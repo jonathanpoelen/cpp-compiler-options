@@ -1,0 +1,4 @@
+-fsanitize=address
+-lasan
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls

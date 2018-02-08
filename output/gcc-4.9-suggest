@@ -1,0 +1,2 @@
+-Wsuggest-attribute=pure
+-Wsuggest-attribute=const

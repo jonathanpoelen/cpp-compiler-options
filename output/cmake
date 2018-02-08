@@ -1,0 +1,420 @@
+option(JLN_CXX_FLAGS_COVERAGE "jln-coverage" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_COVERAGE} JLN_CXX_FLAGS_COVERAGE)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_COVERAGE} OR "on STREQUAL ${JLN_CXX_FLAGS_COVERAGE} )
+  error("Unknow value for JLN_CXX_FLAGS_COVERAGE, expected off or on")
+endif()
+
+option(JLN_CXX_FLAGS_DEBUG "jln-debug" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_DEBUG} JLN_CXX_FLAGS_DEBUG)
+if not ( "on" STREQUAL ${JLN_CXX_FLAGS_DEBUG} OR "off STREQUAL ${JLN_CXX_FLAGS_DEBUG} )
+  error("Unknow value for JLN_CXX_FLAGS_DEBUG, expected on or off")
+endif()
+
+option(JLN_CXX_FLAGS_SUGGEST "jln-suggest" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_SUGGEST} JLN_CXX_FLAGS_SUGGEST)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_SUGGEST} OR "on STREQUAL ${JLN_CXX_FLAGS_SUGGEST} )
+  error("Unknow value for JLN_CXX_FLAGS_SUGGEST, expected off or on")
+endif()
+
+option(JLN_CXX_FLAGS_WARNINGS_AS_ERROR "jln-warnings-as-error" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_WARNINGS_AS_ERROR} JLN_CXX_FLAGS_WARNINGS_AS_ERROR)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_WARNINGS_AS_ERROR} OR "on STREQUAL ${JLN_CXX_FLAGS_WARNINGS_AS_ERROR} )
+  error("Unknow value for JLN_CXX_FLAGS_WARNINGS_AS_ERROR, expected off or on")
+endif()
+
+option(JLN_CXX_FLAGS_STACK_PROTECTOR "jln-stack-protector" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_STACK_PROTECTOR} JLN_CXX_FLAGS_STACK_PROTECTOR)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} OR "on" STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} OR "strong" STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} OR "all STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} )
+  error("Unknow value for JLN_CXX_FLAGS_STACK_PROTECTOR, expected off or on or strong or all")
+endif()
+
+option(JLN_CXX_FLAGS_WARNINGS "jln-warnings" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_WARNINGS} JLN_CXX_FLAGS_WARNINGS)
+if not ( "on" STREQUAL ${JLN_CXX_FLAGS_WARNINGS} OR "off" STREQUAL ${JLN_CXX_FLAGS_WARNINGS} OR "strict STREQUAL ${JLN_CXX_FLAGS_WARNINGS} )
+  error("Unknow value for JLN_CXX_FLAGS_WARNINGS, expected on or off or strict")
+endif()
+
+option(JLN_CXX_FLAGS_FAST_MATH "jln-fast-math" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_FAST_MATH} JLN_CXX_FLAGS_FAST_MATH)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_FAST_MATH} OR "on STREQUAL ${JLN_CXX_FLAGS_FAST_MATH} )
+  error("Unknow value for JLN_CXX_FLAGS_FAST_MATH, expected off or on")
+endif()
+
+option(JLN_CXX_FLAGS_RELRO "jln-relro" "default")
+string(TOLOWER ${JLN_CXX_FLAGS_RELRO} JLN_CXX_FLAGS_RELRO)
+if not ( "default" STREQUAL ${JLN_CXX_FLAGS_RELRO} OR "off" STREQUAL ${JLN_CXX_FLAGS_RELRO} OR "on" STREQUAL ${JLN_CXX_FLAGS_RELRO} OR "full STREQUAL ${JLN_CXX_FLAGS_RELRO} )
+  error("Unknow value for JLN_CXX_FLAGS_RELRO, expected default or off or on or full")
+endif()
+
+option(JLN_CXX_FLAGS_PEDANTIC "jln-pedantic" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_PEDANTIC} JLN_CXX_FLAGS_PEDANTIC)
+if not ( "on" STREQUAL ${JLN_CXX_FLAGS_PEDANTIC} OR "off STREQUAL ${JLN_CXX_FLAGS_PEDANTIC} )
+  error("Unknow value for JLN_CXX_FLAGS_PEDANTIC, expected on or off")
+endif()
+
+option(JLN_CXX_FLAGS_OPTIMIZE "jln-optimize" "default")
+string(TOLOWER ${JLN_CXX_FLAGS_OPTIMIZE} JLN_CXX_FLAGS_OPTIMIZE)
+if not ( "default" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "off" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "on" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "size" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "speed" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "full STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} )
+  error("Unknow value for JLN_CXX_FLAGS_OPTIMIZE, expected default or off or on or size or speed or full")
+endif()
+
+option(JLN_CXX_FLAGS_LTO "jln-lto" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_LTO} JLN_CXX_FLAGS_LTO)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_LTO} OR "on" STREQUAL ${JLN_CXX_FLAGS_LTO} OR "fat STREQUAL ${JLN_CXX_FLAGS_LTO} )
+  error("Unknow value for JLN_CXX_FLAGS_LTO, expected off or on or fat")
+endif()
+
+option(JLN_CXX_FLAGS_GLIBCXX_DEBUG "jln-glibcxx-debug" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} JLN_CXX_FLAGS_GLIBCXX_DEBUG)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} OR "on" STREQUAL ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} OR "allow_broken_abi STREQUAL ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} )
+  error("Unknow value for JLN_CXX_FLAGS_GLIBCXX_DEBUG, expected off or on or allow_broken_abi")
+endif()
+
+option(JLN_CXX_FLAGS_SANITIZERS "jln-sanitizers" "off")
+string(TOLOWER ${JLN_CXX_FLAGS_SANITIZERS} JLN_CXX_FLAGS_SANITIZERS)
+if not ( "off" STREQUAL ${JLN_CXX_FLAGS_SANITIZERS} OR "on STREQUAL ${JLN_CXX_FLAGS_SANITIZERS} )
+  error("Unknow value for JLN_CXX_FLAGS_SANITIZERS, expected off or on")
+endif()
+
+  if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" || CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
+  {
+    if (  NOT ( JLN_CXX_FLAGS_LTO STREQUAL "off") )
+    {
+      add_definitions(
+        -flto
+      )
+      link_libraries(
+        -flto
+      )
+      if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" && NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0" ) ) )
+      {
+        add_definitions(
+          -flto-odr-type-merging
+        )
+        link_libraries(
+          -flto-odr-type-merging
+        )
+        if (  JLN_CXX_FLAGS_LTO STREQUAL "fat" )
+        {
+          add_definitions(
+            -ffat-lto-objects
+          )
+        }
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_COVERAGE STREQUAL "off") )
+    {
+      add_definitions(
+        -coverage
+      )
+      link_libraries(
+        -l-coverage
+      )
+      if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+      {
+        link_libraries(
+          -l-lprofile_rt
+        )
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_FAST_MATH STREQUAL "off") )
+    {
+      add_definitions(
+        -ffast-math
+      )
+    }
+    if (  NOT ( JLN_CXX_FLAGS_PEDANTIC STREQUAL "off") )
+    {
+      add_definitions(
+        -pedantic
+        -pedantic-errors
+      )
+    }
+    if (  NOT ( JLN_CXX_FLAGS_STACK_PROTECTOR STREQUAL "off") )
+    {
+      add_definitions(
+        -Wstack-protector
+        -fstack-protector
+        -D_FORTIFY_SOURCE=2
+      )
+      link_libraries(
+        -fstack-protector
+      )
+      if (  JLN_CXX_FLAGS_STACK_PROTECTOR STREQUAL "strong" )
+      {
+        if (  NOT ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" && CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
+        {
+          add_definitions(
+            -fstack-protector-strong
+          )
+          link_libraries(
+            -fstack-protector-strong
+          )
+        }
+      }
+      else
+      {
+        if (  JLN_CXX_FLAGS_STACK_PROTECTOR STREQUAL "all" )
+        {
+          add_definitions(
+            -fstack-protector-all
+          )
+          link_libraries(
+            -fstack-protector-all
+          )
+        }
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_RELRO STREQUAL "default") )
+    {
+      if (  JLN_CXX_FLAGS_RELRO STREQUAL "off" )
+      {
+        link_libraries(
+          -l-Wl,-z,norelro
+        )
+      }
+      else
+      {
+        if (  JLN_CXX_FLAGS_RELRO STREQUAL "on" )
+        {
+          link_libraries(
+            -l-Wl,-z,relro
+          )
+        }
+      }
+      else
+      {
+        if (  JLN_CXX_FLAGS_RELRO STREQUAL "full" )
+        {
+          link_libraries(
+            -l-Wl,-z,relro,-z,now
+          )
+        }
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_SUGGEST STREQUAL "off") )
+    {
+      if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
+      {
+        add_definitions(
+          -Wsuggest-attribute=pure
+          -Wsuggest-attribute=const
+        )
+        if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0" ) )
+        {
+          add_definitions(
+            -Wsuggest-final-types
+            -Wsuggest-final-methods
+          )
+        }
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_GLIBCXX_DEBUG STREQUAL "off") )
+    {
+      if (  JLN_CXX_FLAGS_GLIBCXX_DEBUG STREQUAL "allow_broken_abi" )
+      {
+        add_definitions(
+          -D_GLIBCXX_DEBUG
+        )
+      }
+      else
+      {
+        add_definitions(
+          -D_GLIBCXX_ASSERTIONS
+        )
+      }
+      if (  NOT ( JLN_CXX_FLAGS_PEDANTIC STREQUAL "off") )
+      {
+        add_definitions(
+          -D_GLIBCXX_DEBUG_PEDANTIC
+        )
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_WARNINGS STREQUAL "off") )
+    {
+      if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
+      {
+        add_definitions(
+          -Wall
+          -Wextra
+          -Wcast-align
+          -Wcast-qual
+          -Wdisabled-optimization
+          -Wfloat-equal
+          -Wformat-security
+          -Wformat-signedness
+          -Wformat=2
+          -Wmissing-declarations
+          -Wmissing-include-dirs
+          -Wnon-virtual-dtor
+          -Wold-style-cast
+          -Woverloaded-virtual
+          -Wpacked
+          -Wredundant-decls
+          -Wundef
+          -Wuninitialized
+          -Wunused-macros
+          -Wvla
+          -Wconversion
+          -Wswitch-default
+          -Wswitch-enum
+        )
+        if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7" ) )
+        {
+          add_definitions(
+            -Wsuggest-attribute=noreturn
+            -Wzero-as-null-pointer-constant
+            -Wlogical-op
+            -Wvector-operation-performance
+            -Wdouble-promotion
+            -Wtrampolines
+          )
+          if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8" ) )
+          {
+            add_definitions(
+              -Wuseless-cast
+            )
+            if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
+            {
+              add_definitions(
+                -Wconditionally-supported
+                -Wfloat-conversion
+                -Wopenmp-simd
+              )
+              if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1" ) )
+              {
+                add_definitions(
+                  -fsized-deallocation
+                  -Warray-bounds=2
+                  -Wconditionally-supported
+                  -Wnoexcept
+                  -Wsized-deallocation
+                  -Wstrict-null-sentinel
+                  -Wsuggest-override
+                )
+                if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.1" ) )
+                {
+                  add_definitions(
+                    -Wduplicated-cond
+                    -Wnull-dereference
+                  )
+                  if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) )
+                  {
+                    add_definitions(
+                      -Waligned-new
+                    )
+                    if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) )
+                    {
+                      add_definitions(
+                        -Walloc-zero
+                        -Walloca
+                        -Wformat-overflow
+                        -Wshadow=compatible-local
+                      )
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+      {
+        add_definitions(
+          -Weverything
+          -Wno-c++98-compat
+          -Wno-c++98-compat-pedantic
+          -Wno-mismatched-tags
+          -Wno-padded
+          -Wno-shadow
+          -Wno-global-constructors
+          -Wno-weak-vtables
+          -Wno-exit-time-destructors
+          -Wno-covered-switch-default
+        )
+      }
+      if (  JLN_CXX_FLAGS_WARNINGS STREQUAL "strict" )
+      {
+        add_definitions(
+          -Wsign-conversion
+        )
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_SANITIZERS STREQUAL "off") )
+    {
+      if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+      {
+        if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.1" ) )
+        {
+          add_definitions(
+            -fsanitize=undefined
+            -fsanitize=address
+            -fsanitize-address-use-after-scope
+            -fno-omit-frame-pointer
+            -fno-optimize-sibling-calls
+          )
+          link_libraries(
+            -lubsan
+            -lasan
+          )
+          if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.4" ) )
+          {
+            add_definitions(
+              -fsanitize=leak
+            )
+            link_libraries(
+              -llsan
+            )
+            if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0" ) )
+            {
+              add_definitions(
+                -fsanitize=bounds
+              )
+              link_libraries(
+                -fsanitize=bounds
+              )
+            }
+          }
+        }
+      }
+      else
+      {
+        if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8" ) )
+        {
+          add_definitions(
+            -fsanitize=address
+            -fno-omit-frame-pointer
+            -fno-optimize-sibling-calls
+          )
+          link_libraries(
+            -lasan
+          )
+          if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
+          {
+            add_definitions(
+              -fsanitize=undefined
+              -fsanitize=leak
+            )
+            link_libraries(
+              -lubsan
+              -llsan
+            )
+            if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0" ) )
+            {
+              add_definitions(
+                -fsanitize=bounds
+                -fsanitize=bounds-strict
+              )
+            }
+          }
+        }
+      }
+    }
+    if (  NOT ( JLN_CXX_FLAGS_WARNINGS_AS_ERROR STREQUAL "off") )
+    {
+      add_definitions(
+        -Werror
+      )
+    }
+  }

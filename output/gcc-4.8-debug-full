@@ -1,0 +1,7 @@
+-D_GLIBCXX_ASSERTIONS
+-D_GLIBCXX_DEBUG_PEDANTIC
+-g
+-fsanitize=address
+-lasan
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls

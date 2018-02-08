@@ -1,0 +1,7 @@
+-fsanitize=undefined
+-lubsan
+-fsanitize=address
+-lasan
+-fsanitize-address-use-after-scope
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls
