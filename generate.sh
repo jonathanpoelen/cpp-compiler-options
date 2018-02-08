@@ -5,6 +5,8 @@ set -e
 cd "$(dirname "$0")"
 mkdir -p output
 
+rm output/*
+
 gen ()
 {
   f=generators/$1.lua
@@ -29,3 +31,6 @@ gen compiler | while read comp ; do
   cat output/$comp-glibcxx_debug            output/$comp-debug output/$comp-sanitizers > output/$comp-debug_full
   cat output/$comp-glibcxx_debug_broken_abi output/$comp-debug output/$comp-sanitizers > output/$comp-debug_full_broken_abi
 done
+
+echo "\n"Empty and removed:
+find output/ -size 0 -delete -print
