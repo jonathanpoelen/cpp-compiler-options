@@ -7,7 +7,7 @@ function tobjamoption(optname)
   return optname:gsub('_', '-')
 end
 
-  
+
 return {
   ignore={
     warnings_as_error=true,
@@ -22,19 +22,19 @@ return {
   cxx=function(_, x) return _.indent .. '  <cxxflags>' .. x .. '\n' end,
   link=function(_, x) return _.indent .. '  <linkflags>' .. x .. '\n' end,
   define=function(_, x) return _.indent .. '  <define>' .. x .. '\n' end,
-  
+
   _vcond_toflags=function(_, cxx, links, defines) return _.indent .. '  flags +=\n' .. cxx .. links .. defines .. _.indent .. '  ;' end,
 
   start=function(_, optprefix)
     _.optprefix = optprefix or ''
     _:_vcond_init({ifopen='', ifclose=''})
-    
+
     -- http://www.boost.org/build/doc/html/index.html
     -- http://www.boost.org/build/doc/html/bbv2/reference/definitions.html#bbv2.reference.features.attributes
-    
+
     _:print('import feature ;')
     _:print('import toolset ;\n')
-    
+
     for optname,v in pairs(_._opts) do
       if optname ~= 'warnings_as_error' and optname ~= 'warnings' then
         local opt = _.optprefix .. tobjamoption(optname)
@@ -77,7 +77,7 @@ rule flags ( properties * )
 ]])
   end,
 
-  stop=function(_) 
+  stop=function(_)
     return _:get_output() .. '  FLAGS = $(flags) ; return $(flags) ;\n}\n}'
   end,
 }

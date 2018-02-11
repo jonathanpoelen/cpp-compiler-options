@@ -10,16 +10,16 @@ local cond_mt = {
     if t then t[#t+1] = x
     else _._else = {x} end
     return _
-  end,  
+  end,
   __mul = function(_, x)
     local t = _._c or _._t
     t[#t+1] = x
     _._c = x._t
     return _
-  end,  
+  end,
   __unm = function(_)
     return setmetatable({ _not=_, _t=_._t }, cond_mt)
-  end,  
+  end,
 }
 
 local comp_mt = {
@@ -64,7 +64,7 @@ G = Or(gcc, clang) {
       },
     },
   },
-  
+
   opt'coverage' {
     cxx'-coverage', -- -fprofile-arcs -ftest-coverage
     link'-coverage', -- -lgcov
@@ -79,7 +79,7 @@ G = Or(gcc, clang) {
 
   opt'fast_math' { cxx'-ffast-math', },
 
-  opt'optimize' { 
+  opt'optimize' {
     lvl'off'   { cxx'-O0' },
     lvl'on'    { cxx'-O2' },
     lvl'size'  { cxx'-Os' },
@@ -109,7 +109,7 @@ G = Or(gcc, clang) {
     lvl'full'{ link'-Wl,-z,relro,-z,now', },
   },
 
-  opt'suggest' { 
+  opt'suggest' {
     gcc {
       cxx'-Wsuggest-attribute=pure',
       cxx'-Wsuggest-attribute=const',
@@ -132,7 +132,7 @@ G = Or(gcc, clang) {
     },
   },
 
-  opt'warnings' { 
+  opt'warnings' {
     gcc {
       cxx'-Wall',
       cxx'-Wextra',
@@ -165,7 +165,7 @@ G = Or(gcc, clang) {
    -- cxx'-Wsign-conversion', -- disabled by default with C++, enabled by -Wconversion
       cxx'-Wswitch-default',
       cxx'-Wswitch-enum',
-    }*    
+    }*
 
     vers(4,7) {
       cxx'-Wsuggest-attribute=noreturn',
@@ -177,11 +177,11 @@ G = Or(gcc, clang) {
       cxx'-Wdouble-promotion',
       cxx'-Wtrampolines', -- C only with a nested function ?
     }*
-  
+
     vers(4,8) {
       cxx'-Wuseless-cast',
     }*
-    
+
     vers(4,9) {
       cxx'-Wconditionally-supported',
       cxx'-Wfloat-conversion',
@@ -203,7 +203,7 @@ G = Or(gcc, clang) {
       cxx'-Wduplicated-cond',
       cxx'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
     }*
-  
+
     vers(7) {
       cxx'-Waligned-new',
     }*
@@ -234,7 +234,7 @@ G = Or(gcc, clang) {
    -- cxx'-Wno-conversion',
    -- cxx'-Qunused-arguments',
     },
-  
+
     lvl'strict' {
       cxx'-Wsign-conversion',
     },
@@ -265,7 +265,7 @@ G = Or(gcc, clang) {
         cxx'-fsanitize=address', -- memory, thread are mutually exclusive
         link'asan',
         cxx'-fno-omit-frame-pointer',
-        cxx'-fno-optimize-sibling-calls',        
+        cxx'-fno-optimize-sibling-calls',
       }*
       vers(4,9) {
         cxx'-fsanitize=undefined',
@@ -279,7 +279,7 @@ G = Or(gcc, clang) {
       },
     },
   },
-  
+
   opt'warnings_as_error' { cxx'-Werror', },
 }
 
@@ -292,7 +292,7 @@ Vbase = {
     warnings=true,
     warnings_as_error=true,
   },
-  
+
   _opts={
     stack_protector={'off', 'off on strong all'},
     relro={'default', 'default off on full'},
@@ -314,23 +314,23 @@ Vbase = {
 
   start=noop, -- function(_) end,
   stop=function(_) return _:get_output() end,
- 
+
   _strs={},
   print=function(_, s) _:write(s) ; _:write('\n') end,
   write=function(_, s) _._strs[#_._strs+1] = s end,
   get_output=function(_) return table.concat(_._strs) end,
-  
+
   startopt=noop, -- function(_, name) end,
   stopopt=noop, -- function(_) end,
-  
+
   startcond=noop, -- function(_, x, optname) end,
   elsecond=noop, -- function(_, optname) end,
   stopcond=noop, -- function(_, optname) end,
-  
+
   cxx=noop,
   link=noop,
   define=noop,
-  
+
   _vcond_init=function(_, keywords)
     _._vcondkeyword = keywords or {}
     for k,v in pairs({
@@ -352,7 +352,7 @@ Vbase = {
     _._vcondkeyword.ifclose = _._vcondkeyword.ifclose or _._vcondkeyword.close
     if #_._vcondkeyword.ifopen ~= 0 then _._vcondkeyword.ifopen = ' ' .. _._vcondkeyword.ifopen .. ' ' end
     if #_._vcondkeyword.ifclose ~= 0 then _._vcondkeyword.ifclose = ' ' .. _._vcondkeyword.ifclose end
-    
+
     _._vcond=function(_, v, optname)
           if v._or      then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._or[1]) ; _:write(' '.._._vcondkeyword._or) _:_vcond(v._or[2]) ; _:write(' '.._._vcondkeyword.close)
       elseif v._and     then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._and[1]); _:write(' '.._._vcondkeyword._and) _:_vcond(v._and[2]); _:write(' '.._._vcondkeyword.close)
@@ -366,9 +366,9 @@ Vbase = {
       else error('Unknown cond ', ipairs(v))
       end
     end
-   
+
     _._vcond_hasopt=function(_, optname) return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl(_._opts[optname][1], optname).._._vcondkeyword.close end
-  
+
     _.startopt=function(_, optname)
       _:_vcond_printflags()
       _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
@@ -383,7 +383,7 @@ Vbase = {
         _:print(_.indent .. _._vcondkeyword.closebloc)
       end
     end
-  
+
     _.startcond=function(_, x, optname)
       _.indent = _.indent:sub(1, #_.indent-2)
       _:_vcond_printflags()
@@ -426,13 +426,13 @@ Vbase = {
       _._vcond_flags_link = ''
       _._vcond_flags_define = ''
     end
-    
+
     local accu=function(k, f)
       return function(_, x)
         _[k] = _[k] .. f(_, x)
       end
     end
-    
+
     _.cxx = accu('_vcond_flags_cxx', _.cxx)
     _.link = accu('_vcond_flags_link', _.link)
     _.define = accu('_vcond_flags_define', _.define)
@@ -483,15 +483,15 @@ end
 function insert_missing_function(V)
   for k,mem in pairs(Vbase) do
     if not V[k] then
-      V[k] = mem 
+      V[k] = mem
     end
-  end  
+  end
 end
 
 function run(generaton_name, ...)
   local V = require(generaton_name:gsub('.lua$', ''))
   insert_missing_function(V)
-  
+
   local r = V:start(...)
   if r == false then
     os.exit(1)
@@ -503,15 +503,15 @@ function run(generaton_name, ...)
     V = r
     insert_missing_function(V)
   end
-  
+
   for k,mem in pairs(V.ignore) do
     if not Vbase._opts[k] then
       error('Unknown ' .. k .. ' in ignore table')
     end
   end
-  
-  evalflags(G, V)    
-  
+
+  evalflags(G, V)
+
   local out =  V:stop()
   if out then io.write(out) end
 end

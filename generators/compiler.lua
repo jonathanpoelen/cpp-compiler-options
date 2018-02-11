@@ -12,14 +12,14 @@ return {
   },
 
   indent = '',
-  
+
   start=function(_, compiler, ...)
     -- list compiler
     if not compiler then
-      return { 
+      return {
         t = {},
         comp = nil,
-  
+
         startcond=function(_, x)
           if x.compiler then
             _.comp = x.compiler
@@ -36,7 +36,7 @@ return {
             end
           end
         end,
-   
+
         stop=function(_)
           local t = {}
           for k,v in ipairs(_.t) do
@@ -106,7 +106,7 @@ return {
 
   stopopt=function(_)
   end,
-  
+
   cond=function(_, v)
     local r = true
         if v._or  then r = r and (_:cond(v._or[1]) or _:cond(v._or[2]))
@@ -138,13 +138,13 @@ return {
     end
     return r
   end,
-  
+
   startcond=function(_, x)
     _.d.condtype = {}
     local r = _:cond(x)
     -- if r and _.d.condtype.version then
     --   _:print('#  ' .. _.d.comp[1] .. '-' .. _.d.condtype.version[1] .. '.' .. _.d.condtype.version[2] .. '.' .. _.d.condtype.version[3])
-    -- end    
+    -- end
     _.d.test[#_.d.test+1] = _.d.test[#_.d.test] and r
     return r
   end,
@@ -156,7 +156,7 @@ return {
   stopcond=function(_)
     _.d.test[#_.d.test] = nil
   end,
-  
+
   cxx=function(_, x)
     if _.d.test[#_.d.test] then
       _:print(x)
@@ -164,7 +164,7 @@ return {
   end,
   link=function(_, x) _:cxx(x) end,
   define=function(_, x) _:cxx('-D'..x) end,
-  
+
   strs={},
   print=function(_, s) _:write(s) ; _:write('\n') end,
   write=function(_, s) _.strs[#_.strs+1] = s end,

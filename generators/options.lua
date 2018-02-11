@@ -1,6 +1,6 @@
 return {
   s = '',
-  
+
   startopt=function(_)
     _.t = {}
   end,
@@ -32,11 +32,11 @@ return {
     if #m ~= 0 then
       error('_opts[' .. optname .. ']: unspecified ' .. table.concat(m, ', '))
     end
-    
+
     _.s = _.s .. optname .. ' = ' .. _._opts[optname][2] .. '\n'
-    _._opts[optname] = nil    
+    _._opts[optname] = nil
   end,
-  
+
   startcond=function(_, x)
     if x.lvl then
       _.t[#_.t+1] = x.lvl
@@ -50,7 +50,7 @@ return {
       end
     end
   end,
-  
+
   stop=function(_)
     for k,x in pairs(_._opts) do
       error('_.opts: no match for ' .. k)

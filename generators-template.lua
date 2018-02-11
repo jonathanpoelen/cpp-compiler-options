@@ -3,13 +3,13 @@ return {
   },
 
   indent = '',
-  
+
   startopt=function(_, name)
   end,
 
   stopopt=function(_)
   end,
-  
+
   cond=function(_, v)
   end,
 
@@ -21,7 +21,7 @@ return {
 
   stopcond=function(_, optname)
   end,
-  
+
   cxx=function(_, x)
   end,
 
@@ -30,7 +30,7 @@ return {
 
   define=function(_, x)
   end,
-  
+
   start=function(_)
   end,
 
