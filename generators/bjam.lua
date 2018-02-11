@@ -16,7 +16,7 @@ return {
   },
 
   _vcond_lvl=function(_, lvl, optname) return '<' .. _.optprefix .. tobjamoption(optname) .. '>' .. lvl .. ' in $(properties)' end,
-  _vcond_verless=function(_, major, minor, patch) return '$(version) < ' .. normnum(major) .. normnum(minor) .. normnum(patch) end,
+  _vcond_verless=function(_, major, minor) return '$(version) < ' .. normnum(major) .. normnum(minor) end,
   _vcond_comp=function(_, compiler) return '$(toolset) == ' .. compiler end,
 
   cxx=function(_, x) return _.indent .. '  <cxxflags>' .. x .. '\n' end,
@@ -46,7 +46,7 @@ return {
 import string ;
 
 local ORIGINAL_TOOLSET = 0 ;
-local COMP_VERSION = 000.000 ;
+local COMP_VERSION = 00.00 ;
 local FLAGS = ;
 
 rule flags ( properties * )

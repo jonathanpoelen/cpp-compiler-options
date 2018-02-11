@@ -38,7 +38,7 @@ import property-set ;
 import string ;
 
 local ORIGINAL_TOOLSET = 0 ;
-local COMP_VERSION = 000.000 ;
+local COMP_VERSION = 00.00 ;
 local FLAGS = ;
 
 rule flags ( properties * )
@@ -75,7 +75,7 @@ rule flags ( properties * )
         <cxxflags>-flto
         <linkflags>-flto
       ;
-      if ( $(toolset) == gcc && ! ( $(version) < 0500il ) )
+      if ( $(toolset) == gcc && ! ( $(version) < 0500 ) )
       {
         flags +=
           <cxxflags>-flto-odr-type-merging
@@ -125,7 +125,7 @@ rule flags ( properties * )
       ;
       if <jln-stack-protector>strong in $(properties)
       {
-        if ! ( $(toolset) == gcc && $(version) < 0409il )
+        if ! ( $(toolset) == gcc && $(version) < 0409 )
         {
           flags +=
             <cxxflags>-fstack-protector-strong
@@ -179,7 +179,7 @@ rule flags ( properties * )
           <cxxflags>-Wsuggest-attribute=pure
           <cxxflags>-Wsuggest-attribute=const
         ;
-        if ! ( $(version) < 0500il )
+        if ! ( $(version) < 0500 )
         {
           flags +=
             <cxxflags>-Wsuggest-final-types
@@ -238,7 +238,7 @@ rule flags ( properties * )
           <cxxflags>-Wswitch-default
           <cxxflags>-Wswitch-enum
         ;
-        if ! ( $(version) < 0407il )
+        if ! ( $(version) < 0407 )
         {
           flags +=
             <cxxflags>-Wsuggest-attribute=noreturn
@@ -248,19 +248,19 @@ rule flags ( properties * )
             <cxxflags>-Wdouble-promotion
             <cxxflags>-Wtrampolines
           ;
-          if ! ( $(version) < 0408il )
+          if ! ( $(version) < 0408 )
           {
             flags +=
               <cxxflags>-Wuseless-cast
             ;
-            if ! ( $(version) < 0409il )
+            if ! ( $(version) < 0409 )
             {
               flags +=
                 <cxxflags>-Wconditionally-supported
                 <cxxflags>-Wfloat-conversion
                 <cxxflags>-Wopenmp-simd
               ;
-              if ! ( $(version) < 0501il )
+              if ! ( $(version) < 0501 )
               {
                 flags +=
                   <cxxflags>-fsized-deallocation
@@ -271,18 +271,18 @@ rule flags ( properties * )
                   <cxxflags>-Wstrict-null-sentinel
                   <cxxflags>-Wsuggest-override
                 ;
-                if ! ( $(version) < 0601il )
+                if ! ( $(version) < 0601 )
                 {
                   flags +=
                     <cxxflags>-Wduplicated-cond
                     <cxxflags>-Wnull-dereference
                   ;
-                  if ! ( $(version) < 0700il )
+                  if ! ( $(version) < 0700 )
                   {
                     flags +=
                       <cxxflags>-Waligned-new
                     ;
-                    if ! ( $(version) < 0701il )
+                    if ! ( $(version) < 0701 )
                     {
                       flags +=
                         <cxxflags>-Walloc-zero
@@ -324,7 +324,7 @@ rule flags ( properties * )
     {
       if $(toolset) == clang
       {
-        if ! ( $(version) < 0301il )
+        if ! ( $(version) < 0301 )
         {
           flags +=
             <cxxflags>-fsanitize=undefined
@@ -335,13 +335,13 @@ rule flags ( properties * )
             <linkflags>-lubsan
             <linkflags>-lasan
           ;
-          if ! ( $(version) < 0304il )
+          if ! ( $(version) < 0304 )
           {
             flags +=
               <cxxflags>-fsanitize=leak
               <linkflags>-llsan
             ;
-            if ! ( $(version) < 0600il )
+            if ! ( $(version) < 0600 )
             {
               flags +=
                 <cxxflags>-fsanitize=bounds
@@ -353,7 +353,7 @@ rule flags ( properties * )
       }
       else
       {
-        if ! ( $(version) < 0408il )
+        if ! ( $(version) < 0408 )
         {
           flags +=
             <cxxflags>-fsanitize=address
@@ -361,7 +361,7 @@ rule flags ( properties * )
             <cxxflags>-fno-optimize-sibling-calls
             <linkflags>-lasan
           ;
-          if ! ( $(version) < 0409il )
+          if ! ( $(version) < 0409 )
           {
             flags +=
               <cxxflags>-fsanitize=undefined
@@ -369,7 +369,7 @@ rule flags ( properties * )
               <linkflags>-lubsan
               <linkflags>-llsan
             ;
-            if ! ( $(version) < 0600il )
+            if ! ( $(version) < 0600 )
             {
               flags +=
                 <cxxflags>-fsanitize=bounds
