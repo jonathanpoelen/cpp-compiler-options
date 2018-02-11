@@ -480,26 +480,28 @@ function evalflags(t, v, curropt)
   end
 end
 
-function run(generaton_name, ...)
-  local V = require(generaton_name:gsub('.lua$', ''))
+function insert_missing_function(V)
   for k,mem in pairs(Vbase) do
     if not V[k] then
       V[k] = mem 
     end
-  end
+  end  
+end
+
+function run(generaton_name, ...)
+  local V = require(generaton_name:gsub('.lua$', ''))
+  insert_missing_function(V)
   
   local r = V:start(...)
   if r == false then
     os.exit(1)
   elseif type(r) == 'number' then
-    os.exit(r)
+    if r ~= 0 then
+      os.exit(r)
+    end
   elseif r ~= nil and r ~= V then
     V = r
-    for k,mem in pairs(Vbase) do
-      if not V[k] then
-        V[k] = mem 
-      end
-    end    
+    insert_missing_function(V)
   end
   
   for k,mem in pairs(V.ignore) do
@@ -513,4 +515,5 @@ function run(generaton_name, ...)
   local out =  V:stop()
   if out then io.write(out) end
 end
+
 run(...)
