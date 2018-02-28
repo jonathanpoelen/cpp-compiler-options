@@ -1,6 +1,6 @@
-Compilation options for different versions of Clang and GCC. Provided a generator and different file formats (bjam, cmake, ...).
+Compilation options for different versions of Clang and GCC. Provided a generator and different file formats (`bjam`, `cmake`, ...).
 
-The output directory contains files for cmake, bjam, and command-line options for gcc and clang.
+The `output` directory contains files for `cmake`, `bjam` and command-line options for `gcc` and `clang`.
 
 $ `g++ @output/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 

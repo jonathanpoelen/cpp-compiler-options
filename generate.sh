@@ -1,36 +1,37 @@
 #!/bin/sh
 
+OUTPUT_DIR=output/
+
 set -e
 
 cd "$(dirname "$0")"
-mkdir -p output
-
-rm output/*
+mkdir -p "$OUTPUT_DIR"
+rm -f "$OUTPUT_DIR"/*
 
 gen ()
 {
   f=generators/$1.lua
   shift
-  ./compiler-options.lua $f "$@"
+  $LUA_BIN ./compiler-options.lua $f "$@"
 }
 
 # check options
 gen options
 
 for g in bjam cmake ; do
-  gen $g jln- > output/$g
+  gen $g jln- > "$OUTPUT_DIR"/$g
 done
 
 gen compiler | while read comp ; do
-  gen compiler $comp warnings pedantic > output/$comp-warnings
-  gen compiler $comp warnings=strict pedantic > output/$comp-warnings_strict
-  gen compiler $comp glibcxx_debug=allow_broken_abi > output/$comp-glibcxx_debug_broken_abi
+  gen compiler $comp warnings pedantic > "$OUTPUT_DIR"/$comp-warnings
+  gen compiler $comp warnings=strict pedantic > "$OUTPUT_DIR"/$comp-warnings_strict
+  gen compiler $comp glibcxx_debug=allow_broken_abi > "$OUTPUT_DIR"/$comp-glibcxx_debug_broken_abi
   for g in suggest glibcxx_debug debug sanitizers ; do
-    gen compiler $comp $g > output/$comp-$g
+    gen compiler $comp $g > "$OUTPUT_DIR"/$comp-$g
   done
-  cat output/$comp-glibcxx_debug            output/$comp-debug output/$comp-sanitizers > output/$comp-debug_full
-  cat output/$comp-glibcxx_debug_broken_abi output/$comp-debug output/$comp-sanitizers > output/$comp-debug_full_broken_abi
+  cat "$OUTPUT_DIR"/$comp-glibcxx_debug            "$OUTPUT_DIR"/$comp-debug output/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full
+  cat "$OUTPUT_DIR"/$comp-glibcxx_debug_broken_abi "$OUTPUT_DIR"/$comp-debug output/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full_broken_abi
 done
 
 echo "\n"Empty and removed:
-find output/ -size 0 -delete -print
+find "$OUTPUT_DIR"/ -size 0 -delete -print
