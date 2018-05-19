@@ -109,26 +109,24 @@ return {
 
   cond=function(_, v)
     local r = true
-        if v._or  then r = r and (_:cond(v._or[1]) or _:cond(v._or[2]))
-    elseif v._and then r = r and _:cond(v._and[1]) and _:cond(v._and[2])
-    elseif v._not then r = r and not _:cond(v._not)
+        if v._or  then r = _:cond(v._or[1]) or _:cond(v._or[2])
+    elseif v._and then r = _:cond(v._and[1]) and _:cond(v._and[2])
+    elseif v._not then r = not _:cond(v._not)
     elseif v.lvl  then
       if _.d.opts then
-        r = r and v.lvl == _.d.opts[_.d.opt]
+        r = v.lvl == _.d.opts[_.d.opt]
       else
-        r = r and (v.lvl == 'GLIBCXX_ALLOW_BROKEN_ABI')
+        r = v.lvl == 'GLIBCXX_ALLOW_BROKEN_ABI'
       end
     elseif v.version  then
-      _.d.condtype.version = v.version
+      -- _.d.condtype.version = v.version
       if v.version[1] < 0 then
-        r = r and (_.d.comp[2] < -v.version[1] or _.d.comp[3] < v.version[2] or _.d.comp[4] < v.version[3])
+        r = _.d.comp[2] < -v.version[1] or _.d.comp[3] < v.version[2]
       else
-        r = r and _.d.comp[2] > v.version[1] or (_.d.comp[2] == v.version[1]
-              and _.d.comp[3] > v.version[2] or (_.d.comp[3] == v.version[2]
-              ))
+        r = _.d.comp[2] > v.version[1] or (_.d.comp[2] == v.version[1] and _.d.comp[3] >= v.version[2])
       end
-    elseif v.compiler then r = r and _.d.comp[1] == v.compiler
-    elseif v.hasopt   then r = r and (not _.d.opts or _.d.opts[v.hasopt])
+    elseif v.compiler then r = _.d.comp[1] == v.compiler
+    elseif v.hasopt   then r = not _.d.opts or _.d.opts[v.hasopt]
     else
       local ks = ''
       for k,_ in pairs(v) do

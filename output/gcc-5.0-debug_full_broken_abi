@@ -9,5 +9,3 @@
 -lubsan
 -fsanitize=leak
 -llsan
--fsanitize=bounds
--fsanitize=bounds-strict

@@ -40,5 +40,3 @@
 -Wsized-deallocation
 -Wstrict-null-sentinel
 -Wsuggest-override
--Wduplicated-cond
--Wnull-dereference
