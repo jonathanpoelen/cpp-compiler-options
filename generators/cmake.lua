@@ -16,7 +16,7 @@ return {
       _:print('option(' .. opt .. ' "' .. optprefix .. string.gsub(v[3] or optname, '_', '-') ..  '" "' .. v[1] .. '")')
       _:print('string(TOLOWER ${' .. opt .. '} ' .. opt .. ')')
       _:print('if not ( "' .. v[2]:gsub(' ', '" STREQUAL ${' .. opt .. '} OR "') .. ' STREQUAL ${' .. opt .. '} )')
-      _:print('  error("Unknow value for ' .. opt .. ', expected ' .. v[2]:gsub(' ', ' or ') .. '")')
+      _:print('  error("Unknow value for ' .. opt .. ', expected ' .. v[2]:gsub(' ', ', ') .. '")')
       _:print('endif()\n')
     end
   end,

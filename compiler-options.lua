@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 local cond_mt = {
   __call = function(_, x)
-    if _._t then error('`t` is no nil') end
+    if _._t then error('`t` is not nil') end
     _._t = x
     return _
   end,
@@ -53,7 +53,7 @@ function hasopt(x) return setmetatable({ hasopt=x }, cond_mt) end
 function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 
 -- gcc and clang
--- g++ -Q --help=optimizers -O3
+-- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 G = Or(gcc, clang) {
   opt'lto' {
     fl'-flto', -- clang -flto=thin
@@ -151,11 +151,6 @@ G = Or(gcc, clang) {
    -- cxx'-Weffc++',
       cxx'-Wpacked',
       cxx'-Wredundant-decls',
-   -- cxx'-Wstrict-overflow=1', -- -Wall
-   -- cxx'-Wstrict-overflow=2',
-   -- cxx'-Wstrict-overflow=3',
-   -- cxx'-Wstrict-overflow=4',
-   -- cxx'-Wstrict-overflow=5',
       cxx'-Wundef',
       cxx'-Wuninitialized',
       cxx'-Wunused-macros',
@@ -237,6 +232,7 @@ G = Or(gcc, clang) {
 
     lvl'strict' {
       cxx'-Wsign-conversion',
+      gcc(8) { cxx'-Wcast-align=strict', }
     },
   },
 
@@ -276,8 +272,31 @@ G = Or(gcc, clang) {
       vers(6) {
         cxx'-fsanitize=bounds',
         cxx'-fsanitize=bounds-strict',
-      },
+      }
     },
+  },
+
+  opt'sanitizers_extra' {
+    lvl'thread' { cxx'-fsanitize=thread', } /
+    lvl'pointer' {
+      gcc(8) {
+        -- By default the check is disabled at run time.
+        -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
+        -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
+        -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
+        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
+        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
+        cxx'-fsanitize=pointer-compare',
+        cxx'-fsanitize=pointer-subtract',
+      }
+    }
+  },
+
+  opt'report_template' {
+    cxx'-fno-elide-type',
+    gcc(8) {
+      cxx'-fdiagnostics-show-template-tree',
+    }
   },
 
   opt'warnings_as_error' { cxx'-Werror', },
@@ -291,6 +310,7 @@ Vbase = {
     suggest=true,
     warnings=true,
     warnings_as_error=true,
+    report_template=true,
   },
 
   _opts={
@@ -304,8 +324,10 @@ Vbase = {
     debug={'off', 'on off'},
     glibcxx_debug={'off', 'off on allow_broken_abi'},
     sanitizers={'off', 'off on'},
+    sanitizers_extra={'off', 'off thread pointer'},
     suggest={'off', 'off on'},
     warnings={'off', 'on off strict'},
+    report_template={'off', 'off on'},
     warnings_as_error={'off', 'off on'},
   },
 
@@ -445,9 +467,9 @@ function evalflags(t, v, curropt)
        error('Unknown lvl "' .. t.lvl .. '" in ' .. curropt)
     end
     local r = v:startcond(t, curropt)
-    if r ~= false then
+    if r ~= false and t._t then
       v.indent = v.indent .. '  '
-      if t._t then evalflags(t._t, v, curropt) end
+      evalflags(t._t, v, curropt)
       v.indent = v.indent:sub(1, #v.indent-2)
     end
     if t._else then
