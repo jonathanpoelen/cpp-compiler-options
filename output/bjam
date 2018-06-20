@@ -429,7 +429,7 @@ rule flags ( properties * )
           <cxxflags>-fdiagnostics-show-template-tree
         ;
       }
-      if ( $(toolset) == clang && ! ( $(version) < 0306 ) )
+      if ( $(toolset) == clang && ! ( $(version) < 0304 ) )
       {
         flags +=
           <cxxflags>-fno-elide-type

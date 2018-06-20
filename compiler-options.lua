@@ -301,7 +301,7 @@ G = Or(gcc, clang) {
       cxx'-fno-elide-type',
       cxx'-fdiagnostics-show-template-tree',
     },
-    clang(3,6) {
+    clang(3,4) {
       cxx'-fno-elide-type',
     },
   },

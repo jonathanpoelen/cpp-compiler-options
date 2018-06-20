@@ -466,7 +466,7 @@ endif()
           -fdiagnostics-show-template-tree
         )
       }
-      if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" && NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.6" ) ) )
+      if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" && NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.4" ) ) )
       {
         add_definitions(
           -fno-elide-type
