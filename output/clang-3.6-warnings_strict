@@ -1,0 +1,13 @@
+-pedantic
+-pedantic-errors
+-Weverything
+-Wno-c++98-compat
+-Wno-c++98-compat-pedantic
+-Wno-mismatched-tags
+-Wno-padded
+-Wno-shadow
+-Wno-global-constructors
+-Wno-weak-vtables
+-Wno-exit-time-destructors
+-Wno-covered-switch-default
+-Wsign-conversion

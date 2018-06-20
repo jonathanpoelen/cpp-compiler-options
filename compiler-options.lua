@@ -210,6 +210,10 @@ G = Or(gcc, clang) {
    -- cxx'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
    -- cxx'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
       cxx'-Wshadow=compatible-local', -- global (default), local, compatible-local
+    }*
+
+    vers(8) {
+      cxx'-Wclass-memaccess',
     },
 
     clang {
@@ -293,10 +297,13 @@ G = Or(gcc, clang) {
   },
 
   opt'report_template' {
-    cxx'-fno-elide-type',
     gcc(8) {
+      cxx'-fno-elide-type',
       cxx'-fdiagnostics-show-template-tree',
-    }
+    },
+    clang(3,6) {
+      cxx'-fno-elide-type',
+    },
   },
 
   opt'warnings_as_error' { cxx'-Werror', },

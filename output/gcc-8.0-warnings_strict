@@ -47,5 +47,6 @@
 -Walloca
 -Wformat-overflow
 -Wshadow=compatible-local
+-Wclass-memaccess
 -Wsign-conversion
 -Wcast-align=strict

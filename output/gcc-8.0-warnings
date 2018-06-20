@@ -47,3 +47,4 @@
 -Walloca
 -Wformat-overflow
 -Wshadow=compatible-local
+-Wclass-memaccess
