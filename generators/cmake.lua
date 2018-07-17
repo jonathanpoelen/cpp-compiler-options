@@ -10,7 +10,7 @@ return {
 
   start=function(_, optprefix)
     optprefix = optprefix or ''
-    _:_vcond_init({_not='NOT'})
+    _:_vcond_init({_not='NOT', else_of_else_if='else'})
     for optname,v in pairs(_._opts) do
       local opt = tocmakeoption(optname)
       _:print('option(' .. opt .. ' "' .. optprefix .. string.gsub(v[3] or optname, '_', '-') ..  '" "' .. v[1] .. '")')

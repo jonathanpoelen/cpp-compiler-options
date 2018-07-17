@@ -7,3 +7,7 @@
 -fno-optimize-sibling-calls
 -fsanitize=leak
 -llsan
+-fsanitize=address
+-lasan
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls

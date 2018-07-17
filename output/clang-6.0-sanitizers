@@ -9,3 +9,13 @@
 -llsan
 -fsanitize=bounds
 -fsanitize=bounds
+-fsanitize=address
+-lasan
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls
+-fsanitize=undefined
+-lubsan
+-fsanitize=leak
+-llsan
+-fsanitize=bounds
+-fsanitize=bounds-strict

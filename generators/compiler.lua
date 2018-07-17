@@ -143,7 +143,7 @@ return {
     -- if r and _.d.condtype.version then
     --   _:print('#  ' .. _.d.comp[1] .. '-' .. _.d.condtype.version[1] .. '.' .. _.d.condtype.version[2] .. '.' .. _.d.condtype.version[3])
     -- end
-    _.d.test[#_.d.test+1] = _.d.test[#_.d.test] and r
+    _.d.test[#_.d.test+1] = r
     return r
   end,
 

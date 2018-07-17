@@ -28,6 +28,7 @@ suggest = off on
 glibcxx_debug = off on allow_broken_abi
 warnings = on off strict
 sanitizers = off on
+sanitizers_extra = off thread pointer
 warnings_as_error = off on
 report_template = off on
 ```

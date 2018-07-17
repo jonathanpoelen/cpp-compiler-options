@@ -58,7 +58,7 @@ G = Or(gcc, clang) {
   opt'lto' {
     fl'-flto', -- clang -flto=thin
     gcc(5) {
-      fl'-flto-odr-type-merging',
+      fl'-flto-odr-type-merging', -- increases size of LTO object files, but enables diagnostics about ODR violations
       lvl'fat' {
         cxx'-ffat-lto-objects',
       },
@@ -339,6 +339,7 @@ Vbase = {
   },
 
   indent = '',
+  if_prefix = '',
   ignore={},
 
   start=noop, -- function(_) end,
@@ -354,6 +355,7 @@ Vbase = {
 
   startcond=noop, -- function(_, x, optname) end,
   elsecond=noop, -- function(_, optname) end,
+  markelseif=noop, -- function() end,
   stopcond=noop, -- function(_, optname) end,
 
   cxx=noop,
@@ -379,6 +381,7 @@ Vbase = {
     end
     _._vcondkeyword.ifopen = _._vcondkeyword.ifopen or _._vcondkeyword.open
     _._vcondkeyword.ifclose = _._vcondkeyword.ifclose or _._vcondkeyword.close
+    _._vcondkeyword.else_of_else_if = _._vcondkeyword.else_of_else_if or (_._vcondkeyword._else .. ' ')
     if #_._vcondkeyword.ifopen ~= 0 then _._vcondkeyword.ifopen = ' ' .. _._vcondkeyword.ifopen .. ' ' end
     if #_._vcondkeyword.ifclose ~= 0 then _._vcondkeyword.ifclose = ' ' .. _._vcondkeyword.ifclose end
 
@@ -417,7 +420,8 @@ Vbase = {
       _.indent = _.indent:sub(1, #_.indent-2)
       _:_vcond_printflags()
       _.indent = _.indent .. '  '
-      _:write(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen)
+      _:write(_.indent .. _.if_prefix .. _._vcondkeyword._if .. _._vcondkeyword.ifopen)
+      _.if_prefix = ''
       _:_vcond(x, optname)
       _:print(_._vcondkeyword.ifclose)
       if _._vcondkeyword.openbloc then
@@ -434,6 +438,14 @@ Vbase = {
       if _._vcondkeyword.openbloc then
         _:print(_.indent .. _._vcondkeyword.openbloc)
       end
+    end
+
+    _.markelseif=function(_)
+      _:_vcond_printflags()
+      if _._vcondkeyword.closebloc then
+        _:print(_.indent .. _._vcondkeyword.closebloc)
+      end
+      _.if_prefix = _._vcondkeyword.else_of_else_if
     end
 
     _.stopcond=function(_)
@@ -468,8 +480,12 @@ Vbase = {
   end,
 }
 
-function evalflags(t, v, curropt)
-  if t.lvl or t._or or t._and or t._not or t.hasopt or t.compiler or t.version then
+function is_cond(t)
+  return t.lvl or t._or or t._and or t._not or t.hasopt or t.compiler or t.version
+end
+
+function evalflags(t, v, curropt, no_stopcond)
+  if is_cond(t) then
     if t.lvl and not v._opts[curropt][2]:find(t.lvl) then
        error('Unknown lvl "' .. t.lvl .. '" in ' .. curropt)
     end
@@ -480,14 +496,23 @@ function evalflags(t, v, curropt)
       v.indent = v.indent:sub(1, #v.indent-2)
     end
     if t._else then
+      local n = #t._else
       for k,x in ipairs(t._else) do
-        v:elsecond(curropt)
-        v.indent = v.indent .. '  '
-        evalflags(x, v, curropt)
-        v.indent = v.indent:sub(1, #v.indent-2)
+        mark_elseif = (k ~= n or is_cond(x))
+        if mark_elseif then
+          v:markelseif()
+          evalflags(x, v, curropt, mark_elseif)
+        else
+          v:elsecond(curropt)
+          v.indent = v.indent .. '  '
+          evalflags(x, v, curropt, mark_elseif)
+          v.indent = v.indent:sub(1, #v.indent-2)
+        end
       end
     end
-    v:stopcond(curropt)
+    if not no_stopcond then
+      v:stopcond(curropt)
+    end
   elseif t.opt then
     if not v._opts[t.opt] then
       error('Unknown "' .. t.opt .. '" option')

@@ -67,8 +67,9 @@ return {
     -- optional keywords
     keywords.ifopen = keywords.open
     keywords.ifclose = keywords.close
+    keywords.else_of_else_if = keywords._else .. ' ',
     -- _vcond_* functions initialize
-    -- Override startopt, stopopt, startcond, elsecond, stopcond, cxx, link, define
+    -- Override startopt, stopopt, startcond, elsecond, markelseif, stopcond, cxx, link, define
     _:_vcond_init(keywords)
   end,
 
