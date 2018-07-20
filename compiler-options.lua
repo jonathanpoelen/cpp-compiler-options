@@ -372,8 +372,8 @@ Vbase = {
      _else = 'else',
      open = '(',
      close = ')',
-     openbloc = '{',
-     closebloc = '}',
+     openblock = '{',
+     closeblock = '}',
     }) do
       if not _._vcondkeyword[k] then
         _._vcondkeyword[k] = v
@@ -382,6 +382,7 @@ Vbase = {
     _._vcondkeyword.ifopen = _._vcondkeyword.ifopen or _._vcondkeyword.open
     _._vcondkeyword.ifclose = _._vcondkeyword.ifclose or _._vcondkeyword.close
     _._vcondkeyword.else_of_else_if = _._vcondkeyword.else_of_else_if or (_._vcondkeyword._else .. ' ')
+    _._vcondkeyword.endif = _._vcondkeyword.endif or _._vcondkeyword.closeblock
     if #_._vcondkeyword.ifopen ~= 0 then _._vcondkeyword.ifopen = ' ' .. _._vcondkeyword.ifopen .. ' ' end
     if #_._vcondkeyword.ifclose ~= 0 then _._vcondkeyword.ifclose = ' ' .. _._vcondkeyword.ifclose end
 
@@ -404,15 +405,15 @@ Vbase = {
     _.startopt=function(_, optname)
       _:_vcond_printflags()
       _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
-      if _._vcondkeyword.openbloc then
-        _:print(_.indent .. _._vcondkeyword.openbloc)
+      if _._vcondkeyword.openblock then
+        _:print(_.indent .. _._vcondkeyword.openblock)
       end
     end
 
     _.stopopt=function(_)
       _:_vcond_printflags()
-      if _._vcondkeyword.closebloc then
-        _:print(_.indent .. _._vcondkeyword.closebloc)
+      if _._vcondkeyword.endif then
+        _:print(_.indent .. _._vcondkeyword.endif)
       end
     end
 
@@ -424,34 +425,34 @@ Vbase = {
       _.if_prefix = ''
       _:_vcond(x, optname)
       _:print(_._vcondkeyword.ifclose)
-      if _._vcondkeyword.openbloc then
-        _:print(_.indent .. _._vcondkeyword.openbloc)
+      if #_._vcondkeyword.openblock then
+        _:print(_.indent .. _._vcondkeyword.openblock)
       end
     end
 
     _.elsecond=function(_)
       _:_vcond_printflags()
-      if _._vcondkeyword.closebloc then
-        _:print(_.indent .. _._vcondkeyword.closebloc)
+      if #_._vcondkeyword.closeblock then
+        _:print(_.indent .. _._vcondkeyword.closeblock)
       end
       _:print(_.indent .. _._vcondkeyword._else)
-      if _._vcondkeyword.openbloc then
-        _:print(_.indent .. _._vcondkeyword.openbloc)
+      if #_._vcondkeyword.openblock then
+        _:print(_.indent .. _._vcondkeyword.openblock)
       end
     end
 
     _.markelseif=function(_)
       _:_vcond_printflags()
-      if _._vcondkeyword.closebloc then
-        _:print(_.indent .. _._vcondkeyword.closebloc)
+      if #_._vcondkeyword.closeblock then
+        _:print(_.indent .. _._vcondkeyword.closeblock)
       end
       _.if_prefix = _._vcondkeyword.else_of_else_if
     end
 
     _.stopcond=function(_)
       _:_vcond_printflags()
-      if _._vcondkeyword.closebloc then
-        _:print(_.indent .. _._vcondkeyword.closebloc)
+      if #_._vcondkeyword.endif then
+        _:print(_.indent .. _._vcondkeyword.endif)
       end
     end
 
@@ -566,7 +567,7 @@ function run(generaton_name, ...)
 
   evalflags(G, V)
 
-  local out =  V:stop()
+  local out = V:stop()
   if out then io.write(out) end
 end
 

@@ -18,7 +18,7 @@ gen ()
 # check options
 gen options
 
-for g in bjam cmake ; do
+for g in bjam cmake premake5 ; do
   gen $g jln- > "$OUTPUT_DIR"/$g
 done
 
