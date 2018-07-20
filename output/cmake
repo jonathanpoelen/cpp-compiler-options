@@ -1,96 +1,96 @@
-option(JLN_CXX_FLAGS_LTO "jln-lto" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_LTO} JLN_CXX_FLAGS_LTO)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_LTO} OR "on" STREQUAL ${JLN_CXX_FLAGS_LTO} OR "fat STREQUAL ${JLN_CXX_FLAGS_LTO} )
-  error("Unknow value for JLN_CXX_FLAGS_LTO, expected off, on, fat")
+option(JLN_FLAG_RELRO "jln-relro" "default")
+string(TOLOWER ${JLN_FLAG_RELRO} JLN_FLAG_RELRO)
+if not ( "default" STREQUAL ${JLN_FLAG_RELRO} OR "off" STREQUAL ${JLN_FLAG_RELRO} OR "on" STREQUAL ${JLN_FLAG_RELRO} OR "full STREQUAL ${JLN_FLAG_RELRO} )
+  error("Unknow value for JLN_FLAG_RELRO, expected default, off, on, full")
 endif()
 
-option(JLN_CXX_FLAGS_DEBUG "jln-debug" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_DEBUG} JLN_CXX_FLAGS_DEBUG)
-if not ( "on" STREQUAL ${JLN_CXX_FLAGS_DEBUG} OR "off STREQUAL ${JLN_CXX_FLAGS_DEBUG} )
-  error("Unknow value for JLN_CXX_FLAGS_DEBUG, expected on, off")
+option(JLN_FLAG_STACK_PROTECTOR "jln-stack-protector" "off")
+string(TOLOWER ${JLN_FLAG_STACK_PROTECTOR} JLN_FLAG_STACK_PROTECTOR)
+if not ( "off" STREQUAL ${JLN_FLAG_STACK_PROTECTOR} OR "on" STREQUAL ${JLN_FLAG_STACK_PROTECTOR} OR "strong" STREQUAL ${JLN_FLAG_STACK_PROTECTOR} OR "all STREQUAL ${JLN_FLAG_STACK_PROTECTOR} )
+  error("Unknow value for JLN_FLAG_STACK_PROTECTOR, expected off, on, strong, all")
 endif()
 
-option(JLN_CXX_FLAGS_WARNINGS_AS_ERROR "jln-warnings-as-error" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_WARNINGS_AS_ERROR} JLN_CXX_FLAGS_WARNINGS_AS_ERROR)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_WARNINGS_AS_ERROR} OR "on STREQUAL ${JLN_CXX_FLAGS_WARNINGS_AS_ERROR} )
-  error("Unknow value for JLN_CXX_FLAGS_WARNINGS_AS_ERROR, expected off, on")
+option(JLN_FLAG_GLIBCXX_DEBUG "jln-glibcxx-debug" "off")
+string(TOLOWER ${JLN_FLAG_GLIBCXX_DEBUG} JLN_FLAG_GLIBCXX_DEBUG)
+if not ( "off" STREQUAL ${JLN_FLAG_GLIBCXX_DEBUG} OR "on" STREQUAL ${JLN_FLAG_GLIBCXX_DEBUG} OR "allow_broken_abi STREQUAL ${JLN_FLAG_GLIBCXX_DEBUG} )
+  error("Unknow value for JLN_FLAG_GLIBCXX_DEBUG, expected off, on, allow_broken_abi")
 endif()
 
-option(JLN_CXX_FLAGS_COVERAGE "jln-coverage" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_COVERAGE} JLN_CXX_FLAGS_COVERAGE)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_COVERAGE} OR "on STREQUAL ${JLN_CXX_FLAGS_COVERAGE} )
-  error("Unknow value for JLN_CXX_FLAGS_COVERAGE, expected off, on")
+option(JLN_FLAG_PEDANTIC "jln-pedantic" "off")
+string(TOLOWER ${JLN_FLAG_PEDANTIC} JLN_FLAG_PEDANTIC)
+if not ( "on" STREQUAL ${JLN_FLAG_PEDANTIC} OR "off STREQUAL ${JLN_FLAG_PEDANTIC} )
+  error("Unknow value for JLN_FLAG_PEDANTIC, expected on, off")
 endif()
 
-option(JLN_CXX_FLAGS_REPORT_TEMPLATE "jln-report-template" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_REPORT_TEMPLATE} JLN_CXX_FLAGS_REPORT_TEMPLATE)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_REPORT_TEMPLATE} OR "on STREQUAL ${JLN_CXX_FLAGS_REPORT_TEMPLATE} )
-  error("Unknow value for JLN_CXX_FLAGS_REPORT_TEMPLATE, expected off, on")
+option(JLN_FLAG_REPORT_TEMPLATE "jln-report-template" "off")
+string(TOLOWER ${JLN_FLAG_REPORT_TEMPLATE} JLN_FLAG_REPORT_TEMPLATE)
+if not ( "off" STREQUAL ${JLN_FLAG_REPORT_TEMPLATE} OR "on STREQUAL ${JLN_FLAG_REPORT_TEMPLATE} )
+  error("Unknow value for JLN_FLAG_REPORT_TEMPLATE, expected off, on")
 endif()
 
-option(JLN_CXX_FLAGS_STACK_PROTECTOR "jln-stack-protector" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_STACK_PROTECTOR} JLN_CXX_FLAGS_STACK_PROTECTOR)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} OR "on" STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} OR "strong" STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} OR "all STREQUAL ${JLN_CXX_FLAGS_STACK_PROTECTOR} )
-  error("Unknow value for JLN_CXX_FLAGS_STACK_PROTECTOR, expected off, on, strong, all")
+option(JLN_FLAG_WARNINGS_AS_ERROR "jln-warnings-as-error" "off")
+string(TOLOWER ${JLN_FLAG_WARNINGS_AS_ERROR} JLN_FLAG_WARNINGS_AS_ERROR)
+if not ( "off" STREQUAL ${JLN_FLAG_WARNINGS_AS_ERROR} OR "on STREQUAL ${JLN_FLAG_WARNINGS_AS_ERROR} )
+  error("Unknow value for JLN_FLAG_WARNINGS_AS_ERROR, expected off, on")
 endif()
 
-option(JLN_CXX_FLAGS_SANITIZERS "jln-sanitizers" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_SANITIZERS} JLN_CXX_FLAGS_SANITIZERS)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_SANITIZERS} OR "on STREQUAL ${JLN_CXX_FLAGS_SANITIZERS} )
-  error("Unknow value for JLN_CXX_FLAGS_SANITIZERS, expected off, on")
+option(JLN_FLAG_LTO "jln-lto" "off")
+string(TOLOWER ${JLN_FLAG_LTO} JLN_FLAG_LTO)
+if not ( "off" STREQUAL ${JLN_FLAG_LTO} OR "on" STREQUAL ${JLN_FLAG_LTO} OR "fat STREQUAL ${JLN_FLAG_LTO} )
+  error("Unknow value for JLN_FLAG_LTO, expected off, on, fat")
 endif()
 
-option(JLN_CXX_FLAGS_FAST_MATH "jln-fast-math" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_FAST_MATH} JLN_CXX_FLAGS_FAST_MATH)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_FAST_MATH} OR "on STREQUAL ${JLN_CXX_FLAGS_FAST_MATH} )
-  error("Unknow value for JLN_CXX_FLAGS_FAST_MATH, expected off, on")
+option(JLN_FLAG_SANITIZERS_EXTRA "jln-sanitizers-extra" "off")
+string(TOLOWER ${JLN_FLAG_SANITIZERS_EXTRA} JLN_FLAG_SANITIZERS_EXTRA)
+if not ( "off" STREQUAL ${JLN_FLAG_SANITIZERS_EXTRA} OR "thread" STREQUAL ${JLN_FLAG_SANITIZERS_EXTRA} OR "pointer STREQUAL ${JLN_FLAG_SANITIZERS_EXTRA} )
+  error("Unknow value for JLN_FLAG_SANITIZERS_EXTRA, expected off, thread, pointer")
 endif()
 
-option(JLN_CXX_FLAGS_RELRO "jln-relro" "default")
-string(TOLOWER ${JLN_CXX_FLAGS_RELRO} JLN_CXX_FLAGS_RELRO)
-if not ( "default" STREQUAL ${JLN_CXX_FLAGS_RELRO} OR "off" STREQUAL ${JLN_CXX_FLAGS_RELRO} OR "on" STREQUAL ${JLN_CXX_FLAGS_RELRO} OR "full STREQUAL ${JLN_CXX_FLAGS_RELRO} )
-  error("Unknow value for JLN_CXX_FLAGS_RELRO, expected default, off, on, full")
+option(JLN_FLAG_OPTIMIZE "jln-optimize" "default")
+string(TOLOWER ${JLN_FLAG_OPTIMIZE} JLN_FLAG_OPTIMIZE)
+if not ( "default" STREQUAL ${JLN_FLAG_OPTIMIZE} OR "off" STREQUAL ${JLN_FLAG_OPTIMIZE} OR "on" STREQUAL ${JLN_FLAG_OPTIMIZE} OR "size" STREQUAL ${JLN_FLAG_OPTIMIZE} OR "speed" STREQUAL ${JLN_FLAG_OPTIMIZE} OR "full STREQUAL ${JLN_FLAG_OPTIMIZE} )
+  error("Unknow value for JLN_FLAG_OPTIMIZE, expected default, off, on, size, speed, full")
 endif()
 
-option(JLN_CXX_FLAGS_OPTIMIZE "jln-optimize" "default")
-string(TOLOWER ${JLN_CXX_FLAGS_OPTIMIZE} JLN_CXX_FLAGS_OPTIMIZE)
-if not ( "default" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "off" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "on" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "size" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "speed" STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} OR "full STREQUAL ${JLN_CXX_FLAGS_OPTIMIZE} )
-  error("Unknow value for JLN_CXX_FLAGS_OPTIMIZE, expected default, off, on, size, speed, full")
+option(JLN_FLAG_WARNINGS "jln-warnings" "off")
+string(TOLOWER ${JLN_FLAG_WARNINGS} JLN_FLAG_WARNINGS)
+if not ( "on" STREQUAL ${JLN_FLAG_WARNINGS} OR "off" STREQUAL ${JLN_FLAG_WARNINGS} OR "strict STREQUAL ${JLN_FLAG_WARNINGS} )
+  error("Unknow value for JLN_FLAG_WARNINGS, expected on, off, strict")
 endif()
 
-option(JLN_CXX_FLAGS_GLIBCXX_DEBUG "jln-glibcxx-debug" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} JLN_CXX_FLAGS_GLIBCXX_DEBUG)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} OR "on" STREQUAL ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} OR "allow_broken_abi STREQUAL ${JLN_CXX_FLAGS_GLIBCXX_DEBUG} )
-  error("Unknow value for JLN_CXX_FLAGS_GLIBCXX_DEBUG, expected off, on, allow_broken_abi")
+option(JLN_FLAG_SUGGEST "jln-suggest" "off")
+string(TOLOWER ${JLN_FLAG_SUGGEST} JLN_FLAG_SUGGEST)
+if not ( "off" STREQUAL ${JLN_FLAG_SUGGEST} OR "on STREQUAL ${JLN_FLAG_SUGGEST} )
+  error("Unknow value for JLN_FLAG_SUGGEST, expected off, on")
 endif()
 
-option(JLN_CXX_FLAGS_SANITIZERS_EXTRA "jln-sanitizers-extra" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_SANITIZERS_EXTRA} JLN_CXX_FLAGS_SANITIZERS_EXTRA)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_SANITIZERS_EXTRA} OR "thread" STREQUAL ${JLN_CXX_FLAGS_SANITIZERS_EXTRA} OR "pointer STREQUAL ${JLN_CXX_FLAGS_SANITIZERS_EXTRA} )
-  error("Unknow value for JLN_CXX_FLAGS_SANITIZERS_EXTRA, expected off, thread, pointer")
+option(JLN_FLAG_DEBUG "jln-debug" "off")
+string(TOLOWER ${JLN_FLAG_DEBUG} JLN_FLAG_DEBUG)
+if not ( "on" STREQUAL ${JLN_FLAG_DEBUG} OR "off STREQUAL ${JLN_FLAG_DEBUG} )
+  error("Unknow value for JLN_FLAG_DEBUG, expected on, off")
 endif()
 
-option(JLN_CXX_FLAGS_PEDANTIC "jln-pedantic" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_PEDANTIC} JLN_CXX_FLAGS_PEDANTIC)
-if not ( "on" STREQUAL ${JLN_CXX_FLAGS_PEDANTIC} OR "off STREQUAL ${JLN_CXX_FLAGS_PEDANTIC} )
-  error("Unknow value for JLN_CXX_FLAGS_PEDANTIC, expected on, off")
+option(JLN_FLAG_FAST_MATH "jln-fast-math" "off")
+string(TOLOWER ${JLN_FLAG_FAST_MATH} JLN_FLAG_FAST_MATH)
+if not ( "off" STREQUAL ${JLN_FLAG_FAST_MATH} OR "on STREQUAL ${JLN_FLAG_FAST_MATH} )
+  error("Unknow value for JLN_FLAG_FAST_MATH, expected off, on")
 endif()
 
-option(JLN_CXX_FLAGS_SUGGEST "jln-suggest" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_SUGGEST} JLN_CXX_FLAGS_SUGGEST)
-if not ( "off" STREQUAL ${JLN_CXX_FLAGS_SUGGEST} OR "on STREQUAL ${JLN_CXX_FLAGS_SUGGEST} )
-  error("Unknow value for JLN_CXX_FLAGS_SUGGEST, expected off, on")
+option(JLN_FLAG_COVERAGE "jln-coverage" "off")
+string(TOLOWER ${JLN_FLAG_COVERAGE} JLN_FLAG_COVERAGE)
+if not ( "off" STREQUAL ${JLN_FLAG_COVERAGE} OR "on STREQUAL ${JLN_FLAG_COVERAGE} )
+  error("Unknow value for JLN_FLAG_COVERAGE, expected off, on")
 endif()
 
-option(JLN_CXX_FLAGS_WARNINGS "jln-warnings" "off")
-string(TOLOWER ${JLN_CXX_FLAGS_WARNINGS} JLN_CXX_FLAGS_WARNINGS)
-if not ( "on" STREQUAL ${JLN_CXX_FLAGS_WARNINGS} OR "off" STREQUAL ${JLN_CXX_FLAGS_WARNINGS} OR "strict STREQUAL ${JLN_CXX_FLAGS_WARNINGS} )
-  error("Unknow value for JLN_CXX_FLAGS_WARNINGS, expected on, off, strict")
+option(JLN_FLAG_SANITIZERS "jln-sanitizers" "off")
+string(TOLOWER ${JLN_FLAG_SANITIZERS} JLN_FLAG_SANITIZERS)
+if not ( "off" STREQUAL ${JLN_FLAG_SANITIZERS} OR "on STREQUAL ${JLN_FLAG_SANITIZERS} )
+  error("Unknow value for JLN_FLAG_SANITIZERS, expected off, on")
 endif()
 
   if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" || CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
   {
-    if (  NOT ( JLN_CXX_FLAGS_LTO STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_LTO STREQUAL "off") )
     {
       add_definitions(
         -flto
@@ -106,7 +106,7 @@ endif()
         link_libraries(
           -flto-odr-type-merging
         )
-        if (  JLN_CXX_FLAGS_LTO STREQUAL "fat" )
+        if (  JLN_FLAG_LTO STREQUAL "fat" )
         {
           add_definitions(
             -ffat-lto-objects
@@ -114,7 +114,7 @@ endif()
         }
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_COVERAGE STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_COVERAGE STREQUAL "off") )
     {
       add_definitions(
         -coverage
@@ -129,20 +129,60 @@ endif()
         )
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_FAST_MATH STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_DEBUG STREQUAL "off") )
+    {
+      add_definitions(
+        -g
+      )
+    }
+    if (  NOT ( JLN_FLAG_FAST_MATH STREQUAL "off") )
     {
       add_definitions(
         -ffast-math
       )
     }
-    if (  NOT ( JLN_CXX_FLAGS_PEDANTIC STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_OPTIMIZE STREQUAL "default") )
+    {
+      if (  JLN_FLAG_OPTIMIZE STREQUAL "off" )
+      {
+        add_definitions(
+          -O0
+        )
+      }
+      if (  JLN_FLAG_OPTIMIZE STREQUAL "on" )
+      {
+        add_definitions(
+          -O2
+        )
+      }
+      if (  JLN_FLAG_OPTIMIZE STREQUAL "size" )
+      {
+        add_definitions(
+          -Os
+        )
+      }
+      if (  JLN_FLAG_OPTIMIZE STREQUAL "speed" )
+      {
+        add_definitions(
+          -O3
+        )
+      }
+      if (  JLN_FLAG_OPTIMIZE STREQUAL "full" )
+      {
+        add_definitions(
+          -O3
+          -march=native
+        )
+      }
+    }
+    if (  NOT ( JLN_FLAG_PEDANTIC STREQUAL "off") )
     {
       add_definitions(
         -pedantic
         -pedantic-errors
       )
     }
-    if (  NOT ( JLN_CXX_FLAGS_STACK_PROTECTOR STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_STACK_PROTECTOR STREQUAL "off") )
     {
       add_definitions(
         -Wstack-protector
@@ -152,7 +192,7 @@ endif()
       link_libraries(
         -fstack-protector
       )
-      if (  JLN_CXX_FLAGS_STACK_PROTECTOR STREQUAL "strong" )
+      if (  JLN_FLAG_STACK_PROTECTOR STREQUAL "strong" )
       {
         if (  NOT ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" && CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
         {
@@ -164,7 +204,7 @@ endif()
           )
         }
       }
-      elseif (  JLN_CXX_FLAGS_STACK_PROTECTOR STREQUAL "all" )
+      elseif (  JLN_FLAG_STACK_PROTECTOR STREQUAL "all" )
       {
         add_definitions(
           -fstack-protector-all
@@ -174,28 +214,28 @@ endif()
         )
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_RELRO STREQUAL "default") )
+    if (  NOT ( JLN_FLAG_RELRO STREQUAL "default") )
     {
-      if (  JLN_CXX_FLAGS_RELRO STREQUAL "off" )
+      if (  JLN_FLAG_RELRO STREQUAL "off" )
       {
         link_libraries(
           -l-Wl,-z,norelro
         )
       }
-      elseif (  JLN_CXX_FLAGS_RELRO STREQUAL "on" )
+      elseif (  JLN_FLAG_RELRO STREQUAL "on" )
       {
         link_libraries(
           -l-Wl,-z,relro
         )
       }
-      elseif (  JLN_CXX_FLAGS_RELRO STREQUAL "full" )
+      elseif (  JLN_FLAG_RELRO STREQUAL "full" )
       {
         link_libraries(
           -l-Wl,-z,relro,-z,now
         )
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_SUGGEST STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_SUGGEST STREQUAL "off") )
     {
       if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
       {
@@ -212,9 +252,9 @@ endif()
         }
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_GLIBCXX_DEBUG STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_GLIBCXX_DEBUG STREQUAL "off") )
     {
-      if (  JLN_CXX_FLAGS_GLIBCXX_DEBUG STREQUAL "allow_broken_abi" )
+      if (  JLN_FLAG_GLIBCXX_DEBUG STREQUAL "allow_broken_abi" )
       {
         add_definitions(
           -D_GLIBCXX_DEBUG
@@ -226,14 +266,14 @@ endif()
           -D_GLIBCXX_ASSERTIONS
         )
       }
-      if (  NOT ( JLN_CXX_FLAGS_PEDANTIC STREQUAL "off") )
+      if (  NOT ( JLN_FLAG_PEDANTIC STREQUAL "off") )
       {
         add_definitions(
           -D_GLIBCXX_DEBUG_PEDANTIC
         )
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_WARNINGS STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_WARNINGS STREQUAL "off") )
     {
       if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
       {
@@ -343,7 +383,7 @@ endif()
           -Wno-covered-switch-default
         )
       }
-      if (  JLN_CXX_FLAGS_WARNINGS STREQUAL "strict" )
+      if (  JLN_FLAG_WARNINGS STREQUAL "strict" )
       {
         add_definitions(
           -Wsign-conversion
@@ -356,7 +396,7 @@ endif()
         }
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_SANITIZERS STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_SANITIZERS STREQUAL "off") )
     {
       if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
       {
@@ -426,15 +466,15 @@ endif()
         }
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_SANITIZERS_EXTRA STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_SANITIZERS_EXTRA STREQUAL "off") )
     {
-      if (  JLN_CXX_FLAGS_SANITIZERS_EXTRA STREQUAL "thread" )
+      if (  JLN_FLAG_SANITIZERS_EXTRA STREQUAL "thread" )
       {
         add_definitions(
           -fsanitize=thread
         )
       }
-      elseif (  JLN_CXX_FLAGS_SANITIZERS_EXTRA STREQUAL "pointer" )
+      elseif (  JLN_FLAG_SANITIZERS_EXTRA STREQUAL "pointer" )
       {
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" && NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
         {
@@ -445,7 +485,7 @@ endif()
         }
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_REPORT_TEMPLATE STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_REPORT_TEMPLATE STREQUAL "off") )
     {
       if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" && NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
       {
@@ -461,7 +501,7 @@ endif()
         )
       }
     }
-    if (  NOT ( JLN_CXX_FLAGS_WARNINGS_AS_ERROR STREQUAL "off") )
+    if (  NOT ( JLN_FLAG_WARNINGS_AS_ERROR STREQUAL "off") )
     {
       add_definitions(
         -Werror
