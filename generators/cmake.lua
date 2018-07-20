@@ -1,12 +1,12 @@
 function tocmakeoption(optname)
-  return 'JLN_CXX_FLAGS_' .. optname:upper()
+  return 'JLN_FLAG_' .. optname:upper()
 end
 
 return {
-  ignore={
-    optimize=true,
-    debug=true,
-  },
+  --ignore={
+  --  optimize=true,
+  --  debug=true,
+  --},
 
   start=function(_, optprefix)
     optprefix = optprefix or ''
@@ -21,7 +21,7 @@ return {
     end
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return tocmakeoption(optname) .. ' STREQUAL "' .. lvl ..'"' end,
+  _vcond_lvl=function(_, lvl, optname) return tocmakeoption(optname) .. ' STREQUAL "' .. lvl .. '"' end,
   _vcond_verless=function(_, major, minor) return 'CMAKE_CXX_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
   _vcond_comp=function(_, compiler) return 'CMAKE_CXX_COMPILER_ID MATCHES ' .. (compiler == 'gcc' and '"GNU"' or '"Clang"') end,
 
