@@ -1,5 +1,5 @@
 return {
-  s = '',
+  lines = {},
 
   startopt=function(_)
     _.t = {}
@@ -27,8 +27,7 @@ return {
     if #m ~= 0 then
       error('_opts[' .. optname .. ']: unspecified ' .. table.concat(m, ', '))
     end
-
-    _.s = _.s .. optname .. ' = ' .. table.concat(_._opts[optname][2], ', ') .. '\n'
+    _.lines[#_.lines+1] = optname .. ' = ' .. table.concat(_._opts[optname][2], ' ')
     _._opts[optname] = nil
   end,
 
@@ -50,6 +49,7 @@ return {
     for k,x in pairs(_._opts) do
       error('_.opts: no match for ' .. k)
     end
-    return _.s
+    table.sort(_.lines)
+    return table.concat(_.lines, '\n') .. '\n'
   end,
 }

@@ -16,27 +16,44 @@ Supported options are:
 
 <!-- ./compiler-options.lua generators/options.lua -->
 ```
-lto = off on fat
 coverage = off on
-debug = on off
+debug = off on
 fast_math = off on
+glibcxx_debug = off on allow_broken_abi
+lto = off on fat
 optimize = default off on size speed full
 pedantic = on off
-stack_protector = off on strong all
 relro = default off on full
-suggest = off on
-glibcxx_debug = off on allow_broken_abi
-warnings = on off strict
+report_template = off on
 sanitizers = off on
 sanitizers_extra = off thread pointer
+stack_protector = off on strong all
+suggest = off on
+warnings = on off strict
 warnings_as_error = off on
-report_template = off on
+```
+
+# Cmake Generator
+
+```cmake
+set(JLN_DEBUG "on" CACHE STRING "")
+include(....)
+add_definitions(${JLN_CXX_FLAGS})
+link_libraries(${JLN_LINK_FLAGS})
+```
+
+```bash
+cmake -DJLN_DEBUG=on
 ```
 
 # Premake Generator
 
 ```lua
-jln_newoptions() -- Registers new command-line options
+jln_newoptions([options]) -- Registers new command-line options (ex jln_newoptions({debug='on'}))
 jln_getoptions([compiler[, version:string]]) -- return {buildoptions=string, linkoptions=string}
 jln_setoptions([compiler[, version:string]]) -- return {buildoptions=string, linkoptions=string}
+```
+
+```bash
+premake5 --jln-debug=on
 ```
