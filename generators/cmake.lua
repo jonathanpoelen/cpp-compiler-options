@@ -23,14 +23,14 @@ return {
       endif='endif()',
     })
 
-    for optname,v in pairs(_._opts) do
+    for optname,args in _:getoptions() do
       local opt = _:tocmakeoption(optname)
-      _:print('set(' .. opt .. ' "' .. v[2]:match('%w+') .. '" CACHE STRING "")')
-      _:print('if(NOT(("' .. v[2]:gsub(' ', '" STREQUAL ' .. opt .. ') OR ("') .. '" STREQUAL ' .. opt .. ')))')
-      _:print('  message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for ' .. opt .. ', expected: ' .. v[2]:gsub(' ', ', ') .. '")')
+      _:print('set(' .. opt .. ' "' .. args[1] .. '" CACHE STRING "")')
+      _:print('if(NOT(("' .. table.concat(args, '" STREQUAL ' .. opt .. ') OR ("') .. '" STREQUAL ' .. opt .. ')))')
+      _:print('  message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for ' .. opt .. ', expected: ' .. table.concat(args, ', ') .. '")')
       _:print('endif()\n')
       _:print('if(NOT("${JLN_HELP}" STREQUAL "") AND NOT("${JLN_HELP}" STREQUAL "0"))')
-      _:print('  message(STATUS "' .. opt .. '=${' .. opt .. '}\t[' .. v[2]:gsub(' ', ', ') .. ']")')
+      _:print('  message(STATUS "' .. opt .. '=${' .. opt .. '}\t[' .. table.concat(args, ', ') .. ']")')
       _:print('endif()')
     end
     _:print('set(JLN_CXX_FLAGS "")\nset(JLN_LINK_FLAGS "")\n')

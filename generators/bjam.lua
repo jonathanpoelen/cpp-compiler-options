@@ -36,10 +36,10 @@ return {
     _:print('import feature ;')
     _:print('import toolset ;\n')
 
-    for optname,v in pairs(_._opts) do
+    for optname,args in _:getoptions() do
       if optname ~= 'warnings_as_error' then
         local opt = _.optprefix .. tobjamoption(optname)
-        _:print('feature.feature <' .. opt .. '> : ' .. v[2] .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
+        _:print('feature.feature <' .. opt .. '> : ' .. table.concat(args, ' ') .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
         _:print('toolset.flags ' .. opt .. ' ' .. optname:upper() .. ' : <' .. opt .. '> ;\n')
       end
     end

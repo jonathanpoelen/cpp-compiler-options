@@ -311,6 +311,16 @@ G = Or(gcc, clang) {
 
 function noop() end
 
+function fopt(t)
+  local u = { }
+  for _, v in ipairs(t[2]) do u[v] = true end
+  if not u[t[1]] then
+    error('_opts integrity error: disable value ' .. t[1] .. ' is not used')
+  end
+  t[3] = u
+  return t
+end
+
 Vbase = {
   _incidental={
     pedantic=true,
@@ -321,21 +331,21 @@ Vbase = {
   },
 
   _opts={
-    stack_protector={'off', 'off on strong all'},
-    relro={'default', 'default off on full'},
-    lto={'off', 'off on fat'},
-    fast_math={'off', 'off on'},
-    optimize={'default', 'default off on size speed full'},
-    coverage={'off', 'off on'},
-    pedantic={'off', 'on off'},
-    debug={'off', 'on off'},
-    glibcxx_debug={'off', 'off on allow_broken_abi'},
-    sanitizers={'off', 'off on'},
-    sanitizers_extra={'off', 'off thread pointer'},
-    suggest={'off', 'off on'},
-    warnings={'off', 'on off strict'},
-    report_template={'off', 'off on'},
-    warnings_as_error={'off', 'off on'},
+    stack_protector=fopt{'off', {'off', 'on', 'strong', 'all'}},
+    relro=fopt{'default', {'default', 'off', 'on', 'full'}},
+    lto=fopt{'off', {'off', 'on', 'fat'}},
+    fast_math=fopt{'off', {'off', 'on'}},
+    optimize=fopt{'default', {'default', 'off', 'on', 'size', 'speed', 'full'}},
+    coverage=fopt{'off', {'off', 'on'}},
+    pedantic=fopt{'off', {'on', 'off'}},
+    debug=fopt{'off', {'on', 'off'}},
+    glibcxx_debug=fopt{'off', {'off', 'on', 'allow_broken_abi'}},
+    sanitizers=fopt{'off', {'off', 'on'}},
+    sanitizers_extra=fopt{'off', {'off', 'thread', 'pointer'}},
+    suggest=fopt{'off', {'off', 'on'}},
+    warnings=fopt{'off', {'on', 'off', 'strict'}},
+    report_template={'off', {'off', 'on'}},
+    warnings_as_error={'off', {'off', 'on'}},
   },
 
   indent = '',
@@ -479,6 +489,25 @@ Vbase = {
     _.link = accu('_vcond_flags_link', _.link)
     _.define = accu('_vcond_flags_define', _.define)
   end,
+
+  getoptions=function(_)
+    local ordered_keys = {}
+
+    for k in pairs(_._opts) do
+      table.insert(ordered_keys, k)
+    end
+
+    table.sort(ordered_keys)
+    local i = 0
+
+    return function()
+      if i == #ordered_keys then
+        return nil
+      end
+      i = i + 1
+      return ordered_keys[i], _._opts[ordered_keys[i]][2]
+    end
+  end,
 }
 
 function is_cond(t)
@@ -487,7 +516,7 @@ end
 
 function evalflags(t, v, curropt, no_stopcond)
   if is_cond(t) then
-    if t.lvl and not v._opts[curropt][2]:find(t.lvl) then
+    if t.lvl and not v._opts[curropt][3][t.lvl] then
        error('Unknown lvl "' .. t.lvl .. '" in ' .. curropt)
     end
     local r = v:startcond(t, curropt)
@@ -544,6 +573,9 @@ function insert_missing_function(V)
 end
 
 function run(generaton_name, ...)
+  if not generaton_name then
+    error('Missing generator')
+  end
   local V = require(generaton_name:gsub('.lua$', ''))
   insert_missing_function(V)
 

@@ -21,10 +21,10 @@ return {
 
     _:print('function jln_newoptions(defaults)')
     _:print('  defaults = defaults or {}')
-    for optname,v in pairs(_._opts) do
+    for optname,args in _:getoptions() do
       local opt = _:tostroption(optname)
-      _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  v[2]:gsub(' ', '"}, {"') .. '"}}, description="' .. optname .. '"}')
-      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] or "' .. v[2]:match('%w+') .. '") end')
+      _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(args, '"}, {"') .. '"}}, description="' .. optname .. '"}')
+      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] or "' .. args[1] .. '") end')
     end
     _:print('end')
 

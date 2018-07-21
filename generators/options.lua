@@ -17,11 +17,6 @@ return {
     m.on  = true
     m.off = true
 
-    local t = {}
-    _._opts[optname][2]:gsub('(%w+)', function(x) t[x] = true end)
-    if not t[_._opts[optname][1]] then
-      error('_opts[' .. optname .. '][1]: disable value ' .. _._opts[optname][1] .. ' is not used')
-    end
     for k,x in pairs(_.t) do
       if not m[x] then
         error('_opts[' .. optname .. ']: unknown ' .. x)
@@ -33,7 +28,7 @@ return {
       error('_opts[' .. optname .. ']: unspecified ' .. table.concat(m, ', '))
     end
 
-    _.s = _.s .. optname .. ' = ' .. _._opts[optname][2] .. '\n'
+    _.s = _.s .. optname .. ' = ' .. table.concat(_._opts[optname][2], ', ') .. '\n'
     _._opts[optname] = nil
   end,
 
