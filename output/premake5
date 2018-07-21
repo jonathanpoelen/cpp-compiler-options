@@ -2,8 +2,8 @@ function jln_newoptions(defaults)
   defaults = defaults or {}
   newoption{trigger="jln-coverage", allowed={{"off"}, {"on"}}, description="coverage"}
   if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or "off") end
-  newoption{trigger="jln-debug", allowed={{"on"}, {"off"}}, description="debug"}
-  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or "on") end
+  newoption{trigger="jln-debug", allowed={{"off"}, {"on"}}, description="debug"}
+  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or "off") end
   newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
   if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or "off") end
   newoption{trigger="jln-glibcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}}, description="glibcxx_debug"}

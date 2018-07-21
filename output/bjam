@@ -5,7 +5,7 @@ import toolset ;
 feature.feature <jln-coverage> : off on : propagated ;
 toolset.flags jln-coverage COVERAGE : <jln-coverage> ;
 
-feature.feature <jln-debug> : on off : propagated ;
+feature.feature <jln-debug> : off on : propagated ;
 toolset.flags jln-debug DEBUG : <jln-debug> ;
 
 feature.feature <jln-fast-math> : off on : propagated ;
