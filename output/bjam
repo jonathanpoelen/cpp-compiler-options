@@ -2,20 +2,17 @@ import property-set ;
 import feature ;
 import toolset ;
 
-feature.feature <jln-coverage> : off on : propagated ;
-toolset.flags jln-coverage COVERAGE : <jln-coverage> ;
+feature.feature <jln-sanitizers> : off on : propagated ;
+toolset.flags jln-sanitizers SANITIZERS : <jln-sanitizers> ;
 
-feature.feature <jln-lto> : off on fat : propagated ;
-toolset.flags jln-lto LTO : <jln-lto> ;
+feature.feature <jln-sanitizers-extra> : off thread pointer : propagated ;
+toolset.flags jln-sanitizers-extra SANITIZERS_EXTRA : <jln-sanitizers-extra> ;
 
-feature.feature <jln-warnings> : on off strict : incidental ;
-toolset.flags jln-warnings WARNINGS : <jln-warnings> ;
+feature.feature <jln-relro> : default off on full : propagated ;
+toolset.flags jln-relro RELRO : <jln-relro> ;
 
-feature.feature <jln-suggest> : off on : incidental ;
-toolset.flags jln-suggest SUGGEST : <jln-suggest> ;
-
-feature.feature <jln-fast-math> : off on : propagated ;
-toolset.flags jln-fast-math FAST_MATH : <jln-fast-math> ;
+feature.feature <jln-report-template> : off on : incidental ;
+toolset.flags jln-report-template REPORT_TEMPLATE : <jln-report-template> ;
 
 feature.feature <jln-debug> : on off : propagated ;
 toolset.flags jln-debug DEBUG : <jln-debug> ;
@@ -23,26 +20,29 @@ toolset.flags jln-debug DEBUG : <jln-debug> ;
 feature.feature <jln-pedantic> : on off : incidental ;
 toolset.flags jln-pedantic PEDANTIC : <jln-pedantic> ;
 
-feature.feature <jln-optimize> : default off on size speed full : propagated ;
-toolset.flags jln-optimize OPTIMIZE : <jln-optimize> ;
-
-feature.feature <jln-report-template> : off on : incidental ;
-toolset.flags jln-report-template REPORT_TEMPLATE : <jln-report-template> ;
-
-feature.feature <jln-sanitizers> : off on : propagated ;
-toolset.flags jln-sanitizers SANITIZERS : <jln-sanitizers> ;
-
-feature.feature <jln-relro> : default off on full : propagated ;
-toolset.flags jln-relro RELRO : <jln-relro> ;
-
 feature.feature <jln-stack-protector> : off on strong all : propagated ;
 toolset.flags jln-stack-protector STACK_PROTECTOR : <jln-stack-protector> ;
 
-feature.feature <jln-sanitizers-extra> : off thread pointer : propagated ;
-toolset.flags jln-sanitizers-extra SANITIZERS_EXTRA : <jln-sanitizers-extra> ;
+feature.feature <jln-suggest> : off on : incidental ;
+toolset.flags jln-suggest SUGGEST : <jln-suggest> ;
+
+feature.feature <jln-fast-math> : off on : propagated ;
+toolset.flags jln-fast-math FAST_MATH : <jln-fast-math> ;
+
+feature.feature <jln-lto> : off on fat : propagated ;
+toolset.flags jln-lto LTO : <jln-lto> ;
+
+feature.feature <jln-warnings> : on off strict : incidental ;
+toolset.flags jln-warnings WARNINGS : <jln-warnings> ;
 
 feature.feature <jln-glibcxx-debug> : off on allow_broken_abi : propagated ;
 toolset.flags jln-glibcxx-debug GLIBCXX_DEBUG : <jln-glibcxx-debug> ;
+
+feature.feature <jln-optimize> : default off on size speed full : propagated ;
+toolset.flags jln-optimize OPTIMIZE : <jln-optimize> ;
+
+feature.feature <jln-coverage> : off on : propagated ;
+toolset.flags jln-coverage COVERAGE : <jln-coverage> ;
 
 import property-set ;
 import string ;

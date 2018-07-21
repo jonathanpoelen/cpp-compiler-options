@@ -1,35 +1,35 @@
 function jln_newoptions(defaults)
   defaults = defaults or {}
-  newoption{trigger="jln-warnings-as-error", allowed={{"off"}, {"on"}}, description="warnings_as_error"}
-  if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or "off") end
-  newoption{trigger="jln-lto", allowed={{"off"}, {"on"}, {"fat"}}, description="lto"}
-  if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or "off") end
-  newoption{trigger="jln-coverage", allowed={{"off"}, {"on"}}, description="coverage"}
-  if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or "off") end
-  newoption{trigger="jln-report-template", allowed={{"off"}, {"on"}}, description="report_template"}
-  if not _OPTIONS["jln-report-template"] then _OPTIONS["jln-report-template"] = (defaults["report_template"] or "off") end
-  newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
-  if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or "off") end
-  newoption{trigger="jln-suggest", allowed={{"off"}, {"on"}}, description="suggest"}
-  if not _OPTIONS["jln-suggest"] then _OPTIONS["jln-suggest"] = (defaults["suggest"] or "off") end
-  newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
-  if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or "default") end
-  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"full"}}, description="optimize"}
-  if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or "default") end
-  newoption{trigger="jln-sanitizers-extra", allowed={{"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
-  if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or "off") end
   newoption{trigger="jln-sanitizers", allowed={{"off"}, {"on"}}, description="sanitizers"}
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or "off") end
+  newoption{trigger="jln-debug", allowed={{"on"}, {"off"}}, description="debug"}
+  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or "off") end
   newoption{trigger="jln-stack-protector", allowed={{"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or "off") end
   newoption{trigger="jln-glibcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}}, description="glibcxx_debug"}
   if not _OPTIONS["jln-glibcxx-debug"] then _OPTIONS["jln-glibcxx-debug"] = (defaults["glibcxx_debug"] or "off") end
-  newoption{trigger="jln-pedantic", allowed={{"on"}, {"off"}}, description="pedantic"}
-  if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or "off") end
-  newoption{trigger="jln-debug", allowed={{"on"}, {"off"}}, description="debug"}
-  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or "off") end
+  newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
+  if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or "default") end
+  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"full"}}, description="optimize"}
+  if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or "default") end
+  newoption{trigger="jln-coverage", allowed={{"off"}, {"on"}}, description="coverage"}
+  if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or "off") end
+  newoption{trigger="jln-warnings-as-error", allowed={{"off"}, {"on"}}, description="warnings_as_error"}
+  if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or "off") end
+  newoption{trigger="jln-suggest", allowed={{"off"}, {"on"}}, description="suggest"}
+  if not _OPTIONS["jln-suggest"] then _OPTIONS["jln-suggest"] = (defaults["suggest"] or "off") end
   newoption{trigger="jln-warnings", allowed={{"on"}, {"off"}, {"strict"}}, description="warnings"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or "off") end
+  newoption{trigger="jln-report-template", allowed={{"off"}, {"on"}}, description="report_template"}
+  if not _OPTIONS["jln-report-template"] then _OPTIONS["jln-report-template"] = (defaults["report_template"] or "off") end
+  newoption{trigger="jln-lto", allowed={{"off"}, {"on"}, {"fat"}}, description="lto"}
+  if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or "off") end
+  newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
+  if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or "off") end
+  newoption{trigger="jln-pedantic", allowed={{"on"}, {"off"}}, description="pedantic"}
+  if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or "off") end
+  newoption{trigger="jln-sanitizers-extra", allowed={{"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
+  if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or "off") end
 end
 function jln_setoptions(compiler, version)
   local options = jln_getoptions()
