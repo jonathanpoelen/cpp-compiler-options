@@ -1,0 +1,9 @@
+project(test)
+cmake_minimum_required(VERSION 2.8)
+
+include(../../output/cmake)
+
+message(STATUS "cxx: ${JLN_CXX_FLAGS}")
+message(STATUS "link: ${JLN_LINK_FLAGS}")
+
+add_executable(test test.cpp)

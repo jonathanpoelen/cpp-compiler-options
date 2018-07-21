@@ -32,3 +32,11 @@ sanitizers_extra = off thread pointer
 warnings_as_error = off on
 report_template = off on
 ```
+
+# Premake Generator
+
+```lua
+jln_newoptions() -- Registers new command-line options
+jln_getoptions([compiler[, version:string]]) -- return {buildoptions=string, linkoptions=string}
+jln_setoptions([compiler[, version:string]]) -- return {buildoptions=string, linkoptions=string}
+```

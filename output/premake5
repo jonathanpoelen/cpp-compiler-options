@@ -1,52 +1,71 @@
-function jln_new_options()
-  newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
-  if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = "default" end
-  newoption{trigger="jln-stack-protector", allowed={{"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
-  if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = "off" end
-  newoption{trigger="jln-glibcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}}, description="glibcxx_debug"}
-  if not _OPTIONS["jln-glibcxx-debug"] then _OPTIONS["jln-glibcxx-debug"] = "off" end
-  newoption{trigger="jln-pedantic", allowed={{"on"}, {"off"}}, description="pedantic"}
-  if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = "off" end
-  newoption{trigger="jln-report-template", allowed={{"off"}, {"on"}}, description="report_template"}
-  if not _OPTIONS["jln-report-template"] then _OPTIONS["jln-report-template"] = "off" end
+function jln_newoptions(defaults)
+  defaults = defaults or {}
   newoption{trigger="jln-warnings-as-error", allowed={{"off"}, {"on"}}, description="warnings_as_error"}
-  if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = "off" end
+  if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or "off") end
   newoption{trigger="jln-lto", allowed={{"off"}, {"on"}, {"fat"}}, description="lto"}
-  if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = "off" end
-  newoption{trigger="jln-sanitizers-extra", allowed={{"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
-  if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = "off" end
-  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"full"}}, description="optimize"}
-  if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = "default" end
-  newoption{trigger="jln-warnings", allowed={{"on"}, {"off"}, {"strict"}}, description="warnings"}
-  if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = "off" end
-  newoption{trigger="jln-suggest", allowed={{"off"}, {"on"}}, description="suggest"}
-  if not _OPTIONS["jln-suggest"] then _OPTIONS["jln-suggest"] = "off" end
-  newoption{trigger="jln-debug", allowed={{"on"}, {"off"}}, description="debug"}
-  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = "off" end
-  newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
-  if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = "off" end
+  if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or "off") end
   newoption{trigger="jln-coverage", allowed={{"off"}, {"on"}}, description="coverage"}
-  if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = "off" end
+  if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or "off") end
+  newoption{trigger="jln-report-template", allowed={{"off"}, {"on"}}, description="report_template"}
+  if not _OPTIONS["jln-report-template"] then _OPTIONS["jln-report-template"] = (defaults["report_template"] or "off") end
+  newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
+  if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or "off") end
+  newoption{trigger="jln-suggest", allowed={{"off"}, {"on"}}, description="suggest"}
+  if not _OPTIONS["jln-suggest"] then _OPTIONS["jln-suggest"] = (defaults["suggest"] or "off") end
+  newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
+  if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or "default") end
+  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"full"}}, description="optimize"}
+  if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or "default") end
+  newoption{trigger="jln-sanitizers-extra", allowed={{"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
+  if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or "off") end
   newoption{trigger="jln-sanitizers", allowed={{"off"}, {"on"}}, description="sanitizers"}
-  if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = "off" end
+  if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or "off") end
+  newoption{trigger="jln-stack-protector", allowed={{"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
+  if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or "off") end
+  newoption{trigger="jln-glibcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}}, description="glibcxx_debug"}
+  if not _OPTIONS["jln-glibcxx-debug"] then _OPTIONS["jln-glibcxx-debug"] = (defaults["glibcxx_debug"] or "off") end
+  newoption{trigger="jln-pedantic", allowed={{"on"}, {"off"}}, description="pedantic"}
+  if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or "off") end
+  newoption{trigger="jln-debug", allowed={{"on"}, {"off"}}, description="debug"}
+  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or "off") end
+  newoption{trigger="jln-warnings", allowed={{"on"}, {"off"}, {"strict"}}, description="warnings"}
+  if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or "off") end
+end
+function jln_setoptions(compiler, version)
+  local options = jln_getoptions()
+  buildoptions(options.buildoptions)
+  linkoptions(options.linkoptions)
+  return options
 end
 
-function jln_get_options(compiler, version)
-      if compiler == 'g++' then compiler = 'gcc'
+function jln_getoptions(compiler, version)
+  if not compiler then compiler = _OPTIONS['cc'] or 'gcc'
+  elseif compiler == 'g++' then compiler = 'gcc'
   elseif compiler == 'clang++' then compiler = 'clang'
   end
 
   local compversion = {}
-  for i in (version or os.outputof(compiler .. " --version"):gsub("^[^ ]+ [^ ]+ ([^ ]+).*", "%1")):gmatch("%d+") do
+  local output = version
+  if not output then
+     output = os.outputof(compiler .. " --version")
+     if not output then
+       return {buildoptions='', linkoptions=''}
+     end
+     version = output:gsub("^[^ ]+ [^ ]+ ([^ ]+).*", "%1")
+  end
+  for i in version:gmatch("%d+") do
     compversion[#compversion+1] = tonumber(i)
   end
-  compversion = compversion[1] * 100 + compversion[2]
+  if not compversion[1] then
+    return
+  end
+  compversion = compversion[1] * 100 + (compversion[2] or 0)
 
   local jln_buildoptions, jln_linkoptions = '', ''
 
   if ( compiler == "gcc" or compiler == "clang" ) then
   
-    if not ( _OPTIONS["lto"] == "off") then
+    if not ( _OPTIONS["jln-lto"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -flto"
       jln_linkoptions = jln_linkoptions .. " -flto"
@@ -54,13 +73,13 @@ function jln_get_options(compiler, version)
       
         jln_buildoptions = jln_buildoptions .. " -flto-odr-type-merging"
         jln_linkoptions = jln_linkoptions .. " -flto-odr-type-merging"
-        if _OPTIONS["lto"] == "fat" then
+        if _OPTIONS["jln-lto"] == "fat" then
         
           jln_buildoptions = jln_buildoptions .. " -ffat-lto-objects"
         end
       end
     end
-    if not ( _OPTIONS["coverage"] == "off") then
+    if not ( _OPTIONS["jln-coverage"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -coverage"
       jln_linkoptions = jln_linkoptions .. " -l-coverage"
@@ -69,46 +88,46 @@ function jln_get_options(compiler, version)
         jln_linkoptions = jln_linkoptions .. " -l-lprofile_rt"
       end
     end
-    if not ( _OPTIONS["debug"] == "off") then
+    if not ( _OPTIONS["jln-debug"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -g"
     end
-    if not ( _OPTIONS["fast_math"] == "off") then
+    if not ( _OPTIONS["jln-fast-math"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -ffast-math"
     end
-    if not ( _OPTIONS["optimize"] == "default") then
+    if not ( _OPTIONS["jln-optimize"] == "default") then
     
-      if _OPTIONS["optimize"] == "off" then
+      if _OPTIONS["jln-optimize"] == "off" then
       
         jln_buildoptions = jln_buildoptions .. " -O0"
       end
-      if _OPTIONS["optimize"] == "on" then
+      if _OPTIONS["jln-optimize"] == "on" then
       
         jln_buildoptions = jln_buildoptions .. " -O2"
       end
-      if _OPTIONS["optimize"] == "size" then
+      if _OPTIONS["jln-optimize"] == "size" then
       
         jln_buildoptions = jln_buildoptions .. " -Os"
       end
-      if _OPTIONS["optimize"] == "speed" then
+      if _OPTIONS["jln-optimize"] == "speed" then
       
         jln_buildoptions = jln_buildoptions .. " -O3"
       end
-      if _OPTIONS["optimize"] == "full" then
+      if _OPTIONS["jln-optimize"] == "full" then
       
         jln_buildoptions = jln_buildoptions .. " -O3 -march=native"
       end
     end
-    if not ( _OPTIONS["pedantic"] == "off") then
+    if not ( _OPTIONS["jln-pedantic"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -pedantic -pedantic-errors"
     end
-    if not ( _OPTIONS["stack_protector"] == "off") then
+    if not ( _OPTIONS["jln-stack-protector"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -Wstack-protector -fstack-protector -D_FORTIFY_SOURCE=2"
       jln_linkoptions = jln_linkoptions .. " -fstack-protector"
-      if _OPTIONS["stack_protector"] == "strong" then
+      if _OPTIONS["jln-stack-protector"] == "strong" then
       
         if not ( compiler == "gcc" and compversion < 409 ) then
         
@@ -116,28 +135,28 @@ function jln_get_options(compiler, version)
           jln_linkoptions = jln_linkoptions .. " -fstack-protector-strong"
         end
       
-      elseif _OPTIONS["stack_protector"] == "all" then
+      elseif _OPTIONS["jln-stack-protector"] == "all" then
       
         jln_buildoptions = jln_buildoptions .. " -fstack-protector-all"
         jln_linkoptions = jln_linkoptions .. " -fstack-protector-all"
       end
     end
-    if not ( _OPTIONS["relro"] == "default") then
+    if not ( _OPTIONS["jln-relro"] == "default") then
     
-      if _OPTIONS["relro"] == "off" then
+      if _OPTIONS["jln-relro"] == "off" then
       
         jln_linkoptions = jln_linkoptions .. " -l-Wl,-z,norelro"
       
-      elseif _OPTIONS["relro"] == "on" then
+      elseif _OPTIONS["jln-relro"] == "on" then
       
         jln_linkoptions = jln_linkoptions .. " -l-Wl,-z,relro"
       
-      elseif _OPTIONS["relro"] == "full" then
+      elseif _OPTIONS["jln-relro"] == "full" then
       
         jln_linkoptions = jln_linkoptions .. " -l-Wl,-z,relro,-z,now"
       end
     end
-    if not ( _OPTIONS["suggest"] == "off") then
+    if not ( _OPTIONS["jln-suggest"] == "off") then
     
       if compiler == "gcc" then
       
@@ -148,9 +167,9 @@ function jln_get_options(compiler, version)
         end
       end
     end
-    if not ( _OPTIONS["glibcxx_debug"] == "off") then
+    if not ( _OPTIONS["jln-glibcxx-debug"] == "off") then
     
-      if _OPTIONS["glibcxx_debug"] == "allow_broken_abi" then
+      if _OPTIONS["jln-glibcxx-debug"] == "allow_broken_abi" then
       
         jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG"
       
@@ -158,12 +177,12 @@ function jln_get_options(compiler, version)
       
         jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_ASSERTIONS"
       end
-      if not ( _OPTIONS["pedantic"] == "off") then
+      if not ( _OPTIONS["jln-pedantic"] == "off") then
       
         jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG_PEDANTIC"
       end
     end
-    if not ( _OPTIONS["warnings"] == "off") then
+    if not ( _OPTIONS["jln-warnings"] == "off") then
     
       if compiler == "gcc" then
       
@@ -205,7 +224,7 @@ function jln_get_options(compiler, version)
       
         jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-shadow -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default"
       end
-      if _OPTIONS["warnings"] == "strict" then
+      if _OPTIONS["jln-warnings"] == "strict" then
       
         jln_buildoptions = jln_buildoptions .. " -Wsign-conversion"
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
@@ -214,7 +233,7 @@ function jln_get_options(compiler, version)
         end
       end
     end
-    if not ( _OPTIONS["sanitizers"] == "off") then
+    if not ( _OPTIONS["jln-sanitizers"] == "off") then
     
       if compiler == "clang" then
       
@@ -252,13 +271,13 @@ function jln_get_options(compiler, version)
         end
       end
     end
-    if not ( _OPTIONS["sanitizers_extra"] == "off") then
+    if not ( _OPTIONS["jln-sanitizers-extra"] == "off") then
     
-      if _OPTIONS["sanitizers_extra"] == "thread" then
+      if _OPTIONS["jln-sanitizers-extra"] == "thread" then
       
         jln_buildoptions = jln_buildoptions .. " -fsanitize=thread"
       
-      elseif _OPTIONS["sanitizers_extra"] == "pointer" then
+      elseif _OPTIONS["jln-sanitizers-extra"] == "pointer" then
       
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
         
@@ -266,7 +285,7 @@ function jln_get_options(compiler, version)
         end
       end
     end
-    if not ( _OPTIONS["report_template"] == "off") then
+    if not ( _OPTIONS["jln-report-template"] == "off") then
     
       if ( compiler == "gcc" and not ( compversion < 800 ) ) then
       
@@ -277,10 +296,11 @@ function jln_get_options(compiler, version)
         jln_buildoptions = jln_buildoptions .. " -fno-elide-type"
       end
     end
-    if not ( _OPTIONS["warnings_as_error"] == "off") then
+    if not ( _OPTIONS["jln-warnings-as-error"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -Werror"
     end
   end
   return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}
 end
+return m

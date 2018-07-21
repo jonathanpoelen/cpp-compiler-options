@@ -19,6 +19,7 @@ return {
       _:print('  error("Unknow value for ' .. opt .. ', expected ' .. v[2]:gsub(' ', ', ') .. '")')
       _:print('endif()\n')
     end
+    _:print('set(JLN_CXX_FLAGS "")\n')
   end,
 
   _vcond_lvl=function(_, lvl, optname) return tocmakeoption(optname) .. ' STREQUAL "' .. lvl .. '"' end,
