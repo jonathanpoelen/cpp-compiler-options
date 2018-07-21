@@ -24,7 +24,7 @@ return {
     for optname,v in pairs(_._opts) do
       local opt = _:tostroption(optname)
       _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  v[2]:gsub(' ', '"}, {"') .. '"}}, description="' .. optname .. '"}')
-      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] or "' .. v[1] .. '") end')
+      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] or "' .. v[2]:match('%w+') .. '") end')
     end
     _:print('end')
 

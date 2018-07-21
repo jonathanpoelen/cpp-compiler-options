@@ -25,7 +25,7 @@ return {
 
     for optname,v in pairs(_._opts) do
       local opt = _:tocmakeoption(optname)
-      _:print('set(' .. opt .. ' "' .. v[1] .. '" CACHE STRING "")')
+      _:print('set(' .. opt .. ' "' .. v[2]:match('%w+') .. '" CACHE STRING "")')
       _:print('if(NOT(("' .. v[2]:gsub(' ', '" STREQUAL ' .. opt .. ') OR ("') .. '" STREQUAL ' .. opt .. ')))')
       _:print('  message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for ' .. opt .. ', expected: ' .. v[2]:gsub(' ', ', ') .. '")')
       _:print('endif()\n')
