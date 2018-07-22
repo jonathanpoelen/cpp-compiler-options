@@ -29,10 +29,15 @@ return {
       _:print('if(NOT(("' .. table.concat(args, '" STREQUAL ' .. opt .. ') OR ("') .. '" STREQUAL ' .. opt .. ')))')
       _:print('  message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for ' .. opt .. ', expected: ' .. table.concat(args, ', ') .. '")')
       _:print('endif()\n')
-      _:print('if(NOT("${JLN_HELP}" STREQUAL "") AND NOT("${JLN_HELP}" STREQUAL "0"))')
-      _:print('  message(STATUS "' .. opt .. '=${' .. opt .. '}\t[' .. table.concat(args, ', ') .. ']")')
-      _:print('endif()')
     end
+
+    _:print('if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")')
+    for optname,args in _:getoptions() do
+      local opt = _:tocmakeoption(optname)
+      _:print('  message(STATUS "' .. opt .. '=${' .. opt .. '}\t[' .. table.concat(args, ', ') .. ']")')
+    end
+    _:print('endif()')
+
     _:print('set(JLN_CXX_FLAGS "")\nset(JLN_LINK_FLAGS "")\n')
   end,
 
