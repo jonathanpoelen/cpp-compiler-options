@@ -1,0 +1,7 @@
+include ../../output/bjam ;
+
+project test : requirements
+  <conditional>@jln_flags
+: default-build release ;
+
+exe test : test.cpp ;
