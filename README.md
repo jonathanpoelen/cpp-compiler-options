@@ -1,4 +1,4 @@
-Compilation options for different versions of Clang and GCC. Provided a generator and different file formats (`cmake`, `premake5`, `bjam/`b2`, ...).
+Compilation options for different versions of Clang and GCC. Provided a generator and different file formats (`cmake`, `premake5`, `bjam`/`b2`, ...).
 
 The `output` directory contains files for `cmake`, `bjam` and command-line options for `gcc` and `clang`.
 
@@ -60,6 +60,7 @@ jln_setoptions([compiler[, version:string]]) -- return {buildoptions=string, lin
 
 ```jam
 project name : requirements
+  <jln-lto>on # enable jln-lto
   <conditional>@jln_flags
 : default-build release ;
 ```
