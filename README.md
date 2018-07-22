@@ -57,3 +57,15 @@ jln_setoptions([compiler[, version:string]]) -- return {buildoptions=string, lin
 ```bash
 premake5 --jln-debug=on
 ```
+
+# Bjam/B2 Generator
+
+```jam
+project name : requirements
+  <conditional>@jln_flags
+: default-build release ;
+```
+
+```bash
+bjam jln-debug=on
+```

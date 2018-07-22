@@ -50,7 +50,7 @@ local ORIGINAL_TOOLSET = 0 ;
 local COMP_VERSION = 00.00 ;
 local FLAGS = ;
 
-rule flags ( properties * )
+rule jln_flags ( properties * )
 {
   local ps = [ property-set.create $(properties) ] ;
   local toolset = [ $(ps).get <toolset> ] ;
