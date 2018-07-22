@@ -57,6 +57,9 @@ target_link_libraries(test lib_project)
 jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS SANITIZERS on)
 
 add_library(lib_project2 INTERFACE)
+target_link_libraries(lib_project2 INTERFACE ${LINK_FLAGS})
+target_compile_options(lib_project2 INTERFACE ${CXX_FLAGS})
+
 add_definitions(lib_project2)
 link_libraries(lib_project2)
 ```
