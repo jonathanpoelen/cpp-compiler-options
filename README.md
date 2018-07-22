@@ -35,25 +35,46 @@ warnings = on off strict
 warnings_as_error = off on
 ```
 
+
 # Cmake Generator
 
 ```cmake
-set(JLN_DEBUG "on" CACHE STRING "") # set a default value
-include(output/cmake)
-add_definitions(${JLN_CXX_FLAGS})
-link_libraries(${JLN_LINK_FLAGS})
+# init cache and cli parser
+# jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
+# (cmake -DJLN_VERBOSE=on -DJLN_DEBUG=on)
+jln_init_flags(DEBUG on) # set DEBUG default value to "on"
+
+
+add_library(lib_project INTERFACE)
+# jln_target_interface(<libname> [<jln-option> <value>]... [DISABLE_OTHERS on|off])
+jln_target_interface(lib_project)
+
+add_executable(test test.cpp)
+target_link_libraries(test lib_project)
+
+
+# jln_flags(CXX_VAR <out-variable> LINK_VAR <out-variable> [<jln-option> <value>]... [DISABLE_OTHERS on|off])
+jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS SANITIZERS on)
+
+add_library(lib_project2 INTERFACE)
+add_definitions(lib_project2)
+link_libraries(lib_project2)
 ```
 
-```bash
-cmake JLN_VERBOSE=on
-```
 
 # Premake Generator
 
 ```lua
-jln_newoptions([options]) -- Registers new command-line options (ex jln_newoptions({debug='on'}))
-jln_getoptions([compiler[, version:string]]) -- return {buildoptions=string, linkoptions=string}
-jln_setoptions([compiler[, version:string]]) -- return {buildoptions=string, linkoptions=string}
+-- Registers new command-line options (ex jln_newoptions({debug='on'}))
+jln_newoptions([default_values])
+
+-- return {buildoptions=string, linkoptions=string}
+jln_getoptions(values:table[, disable_others:boolean])
+jln_getoptions([compiler:string[, version:string[, values:table[, disable_others:boolean]]]])
+
+-- use buildoptions and linkoptions then return {buildoptions=string, linkoptions=string}
+jln_setoptions(values:table[, disable_others:boolean])
+jln_setoptions([compiler:string[, version:string[, values:table[, disable_others:boolean]]]])
 ```
 
 # Bjam/B2 Generator

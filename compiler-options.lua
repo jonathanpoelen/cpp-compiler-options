@@ -490,6 +490,7 @@ Vbase = {
     _.define = accu('_vcond_flags_define', _.define)
   end,
 
+  -- iterator: optname,args,disable_value
   getoptions=function(_)
     local ordered_keys = {}
 
@@ -505,7 +506,9 @@ Vbase = {
         return nil
       end
       i = i + 1
-      return ordered_keys[i], _._opts[ordered_keys[i]][2]
+      local k = ordered_keys[i]
+      local v = _._opts[k]
+      return k, v[2], v[1]
     end
   end,
 }

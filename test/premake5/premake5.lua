@@ -9,6 +9,6 @@ project "HelloWorld"
    language "C++"
 
    jln_newoptions({warnings='on'})
-   options=jln_setoptions()
+   options=jln_setoptions({sanitizers=true})
    printf("cxx=%s\nlink=%s", options.buildoptions, options.linkoptions)
    files { "test.cpp" }
