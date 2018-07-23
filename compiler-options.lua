@@ -306,6 +306,14 @@ G = Or(gcc, clang) {
     },
   },
 
+  opt'color' {
+    Or(gcc(4,9), clang) {
+      lvl'auto' { cxx'-fdiagnostics-color=auto' } /
+      lvl'never' { cxx'-fdiagnostics-color=never' } /
+      lvl'always' { cxx'-fdiagnostics-color=always' },
+    },
+  },
+
   opt'warnings_as_error' { cxx'-Werror', },
 }
 
@@ -321,8 +329,17 @@ function fopt(t)
   return t
 end
 
+function fopts(t)
+  local r = {}
+  for k,v in pairs(t) do
+    r[k] = fopt(v)
+  end
+  return r
+end
+
 Vbase = {
   _incidental={
+    color=true,
     pedantic=true,
     suggest=true,
     warnings=true,
@@ -330,22 +347,23 @@ Vbase = {
     report_template=true,
   },
 
-  _opts={
-    stack_protector=fopt{'off', {'off', 'on', 'strong', 'all'}},
-    relro=fopt{'default', {'default', 'off', 'on', 'full'}},
-    lto=fopt{'off', {'off', 'on', 'fat'}},
-    fast_math=fopt{'off', {'off', 'on'}},
-    optimize=fopt{'default', {'default', 'off', 'on', 'size', 'speed', 'full'}},
-    coverage=fopt{'off', {'off', 'on'}},
-    pedantic=fopt{'off', {'on', 'off'}},
-    debug=fopt{'off', {'off', 'on'}},
-    glibcxx_debug=fopt{'off', {'off', 'on', 'allow_broken_abi'}},
-    sanitizers=fopt{'off', {'off', 'on'}},
-    sanitizers_extra=fopt{'off', {'off', 'thread', 'pointer'}},
-    suggest=fopt{'off', {'off', 'on'}},
-    warnings=fopt{'off', {'on', 'off', 'strict'}},
+  _opts=fopts{
+    stack_protector={'off', {'off', 'on', 'strong', 'all'}},
+    relro={'default', {'default', 'off', 'on', 'full'}},
+    lto={'off', {'off', 'on', 'fat'}},
+    fast_math={'off', {'off', 'on'}},
+    optimize={'default', {'default', 'off', 'on', 'size', 'speed', 'full'}},
+    coverage={'off', {'off', 'on'}},
+    pedantic={'off', {'on', 'off'}},
+    debug={'off', {'off', 'on'}},
+    glibcxx_debug={'off', {'off', 'on', 'allow_broken_abi'}},
+    sanitizers={'off', {'off', 'on'}},
+    sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
+    suggest={'off', {'off', 'on'}},
+    warnings={'off', {'on', 'off', 'strict'}},
     report_template={'off', {'off', 'on'}},
     warnings_as_error={'off', {'off', 'on'}},
+    color={'default', {'default', 'auto', 'never', 'always'}},
   },
 
   indent = '',

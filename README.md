@@ -18,6 +18,7 @@ Supported options are:
 
 <!-- ./compiler-options.lua generators/options.lua -->
 ```
+color = default auto never always
 coverage = off on
 debug = off on
 fast_math = off on
