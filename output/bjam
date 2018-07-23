@@ -2,6 +2,9 @@ import property-set ;
 import feature ;
 import toolset ;
 
+feature.feature <jln-color> : default auto never always : incidental ;
+toolset.flags jln-color COLOR : <jln-color> ;
+
 feature.feature <jln-coverage> : off on : propagated ;
 toolset.flags jln-coverage COVERAGE : <jln-coverage> ;
 
@@ -435,6 +438,30 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>-fno-elide-type
           ;
+        }
+      }
+      if ! (  <jln-color>default in $(properties) )
+      {
+        if (  (  $(toolset) = gcc && ! (  $(version) < 04.09  )  ) || $(toolset) = clang  )
+        {
+          if <jln-color>auto in $(properties)
+          {
+            flags +=
+              <cxxflags>-fdiagnostics-color=auto
+            ;
+          }
+          else if <jln-color>never in $(properties)
+          {
+            flags +=
+              <cxxflags>-fdiagnostics-color=never
+            ;
+          }
+          else if <jln-color>always in $(properties)
+          {
+            flags +=
+              <cxxflags>-fdiagnostics-color=always
+            ;
+          }
         }
       }
     }

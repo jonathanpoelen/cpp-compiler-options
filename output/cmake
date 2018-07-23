@@ -1,9 +1,19 @@
 # jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
 function(jln_init_flags)
-  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COVERAGE;DEBUG;FAST_MATH;GLIBCXX_DEBUG;LTO;OPTIMIZE;PEDANTIC;RELRO;REPORT_TEMPLATE;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;SUGGEST;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;COVERAGE;DEBUG;FAST_MATH;GLIBCXX_DEBUG;LTO;OPTIMIZE;PEDANTIC;RELRO;REPORT_TEMPLATE;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;SUGGEST;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
 
   if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)
     set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_COLOR)
+    set(JLN_COLOR ${JLN_DEFAULT_FLAG_COLOR} CACHE STING "")
+  else()
+    set(JLN_COLOR "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_COLOR) OR ("auto" STREQUAL JLN_COLOR) OR ("never" STREQUAL JLN_COLOR) OR ("always" STREQUAL JLN_COLOR)))
+    message(FATAL_ERROR "Unknow value \"${JLN_COLOR}\" for JLN_COLOR, expected: default, auto, never, always")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_COVERAGE)
@@ -157,6 +167,7 @@ function(jln_init_flags)
   endif()
 
   if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")
+    message(STATUS "JLN_COLOR=${JLN_COLOR}	[default, auto, never, always]")
     message(STATUS "JLN_COVERAGE=${JLN_COVERAGE}	[off, on]")
     message(STATUS "JLN_DEBUG=${JLN_DEBUG}	[off, on]")
     message(STATUS "JLN_FAST_MATH=${JLN_FAST_MATH}	[off, on]")
@@ -187,7 +198,15 @@ endfunction()
 function(jln_flags)
   set(CXX_FLAGS "")
   set(LINK_LINK "")
-  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COVERAGE;DEBUG;FAST_MATH;GLIBCXX_DEBUG;LTO;OPTIMIZE;PEDANTIC;RELRO;REPORT_TEMPLATE;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;SUGGEST;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;COVERAGE;DEBUG;FAST_MATH;GLIBCXX_DEBUG;LTO;OPTIMIZE;PEDANTIC;RELRO;REPORT_TEMPLATE;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;SUGGEST;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+
+  if(NOT DEFINED JLN_FLAGS_COLOR)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_COLOR "default")
+    else()
+      set(JLN_FLAGS_COLOR "${JLN_COLOR}")
+    endif()
+  endif()
 
   if(NOT DEFINED JLN_FLAGS_COVERAGE)
     if(${JLN_FLAGS_DISABLE_OTHERS})
@@ -347,27 +366,27 @@ function(jln_flags)
     endif()
     if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
     
-      if (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-O0")
-
-      endif()
       if (  JLN_FLAGS_OPTIMIZE STREQUAL "on" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O2")
 
-      endif()
-      if (  JLN_FLAGS_OPTIMIZE STREQUAL "size" )
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-O0")
+
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "size" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-Os")
 
-      endif()
-      if (  JLN_FLAGS_OPTIMIZE STREQUAL "speed" )
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "speed" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O3")
 
-      endif()
-      if (  JLN_FLAGS_OPTIMIZE STREQUAL "full" )
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "full" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O3" "-march=native")
 
@@ -571,6 +590,27 @@ function(jln_flags)
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-fno-elide-type")
 
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_COLOR STREQUAL "default") )
+    
+      if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) ) OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
+      
+        if (  JLN_FLAGS_COLOR STREQUAL "auto" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-color=auto")
+
+        
+        elseif (  JLN_FLAGS_COLOR STREQUAL "never" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-color=never")
+
+        
+        elseif (  JLN_FLAGS_COLOR STREQUAL "always" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-color=always")
+
+        endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "off") )
