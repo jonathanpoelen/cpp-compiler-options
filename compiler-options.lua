@@ -80,10 +80,10 @@ G = Or(gcc, clang) {
   opt'fast_math' { cxx'-ffast-math', },
 
   opt'optimize' {
-    lvl'off'   { cxx'-O0' },
-    lvl'on'    { cxx'-O2' },
-    lvl'size'  { cxx'-Os' },
-    lvl'speed' { cxx'-O3' },
+    lvl'on'    { cxx'-O2' } /
+    lvl'off'   { cxx'-O0' } /
+    lvl'size'  { cxx'-Os' } /
+    lvl'speed' { cxx'-O3' } /
     lvl'full'  { cxx'-O3', cxx'-march=native' },
   },
 
