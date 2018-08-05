@@ -81,8 +81,8 @@ rule jln_flags ( properties * )
       # }
     }
     local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
-    local major = [ MATCH (..)$ : [ string.join 00 $(match[1]) ] ] ;
-    local minor = [ MATCH (..)$ : [ string.join 00 $(match[3]) ] ] ;
+    local major = [ MATCH "(..)$" : [ string.join 00 $(match[1]) ] ] ;
+    local minor = [ MATCH "(..)$" : [ string.join 00 $(match[3]) ] ] ;
     version = $(major).$(minor) ;
     ORIGINAL_TOOLSET = $(toolset) ;
 
