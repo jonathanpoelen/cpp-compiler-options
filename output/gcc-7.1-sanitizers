@@ -1,10 +1,10 @@
--fsanitize=address
--lasan
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
--fsanitize=undefined
--lubsan
--fsanitize=leak
--llsan
+-fsanitize=address
 -fsanitize=bounds
 -fsanitize=bounds-strict
+-fsanitize=leak
+-fsanitize=undefined
+-lasan
+-llsan
+-lubsan

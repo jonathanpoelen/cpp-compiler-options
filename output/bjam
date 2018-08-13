@@ -41,8 +41,8 @@ toolset.flags jln-sanitizers-extra SANITIZERS_EXTRA : <jln-sanitizers-extra> ;
 feature.feature <jln-stack-protector> : off on strong all : propagated ;
 toolset.flags jln-stack-protector STACK_PROTECTOR : <jln-stack-protector> ;
 
-feature.feature <jln-suggest> : off on : incidental ;
-toolset.flags jln-suggest SUGGEST : <jln-suggest> ;
+feature.feature <jln-suggests> : off on : incidental ;
+toolset.flags jln-suggests SUGGESTS : <jln-suggests> ;
 
 feature.feature <jln-warnings> : on off strict : incidental ;
 toolset.flags jln-warnings WARNINGS : <jln-warnings> ;
@@ -184,7 +184,7 @@ rule jln_flags ( properties * )
           ;
         }
       }
-      if ! (  <jln-suggest>off in $(properties) )
+      if ! (  <jln-suggests>off in $(properties) )
       {
         if $(toolset) = gcc
         {

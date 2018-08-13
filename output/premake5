@@ -25,8 +25,8 @@ _jln_flag_names["jln-sanitizers-extra"] = true
 _jln_flag_names["sanitizers_extra"] = true
 _jln_flag_names["jln-stack-protector"] = true
 _jln_flag_names["stack_protector"] = true
-_jln_flag_names["jln-suggest"] = true
-_jln_flag_names["suggest"] = true
+_jln_flag_names["jln-suggests"] = true
+_jln_flag_names["suggests"] = true
 _jln_flag_names["jln-warnings"] = true
 _jln_flag_names["warnings"] = true
 _jln_flag_names["jln-warnings-as-error"] = true
@@ -64,8 +64,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "off") end
   newoption{trigger="jln-stack-protector", allowed={{"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "off") end
-  newoption{trigger="jln-suggest", allowed={{"off"}, {"on"}}, description="suggest"}
-  if not _OPTIONS["jln-suggest"] then _OPTIONS["jln-suggest"] = (defaults["suggest"] or defaults["jln-suggest"] or "off") end
+  newoption{trigger="jln-suggests", allowed={{"off"}, {"on"}}, description="suggests"}
+  if not _OPTIONS["jln-suggests"] then _OPTIONS["jln-suggests"] = (defaults["suggests"] or defaults["jln-suggests"] or "off") end
   newoption{trigger="jln-warnings", allowed={{"on"}, {"off"}, {"strict"}}, description="warnings"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "on") end
   newoption{trigger="jln-warnings-as-error", allowed={{"off"}, {"on"}}, description="warnings_as_error"}
@@ -157,9 +157,9 @@ function jln_getoptions(compiler, version, values, disable_others)
     name_list["jln-stack-protector"] = true
     name_list["stack_protector"] = true
     new_value["jln-stack-protector"] = values["stack_protector"] or values["jln-stack-protector"] or (disable_others and "off" or _OPTIONS["jln-stack-protector"])
-    name_list["jln-suggest"] = true
-    name_list["suggest"] = true
-    new_value["jln-suggest"] = values["suggest"] or values["jln-suggest"] or (disable_others and "off" or _OPTIONS["jln-suggest"])
+    name_list["jln-suggests"] = true
+    name_list["suggests"] = true
+    new_value["jln-suggests"] = values["suggests"] or values["jln-suggests"] or (disable_others and "off" or _OPTIONS["jln-suggests"])
     name_list["jln-warnings"] = true
     name_list["warnings"] = true
     new_value["jln-warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "off" or _OPTIONS["jln-warnings"])
@@ -266,7 +266,7 @@ function jln_getoptions(compiler, version, values, disable_others)
         jln_linkoptions = jln_linkoptions .. " -l-Wl,-z,relro,-z,now"
       end
     end
-    if not ( values["jln-suggest"] == "off") then
+    if not ( values["jln-suggests"] == "off") then
     
       if compiler == "gcc" then
       

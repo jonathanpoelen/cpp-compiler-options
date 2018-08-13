@@ -1,12 +1,12 @@
 -D_GLIBCXX_DEBUG
 -D_GLIBCXX_DEBUG_PEDANTIC
 -g
--fsanitize=undefined
--lubsan
--fsanitize=address
--lasan
--fsanitize-address-use-after-scope
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
+-fsanitize-address-use-after-scope
+-fsanitize=address
 -fsanitize=leak
+-fsanitize=undefined
+-lasan
 -llsan
+-lubsan

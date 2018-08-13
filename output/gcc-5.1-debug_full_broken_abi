@@ -1,11 +1,11 @@
 -D_GLIBCXX_DEBUG
 -D_GLIBCXX_DEBUG_PEDANTIC
 -g
--fsanitize=address
--lasan
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
--fsanitize=undefined
--lubsan
+-fsanitize=address
 -fsanitize=leak
+-fsanitize=undefined
+-lasan
 -llsan
+-lubsan
