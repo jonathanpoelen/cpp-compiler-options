@@ -93,7 +93,14 @@ return {
       end
     end
   end,
-  stop=function(_) return table.concat(_.strs) end,
+
+  stop=function(_)
+    if #_._strs ~= 0 then
+      table.sort(_._strs)
+      return table.concat(_._strs, '\n') .. '\n'
+    end
+    return ''
+  end,
 
   startopt=function(_, name)
     _.d.opt = name
@@ -157,13 +164,9 @@ return {
 
   cxx=function(_, x)
     if _.d.test[#_.d.test] then
-      _:print(x)
+      _:write(x)
     end
   end,
   link=function(_, x) _:cxx(x) end,
   define=function(_, x) _:cxx('-D'..x) end,
-
-  strs={},
-  print=function(_, s) _:write(s) ; _:write('\n') end,
-  write=function(_, s) _.strs[#_.strs+1] = s end,
 }
