@@ -27,7 +27,7 @@ gen compiler | while read comp ; do
   gen compiler $comp warnings=strict pedantic > "$OUTPUT_DIR"/$comp-warnings_strict
   gen compiler $comp glibcxx_debug=allow_broken_abi > "$OUTPUT_DIR"/$comp-glibcxx_debug_broken_abi
   gen compiler $comp sanitizers_extra=pointer > "$OUTPUT_DIR"/$comp-sanitizers-pointer
-  for g in suggest glibcxx_debug debug sanitizers report_template ; do
+  for g in suggests glibcxx_debug debug sanitizers report_template ; do
     gen compiler $comp $g > "$OUTPUT_DIR"/$comp-$g
   done
   cat "$OUTPUT_DIR"/$comp-glibcxx_debug            "$OUTPUT_DIR"/$comp-debug output/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full

@@ -31,7 +31,7 @@ report_template = off on
 sanitizers = off on
 sanitizers_extra = off thread pointer
 stack_protector = off on strong all
-suggest = off on
+suggests = off on
 warnings = on off strict
 warnings_as_error = off on
 ```

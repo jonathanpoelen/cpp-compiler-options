@@ -4,7 +4,7 @@ return {
     debug=true,
     pedantic=true,
     sanitizers=true,
-    suggest=true,
+    suggests=true,
     warnings=true,
   }},
 

@@ -109,7 +109,7 @@ G = Or(gcc, clang) {
     lvl'full'{ link'-Wl,-z,relro,-z,now', },
   },
 
-  opt'suggest' {
+  opt'suggests' {
     gcc {
       cxx'-Wsuggest-attribute=pure',
       cxx'-Wsuggest-attribute=const',
@@ -341,7 +341,7 @@ Vbase = {
   _incidental={
     color=true,
     pedantic=true,
-    suggest=true,
+    suggests=true,
     warnings=true,
     warnings_as_error=true,
     report_template=true,
@@ -359,7 +359,7 @@ Vbase = {
     glibcxx_debug={'off', {'off', 'on', 'allow_broken_abi'}},
     sanitizers={'off', {'off', 'on'}},
     sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
-    suggest={'off', {'off', 'on'}},
+    suggests={'off', {'off', 'on'}},
     warnings={'off', {'on', 'off', 'strict'}},
     report_template={'off', {'off', 'on'}},
     warnings_as_error={'off', {'off', 'on'}},
