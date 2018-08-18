@@ -87,7 +87,12 @@ G = Or(gcc, clang) {
     lvl'full'  { cxx'-O3', cxx'-march=native' },
   },
 
-  opt'pedantic' { cxx'-pedantic', cxx'-pedantic-errors', },
+  opt'pedantic' {
+    cxx'-pedantic',
+    lvl'as_error' {
+      cxx'-pedantic-errors',
+    },
+  },
 
   opt'stack_protector' {
     def'_FORTIFY_SOURCE=2',
@@ -354,7 +359,7 @@ Vbase = {
     fast_math={'off', {'off', 'on'}},
     optimize={'default', {'default', 'off', 'on', 'size', 'speed', 'full'}},
     coverage={'off', {'off', 'on'}},
-    pedantic={'off', {'on', 'off'}},
+    pedantic={'off', {'on', 'off', 'as_error'}},
     debug={'off', {'off', 'on'}},
     glibcxx_debug={'off', {'off', 'on', 'allow_broken_abi'}},
     sanitizers={'off', {'off', 'on'}},
