@@ -47,4 +47,3 @@
 -Wzero-as-null-pointer-constant
 -fsized-deallocation
 -pedantic
--pedantic-errors

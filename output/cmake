@@ -82,8 +82,8 @@ function(jln_init_flags)
     set(JLN_PEDANTIC "on" CACHE STRING "")
   endif()
 
-  if(NOT(("on" STREQUAL JLN_PEDANTIC) OR ("off" STREQUAL JLN_PEDANTIC)))
-    message(FATAL_ERROR "Unknow value \"${JLN_PEDANTIC}\" for JLN_PEDANTIC, expected: on, off")
+  if(NOT(("on" STREQUAL JLN_PEDANTIC) OR ("off" STREQUAL JLN_PEDANTIC) OR ("as_error" STREQUAL JLN_PEDANTIC)))
+    message(FATAL_ERROR "Unknow value \"${JLN_PEDANTIC}\" for JLN_PEDANTIC, expected: on, off, as_error")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_RELRO)
@@ -174,7 +174,7 @@ function(jln_init_flags)
     message(STATUS "JLN_GLIBCXX_DEBUG=${JLN_GLIBCXX_DEBUG}	[off, on, allow_broken_abi]")
     message(STATUS "JLN_LTO=${JLN_LTO}	[off, on, fat]")
     message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, full]")
-    message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[on, off]")
+    message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[on, off, as_error]")
     message(STATUS "JLN_RELRO=${JLN_RELRO}	[default, off, on, full]")
     message(STATUS "JLN_REPORT_TEMPLATE=${JLN_REPORT_TEMPLATE}	[off, on]")
     message(STATUS "JLN_SANITIZERS=${JLN_SANITIZERS}	[off, on]")
@@ -394,8 +394,13 @@ function(jln_flags)
     endif()
     if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "off") )
     
-      set(CXX_FLAGS ${CXX_FLAGS}  "-pedantic" "-pedantic-errors")
+      set(CXX_FLAGS ${CXX_FLAGS}  "-pedantic")
 
+      if (  JLN_FLAGS_PEDANTIC STREQUAL "as_error" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-pedantic-errors")
+
+      endif()
     endif()
     if (  NOT ( JLN_FLAGS_STACK_PROTECTOR STREQUAL "off") )
     

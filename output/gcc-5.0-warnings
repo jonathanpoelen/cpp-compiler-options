@@ -32,4 +32,3 @@
 -Wvla
 -Wzero-as-null-pointer-constant
 -pedantic
--pedantic-errors

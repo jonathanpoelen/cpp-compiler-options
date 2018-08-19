@@ -9,4 +9,3 @@
 -Wno-shadow
 -Wno-weak-vtables
 -pedantic
--pedantic-errors

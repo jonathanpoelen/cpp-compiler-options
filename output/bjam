@@ -23,7 +23,7 @@ toolset.flags jln-lto LTO : <jln-lto> ;
 feature.feature <jln-optimize> : default off on size speed full : propagated ;
 toolset.flags jln-optimize OPTIMIZE : <jln-optimize> ;
 
-feature.feature <jln-pedantic> : on off : incidental ;
+feature.feature <jln-pedantic> : on off as_error : incidental ;
 toolset.flags jln-pedantic PEDANTIC : <jln-pedantic> ;
 
 feature.feature <jln-relro> : default off on full : propagated ;
@@ -134,8 +134,13 @@ rule jln_flags ( properties * )
       {
         flags +=
           <cxxflags>-pedantic
-          <cxxflags>-pedantic-errors
         ;
+        if <jln-pedantic>as_error in $(properties)
+        {
+          flags +=
+            <cxxflags>-pedantic-errors
+          ;
+        }
       }
       if ! (  <jln-stack-protector>off in $(properties) )
       {
