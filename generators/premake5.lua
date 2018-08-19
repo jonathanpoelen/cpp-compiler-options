@@ -37,6 +37,8 @@ return {
       _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(args, '"}, {"') .. '"}}, description="' .. optname .. '"}')
       _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] or defaults["' .. opt .. '"] or "' .. args[1] .. '") end')
     end
+    _:print('  newoption{trigger="' .. _.optprefix .. 'compiler", description="Path or name of the compiler"}')
+    _:print('  newoption{trigger="' .. _.optprefix .. 'compiler-version", description="Force the compiler version"}')
     _:print('end\n')
 
     _:print([[
@@ -60,20 +62,48 @@ function jln_getoptions(compiler, version, values, disable_others)
     values, disable_others, compiler, version = compiler, version, nil, nil
   end
 
-  if not compiler then compiler = _OPTIONS['cc'] or 'gcc'
-  elseif compiler == 'g++' then compiler = 'gcc'
-  elseif compiler == 'clang++' then compiler = 'clang'
+  if not compiler then
+    compiler = _OPTIONS[']] .. _:tostroption'compiler' .. [['] or _OPTIONS['cc'] or 'g++'
+    version = _OPTIONS[']] .. _:tostroption'compiler-version' .. [['] or nil
+  elseif compiler == 'gcc' then compiler = 'g++'
+  elseif compiler == 'clang' then compiler = 'clang++'
   end
 
   local compversion = {}
-  local output = version
-  if not output then
-     output = os.outputof(compiler .. " --version")
-     if not output then
-       return {buildoptions='', linkoptions=''}
+  if not version then
+     local output = os.outputof(compiler .. " --version")
+     if output then
+       output = output:sub(0, output:find('\n') or #output)
+       version = output:gsub(".*(%d+%.%d+%.%d+).*", "%1")
+     else
+       printf("WARNING: `%s --version` failed", compiler)
+       output = compiler:gmatch(".*%-(%d+%.?%d*%.?%d*)$")()
+       if output then
+         version = output
+         printf("Extract version %s of the compiler name", version)
+       end
      end
-     version = output:gsub("^[^ ]+ [^ ]+ ([^ ]+).*", "%1")
   end
+
+  compiler = (compiler:find('clang', 1, true) and 'clang') or
+             ((compiler:find('g++', 1, true) or
+               compiler:find('gcc', 1, true) or
+               compiler:find('GCC', 1, true) or
+               compiler:find('MinGW', 1, true) or
+               compiler:find('mingw', 1, true)
+              ) and 'gcc') or
+             nil
+
+  if not compiler then
+    printf("WARNING: unknown compiler")
+    return {buildoptions='', linkoptions=''}
+  end
+
+  if not version then
+    version = tostring(tonumber(os.date("%y")) - (compiler == 'clang' and 14 or 12))
+    printf("Select version %s", version)
+  end
+
   for i in version:gmatch("%d+") do
     compversion[#compversion+1] = tonumber(i)
   end

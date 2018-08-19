@@ -31,6 +31,9 @@ if [ -z "$1" ] || [ "$1" = premake5 ]; then
   test_failure 'premake5 | grep Weverything'
   test_success 'premake5 --cc=gcc | grep Wlogical-op'
   test_success 'premake5 --cc=clang | grep Weverything'
+  test_success 'premake5 --cc=gcc --jln-compiler=clang | grep Weverything'
+  test_failure 'premake5 --jln-compiler-version=4 | grep Wclass-memaccess'
+  test_success 'premake5 --jln-compiler-version=8 | grep Wclass-memaccess'
   test_failure 'premake5 | grep lto'
   test_success 'premake5 --jln-lto=on | grep lto'
 fi
