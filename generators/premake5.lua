@@ -101,14 +101,16 @@ function jln_getoptions(compiler, version, values, disable_others)
 
   if not version then
     version = tostring(tonumber(os.date("%y")) - (compiler == 'clang' and 14 or 12))
-    printf("Select version %s", version)
   end
+
+  printf("getoptions: compiler: %s, version: %s", compiler, version)
 
   for i in version:gmatch("%d+") do
     compversion[#compversion+1] = tonumber(i)
   end
   if not compversion[1] then
-    return
+    printf("WARNING: wrong version format")
+    return {buildoptions='', linkoptions=''}
   end
   compversion = compversion[1] * 100 + (compversion[2] or 0)
 
@@ -147,6 +149,6 @@ function jln_getoptions(compiler, version, values, disable_others)
   end,
 
   stop=function(_)
-    return _:get_output() .. '  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\nreturn m'
+    return _:get_output() .. '  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\nreturn m\n'
   end,
 }
