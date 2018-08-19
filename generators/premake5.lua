@@ -50,16 +50,16 @@ function jln_check_flag_names(t)
   end
 end
 
-function jln_setoptions(compiler, version, values, disable_others)
-  local options = jln_getoptions(compiler, version, values, disable_others)
+function jln_setoptions(compiler, version, values, disable_others, print_compiler)
+  local options = jln_getoptions(compiler, version, values, disable_others, print_compiler)
   buildoptions(options.buildoptions)
   linkoptions(options.linkoptions)
   return options
 end
 
-function jln_getoptions(compiler, version, values, disable_others)
+function jln_getoptions(compiler, version, values, disable_others, print_compiler)
   if compiler and type(compiler) ~= 'string' then
-    values, disable_others, compiler, version = compiler, version, nil, nil
+    values, disable_others, print_compiler, compiler, version = compiler, version, values, nil, nil
   end
 
   if not compiler then
@@ -103,7 +103,9 @@ function jln_getoptions(compiler, version, values, disable_others)
     version = tostring(tonumber(os.date("%y")) - (compiler == 'clang' and 14 or 12))
   end
 
-  printf("getoptions: compiler: %s, version: %s", compiler, version)
+  if print_compiler then
+    printf("getoptions: compiler: %s, version: %s", compiler, version)
+  end
 
   for i in version:gmatch("%d+") do
     compversion[#compversion+1] = tonumber(i)

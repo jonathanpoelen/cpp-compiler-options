@@ -66,19 +66,25 @@ link_libraries(lib_project2)
 ```
 
 
-# Premake Generator
+# Premake5 Generator
 
 ```lua
 -- Registers new command-line options (ex jln_newoptions({debug='on'}))
 jln_newoptions([default_values])
 
+-- `values`: table. ex: {warnings='on'}
+-- `disable_others`: boolean
+-- `print_compiler`: boolean
+-- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
+-- `version`: string. ex: '7', '7.2'
+
 -- return {buildoptions=string, linkoptions=string}
-jln_getoptions(values:table[, disable_others:boolean])
-jln_getoptions([compiler:string[, version:string[, values:table[, disable_others:boolean]]]])
+jln_getoptions(values[, disable_others[, print_compiler]])
+jln_getoptions([compiler[, version[, values[, disable_others[, print_compiler]]]]])
 
 -- use buildoptions and linkoptions then return {buildoptions=string, linkoptions=string}
-jln_setoptions(values:table[, disable_others:boolean])
-jln_setoptions([compiler:string[, version:string[, values:table[, disable_others:boolean]]]])
+jln_setoptions(values[, disable_others[, print_compiler]])
+jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]]])
 ```
 
 # Bjam/B2 Generator
