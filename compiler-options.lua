@@ -126,7 +126,8 @@ G = Or(gcc, clang) {
     },
   },
 
-  opt'glibcxx_debug' {
+  opt'libcxx_debug' {
+    def'_LIBCPP_DEBUG=1',
     lvl'allow_broken_abi' {
       def'_GLIBCXX_DEBUG',
     } / {
@@ -361,7 +362,7 @@ Vbase = {
     coverage={'off', {'off', 'on'}},
     pedantic={'off', {'on', 'off', 'as_error'}},
     debug={'off', {'off', 'on'}},
-    glibcxx_debug={'off', {'off', 'on', 'allow_broken_abi'}},
+    libcxx_debug={'off', {'off', 'on', 'allow_broken_abi'}},
     sanitizers={'off', {'off', 'on'}},
     sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
     suggests={'off', {'off', 'on'}},
