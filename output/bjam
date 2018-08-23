@@ -14,8 +14,8 @@ toolset.flags jln-debug DEBUG : <jln-debug> ;
 feature.feature <jln-fast-math> : off on : propagated ;
 toolset.flags jln-fast-math FAST_MATH : <jln-fast-math> ;
 
-feature.feature <jln-glibcxx-debug> : off on allow_broken_abi : propagated ;
-toolset.flags jln-glibcxx-debug GLIBCXX_DEBUG : <jln-glibcxx-debug> ;
+feature.feature <jln-libcxx-debug> : off on allow_broken_abi : propagated ;
+toolset.flags jln-libcxx-debug LIBCXX_DEBUG : <jln-libcxx-debug> ;
 
 feature.feature <jln-lto> : off on fat : propagated ;
 toolset.flags jln-lto LTO : <jln-lto> ;
@@ -206,9 +206,12 @@ rule jln_flags ( properties * )
           }
         }
       }
-      if ! (  <jln-glibcxx-debug>off in $(properties) )
+      if ! (  <jln-libcxx-debug>off in $(properties) )
       {
-        if <jln-glibcxx-debug>allow_broken_abi in $(properties)
+        flags +=
+          <define>_LIBCPP_DEBUG=1
+        ;
+        if <jln-libcxx-debug>allow_broken_abi in $(properties)
         {
           flags +=
             <define>_GLIBCXX_DEBUG

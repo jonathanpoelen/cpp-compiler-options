@@ -7,8 +7,8 @@ _jln_flag_names["jln-debug"] = true
 _jln_flag_names["debug"] = true
 _jln_flag_names["jln-fast-math"] = true
 _jln_flag_names["fast_math"] = true
-_jln_flag_names["jln-glibcxx-debug"] = true
-_jln_flag_names["glibcxx_debug"] = true
+_jln_flag_names["jln-libcxx-debug"] = true
+_jln_flag_names["libcxx_debug"] = true
 _jln_flag_names["jln-lto"] = true
 _jln_flag_names["lto"] = true
 _jln_flag_names["jln-optimize"] = true
@@ -46,8 +46,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "off") end
   newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
   if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or defaults["jln-fast-math"] or "off") end
-  newoption{trigger="jln-glibcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}}, description="glibcxx_debug"}
-  if not _OPTIONS["jln-glibcxx-debug"] then _OPTIONS["jln-glibcxx-debug"] = (defaults["glibcxx_debug"] or defaults["jln-glibcxx-debug"] or "off") end
+  newoption{trigger="jln-libcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}}, description="libcxx_debug"}
+  if not _OPTIONS["jln-libcxx-debug"] then _OPTIONS["jln-libcxx-debug"] = (defaults["libcxx_debug"] or defaults["jln-libcxx-debug"] or "off") end
   newoption{trigger="jln-lto", allowed={{"off"}, {"on"}, {"fat"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "off") end
   newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"full"}}, description="optimize"}
@@ -164,9 +164,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-fast-math"] = true
     name_list["fast_math"] = true
     new_value["jln-fast-math"] = values["fast_math"] or values["jln-fast-math"] or (disable_others and "off" or _OPTIONS["jln-fast-math"])
-    name_list["jln-glibcxx-debug"] = true
-    name_list["glibcxx_debug"] = true
-    new_value["jln-glibcxx-debug"] = values["glibcxx_debug"] or values["jln-glibcxx-debug"] or (disable_others and "off" or _OPTIONS["jln-glibcxx-debug"])
+    name_list["jln-libcxx-debug"] = true
+    name_list["libcxx_debug"] = true
+    new_value["jln-libcxx-debug"] = values["libcxx_debug"] or values["jln-libcxx-debug"] or (disable_others and "off" or _OPTIONS["jln-libcxx-debug"])
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "off" or _OPTIONS["jln-lto"])
@@ -315,9 +315,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
-    if not ( values["jln-glibcxx-debug"] == "off") then
+    if not ( values["jln-libcxx-debug"] == "off") then
     
-      if values["jln-glibcxx-debug"] == "allow_broken_abi" then
+      jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG=1"
+      if values["jln-libcxx-debug"] == "allow_broken_abi" then
       
         jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG"
       
