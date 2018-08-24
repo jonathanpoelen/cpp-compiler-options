@@ -22,7 +22,7 @@ color = default auto never always
 coverage = off on
 debug = off on
 fast_math = off on
-libcxx_debug = off on allow_broken_abi
+libcxx_debug = off on allow_broken_abi assert_as_exceptions
 lto = off on fat
 optimize = default off on size speed full
 pedantic = on off as_error
@@ -90,6 +90,8 @@ jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]
 # Bjam/B2 Generator
 
 ```jam
+# rule jln_flags ( properties * )
+
 project name : requirements
   <jln-lto>on # enable jln-lto
   <conditional>@jln_flags

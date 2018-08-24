@@ -45,7 +45,7 @@ local clang = compiler('clang')
 function vers(major, minor) return setmetatable({ version={major, minor or 0} }, cond_mt) end
 function def(x) return { def=x } end
 function cxx(x) return { cxx=x } end
-function link(x) return { link=(x[1] == '-' and x or '-l'..x) } end
+function link(x) return { link=(x:sub(1,1) == '-' and x or '-l'..x) } end
 function fl(x) return { cxx=x, link=x } end
 function lvl(x) return setmetatable({ lvl=x }, cond_mt) end
 function opt(x) return setmetatable({ opt=x }, cond_mt) end
@@ -66,8 +66,8 @@ G = Or(gcc, clang) {
   },
 
   opt'coverage' {
-    cxx'-coverage', -- -fprofile-arcs -ftest-coverage
-    link'-coverage', -- -lgcov
+    cxx'--coverage', -- -fprofile-arcs -ftest-coverage
+    link'--coverage', -- -lgcov
     clang {
       link'-lprofile_rt',
       -- fl'-fprofile-instr-generate',
@@ -128,6 +128,9 @@ G = Or(gcc, clang) {
 
   opt'libcxx_debug' {
     def'_LIBCPP_DEBUG=1',
+    lvl'assert_as_exceptions' {
+      def'_LIBCPP_DEBUG_USE_EXCEPTIONS'
+    },
     lvl'allow_broken_abi' {
       def'_GLIBCXX_DEBUG',
     } / {
@@ -164,8 +167,8 @@ G = Or(gcc, clang) {
    -- cxx'-Winline',
       cxx'-Wconversion',
    -- cxx'-Wsign-conversion', -- disabled by default with C++, enabled by -Wconversion
-      cxx'-Wswitch-default',
-      cxx'-Wswitch-enum',
+   -- cxx'-Wswitch-default',
+   -- cxx'-Wswitch-enum',
     }*
 
     vers(4,7) {
@@ -236,13 +239,19 @@ G = Or(gcc, clang) {
       cxx'-Wno-weak-vtables',
       cxx'-Wno-exit-time-destructors',
       cxx'-Wno-covered-switch-default',
-   -- cxx'-Wno-conversion',
    -- cxx'-Qunused-arguments',
+      cxx'-Wno-switch-default',
+      cxx'-Wno-switch-enum',
+      cxx'-Wno-inconsistent-missing-destructor-override',
     },
 
     lvl'strict' {
       cxx'-Wsign-conversion',
       gcc(8) { cxx'-Wcast-align=strict', }
+    } /
+    clang {
+      cxx'-Wno-conversion',
+      cxx'-Wno-sign-conversion',
     },
   },
 
@@ -362,7 +371,7 @@ Vbase = {
     coverage={'off', {'off', 'on'}},
     pedantic={'off', {'on', 'off', 'as_error'}},
     debug={'off', {'off', 'on'}},
-    libcxx_debug={'off', {'off', 'on', 'allow_broken_abi'}},
+    libcxx_debug={'off', {'off', 'on', 'allow_broken_abi', 'assert_as_exceptions'}},
     sanitizers={'off', {'off', 'on'}},
     sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
     suggests={'off', {'off', 'on'}},
@@ -627,7 +636,7 @@ function run(generaton_name, ...)
   evalflags(G, V)
 
   local out = V:stop()
-  if out then io.write(out) end
+  if out then io.write(out) io.write('\n') end
 end
 
 run(...)
