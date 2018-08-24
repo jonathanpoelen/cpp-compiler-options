@@ -29,66 +29,70 @@ return {
     _.optprefix = optprefix or ''
     _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
-    -- http://www.boost.org/build/doc/html/index.html
-    -- http://www.boost.org/build/doc/html/bbv2/reference/definitions.html#bbv2.reference.features.attributes
+    _:print('# https://boostorg.github.io/build/manual/develop/index.html\n')
 
-    _:print('import property-set ;')
-    _:print('import feature ;')
-    _:print('import toolset ;\n')
+    _:print('import feature : feature ;\n')
+
+    -- for optname,k in pairs({'compiler', 'compiler-version'}) do
+    --   local opt = _.optprefix .. tobjamoption(optname)
+    --   _:print('feature <' .. opt .. '> : : free ;')
+    -- end
 
     for optname,args in _:getoptions() do
       if optname ~= 'warnings_as_error' then
         local opt = _.optprefix .. tobjamoption(optname)
-        _:print('feature.feature <' .. opt .. '> : ' .. table.concat(args, ' ') .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
-        _:print('toolset.flags ' .. opt .. ' ' .. optname:upper() .. ' : <' .. opt .. '> ;\n')
+        _:print('feature <' .. opt .. '> : ' .. table.concat(args, ' ')
+          .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
       end
     end
-    _:print([[import property-set ;
+    _:print([[
+
+import property-set ;
 import string ;
 
 local ORIGINAL_TOOLSET = 0 ;
 local COMP_VERSION = 00.00 ;
-local FLAGS = ;
 
-rule jln_flags ( properties * )
+rule jln-get-normalized-compiler-version ( toolset : version )
 {
-  local ps = [ property-set.create $(properties) ] ;
-  local toolset = [ $(ps).get <toolset> ] ;
-
-  if $(ORIGINAL_TOOLSET) = $(toolset)
+  # TODO `version` is not the real version. For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
+  # define PP_CAT_I(a,b) a##b
+  # define PP_CAT(a,b) PP_CAT_I(a,b)
+  # g++ -x c++ -E - <<<'PP_CAT(__GNUC__, PP_CAT(__GNUC_MINOR__, __GNUC_PATCHLEVEL__))'
+  # clang++ -x c++ -E - <<<'PP_CAT(__clang_major__, PP_CAT(__clang_minor__, __clang_patchlevel__))'
+  if $(ORIGINAL_TOOLSET) != $(toolset)
   {
-    return $(FLAGS) ;
-  }
-  else
-  {
-    # TODO `version` is not the real version. For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
-    # define PP_CAT_I(a,b) a##b
-    # define PP_CAT(a,b) PP_CAT_I(a,b)
-    # g++ -x c++ -E - <<<'PP_CAT(__GNUC__, PP_CAT(__GNUC_MINOR__, __GNUC_PATCHLEVEL__))'
-    # clang++ -x c++ -E - <<<'PP_CAT(__clang_major__, PP_CAT(__clang_minor__, __clang_patchlevel__))'
-    local version = [ $(ps).get <toolset-$(toolset):version> ] ;
-    version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
+    local version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
     if ! $(version) {
       # if $(toolset) = gcc {
       #   version = [ SHELL "$(toolset) -dumpfullversion" ] ;
       # }
       # else {
-        version = [ MATCH "^[^ ]+ [^ ]+ ([^ ]+)" : [ SHELL "$(toolset) --version" ] ] ;
+        version = [ MATCH ".*(\\d+\\.\\d+\\.\\d+).*" : [ SHELL "$(toolset) --version" ] ] ;
       # }
     }
     local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
     local major = [ MATCH "(..)$" : [ string.join 00 $(match[1]) ] ] ;
     local minor = [ MATCH "(..)$" : [ string.join 00 $(match[3]) ] ] ;
-    version = $(major).$(minor) ;
+    COMP_VERSION = $(major).$(minor) ;
     ORIGINAL_TOOLSET = $(toolset) ;
+  }
+  return $(COMP_VERSION) ;
+}
 
-    local flags ;
+rule jln_flags ( properties * )
+{
+  local ps = [ property-set.create $(properties) ] ;
+  local toolset = [ $(ps).get <toolset> ] ;
+  local version = [ jln-get-normalized-compiler-version $(toolset)
+                  : [ $(ps).get <toolset-$(toolset):version> ] ] ;
+  local flags ;
 
 ]])
-    _.indent = '    '
+    _.indent = '  '
   end,
 
   stop=function(_)
-    return _:get_output() .. '    FLAGS = $(flags) ; return $(flags) ;\n  }\n}'
+    return _:get_output() .. '  return $(flags) ;\n}\n'
   end,
 }
