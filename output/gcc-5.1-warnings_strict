@@ -28,8 +28,6 @@
 -Wstrict-null-sentinel
 -Wsuggest-attribute=noreturn
 -Wsuggest-override
--Wswitch-default
--Wswitch-enum
 -Wtrampolines
 -Wundef
 -Wuninitialized

@@ -52,8 +52,8 @@ function(jln_init_flags)
     set(JLN_LIBCXX_DEBUG "off" CACHE STRING "")
   endif()
 
-  if(NOT(("off" STREQUAL JLN_LIBCXX_DEBUG) OR ("on" STREQUAL JLN_LIBCXX_DEBUG) OR ("allow_broken_abi" STREQUAL JLN_LIBCXX_DEBUG)))
-    message(FATAL_ERROR "Unknow value \"${JLN_LIBCXX_DEBUG}\" for JLN_LIBCXX_DEBUG, expected: off, on, allow_broken_abi")
+  if(NOT(("off" STREQUAL JLN_LIBCXX_DEBUG) OR ("on" STREQUAL JLN_LIBCXX_DEBUG) OR ("allow_broken_abi" STREQUAL JLN_LIBCXX_DEBUG) OR ("assert_as_exceptions" STREQUAL JLN_LIBCXX_DEBUG)))
+    message(FATAL_ERROR "Unknow value \"${JLN_LIBCXX_DEBUG}\" for JLN_LIBCXX_DEBUG, expected: off, on, allow_broken_abi, assert_as_exceptions")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_LTO)
@@ -171,7 +171,7 @@ function(jln_init_flags)
     message(STATUS "JLN_COVERAGE=${JLN_COVERAGE}	[off, on]")
     message(STATUS "JLN_DEBUG=${JLN_DEBUG}	[off, on]")
     message(STATUS "JLN_FAST_MATH=${JLN_FAST_MATH}	[off, on]")
-    message(STATUS "JLN_LIBCXX_DEBUG=${JLN_LIBCXX_DEBUG}	[off, on, allow_broken_abi]")
+    message(STATUS "JLN_LIBCXX_DEBUG=${JLN_LIBCXX_DEBUG}	[off, on, allow_broken_abi, assert_as_exceptions]")
     message(STATUS "JLN_LTO=${JLN_LTO}	[off, on, fat]")
     message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, full]")
     message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[on, off, as_error]")
@@ -347,11 +347,11 @@ function(jln_flags)
     endif()
     if (  NOT ( JLN_FLAGS_COVERAGE STREQUAL "off") )
     
-      set(CXX_FLAGS ${CXX_FLAGS}  "-coverage")
-      set(LINK_FLAGS ${LINK_FLAGS}  "-l-coverage")
+      set(CXX_FLAGS ${CXX_FLAGS}  "--coverage")
+      set(LINK_FLAGS ${LINK_FLAGS}  "--coverage")
       if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
       
-        set(LINK_FLAGS ${LINK_FLAGS}  "-l-lprofile_rt")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-lprofile_rt")
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_DEBUG STREQUAL "off") )
@@ -424,15 +424,15 @@ function(jln_flags)
     
       if (  JLN_FLAGS_RELRO STREQUAL "off" )
       
-        set(LINK_FLAGS ${LINK_FLAGS}  "-l-Wl,-z,norelro")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-Wl,-z,norelro")
       
       elseif (  JLN_FLAGS_RELRO STREQUAL "on" )
       
-        set(LINK_FLAGS ${LINK_FLAGS}  "-l-Wl,-z,relro")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-Wl,-z,relro")
       
       elseif (  JLN_FLAGS_RELRO STREQUAL "full" )
       
-        set(LINK_FLAGS ${LINK_FLAGS}  "-l-Wl,-z,relro,-z,now")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-Wl,-z,relro,-z,now")
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_SUGGESTS STREQUAL "off") )
@@ -452,6 +452,11 @@ function(jln_flags)
     
       set(CXX_FLAGS ${CXX_FLAGS}  -D_LIBCPP_DEBUG=1)
 
+      if (  JLN_FLAGS_LIBCXX_DEBUG STREQUAL "assert_as_exceptions" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  -D_LIBCPP_DEBUG_USE_EXCEPTIONS)
+
+      endif()
       if (  JLN_FLAGS_LIBCXX_DEBUG STREQUAL "allow_broken_abi" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  -D_GLIBCXX_DEBUG)
@@ -472,7 +477,7 @@ function(jln_flags)
     
       if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-Wall" "-Wextra" "-Wcast-align" "-Wcast-qual" "-Wdisabled-optimization" "-Wfloat-equal" "-Wformat-security" "-Wformat-signedness" "-Wformat=2" "-Wmissing-declarations" "-Wmissing-include-dirs" "-Wnon-virtual-dtor" "-Wold-style-cast" "-Woverloaded-virtual" "-Wpacked" "-Wredundant-decls" "-Wundef" "-Wuninitialized" "-Wunused-macros" "-Wvla" "-Wconversion" "-Wswitch-default" "-Wswitch-enum")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wall" "-Wextra" "-Wcast-align" "-Wcast-qual" "-Wdisabled-optimization" "-Wfloat-equal" "-Wformat-security" "-Wformat-signedness" "-Wformat=2" "-Wmissing-declarations" "-Wmissing-include-dirs" "-Wnon-virtual-dtor" "-Wold-style-cast" "-Woverloaded-virtual" "-Wpacked" "-Wredundant-decls" "-Wundef" "-Wuninitialized" "-Wunused-macros" "-Wvla" "-Wconversion")
 
         if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7" ) )
         
@@ -517,7 +522,7 @@ function(jln_flags)
       endif()
       if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-Weverything" "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-mismatched-tags" "-Wno-padded" "-Wno-shadow" "-Wno-global-constructors" "-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-covered-switch-default")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Weverything" "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-mismatched-tags" "-Wno-padded" "-Wno-shadow" "-Wno-global-constructors" "-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-covered-switch-default" "-Wno-switch-default" "-Wno-switch-enum" "-Wno-inconsistent-missing-destructor-override")
 
       endif()
       if (  JLN_FLAGS_WARNINGS STREQUAL "strict" )
@@ -529,6 +534,11 @@ function(jln_flags)
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wcast-align=strict")
 
         endif()
+      
+      elseif (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-conversion" "-Wno-sign-conversion")
+
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_SANITIZERS STREQUAL "off") )

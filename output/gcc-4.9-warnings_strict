@@ -22,8 +22,6 @@
 -Wredundant-decls
 -Wsign-conversion
 -Wsuggest-attribute=noreturn
--Wswitch-default
--Wswitch-enum
 -Wtrampolines
 -Wundef
 -Wuninitialized

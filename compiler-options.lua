@@ -636,7 +636,7 @@ function run(generaton_name, ...)
   evalflags(G, V)
 
   local out = V:stop()
-  if out then io.write(out) io.write('\n') end
+  if out then io.write(out) end
 end
 
 run(...)

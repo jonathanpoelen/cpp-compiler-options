@@ -46,7 +46,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "off") end
   newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
   if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or defaults["jln-fast-math"] or "off") end
-  newoption{trigger="jln-libcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}}, description="libcxx_debug"}
+  newoption{trigger="jln-libcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}, {"assert_as_exceptions"}}, description="libcxx_debug"}
   if not _OPTIONS["jln-libcxx-debug"] then _OPTIONS["jln-libcxx-debug"] = (defaults["libcxx_debug"] or defaults["jln-libcxx-debug"] or "off") end
   newoption{trigger="jln-lto", allowed={{"off"}, {"on"}, {"fat"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "off") end
@@ -225,11 +225,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     end
     if not ( values["jln-coverage"] == "off") then
     
-      jln_buildoptions = jln_buildoptions .. " -coverage"
-      jln_linkoptions = jln_linkoptions .. " -l-coverage"
+      jln_buildoptions = jln_buildoptions .. " --coverage"
+      jln_linkoptions = jln_linkoptions .. " --coverage"
       if compiler == "clang" then
       
-        jln_linkoptions = jln_linkoptions .. " -l-lprofile_rt"
+        jln_linkoptions = jln_linkoptions .. " -lprofile_rt"
       end
     end
     if not ( values["jln-debug"] == "off") then
@@ -293,15 +293,15 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     
       if values["jln-relro"] == "off" then
       
-        jln_linkoptions = jln_linkoptions .. " -l-Wl,-z,norelro"
+        jln_linkoptions = jln_linkoptions .. " -Wl,-z,norelro"
       
       elseif values["jln-relro"] == "on" then
       
-        jln_linkoptions = jln_linkoptions .. " -l-Wl,-z,relro"
+        jln_linkoptions = jln_linkoptions .. " -Wl,-z,relro"
       
       elseif values["jln-relro"] == "full" then
       
-        jln_linkoptions = jln_linkoptions .. " -l-Wl,-z,relro,-z,now"
+        jln_linkoptions = jln_linkoptions .. " -Wl,-z,relro,-z,now"
       end
     end
     if not ( values["jln-suggests"] == "off") then
@@ -318,6 +318,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     if not ( values["jln-libcxx-debug"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG=1"
+      if values["jln-libcxx-debug"] == "assert_as_exceptions" then
+      
+        jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG_USE_EXCEPTIONS"
+      end
       if values["jln-libcxx-debug"] == "allow_broken_abi" then
       
         jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG"
@@ -335,7 +339,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     
       if compiler == "gcc" then
       
-        jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat-signedness -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wredundant-decls -Wundef -Wuninitialized -Wunused-macros -Wvla -Wconversion -Wswitch-default -Wswitch-enum"
+        jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat-signedness -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wredundant-decls -Wundef -Wuninitialized -Wunused-macros -Wvla -Wconversion"
         if not ( compversion < 407 ) then
         
           jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=noreturn -Wzero-as-null-pointer-constant -Wlogical-op -Wvector-operation-performance -Wdouble-promotion -Wtrampolines"
@@ -371,7 +375,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       end
       if compiler == "clang" then
       
-        jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-shadow -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default"
+        jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-shadow -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum -Wno-inconsistent-missing-destructor-override"
       end
       if values["jln-warnings"] == "strict" then
       
@@ -380,6 +384,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         
           jln_buildoptions = jln_buildoptions .. " -Wcast-align=strict"
         end
+      
+      elseif compiler == "clang" then
+      
+        jln_buildoptions = jln_buildoptions .. " -Wno-conversion -Wno-sign-conversion"
       end
     end
     if not ( values["jln-sanitizers"] == "off") then

@@ -1,322 +1,296 @@
-import property-set ;
-import feature ;
-import toolset ;
+# https://boostorg.github.io/build/manual/develop/index.html
 
-feature.feature <jln-color> : default auto never always : incidental ;
-toolset.flags jln-color COLOR : <jln-color> ;
+import feature : feature ;
 
-feature.feature <jln-coverage> : off on : propagated ;
-toolset.flags jln-coverage COVERAGE : <jln-coverage> ;
-
-feature.feature <jln-debug> : off on : propagated ;
-toolset.flags jln-debug DEBUG : <jln-debug> ;
-
-feature.feature <jln-fast-math> : off on : propagated ;
-toolset.flags jln-fast-math FAST_MATH : <jln-fast-math> ;
-
-feature.feature <jln-libcxx-debug> : off on allow_broken_abi : propagated ;
-toolset.flags jln-libcxx-debug LIBCXX_DEBUG : <jln-libcxx-debug> ;
-
-feature.feature <jln-lto> : off on fat : propagated ;
-toolset.flags jln-lto LTO : <jln-lto> ;
-
-feature.feature <jln-optimize> : default off on size speed full : propagated ;
-toolset.flags jln-optimize OPTIMIZE : <jln-optimize> ;
-
-feature.feature <jln-pedantic> : on off as_error : incidental ;
-toolset.flags jln-pedantic PEDANTIC : <jln-pedantic> ;
-
-feature.feature <jln-relro> : default off on full : propagated ;
-toolset.flags jln-relro RELRO : <jln-relro> ;
-
-feature.feature <jln-report-template> : off on : incidental ;
-toolset.flags jln-report-template REPORT_TEMPLATE : <jln-report-template> ;
-
-feature.feature <jln-sanitizers> : off on : propagated ;
-toolset.flags jln-sanitizers SANITIZERS : <jln-sanitizers> ;
-
-feature.feature <jln-sanitizers-extra> : off thread pointer : propagated ;
-toolset.flags jln-sanitizers-extra SANITIZERS_EXTRA : <jln-sanitizers-extra> ;
-
-feature.feature <jln-stack-protector> : off on strong all : propagated ;
-toolset.flags jln-stack-protector STACK_PROTECTOR : <jln-stack-protector> ;
-
-feature.feature <jln-suggests> : off on : incidental ;
-toolset.flags jln-suggests SUGGESTS : <jln-suggests> ;
-
-feature.feature <jln-warnings> : on off strict : incidental ;
-toolset.flags jln-warnings WARNINGS : <jln-warnings> ;
+feature <jln-color> : default auto never always : incidental ;
+feature <jln-coverage> : off on : propagated ;
+feature <jln-debug> : off on : propagated ;
+feature <jln-fast-math> : off on : propagated ;
+feature <jln-libcxx-debug> : off on allow_broken_abi assert_as_exceptions : propagated ;
+feature <jln-lto> : off on fat : propagated ;
+feature <jln-optimize> : default off on size speed full : propagated ;
+feature <jln-pedantic> : on off as_error : incidental ;
+feature <jln-relro> : default off on full : propagated ;
+feature <jln-report-template> : off on : incidental ;
+feature <jln-sanitizers> : off on : propagated ;
+feature <jln-sanitizers-extra> : off thread pointer : propagated ;
+feature <jln-stack-protector> : off on strong all : propagated ;
+feature <jln-suggests> : off on : incidental ;
+feature <jln-warnings> : on off strict : incidental ;
 
 import property-set ;
 import string ;
 
 local ORIGINAL_TOOLSET = 0 ;
 local COMP_VERSION = 00.00 ;
-local FLAGS = ;
 
-rule jln_flags ( properties * )
+rule jln-get-normalized-compiler-version ( toolset : version )
 {
-  local ps = [ property-set.create $(properties) ] ;
-  local toolset = [ $(ps).get <toolset> ] ;
-
-  if $(ORIGINAL_TOOLSET) = $(toolset)
+  # TODO `version` is not the real version. For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
+  # define PP_CAT_I(a,b) a##b
+  # define PP_CAT(a,b) PP_CAT_I(a,b)
+  # g++ -x c++ -E - <<<'PP_CAT(__GNUC__, PP_CAT(__GNUC_MINOR__, __GNUC_PATCHLEVEL__))'
+  # clang++ -x c++ -E - <<<'PP_CAT(__clang_major__, PP_CAT(__clang_minor__, __clang_patchlevel__))'
+  if $(ORIGINAL_TOOLSET) != $(toolset)
   {
-    return $(FLAGS) ;
-  }
-  else
-  {
-    # TODO `version` is not the real version. For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
-    # define PP_CAT_I(a,b) a##b
-    # define PP_CAT(a,b) PP_CAT_I(a,b)
-    # g++ -x c++ -E - <<<'PP_CAT(__GNUC__, PP_CAT(__GNUC_MINOR__, __GNUC_PATCHLEVEL__))'
-    # clang++ -x c++ -E - <<<'PP_CAT(__clang_major__, PP_CAT(__clang_minor__, __clang_patchlevel__))'
-    local version = [ $(ps).get <toolset-$(toolset):version> ] ;
-    version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
+    local version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
     if ! $(version) {
       # if $(toolset) = gcc {
       #   version = [ SHELL "$(toolset) -dumpfullversion" ] ;
       # }
       # else {
-        version = [ MATCH "^[^ ]+ [^ ]+ ([^ ]+)" : [ SHELL "$(toolset) --version" ] ] ;
+        version = [ MATCH ".*(\\d+\\.\\d+\\.\\d+).*" : [ SHELL "$(toolset) --version" ] ] ;
       # }
     }
     local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
     local major = [ MATCH "(..)$" : [ string.join 00 $(match[1]) ] ] ;
     local minor = [ MATCH "(..)$" : [ string.join 00 $(match[3]) ] ] ;
-    version = $(major).$(minor) ;
+    COMP_VERSION = $(major).$(minor) ;
     ORIGINAL_TOOLSET = $(toolset) ;
+  }
+  return $(COMP_VERSION) ;
+}
 
-    local flags ;
+rule jln_flags ( properties * )
+{
+  local ps = [ property-set.create $(properties) ] ;
+  local toolset = [ $(ps).get <toolset> ] ;
+  local version = [ jln-get-normalized-compiler-version $(toolset)
+                  : [ $(ps).get <toolset-$(toolset):version> ] ] ;
+  local flags ;
 
 
-    if (  $(toolset) = gcc || $(toolset) = clang  )
+  if (  $(toolset) = gcc || $(toolset) = clang  )
+  {
+    if ! (  <jln-lto>off in $(properties) )
     {
-      if ! (  <jln-lto>off in $(properties) )
+      flags +=
+        <cxxflags>-flto
+        <linkflags>-flto
+      ;
+      if (  $(toolset) = gcc && ! (  $(version) < 05.00  )  )
       {
         flags +=
-          <cxxflags>-flto
-          <linkflags>-flto
+          <cxxflags>-flto-odr-type-merging
+          <linkflags>-flto-odr-type-merging
         ;
-        if (  $(toolset) = gcc && ! (  $(version) < 05.00  )  )
+        if <jln-lto>fat in $(properties)
         {
           flags +=
-            <cxxflags>-flto-odr-type-merging
-            <linkflags>-flto-odr-type-merging
-          ;
-          if <jln-lto>fat in $(properties)
-          {
-            flags +=
-              <cxxflags>-ffat-lto-objects
-            ;
-          }
-        }
-      }
-      if ! (  <jln-coverage>off in $(properties) )
-      {
-        flags +=
-          <cxxflags>-coverage
-          <linkflags>-l-coverage
-        ;
-        if $(toolset) = clang
-        {
-          flags +=
-            <linkflags>-l-lprofile_rt
+            <cxxflags>-ffat-lto-objects
           ;
         }
       }
-      if ! (  <jln-fast-math>off in $(properties) )
+    }
+    if ! (  <jln-coverage>off in $(properties) )
+    {
+      flags +=
+        <cxxflags>--coverage
+        <linkflags>--coverage
+      ;
+      if $(toolset) = clang
       {
         flags +=
-          <cxxflags>-ffast-math
+          <linkflags>-lprofile_rt
+        ;
+      }
+    }
+    if ! (  <jln-fast-math>off in $(properties) )
+    {
+      flags +=
+        <cxxflags>-ffast-math
+      ;
+    }
+    if ! (  <jln-pedantic>off in $(properties) )
+    {
+      flags +=
+        <cxxflags>-pedantic
+      ;
+      if <jln-pedantic>as_error in $(properties)
+      {
+        flags +=
+          <cxxflags>-pedantic-errors
+        ;
+      }
+    }
+    if ! (  <jln-stack-protector>off in $(properties) )
+    {
+      flags +=
+        <cxxflags>-Wstack-protector
+        <cxxflags>-fstack-protector
+        <linkflags>-fstack-protector
+        <define>_FORTIFY_SOURCE=2
+      ;
+      if <jln-stack-protector>strong in $(properties)
+      {
+        if ! (  $(toolset) = gcc && $(version) < 04.09  )
+        {
+          flags +=
+            <cxxflags>-fstack-protector-strong
+            <linkflags>-fstack-protector-strong
+          ;
+        }
+      }
+      else if <jln-stack-protector>all in $(properties)
+      {
+        flags +=
+          <cxxflags>-fstack-protector-all
+          <linkflags>-fstack-protector-all
+        ;
+      }
+    }
+    if ! (  <jln-relro>default in $(properties) )
+    {
+      if <jln-relro>off in $(properties)
+      {
+        flags +=
+          <linkflags>-Wl,-z,norelro
+        ;
+      }
+      else if <jln-relro>on in $(properties)
+      {
+        flags +=
+          <linkflags>-Wl,-z,relro
+        ;
+      }
+      else if <jln-relro>full in $(properties)
+      {
+        flags +=
+          <linkflags>-Wl,-z,relro,-z,now
+        ;
+      }
+    }
+    if ! (  <jln-suggests>off in $(properties) )
+    {
+      if $(toolset) = gcc
+      {
+        flags +=
+          <cxxflags>-Wsuggest-attribute=pure
+          <cxxflags>-Wsuggest-attribute=const
+        ;
+        if ! (  $(version) < 05.00  )
+        {
+          flags +=
+            <cxxflags>-Wsuggest-final-types
+            <cxxflags>-Wsuggest-final-methods
+          ;
+        }
+      }
+    }
+    if ! (  <jln-libcxx-debug>off in $(properties) )
+    {
+      flags +=
+        <define>_LIBCPP_DEBUG=1
+      ;
+      if <jln-libcxx-debug>assert_as_exceptions in $(properties)
+      {
+        flags +=
+          <define>_LIBCPP_DEBUG_USE_EXCEPTIONS
+        ;
+      }
+      if <jln-libcxx-debug>allow_broken_abi in $(properties)
+      {
+        flags +=
+          <define>_GLIBCXX_DEBUG
+        ;
+      }
+      else
+      {
+        flags +=
+          <define>_GLIBCXX_ASSERTIONS
         ;
       }
       if ! (  <jln-pedantic>off in $(properties) )
       {
         flags +=
-          <cxxflags>-pedantic
+          <define>_GLIBCXX_DEBUG_PEDANTIC
         ;
-        if <jln-pedantic>as_error in $(properties)
-        {
-          flags +=
-            <cxxflags>-pedantic-errors
-          ;
-        }
       }
-      if ! (  <jln-stack-protector>off in $(properties) )
+    }
+    if ! (  <jln-warnings>off in $(properties) )
+    {
+      if $(toolset) = gcc
       {
         flags +=
-          <cxxflags>-Wstack-protector
-          <cxxflags>-fstack-protector
-          <linkflags>-fstack-protector
-          <define>_FORTIFY_SOURCE=2
+          <cxxflags>-Wall
+          <cxxflags>-Wextra
+          <cxxflags>-Wcast-align
+          <cxxflags>-Wcast-qual
+          <cxxflags>-Wdisabled-optimization
+          <cxxflags>-Wfloat-equal
+          <cxxflags>-Wformat-security
+          <cxxflags>-Wformat-signedness
+          <cxxflags>-Wformat=2
+          <cxxflags>-Wmissing-declarations
+          <cxxflags>-Wmissing-include-dirs
+          <cxxflags>-Wnon-virtual-dtor
+          <cxxflags>-Wold-style-cast
+          <cxxflags>-Woverloaded-virtual
+          <cxxflags>-Wpacked
+          <cxxflags>-Wredundant-decls
+          <cxxflags>-Wundef
+          <cxxflags>-Wuninitialized
+          <cxxflags>-Wunused-macros
+          <cxxflags>-Wvla
+          <cxxflags>-Wconversion
         ;
-        if <jln-stack-protector>strong in $(properties)
+        if ! (  $(version) < 04.07  )
         {
-          if ! (  $(toolset) = gcc && $(version) < 04.09  )
+          flags +=
+            <cxxflags>-Wsuggest-attribute=noreturn
+            <cxxflags>-Wzero-as-null-pointer-constant
+            <cxxflags>-Wlogical-op
+            <cxxflags>-Wvector-operation-performance
+            <cxxflags>-Wdouble-promotion
+            <cxxflags>-Wtrampolines
+          ;
+          if ! (  $(version) < 04.08  )
           {
             flags +=
-              <cxxflags>-fstack-protector-strong
-              <linkflags>-fstack-protector-strong
+              <cxxflags>-Wuseless-cast
             ;
-          }
-        }
-        else if <jln-stack-protector>all in $(properties)
-        {
-          flags +=
-            <cxxflags>-fstack-protector-all
-            <linkflags>-fstack-protector-all
-          ;
-        }
-      }
-      if ! (  <jln-relro>default in $(properties) )
-      {
-        if <jln-relro>off in $(properties)
-        {
-          flags +=
-            <linkflags>-l-Wl,-z,norelro
-          ;
-        }
-        else if <jln-relro>on in $(properties)
-        {
-          flags +=
-            <linkflags>-l-Wl,-z,relro
-          ;
-        }
-        else if <jln-relro>full in $(properties)
-        {
-          flags +=
-            <linkflags>-l-Wl,-z,relro,-z,now
-          ;
-        }
-      }
-      if ! (  <jln-suggests>off in $(properties) )
-      {
-        if $(toolset) = gcc
-        {
-          flags +=
-            <cxxflags>-Wsuggest-attribute=pure
-            <cxxflags>-Wsuggest-attribute=const
-          ;
-          if ! (  $(version) < 05.00  )
-          {
-            flags +=
-              <cxxflags>-Wsuggest-final-types
-              <cxxflags>-Wsuggest-final-methods
-            ;
-          }
-        }
-      }
-      if ! (  <jln-libcxx-debug>off in $(properties) )
-      {
-        flags +=
-          <define>_LIBCPP_DEBUG=1
-        ;
-        if <jln-libcxx-debug>allow_broken_abi in $(properties)
-        {
-          flags +=
-            <define>_GLIBCXX_DEBUG
-          ;
-        }
-        else
-        {
-          flags +=
-            <define>_GLIBCXX_ASSERTIONS
-          ;
-        }
-        if ! (  <jln-pedantic>off in $(properties) )
-        {
-          flags +=
-            <define>_GLIBCXX_DEBUG_PEDANTIC
-          ;
-        }
-      }
-      if ! (  <jln-warnings>off in $(properties) )
-      {
-        if $(toolset) = gcc
-        {
-          flags +=
-            <cxxflags>-Wall
-            <cxxflags>-Wextra
-            <cxxflags>-Wcast-align
-            <cxxflags>-Wcast-qual
-            <cxxflags>-Wdisabled-optimization
-            <cxxflags>-Wfloat-equal
-            <cxxflags>-Wformat-security
-            <cxxflags>-Wformat-signedness
-            <cxxflags>-Wformat=2
-            <cxxflags>-Wmissing-declarations
-            <cxxflags>-Wmissing-include-dirs
-            <cxxflags>-Wnon-virtual-dtor
-            <cxxflags>-Wold-style-cast
-            <cxxflags>-Woverloaded-virtual
-            <cxxflags>-Wpacked
-            <cxxflags>-Wredundant-decls
-            <cxxflags>-Wundef
-            <cxxflags>-Wuninitialized
-            <cxxflags>-Wunused-macros
-            <cxxflags>-Wvla
-            <cxxflags>-Wconversion
-            <cxxflags>-Wswitch-default
-            <cxxflags>-Wswitch-enum
-          ;
-          if ! (  $(version) < 04.07  )
-          {
-            flags +=
-              <cxxflags>-Wsuggest-attribute=noreturn
-              <cxxflags>-Wzero-as-null-pointer-constant
-              <cxxflags>-Wlogical-op
-              <cxxflags>-Wvector-operation-performance
-              <cxxflags>-Wdouble-promotion
-              <cxxflags>-Wtrampolines
-            ;
-            if ! (  $(version) < 04.08  )
+            if ! (  $(version) < 04.09  )
             {
               flags +=
-                <cxxflags>-Wuseless-cast
+                <cxxflags>-Wconditionally-supported
+                <cxxflags>-Wfloat-conversion
+                <cxxflags>-Wopenmp-simd
               ;
-              if ! (  $(version) < 04.09  )
+              if ! (  $(version) < 05.01  )
               {
                 flags +=
+                  <cxxflags>-fsized-deallocation
+                  <cxxflags>-Warray-bounds=2
                   <cxxflags>-Wconditionally-supported
-                  <cxxflags>-Wfloat-conversion
-                  <cxxflags>-Wopenmp-simd
+                  <cxxflags>-Wnoexcept
+                  <cxxflags>-Wsized-deallocation
+                  <cxxflags>-Wstrict-null-sentinel
+                  <cxxflags>-Wsuggest-override
                 ;
-                if ! (  $(version) < 05.01  )
+                if ! (  $(version) < 06.01  )
                 {
                   flags +=
-                    <cxxflags>-fsized-deallocation
-                    <cxxflags>-Warray-bounds=2
-                    <cxxflags>-Wconditionally-supported
-                    <cxxflags>-Wnoexcept
-                    <cxxflags>-Wsized-deallocation
-                    <cxxflags>-Wstrict-null-sentinel
-                    <cxxflags>-Wsuggest-override
+                    <cxxflags>-Wduplicated-cond
+                    <cxxflags>-Wnull-dereference
                   ;
-                  if ! (  $(version) < 06.01  )
+                  if ! (  $(version) < 07.00  )
                   {
                     flags +=
-                      <cxxflags>-Wduplicated-cond
-                      <cxxflags>-Wnull-dereference
+                      <cxxflags>-Waligned-new
                     ;
-                    if ! (  $(version) < 07.00  )
+                    if ! (  $(version) < 07.01  )
                     {
                       flags +=
-                        <cxxflags>-Waligned-new
+                        <cxxflags>-Walloc-zero
+                        <cxxflags>-Walloca
+                        <cxxflags>-Wformat-overflow
+                        <cxxflags>-Wshadow=compatible-local
                       ;
-                      if ! (  $(version) < 07.01  )
+                      if ! (  $(version) < 08.00  )
                       {
                         flags +=
-                          <cxxflags>-Walloc-zero
-                          <cxxflags>-Walloca
-                          <cxxflags>-Wformat-overflow
-                          <cxxflags>-Wshadow=compatible-local
+                          <cxxflags>-Wclass-memaccess
                         ;
-                        if ! (  $(version) < 08.00  )
-                        {
-                          flags +=
-                            <cxxflags>-Wclass-memaccess
-                          ;
-                        }
                       }
                     }
                   }
@@ -325,154 +299,164 @@ rule jln_flags ( properties * )
             }
           }
         }
-        if $(toolset) = clang
-        {
-          flags +=
-            <cxxflags>-Weverything
-            <cxxflags>-Wno-c++98-compat
-            <cxxflags>-Wno-c++98-compat-pedantic
-            <cxxflags>-Wno-mismatched-tags
-            <cxxflags>-Wno-padded
-            <cxxflags>-Wno-shadow
-            <cxxflags>-Wno-global-constructors
-            <cxxflags>-Wno-weak-vtables
-            <cxxflags>-Wno-exit-time-destructors
-            <cxxflags>-Wno-covered-switch-default
-          ;
-        }
-        if <jln-warnings>strict in $(properties)
-        {
-          flags +=
-            <cxxflags>-Wsign-conversion
-          ;
-          if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
-          {
-            flags +=
-              <cxxflags>-Wcast-align=strict
-            ;
-          }
-        }
       }
-      if ! (  <jln-sanitizers>off in $(properties) )
+      if $(toolset) = clang
       {
-        if $(toolset) = clang
-        {
-          if ! (  $(version) < 03.01  )
-          {
-            flags +=
-              <cxxflags>-fsanitize=undefined
-              <cxxflags>-fsanitize=address
-              <cxxflags>-fsanitize-address-use-after-scope
-              <cxxflags>-fno-omit-frame-pointer
-              <cxxflags>-fno-optimize-sibling-calls
-              <linkflags>-lubsan
-              <linkflags>-lasan
-            ;
-            if ! (  $(version) < 03.04  )
-            {
-              flags +=
-                <cxxflags>-fsanitize=leak
-                <linkflags>-llsan
-              ;
-              if ! (  $(version) < 06.00  )
-              {
-                flags +=
-                  <cxxflags>-fsanitize=bounds
-                  <linkflags>-fsanitize=bounds
-                ;
-              }
-            }
-          }
-        }
-        else
-        {
-          if ! (  $(version) < 04.08  )
-          {
-            flags +=
-              <cxxflags>-fsanitize=address
-              <cxxflags>-fno-omit-frame-pointer
-              <cxxflags>-fno-optimize-sibling-calls
-              <linkflags>-lasan
-            ;
-            if ! (  $(version) < 04.09  )
-            {
-              flags +=
-                <cxxflags>-fsanitize=undefined
-                <cxxflags>-fsanitize=leak
-                <linkflags>-lubsan
-                <linkflags>-llsan
-              ;
-              if ! (  $(version) < 06.00  )
-              {
-                flags +=
-                  <cxxflags>-fsanitize=bounds
-                  <cxxflags>-fsanitize=bounds-strict
-                ;
-              }
-            }
-          }
-        }
+        flags +=
+          <cxxflags>-Weverything
+          <cxxflags>-Wno-c++98-compat
+          <cxxflags>-Wno-c++98-compat-pedantic
+          <cxxflags>-Wno-mismatched-tags
+          <cxxflags>-Wno-padded
+          <cxxflags>-Wno-shadow
+          <cxxflags>-Wno-global-constructors
+          <cxxflags>-Wno-weak-vtables
+          <cxxflags>-Wno-exit-time-destructors
+          <cxxflags>-Wno-covered-switch-default
+          <cxxflags>-Wno-switch-default
+          <cxxflags>-Wno-switch-enum
+          <cxxflags>-Wno-inconsistent-missing-destructor-override
+        ;
       }
-      if ! (  <jln-sanitizers-extra>off in $(properties) )
+      if <jln-warnings>strict in $(properties)
       {
-        if <jln-sanitizers-extra>thread in $(properties)
-        {
-          flags +=
-            <cxxflags>-fsanitize=thread
-          ;
-        }
-        else if <jln-sanitizers-extra>pointer in $(properties)
-        {
-          if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
-          {
-            flags +=
-              <cxxflags>-fsanitize=pointer-compare
-              <cxxflags>-fsanitize=pointer-subtract
-            ;
-          }
-        }
-      }
-      if ! (  <jln-report-template>off in $(properties) )
-      {
+        flags +=
+          <cxxflags>-Wsign-conversion
+        ;
         if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
         {
           flags +=
-            <cxxflags>-fno-elide-type
-            <cxxflags>-fdiagnostics-show-template-tree
-          ;
-        }
-        if (  $(toolset) = clang && ! (  $(version) < 03.04  )  )
-        {
-          flags +=
-            <cxxflags>-fno-elide-type
+            <cxxflags>-Wcast-align=strict
           ;
         }
       }
-      if ! (  <jln-color>default in $(properties) )
+      else if $(toolset) = clang
       {
-        if (  (  $(toolset) = gcc && ! (  $(version) < 04.09  )  ) || $(toolset) = clang  )
+        flags +=
+          <cxxflags>-Wno-conversion
+          <cxxflags>-Wno-sign-conversion
+        ;
+      }
+    }
+    if ! (  <jln-sanitizers>off in $(properties) )
+    {
+      if $(toolset) = clang
+      {
+        if ! (  $(version) < 03.01  )
         {
-          if <jln-color>auto in $(properties)
+          flags +=
+            <cxxflags>-fsanitize=undefined
+            <cxxflags>-fsanitize=address
+            <cxxflags>-fsanitize-address-use-after-scope
+            <cxxflags>-fno-omit-frame-pointer
+            <cxxflags>-fno-optimize-sibling-calls
+            <linkflags>-lubsan
+            <linkflags>-lasan
+          ;
+          if ! (  $(version) < 03.04  )
           {
             flags +=
-              <cxxflags>-fdiagnostics-color=auto
+              <cxxflags>-fsanitize=leak
+              <linkflags>-llsan
             ;
+            if ! (  $(version) < 06.00  )
+            {
+              flags +=
+                <cxxflags>-fsanitize=bounds
+                <linkflags>-fsanitize=bounds
+              ;
+            }
           }
-          else if <jln-color>never in $(properties)
+        }
+      }
+      else
+      {
+        if ! (  $(version) < 04.08  )
+        {
+          flags +=
+            <cxxflags>-fsanitize=address
+            <cxxflags>-fno-omit-frame-pointer
+            <cxxflags>-fno-optimize-sibling-calls
+            <linkflags>-lasan
+          ;
+          if ! (  $(version) < 04.09  )
           {
             flags +=
-              <cxxflags>-fdiagnostics-color=never
+              <cxxflags>-fsanitize=undefined
+              <cxxflags>-fsanitize=leak
+              <linkflags>-lubsan
+              <linkflags>-llsan
             ;
-          }
-          else if <jln-color>always in $(properties)
-          {
-            flags +=
-              <cxxflags>-fdiagnostics-color=always
-            ;
+            if ! (  $(version) < 06.00  )
+            {
+              flags +=
+                <cxxflags>-fsanitize=bounds
+                <cxxflags>-fsanitize=bounds-strict
+              ;
+            }
           }
         }
       }
     }
-    FLAGS = $(flags) ; return $(flags) ;
+    if ! (  <jln-sanitizers-extra>off in $(properties) )
+    {
+      if <jln-sanitizers-extra>thread in $(properties)
+      {
+        flags +=
+          <cxxflags>-fsanitize=thread
+        ;
+      }
+      else if <jln-sanitizers-extra>pointer in $(properties)
+      {
+        if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
+        {
+          flags +=
+            <cxxflags>-fsanitize=pointer-compare
+            <cxxflags>-fsanitize=pointer-subtract
+          ;
+        }
+      }
+    }
+    if ! (  <jln-report-template>off in $(properties) )
+    {
+      if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
+      {
+        flags +=
+          <cxxflags>-fno-elide-type
+          <cxxflags>-fdiagnostics-show-template-tree
+        ;
+      }
+      if (  $(toolset) = clang && ! (  $(version) < 03.04  )  )
+      {
+        flags +=
+          <cxxflags>-fno-elide-type
+        ;
+      }
+    }
+    if ! (  <jln-color>default in $(properties) )
+    {
+      if (  (  $(toolset) = gcc && ! (  $(version) < 04.09  )  ) || $(toolset) = clang  )
+      {
+        if <jln-color>auto in $(properties)
+        {
+          flags +=
+            <cxxflags>-fdiagnostics-color=auto
+          ;
+        }
+        else if <jln-color>never in $(properties)
+        {
+          flags +=
+            <cxxflags>-fdiagnostics-color=never
+          ;
+        }
+        else if <jln-color>always in $(properties)
+        {
+          flags +=
+            <cxxflags>-fdiagnostics-color=always
+          ;
+        }
+      }
+    }
   }
+  return $(flags) ;
 }
