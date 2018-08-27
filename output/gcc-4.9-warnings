@@ -2,7 +2,6 @@
 -Wcast-align
 -Wcast-qual
 -Wconditionally-supported
--Wconversion
 -Wdisabled-optimization
 -Wdouble-promotion
 -Wextra

@@ -52,8 +52,8 @@ function(jln_init_flags)
     set(JLN_LIBCXX_DEBUG "off" CACHE STRING "")
   endif()
 
-  if(NOT(("off" STREQUAL JLN_LIBCXX_DEBUG) OR ("on" STREQUAL JLN_LIBCXX_DEBUG) OR ("allow_broken_abi" STREQUAL JLN_LIBCXX_DEBUG) OR ("assert_as_exceptions" STREQUAL JLN_LIBCXX_DEBUG)))
-    message(FATAL_ERROR "Unknow value \"${JLN_LIBCXX_DEBUG}\" for JLN_LIBCXX_DEBUG, expected: off, on, allow_broken_abi, assert_as_exceptions")
+  if(NOT(("off" STREQUAL JLN_LIBCXX_DEBUG) OR ("on" STREQUAL JLN_LIBCXX_DEBUG) OR ("allow_broken_abi" STREQUAL JLN_LIBCXX_DEBUG) OR ("assert_as_exception" STREQUAL JLN_LIBCXX_DEBUG)))
+    message(FATAL_ERROR "Unknow value \"${JLN_LIBCXX_DEBUG}\" for JLN_LIBCXX_DEBUG, expected: off, on, allow_broken_abi, assert_as_exception")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_LTO)
@@ -171,7 +171,7 @@ function(jln_init_flags)
     message(STATUS "JLN_COVERAGE=${JLN_COVERAGE}	[off, on]")
     message(STATUS "JLN_DEBUG=${JLN_DEBUG}	[off, on]")
     message(STATUS "JLN_FAST_MATH=${JLN_FAST_MATH}	[off, on]")
-    message(STATUS "JLN_LIBCXX_DEBUG=${JLN_LIBCXX_DEBUG}	[off, on, allow_broken_abi, assert_as_exceptions]")
+    message(STATUS "JLN_LIBCXX_DEBUG=${JLN_LIBCXX_DEBUG}	[off, on, allow_broken_abi, assert_as_exception]")
     message(STATUS "JLN_LTO=${JLN_LTO}	[off, on, fat]")
     message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, full]")
     message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[on, off, as_error]")
@@ -452,7 +452,7 @@ function(jln_flags)
     
       set(CXX_FLAGS ${CXX_FLAGS}  -D_LIBCPP_DEBUG=1)
 
-      if (  JLN_FLAGS_LIBCXX_DEBUG STREQUAL "assert_as_exceptions" )
+      if (  JLN_FLAGS_LIBCXX_DEBUG STREQUAL "assert_as_exception" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  -D_LIBCPP_DEBUG_USE_EXCEPTIONS)
 
@@ -477,7 +477,7 @@ function(jln_flags)
     
       if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-Wall" "-Wextra" "-Wcast-align" "-Wcast-qual" "-Wdisabled-optimization" "-Wfloat-equal" "-Wformat-security" "-Wformat-signedness" "-Wformat=2" "-Wmissing-declarations" "-Wmissing-include-dirs" "-Wnon-virtual-dtor" "-Wold-style-cast" "-Woverloaded-virtual" "-Wpacked" "-Wredundant-decls" "-Wundef" "-Wuninitialized" "-Wunused-macros" "-Wvla" "-Wconversion")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wall" "-Wextra" "-Wcast-align" "-Wcast-qual" "-Wdisabled-optimization" "-Wfloat-equal" "-Wformat-security" "-Wformat-signedness" "-Wformat=2" "-Wmissing-declarations" "-Wmissing-include-dirs" "-Wnon-virtual-dtor" "-Wold-style-cast" "-Woverloaded-virtual" "-Wpacked" "-Wredundant-decls" "-Wundef" "-Wuninitialized" "-Wunused-macros" "-Wvla")
 
         if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7" ) )
         
@@ -527,7 +527,7 @@ function(jln_flags)
       endif()
       if (  JLN_FLAGS_WARNINGS STREQUAL "strict" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-Wsign-conversion")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wconversion")
 
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
         
@@ -548,11 +548,11 @@ function(jln_flags)
         if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.1" ) )
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=undefined" "-fsanitize=address" "-fsanitize-address-use-after-scope" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
-          set(LINK_FLAGS ${LINK_FLAGS}  "-lubsan" "-lasan")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-fsanitize=undefined" "-fsanitize=address")
           if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.4" ) )
           
             set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=leak")
-            set(LINK_FLAGS ${LINK_FLAGS}  "-llsan")
+            set(LINK_FLAGS ${LINK_FLAGS}  "-fsanitize=leak")
             if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0" ) )
             
               set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=bounds")
@@ -566,11 +566,11 @@ function(jln_flags)
         if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8" ) )
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=address" "-fno-omit-frame-pointer" "-fno-optimize-sibling-calls")
-          set(LINK_FLAGS ${LINK_FLAGS}  "-lasan")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-fsanitize=address")
           if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
           
             set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=undefined" "-fsanitize=leak")
-            set(LINK_FLAGS ${LINK_FLAGS}  "-lubsan" "-llsan")
+            set(LINK_FLAGS ${LINK_FLAGS}  "-fsanitize=undefined" "-fsanitize=leak")
             if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0" ) )
             
               set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=bounds" "-fsanitize=bounds-strict")

@@ -30,7 +30,6 @@
 -Wpacked
 -Wredundant-decls
 -Wshadow=compatible-local
--Wsign-conversion
 -Wsized-deallocation
 -Wstrict-null-sentinel
 -Wsuggest-attribute=noreturn

@@ -1,7 +1,6 @@
 -Wall
 -Wcast-align
 -Wcast-qual
--Wconversion
 -Wdisabled-optimization
 -Wdouble-promotion
 -Wextra

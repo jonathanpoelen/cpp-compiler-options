@@ -2,6 +2,6 @@
 -fno-optimize-sibling-calls
 -fsanitize-address-use-after-scope
 -fsanitize=address
+-fsanitize=address
 -fsanitize=undefined
--lasan
--lubsan
+-fsanitize=undefined

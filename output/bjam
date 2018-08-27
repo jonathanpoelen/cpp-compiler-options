@@ -1,12 +1,15 @@
 # https://boostorg.github.io/build/manual/develop/index.html
 
 import feature : feature ;
+import modules ;
+
+CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
 feature <jln-color> : default auto never always : incidental ;
 feature <jln-coverage> : off on : propagated ;
 feature <jln-debug> : off on : propagated ;
 feature <jln-fast-math> : off on : propagated ;
-feature <jln-libcxx-debug> : off on allow_broken_abi assert_as_exceptions : propagated ;
+feature <jln-libcxx-debug> : off on allow_broken_abi assert_as_exception : propagated ;
 feature <jln-lto> : off on fat : propagated ;
 feature <jln-optimize> : default off on size speed full : propagated ;
 feature <jln-pedantic> : on off as_error : incidental ;
@@ -17,6 +20,20 @@ feature <jln-sanitizers-extra> : off thread pointer : propagated ;
 feature <jln-stack-protector> : off on strong all : propagated ;
 feature <jln-suggests> : off on : incidental ;
 feature <jln-warnings> : on off strict : incidental ;
+
+if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
+  import toolset ;
+  toolset.flags jln-coverage JLN_COVERAGE : <jln-coverage> ;
+  toolset.flags jln-debug JLN_DEBUG : <jln-debug> ;
+  toolset.flags jln-fast-math JLN_FAST_MATH : <jln-fast-math> ;
+  toolset.flags jln-libcxx-debug JLN_LIBCXX_DEBUG : <jln-libcxx-debug> ;
+  toolset.flags jln-lto JLN_LTO : <jln-lto> ;
+  toolset.flags jln-optimize JLN_OPTIMIZE : <jln-optimize> ;
+  toolset.flags jln-relro JLN_RELRO : <jln-relro> ;
+  toolset.flags jln-sanitizers JLN_SANITIZERS : <jln-sanitizers> ;
+  toolset.flags jln-sanitizers-extra JLN_SANITIZERS_EXTRA : <jln-sanitizers-extra> ;
+  toolset.flags jln-stack-protector JLN_STACK_PROTECTOR : <jln-stack-protector> ;
+}
 
 import property-set ;
 import string ;
@@ -57,7 +74,23 @@ rule jln_flags ( properties * )
   local toolset = [ $(ps).get <toolset> ] ;
   local version = [ jln-get-normalized-compiler-version $(toolset)
                   : [ $(ps).get <toolset-$(toolset):version> ] ] ;
-  local flags ;
+
+  local flags = ;
+  if $(CXX_BJAM_YEAR_VERSION) >= 2016.00
+  {
+    flags += 
+      <relevant>jln-coverage
+      <relevant>jln-debug
+      <relevant>jln-fast-math
+      <relevant>jln-libcxx-debug
+      <relevant>jln-lto
+      <relevant>jln-optimize
+      <relevant>jln-relro
+      <relevant>jln-sanitizers
+      <relevant>jln-sanitizers-extra
+      <relevant>jln-stack-protector
+    ;
+  }
 
 
   if (  $(toolset) = gcc || $(toolset) = clang  )
@@ -182,7 +215,7 @@ rule jln_flags ( properties * )
       flags +=
         <define>_LIBCPP_DEBUG=1
       ;
-      if <jln-libcxx-debug>assert_as_exceptions in $(properties)
+      if <jln-libcxx-debug>assert_as_exception in $(properties)
       {
         flags +=
           <define>_LIBCPP_DEBUG_USE_EXCEPTIONS
@@ -232,7 +265,6 @@ rule jln_flags ( properties * )
           <cxxflags>-Wuninitialized
           <cxxflags>-Wunused-macros
           <cxxflags>-Wvla
-          <cxxflags>-Wconversion
         ;
         if ! (  $(version) < 04.07  )
         {
@@ -321,7 +353,7 @@ rule jln_flags ( properties * )
       if <jln-warnings>strict in $(properties)
       {
         flags +=
-          <cxxflags>-Wsign-conversion
+          <cxxflags>-Wconversion
         ;
         if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
         {
@@ -350,14 +382,14 @@ rule jln_flags ( properties * )
             <cxxflags>-fsanitize-address-use-after-scope
             <cxxflags>-fno-omit-frame-pointer
             <cxxflags>-fno-optimize-sibling-calls
-            <linkflags>-lubsan
-            <linkflags>-lasan
+            <linkflags>-fsanitize=undefined
+            <linkflags>-fsanitize=address
           ;
           if ! (  $(version) < 03.04  )
           {
             flags +=
               <cxxflags>-fsanitize=leak
-              <linkflags>-llsan
+              <linkflags>-fsanitize=leak
             ;
             if ! (  $(version) < 06.00  )
             {
@@ -377,15 +409,15 @@ rule jln_flags ( properties * )
             <cxxflags>-fsanitize=address
             <cxxflags>-fno-omit-frame-pointer
             <cxxflags>-fno-optimize-sibling-calls
-            <linkflags>-lasan
+            <linkflags>-fsanitize=address
           ;
           if ! (  $(version) < 04.09  )
           {
             flags +=
               <cxxflags>-fsanitize=undefined
               <cxxflags>-fsanitize=leak
-              <linkflags>-lubsan
-              <linkflags>-llsan
+              <linkflags>-fsanitize=undefined
+              <linkflags>-fsanitize=leak
             ;
             if ! (  $(version) < 06.00  )
             {

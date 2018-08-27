@@ -1,8 +1,8 @@
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
 -fsanitize=address
+-fsanitize=address
+-fsanitize=leak
 -fsanitize=leak
 -fsanitize=undefined
--lasan
--llsan
--lubsan
+-fsanitize=undefined

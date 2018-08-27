@@ -5,9 +5,9 @@
 -fsanitize-address-use-after-scope
 -fsanitize=address
 -fsanitize=address
+-fsanitize=address
+-fsanitize=address
+-fsanitize=leak
 -fsanitize=leak
 -fsanitize=undefined
--lasan
--lasan
--llsan
--lubsan
+-fsanitize=undefined

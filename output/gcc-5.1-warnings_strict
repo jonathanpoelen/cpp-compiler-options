@@ -23,7 +23,6 @@
 -Woverloaded-virtual
 -Wpacked
 -Wredundant-decls
--Wsign-conversion
 -Wsized-deallocation
 -Wstrict-null-sentinel
 -Wsuggest-attribute=noreturn

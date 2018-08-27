@@ -7,7 +7,6 @@
 -Wcast-qual
 -Wconditionally-supported
 -Wconditionally-supported
--Wconversion
 -Wdisabled-optimization
 -Wdouble-promotion
 -Wduplicated-cond

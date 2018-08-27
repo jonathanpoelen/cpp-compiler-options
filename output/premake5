@@ -46,7 +46,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "off") end
   newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
   if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or defaults["jln-fast-math"] or "off") end
-  newoption{trigger="jln-libcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}, {"assert_as_exceptions"}}, description="libcxx_debug"}
+  newoption{trigger="jln-libcxx-debug", allowed={{"off"}, {"on"}, {"allow_broken_abi"}, {"assert_as_exception"}}, description="libcxx_debug"}
   if not _OPTIONS["jln-libcxx-debug"] then _OPTIONS["jln-libcxx-debug"] = (defaults["libcxx_debug"] or defaults["jln-libcxx-debug"] or "off") end
   newoption{trigger="jln-lto", allowed={{"off"}, {"on"}, {"fat"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "off") end
@@ -318,7 +318,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     if not ( values["jln-libcxx-debug"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG=1"
-      if values["jln-libcxx-debug"] == "assert_as_exceptions" then
+      if values["jln-libcxx-debug"] == "assert_as_exception" then
       
         jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG_USE_EXCEPTIONS"
       end
@@ -339,7 +339,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     
       if compiler == "gcc" then
       
-        jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat-signedness -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wredundant-decls -Wundef -Wuninitialized -Wunused-macros -Wvla -Wconversion"
+        jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat-signedness -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wredundant-decls -Wundef -Wuninitialized -Wunused-macros -Wvla"
         if not ( compversion < 407 ) then
         
           jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=noreturn -Wzero-as-null-pointer-constant -Wlogical-op -Wvector-operation-performance -Wdouble-promotion -Wtrampolines"
@@ -379,7 +379,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       end
       if values["jln-warnings"] == "strict" then
       
-        jln_buildoptions = jln_buildoptions .. " -Wsign-conversion"
+        jln_buildoptions = jln_buildoptions .. " -Wconversion"
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
         
           jln_buildoptions = jln_buildoptions .. " -Wcast-align=strict"
@@ -397,11 +397,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         if not ( compversion < 301 ) then
         
           jln_buildoptions = jln_buildoptions .. " -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer -fno-optimize-sibling-calls"
-          jln_linkoptions = jln_linkoptions .. " -lubsan -lasan"
+          jln_linkoptions = jln_linkoptions .. " -fsanitize=undefined -fsanitize=address"
           if not ( compversion < 304 ) then
           
             jln_buildoptions = jln_buildoptions .. " -fsanitize=leak"
-            jln_linkoptions = jln_linkoptions .. " -llsan"
+            jln_linkoptions = jln_linkoptions .. " -fsanitize=leak"
             if not ( compversion < 600 ) then
             
               jln_buildoptions = jln_buildoptions .. " -fsanitize=bounds"
@@ -415,11 +415,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         if not ( compversion < 408 ) then
         
           jln_buildoptions = jln_buildoptions .. " -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"
-          jln_linkoptions = jln_linkoptions .. " -lasan"
+          jln_linkoptions = jln_linkoptions .. " -fsanitize=address"
           if not ( compversion < 409 ) then
           
             jln_buildoptions = jln_buildoptions .. " -fsanitize=undefined -fsanitize=leak"
-            jln_linkoptions = jln_linkoptions .. " -lubsan -llsan"
+            jln_linkoptions = jln_linkoptions .. " -fsanitize=undefined -fsanitize=leak"
             if not ( compversion < 600 ) then
             
               jln_buildoptions = jln_buildoptions .. " -fsanitize=bounds -fsanitize=bounds-strict"

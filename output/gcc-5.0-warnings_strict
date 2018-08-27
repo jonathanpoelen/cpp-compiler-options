@@ -20,7 +20,6 @@
 -Woverloaded-virtual
 -Wpacked
 -Wredundant-decls
--Wsign-conversion
 -Wsuggest-attribute=noreturn
 -Wtrampolines
 -Wundef
