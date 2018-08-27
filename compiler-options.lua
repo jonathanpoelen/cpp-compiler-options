@@ -128,7 +128,7 @@ G = Or(gcc, clang) {
 
   opt'libcxx_debug' {
     def'_LIBCPP_DEBUG=1',
-    lvl'assert_as_exceptions' {
+    lvl'assert_as_exception' {
       def'_LIBCPP_DEBUG_USE_EXCEPTIONS'
     },
     lvl'allow_broken_abi' {
@@ -165,8 +165,6 @@ G = Or(gcc, clang) {
       cxx'-Wunused-macros',
       cxx'-Wvla',
    -- cxx'-Winline',
-      cxx'-Wconversion',
-   -- cxx'-Wsign-conversion', -- disabled by default with C++, enabled by -Wconversion
    -- cxx'-Wswitch-default',
    -- cxx'-Wswitch-enum',
     }*
@@ -246,7 +244,7 @@ G = Or(gcc, clang) {
     },
 
     lvl'strict' {
-      cxx'-Wsign-conversion',
+      cxx'-Wconversion',
       gcc(8) { cxx'-Wcast-align=strict', }
     } /
     clang {
@@ -258,17 +256,14 @@ G = Or(gcc, clang) {
   opt'sanitizers' {
     clang {
       vers(3,1) {
-        cxx'-fsanitize=undefined',
-        link'ubsan',
-        cxx'-fsanitize=address', -- memory, thread are mutually exclusive
-        link'asan',
+        fl'-fsanitize=undefined',
+        fl'-fsanitize=address', -- memory, thread are mutually exclusive
         cxx'-fsanitize-address-use-after-scope',
         cxx'-fno-omit-frame-pointer',
         cxx'-fno-optimize-sibling-calls',
       }*
       vers(3,4) {
-        cxx'-fsanitize=leak', -- requires the address sanitizer
-        link'lsan',
+        fl'-fsanitize=leak', -- requires the address sanitizer
       }*
       vers(6) {
         fl'-fsanitize=bounds',
@@ -277,16 +272,13 @@ G = Or(gcc, clang) {
     -- gcc
     {
       vers(4,8) {
-        cxx'-fsanitize=address', -- memory, thread are mutually exclusive
-        link'asan',
+        fl'-fsanitize=address', -- memory, thread are mutually exclusive
         cxx'-fno-omit-frame-pointer',
         cxx'-fno-optimize-sibling-calls',
       }*
       vers(4,9) {
-        cxx'-fsanitize=undefined',
-        link'ubsan',
-        cxx'-fsanitize=leak', -- requires the address sanitizer
-        link'lsan',
+        fl'-fsanitize=undefined',
+        fl'-fsanitize=leak', -- requires the address sanitizer
       }*
       vers(6) {
         cxx'-fsanitize=bounds',
@@ -371,7 +363,7 @@ Vbase = {
     coverage={'off', {'off', 'on'}},
     pedantic={'off', {'on', 'off', 'as_error'}},
     debug={'off', {'off', 'on'}},
-    libcxx_debug={'off', {'off', 'on', 'allow_broken_abi', 'assert_as_exceptions'}},
+    libcxx_debug={'off', {'off', 'on', 'allow_broken_abi', 'assert_as_exception'}},
     sanitizers={'off', {'off', 'on'}},
     sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
     suggests={'off', {'off', 'on'}},
