@@ -29,23 +29,42 @@ return {
     _.optprefix = optprefix or ''
     _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
-    _:print('# https://boostorg.github.io/build/manual/develop/index.html\n')
+    _:print([[# https://boostorg.github.io/build/manual/develop/index.html
 
-    _:print('import feature : feature ;\n')
+import feature : feature ;
+import modules ;
+
+CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
+]])
 
     -- for optname,k in pairs({'compiler', 'compiler-version'}) do
     --   local opt = _.optprefix .. tobjamoption(optname)
     --   _:print('feature <' .. opt .. '> : : free ;')
     -- end
 
+    local relevants = ""
+
     for optname,args in _:getoptions() do
       if optname ~= 'warnings_as_error' then
         local opt = _.optprefix .. tobjamoption(optname)
+        if not _._incidental[optname] then
+          relevants = relevants .. "\n      <relevant>" .. opt
+        end
         _:print('feature <' .. opt .. '> : ' .. table.concat(args, ' ')
           .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
       end
     end
-    _:print([[
+    relevants = relevants .. '\n'
+
+    _:print('\nif $(CXX_BJAM_YEAR_VERSION) < 2016.00 {')
+    _:print('  import toolset ;')
+    for optname,args in _:getoptions() do
+      if optname ~= 'warnings_as_error' and not _._incidental[optname] then
+        local opt = _.optprefix .. tobjamoption(optname)
+        _:print('  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;')
+      end
+    end
+    _:print([[}
 
 import property-set ;
 import string ;
@@ -86,7 +105,13 @@ rule jln_flags ( properties * )
   local toolset = [ $(ps).get <toolset> ] ;
   local version = [ jln-get-normalized-compiler-version $(toolset)
                   : [ $(ps).get <toolset-$(toolset):version> ] ] ;
-  local flags ;
+
+  local flags = ;
+  if $(CXX_BJAM_YEAR_VERSION) >= 2016.00
+  {
+    flags += ]] .. relevants .. [[
+    ;
+  }
 
 ]])
     _.indent = '  '
