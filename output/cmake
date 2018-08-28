@@ -445,6 +445,11 @@ function(jln_flags)
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wsuggest-final-types" "-Wsuggest-final-methods")
 
+          if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1" ) )
+          
+            set(CXX_FLAGS ${CXX_FLAGS}  "-Wnoexcept")
+
+          endif()
         endif()
       endif()
     endif()
@@ -493,7 +498,7 @@ function(jln_flags)
 
               if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1" ) )
               
-                set(CXX_FLAGS ${CXX_FLAGS}  "-fsized-deallocation" "-Warray-bounds=2" "-Wconditionally-supported" "-Wnoexcept" "-Wsized-deallocation" "-Wstrict-null-sentinel" "-Wsuggest-override")
+                set(CXX_FLAGS ${CXX_FLAGS}  "-fsized-deallocation" "-Warray-bounds=2" "-Wconditionally-supported" "-Wsized-deallocation" "-Wstrict-null-sentinel" "-Wsuggest-override")
 
                 if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.1" ) )
                 

@@ -312,6 +312,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         if not ( compversion < 500 ) then
         
           jln_buildoptions = jln_buildoptions .. " -Wsuggest-final-types -Wsuggest-final-methods"
+          if not ( compversion < 501 ) then
+          
+            jln_buildoptions = jln_buildoptions .. " -Wnoexcept"
+          end
         end
       end
     end
@@ -351,7 +355,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
               jln_buildoptions = jln_buildoptions .. " -Wconditionally-supported -Wfloat-conversion -Wopenmp-simd"
               if not ( compversion < 501 ) then
               
-                jln_buildoptions = jln_buildoptions .. " -fsized-deallocation -Warray-bounds=2 -Wconditionally-supported -Wnoexcept -Wsized-deallocation -Wstrict-null-sentinel -Wsuggest-override"
+                jln_buildoptions = jln_buildoptions .. " -fsized-deallocation -Warray-bounds=2 -Wconditionally-supported -Wsized-deallocation -Wstrict-null-sentinel -Wsuggest-override"
                 if not ( compversion < 601 ) then
                 
                   jln_buildoptions = jln_buildoptions .. " -Wduplicated-cond -Wnull-dereference"

@@ -207,6 +207,12 @@ rule jln_flags ( properties * )
             <cxxflags>-Wsuggest-final-types
             <cxxflags>-Wsuggest-final-methods
           ;
+          if ! (  $(version) < 05.01  )
+          {
+            flags +=
+              <cxxflags>-Wnoexcept
+            ;
+          }
         }
       }
     }
@@ -294,7 +300,6 @@ rule jln_flags ( properties * )
                   <cxxflags>-fsized-deallocation
                   <cxxflags>-Warray-bounds=2
                   <cxxflags>-Wconditionally-supported
-                  <cxxflags>-Wnoexcept
                   <cxxflags>-Wsized-deallocation
                   <cxxflags>-Wstrict-null-sentinel
                   <cxxflags>-Wsuggest-override

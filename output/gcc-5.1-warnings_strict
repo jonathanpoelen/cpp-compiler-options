@@ -16,7 +16,6 @@
 -Wlogical-op
 -Wmissing-declarations
 -Wmissing-include-dirs
--Wnoexcept
 -Wnon-virtual-dtor
 -Wold-style-cast
 -Wopenmp-simd

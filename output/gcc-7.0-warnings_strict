@@ -18,7 +18,6 @@
 -Wlogical-op
 -Wmissing-declarations
 -Wmissing-include-dirs
--Wnoexcept
 -Wnon-virtual-dtor
 -Wnull-dereference
 -Wold-style-cast
