@@ -123,6 +123,9 @@ G = Or(gcc, clang) {
       cxx'-Wsuggest-final-types',
       cxx'-Wsuggest-final-methods',
    -- cxx'-Wsuggest-attribute=format',
+    }*
+    vers(5,1) {
+      cxx'-Wnoexcept',
     },
   },
 
@@ -195,7 +198,6 @@ G = Or(gcc, clang) {
       cxx'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
       cxx'-Wconditionally-supported',
    -- cxx'-Wctor-dtor-privacy',
-      cxx'-Wnoexcept',
       cxx'-Wsized-deallocation',
       cxx'-Wstrict-null-sentinel',
       cxx'-Wsuggest-override',
