@@ -603,8 +603,14 @@ function insert_missing_function(V)
 end
 
 function run(generaton_name, ...)
-  if not generaton_name then
-    error('Missing generator')
+  if not generaton_name or generaton_name == '-h' or generaton_name == '--help' then
+    local out = generaton_name and io.stdout or io.stderr
+    out:write(arg[0] .. ' {generator.lua} [-h|{options}...]\n')
+    if not generaton_name then
+      out:write('Missing generator file\n')  
+      os.exit(1)
+    end
+    return
   end
   local V = require(generaton_name:gsub('.lua$', ''))
   insert_missing_function(V)
@@ -613,9 +619,7 @@ function run(generaton_name, ...)
   if r == false then
     os.exit(1)
   elseif type(r) == 'number' then
-    if r ~= 0 then
-      os.exit(r)
-    end
+    os.exit(r)
   elseif r ~= nil and r ~= V then
     V = r
     insert_missing_function(V)

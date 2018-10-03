@@ -1,10 +1,11 @@
 Compilation options for different versions of Clang and GCC. Provided a generator and different file formats (`cmake`, `premake5`, `bjam`/`b2`, ...).
 
-The `output` directory contains files for `cmake`, `bjam` and command-line options for `gcc` and `clang`.
+The `output` directory contains files for `cmake`, `premake5`, `bjam` and command-line options for `gcc` and `clang`.
 
 $ `g++ @output/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 
 > <stdin>:1:10: warning: zero as null pointer constant \[-Wzero-as-null-pointer-constant]
+(`@file` is a special option of gcc/clang)
 
 $ `cmake -DJLN_FAST_MATH=on`
 
@@ -40,6 +41,8 @@ warnings_as_error = off on
 # Cmake Generator
 
 ```cmake
+# include(output/cmake)
+
 # init cache and cli parser
 # jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
 # (cmake -DJLN_VERBOSE=on -DJLN_DEBUG=on)
@@ -69,6 +72,8 @@ link_libraries(lib_project2)
 # Premake5 Generator
 
 ```lua
+-- include "output/premake5"
+
 -- Registers new command-line options (ex jln_newoptions({debug='on'}))
 jln_newoptions([default_values])
 
@@ -90,10 +95,21 @@ jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]
 # Bjam/B2 Generator
 
 ```jam
+# include output/bjam ;
+
 # rule jln_flags ( properties * )
 
 project name : requirements
   <jln-lto>on # enable jln-lto
   <conditional>@jln_flags
 : default-build release ;
+```
+
+
+# Create a bash alias for the compiler
+
+```sh
+for comp in g++ clang++ ; do
+  echo "alias ${comp:0:1}w++='$comp "$(./compiler-options.lua generators/compiler.lua $comp)\'
+done >> ~/.bashrc
 ```

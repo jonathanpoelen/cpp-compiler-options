@@ -1,11 +1,11 @@
 return {
   d = {comp={}, test={true}, opts={
     libcxx_debug='allow_broken_ABI',
-    debug=true,
-    pedantic=true,
-    sanitizers=true,
-    suggests=true,
-    warnings=true,
+    debug='on',
+    pedantic='on',
+    sanitizers='on',
+    suggests='on',
+    warnings='on',
   }},
 
   ignore={
@@ -14,7 +14,7 @@ return {
   indent = '',
 
   start=function(_, compiler, ...)
-    -- list compiler
+    -- list compilers
     if not compiler then
       return {
         t = {},
@@ -54,8 +54,20 @@ return {
       }
     end
 
+    -- help
+    if compiler == '-h' or compiler == '--help' then
+      print(arg[0] .. ' [-h] | [ {compiler|compiler-version} [[{+|-}]{option}[={level}] ...]] ]')
+      print('\nsample:\n  ' .. arg[0] .. ' ' .. arg[1] .. ' gcc warnings=strict')
+      print('\nBy default:')
+      for k,v in pairs(_.d.opts) do
+        print('  ' .. k .. '=' .. v)
+      end
+      return 0
+    end
+
+    -- list options 
     local t = _.d.comp
-    compiler:gsub('%w+', function(x) t[#t+1]=x end)
+    compiler:gsub('^g++','gcc'):gsub('^clang++', 'clang'):gsub('%w+', function(x) t[#t+1]=x end)
     t[2] = t[2] and tonumber(t[2]) or 999
     t[3] = t[3] and tonumber(t[3]) or 999
     t[4] = t[4] and tonumber(t[4]) or 999
@@ -104,11 +116,7 @@ return {
 
   startopt=function(_, name)
     _.d.opt = name
-    if _.d.opts[name] then
-      -- _:print('## category: ' .. name)
-      return true
-    end
-    return false
+    return _.d.opts[name] and true or false
   end,
 
   stopopt=function(_)
