@@ -141,7 +141,7 @@ return {
         r = _.d.comp[2] > v.version[1] or (_.d.comp[2] == v.version[1] and _.d.comp[3] >= v.version[2])
       end
     elseif v.compiler then r = _.d.comp[1] == v.compiler
-    elseif v.hasopt   then r = not _.d.opts or _.d.opts[v.hasopt]
+    elseif v.hasopt   then r = not _.d.opts or (_.d.opts[v.hasopt] and true or false)
     else
       local ks = ''
       for k,_ in pairs(v) do

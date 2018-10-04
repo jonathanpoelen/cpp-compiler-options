@@ -555,7 +555,7 @@ function evalflags(t, v, curropt, no_stopcond)
       evalflags(t._t, v, curropt)
       v.indent = v.indent:sub(1, #v.indent-2)
     end
-    if t._else then
+    if r ~= true and t._else then
       local n = #t._else
       for k,x in ipairs(t._else) do
         mark_elseif = (k ~= n or is_cond(x))
