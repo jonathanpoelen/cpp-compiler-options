@@ -107,9 +107,18 @@ return {
   end,
 
   stop=function(_)
+    -- remove duplications
     if #_._strs ~= 0 then
-      table.sort(_._strs)
-      return table.concat(_._strs, '\n') .. '\n'
+      local t = {}
+      for k,v in ipairs(_._strs) do
+        t[v] = true
+      end
+      local l = {}
+      for k,v in pairs(t) do
+        l[#l+1] = k
+      end      
+      table.sort(l)
+      return table.concat(l, '\n') .. '\n'
     end
     return ''
   end,
