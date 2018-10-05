@@ -3,7 +3,6 @@
 -Wcast-align
 -Wcast-qual
 -Wconditionally-supported
--Wconditionally-supported
 -Wdisabled-optimization
 -Wdouble-promotion
 -Wduplicated-cond

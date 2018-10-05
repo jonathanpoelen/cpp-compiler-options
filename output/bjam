@@ -9,7 +9,6 @@ feature <jln-color> : default auto never always : incidental ;
 feature <jln-coverage> : off on : propagated ;
 feature <jln-debug> : off on : propagated ;
 feature <jln-fast-math> : off on : propagated ;
-feature <jln-libcxx-debug> : off on allow_broken_abi assert_as_exception : propagated ;
 feature <jln-lto> : off on fat : propagated ;
 feature <jln-optimize> : default off on size speed full : propagated ;
 feature <jln-pedantic> : on off as_error : incidental ;
@@ -18,6 +17,7 @@ feature <jln-report-template> : off on : incidental ;
 feature <jln-sanitizers> : off on : propagated ;
 feature <jln-sanitizers-extra> : off thread pointer : propagated ;
 feature <jln-stack-protector> : off on strong all : propagated ;
+feature <jln-stl-debug> : off on allow_broken_abi assert_as_exception : propagated ;
 feature <jln-suggests> : off on : incidental ;
 feature <jln-warnings> : on off strict : incidental ;
 
@@ -26,13 +26,13 @@ if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   toolset.flags jln-coverage JLN_COVERAGE : <jln-coverage> ;
   toolset.flags jln-debug JLN_DEBUG : <jln-debug> ;
   toolset.flags jln-fast-math JLN_FAST_MATH : <jln-fast-math> ;
-  toolset.flags jln-libcxx-debug JLN_LIBCXX_DEBUG : <jln-libcxx-debug> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-optimize JLN_OPTIMIZE : <jln-optimize> ;
   toolset.flags jln-relro JLN_RELRO : <jln-relro> ;
   toolset.flags jln-sanitizers JLN_SANITIZERS : <jln-sanitizers> ;
   toolset.flags jln-sanitizers-extra JLN_SANITIZERS_EXTRA : <jln-sanitizers-extra> ;
   toolset.flags jln-stack-protector JLN_STACK_PROTECTOR : <jln-stack-protector> ;
+  toolset.flags jln-stl-debug JLN_STL_DEBUG : <jln-stl-debug> ;
 }
 
 import property-set ;
@@ -82,13 +82,13 @@ rule jln_flags ( properties * )
       <relevant>jln-coverage
       <relevant>jln-debug
       <relevant>jln-fast-math
-      <relevant>jln-libcxx-debug
       <relevant>jln-lto
       <relevant>jln-optimize
       <relevant>jln-relro
       <relevant>jln-sanitizers
       <relevant>jln-sanitizers-extra
       <relevant>jln-stack-protector
+      <relevant>jln-stl-debug
     ;
   }
 
@@ -216,18 +216,18 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if ! (  <jln-libcxx-debug>off in $(properties) )
+    if ! (  <jln-stl-debug>off in $(properties) )
     {
       flags +=
         <define>_LIBCPP_DEBUG=1
       ;
-      if <jln-libcxx-debug>assert_as_exception in $(properties)
+      if <jln-stl-debug>assert_as_exception in $(properties)
       {
         flags +=
           <define>_LIBCPP_DEBUG_USE_EXCEPTIONS
         ;
       }
-      if <jln-libcxx-debug>allow_broken_abi in $(properties)
+      if <jln-stl-debug>allow_broken_abi in $(properties)
       {
         flags +=
           <define>_GLIBCXX_DEBUG
