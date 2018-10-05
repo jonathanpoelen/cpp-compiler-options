@@ -1,6 +1,6 @@
 return {
   d = {comp={}, test={true}, opts={
-    libcxx_debug='allow_broken_ABI',
+    stl_debug='allow_broken_abi',
     debug='on',
     pedantic='on',
     sanitizers='on',

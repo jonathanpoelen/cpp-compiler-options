@@ -129,7 +129,7 @@ G = Or(gcc, clang) {
     },
   },
 
-  opt'libcxx_debug' {
+  opt'stl_debug' {
     def'_LIBCPP_DEBUG=1',
     lvl'assert_as_exception' {
       def'_LIBCPP_DEBUG_USE_EXCEPTIONS'
@@ -365,7 +365,7 @@ Vbase = {
     coverage={'off', {'off', 'on'}},
     pedantic={'off', {'on', 'off', 'as_error'}},
     debug={'off', {'off', 'on'}},
-    libcxx_debug={'off', {'off', 'on', 'allow_broken_abi', 'assert_as_exception'}},
+    stl_debug={'off', {'off', 'on', 'allow_broken_abi', 'assert_as_exception'}},
     sanitizers={'off', {'off', 'on'}},
     sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
     suggests={'off', {'off', 'on'}},
