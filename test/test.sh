@@ -63,3 +63,17 @@ if [ -z "$1" ] || [ "$1" = bjam ]; then
   test_failure 'bjam -n --build-dir=/tmp/compgenbjam | grep lto'
   test_success 'bjam -n --build-dir=/tmp/compgenbjam jln-lto=on | grep lto'
 fi
+
+if [ -z "$1" ] || [ "$1" = meson ]; then
+  mkdir -p /tmp/compgenmeson
+  cd /tmp/compgenmeson
+  awk 'BEGIN{f="meson_options.txt"}
+    /meson.build/{
+      f="meson.build"
+      print "project('\''test'\'', '\''cpp'\'')">f
+    }
+    {print > f}' "$d"/../output/meson
+  rm -rf b; test_success 'meson b | grep -m1 "Wall.*YES"'
+  rm -rf b; test_failure 'meson b -Djln_warnings=off | grep "Wall\|sanitizer"'
+  rm -rf b; test_success 'meson b -Djln_sanitizers=on | grep -m1 "sanitize.*YES"'
+fi

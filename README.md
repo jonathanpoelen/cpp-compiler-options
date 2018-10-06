@@ -1,6 +1,6 @@
-Compilation options for different versions of Clang and GCC. Provided a generator and different file formats (`cmake`, `premake5`, `bjam`/`b2`, ...).
+Compilation options for different versions of Clang and GCC. Provided a generator and different file formats (build system and compiler).
 
-The `output` directory contains files for `cmake`, `premake5`, `bjam` and command-line options for `gcc` and `clang`.
+The `output` directory contains files for `cmake`, `premake5`, `bjam`, `meson` and command-line options for `gcc` and `clang`.
 
 $ `g++ @output/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 
@@ -12,6 +12,8 @@ $ `cmake -DJLN_FAST_MATH=on`
 $ `premake5 --jln-fast-math=on`
 
 $ `bjam jln-fast-math=on`
+
+$ `meson -Djln_fast_math=on`
 
 (`jln-` is a parameterizable prefix, see generate.sh)
 
