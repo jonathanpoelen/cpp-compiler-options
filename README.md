@@ -21,7 +21,7 @@ $ `meson -Djln_fast_math=on`
 Supported options are:
 
 <!-- ./compiler-options.lua generators/options.lua -->
-```
+```ini
 color = default auto never always
 coverage = off on
 debug = off on
