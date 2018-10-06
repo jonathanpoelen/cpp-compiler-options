@@ -5,6 +5,7 @@ The `output` directory contains files for `cmake`, `premake5`, `bjam`, `meson` a
 $ `g++ @output/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 
 > <stdin>:1:10: warning: zero as null pointer constant \[-Wzero-as-null-pointer-constant]
+
 (`@file` is a special option of gcc/clang)
 
 $ `cmake -DJLN_FAST_MATH=on`
