@@ -31,6 +31,7 @@ optimize = default off on size speed full
 pedantic = on off as_error
 relro = default off on full
 report_template = off on
+reproducible_build_warnings = off on
 sanitizers = off on
 sanitizers_extra = off thread pointer
 stack_protector = off on strong all

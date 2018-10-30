@@ -17,6 +17,8 @@ _jln_flag_names["jln-relro"] = true
 _jln_flag_names["relro"] = true
 _jln_flag_names["jln-report-template"] = true
 _jln_flag_names["report_template"] = true
+_jln_flag_names["jln-reproducible-build-warnings"] = true
+_jln_flag_names["reproducible_build_warnings"] = true
 _jln_flag_names["jln-sanitizers"] = true
 _jln_flag_names["sanitizers"] = true
 _jln_flag_names["jln-sanitizers-extra"] = true
@@ -56,6 +58,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or defaults["jln-relro"] or "default") end
   newoption{trigger="jln-report-template", allowed={{"off"}, {"on"}}, description="report_template"}
   if not _OPTIONS["jln-report-template"] then _OPTIONS["jln-report-template"] = (defaults["report_template"] or defaults["jln-report-template"] or "off") end
+  newoption{trigger="jln-reproducible-build-warnings", allowed={{"off"}, {"on"}}, description="reproducible_build_warnings"}
+  if not _OPTIONS["jln-reproducible-build-warnings"] then _OPTIONS["jln-reproducible-build-warnings"] = (defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "off") end
   newoption{trigger="jln-sanitizers", allowed={{"off"}, {"on"}}, description="sanitizers"}
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "off") end
   newoption{trigger="jln-sanitizers-extra", allowed={{"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
@@ -179,6 +183,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-report-template"] = true
     name_list["report_template"] = true
     new_value["jln-report-template"] = values["report_template"] or values["jln-report-template"] or (disable_others and "off" or _OPTIONS["jln-report-template"])
+    name_list["jln-reproducible-build-warnings"] = true
+    name_list["reproducible_build_warnings"] = true
+    new_value["jln-reproducible-build-warnings"] = values["reproducible_build_warnings"] or values["jln-reproducible-build-warnings"] or (disable_others and "off" or _OPTIONS["jln-reproducible-build-warnings"])
     name_list["jln-sanitizers"] = true
     name_list["sanitizers"] = true
     new_value["jln-sanitizers"] = values["sanitizers"] or values["jln-sanitizers"] or (disable_others and "off" or _OPTIONS["jln-sanitizers"])
@@ -364,7 +371,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
                     jln_buildoptions = jln_buildoptions .. " -Waligned-new"
                     if not ( compversion < 701 ) then
                     
-                      jln_buildoptions = jln_buildoptions .. " -Walloc-zero -Walloca -Wformat-overflow -Wshadow=compatible-local"
+                      jln_buildoptions = jln_buildoptions .. " -Walloc-zero -Walloca -Wformat-overflow -Wshadow=compatible-local -Wduplicated-branches"
                       if not ( compversion < 800 ) then
                       
                         jln_buildoptions = jln_buildoptions .. " -Wclass-memaccess"
@@ -455,6 +462,13 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       if ( compiler == "clang" and not ( compversion < 304 ) ) then
       
         jln_buildoptions = jln_buildoptions .. " -fno-elide-type"
+      end
+    end
+    if not ( values["jln-reproducible-build-warnings"] == "off") then
+    
+      if ( compiler == "gcc" and not ( compversion < 409 ) ) then
+      
+        jln_buildoptions = jln_buildoptions .. " -Wdate-time"
       end
     end
     if not ( values["jln-color"] == "default") then

@@ -14,6 +14,7 @@ feature <jln-optimize> : default off on size speed full : propagated ;
 feature <jln-pedantic> : on off as_error : incidental ;
 feature <jln-relro> : default off on full : propagated ;
 feature <jln-report-template> : off on : incidental ;
+feature <jln-reproducible-build-warnings> : off on : incidental ;
 feature <jln-sanitizers> : off on : propagated ;
 feature <jln-sanitizers-extra> : off thread pointer : propagated ;
 feature <jln-stack-protector> : off on strong all : propagated ;
@@ -322,6 +323,7 @@ rule jln_flags ( properties * )
                         <cxxflags>-Walloca
                         <cxxflags>-Wformat-overflow
                         <cxxflags>-Wshadow=compatible-local
+                        <cxxflags>-Wduplicated-branches
                       ;
                       if ! (  $(version) < 08.00  )
                       {
@@ -467,6 +469,15 @@ rule jln_flags ( properties * )
       {
         flags +=
           <cxxflags>-fno-elide-type
+        ;
+      }
+    }
+    if ! (  <jln-reproducible-build-warnings>off in $(properties) )
+    {
+      if (  $(toolset) = gcc && ! (  $(version) < 04.09  )  )
+      {
+        flags +=
+          <cxxflags>-Wdate-time
         ;
       }
     }

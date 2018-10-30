@@ -219,6 +219,7 @@ G = Or(gcc, clang) {
    -- cxx'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
    -- cxx'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
       cxx'-Wshadow=compatible-local', -- global (default), local, compatible-local
+      cxx'-Wduplicated-branches',
     }*
 
     vers(8) {
@@ -315,6 +316,12 @@ G = Or(gcc, clang) {
     },
   },
 
+  opt'reproducible_build_warnings' {
+    gcc(4,9) {
+      cxx'-Wdate-time'
+    }
+  },
+
   opt'color' {
     Or(gcc(4,9), clang) {
       lvl'auto' { cxx'-fdiagnostics-color=auto' } /
@@ -354,6 +361,7 @@ Vbase = {
     warnings=true,
     warnings_as_error=true,
     report_template=true,
+    reproducible_build_warnings=true,
   },
 
   _opts=fopts{
@@ -372,6 +380,7 @@ Vbase = {
     warnings={'off', {'on', 'off', 'strict'}},
     report_template={'off', {'off', 'on'}},
     warnings_as_error={'off', {'off', 'on'}},
+    reproducible_build_warnings={'off', {'off', 'on'}},
     color={'default', {'default', 'auto', 'never', 'always'}},
   },
 

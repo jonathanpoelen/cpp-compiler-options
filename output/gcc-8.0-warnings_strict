@@ -11,6 +11,7 @@
 -Wconversion
 -Wdisabled-optimization
 -Wdouble-promotion
+-Wduplicated-branches
 -Wduplicated-cond
 -Wextra
 -Wfloat-conversion
