@@ -7,13 +7,16 @@ CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
 feature <jln-color> : default auto never always : incidental ;
 feature <jln-coverage> : off on : propagated ;
-feature <jln-debug> : off on : propagated ;
+feature <jln-debug> : default off on line-tables-only gdb lldb sce : propagated ;
+feature <jln-diagnostics> : default patch fixits : incidental ;
+feature <jln-diagnostics-format> : default fixits patch print-source-range-info : incidental ;
+feature <jln-diagnostics-show-template-tree> : default off on : incidental ;
+feature <jln-elide-type> : default off on : incidental ;
 feature <jln-fast-math> : off on : propagated ;
 feature <jln-lto> : off on fat : propagated ;
-feature <jln-optimize> : default off on size speed full : propagated ;
-feature <jln-pedantic> : on off as_error : incidental ;
+feature <jln-optimize> : default off on size speed very-fast : propagated ;
+feature <jln-pedantic> : on off as_error : propagated ;
 feature <jln-relro> : default off on full : propagated ;
-feature <jln-report-template> : off on : incidental ;
 feature <jln-reproducible-build-warnings> : off on : incidental ;
 feature <jln-sanitizers> : off on : propagated ;
 feature <jln-sanitizers-extra> : off thread pointer : propagated ;
@@ -29,6 +32,7 @@ if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   toolset.flags jln-fast-math JLN_FAST_MATH : <jln-fast-math> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-optimize JLN_OPTIMIZE : <jln-optimize> ;
+  toolset.flags jln-pedantic JLN_PEDANTIC : <jln-pedantic> ;
   toolset.flags jln-relro JLN_RELRO : <jln-relro> ;
   toolset.flags jln-sanitizers JLN_SANITIZERS : <jln-sanitizers> ;
   toolset.flags jln-sanitizers-extra JLN_SANITIZERS_EXTRA : <jln-sanitizers-extra> ;
@@ -85,6 +89,7 @@ rule jln_flags ( properties * )
       <relevant>jln-fast-math
       <relevant>jln-lto
       <relevant>jln-optimize
+      <relevant>jln-pedantic
       <relevant>jln-relro
       <relevant>jln-sanitizers
       <relevant>jln-sanitizers-extra
@@ -96,6 +101,19 @@ rule jln_flags ( properties * )
 
   if (  $(toolset) = gcc || $(toolset) = clang  )
   {
+    if ! (  <jln-coverage>off in $(properties) )
+    {
+      flags +=
+        <cxxflags>--coverage
+        <linkflags>--coverage
+      ;
+      if $(toolset) = clang
+      {
+        flags +=
+          <linkflags>-lprofile_rt
+        ;
+      }
+    }
     if ! (  <jln-lto>off in $(properties) )
     {
       flags +=
@@ -115,24 +133,15 @@ rule jln_flags ( properties * )
           ;
         }
       }
-    }
-    if ! (  <jln-coverage>off in $(properties) )
-    {
-      flags +=
-        <cxxflags>--coverage
-        <linkflags>--coverage
-      ;
-      if $(toolset) = clang
+      else
       {
-        flags +=
-          <linkflags>-lprofile_rt
-        ;
       }
     }
     if ! (  <jln-fast-math>off in $(properties) )
     {
       flags +=
         <cxxflags>-ffast-math
+        <linkflags>-ffast-math
       ;
     }
     if ! (  <jln-pedantic>off in $(properties) )
@@ -162,6 +171,13 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>-fstack-protector-strong
             <linkflags>-fstack-protector-strong
+          ;
+        }
+        else if $(toolset) = clang
+        {
+          flags +=
+            <cxxflags>-fsanitize=safe-stack
+            <linkflags>-fsanitize=safe-stack
           ;
         }
       }
@@ -456,22 +472,6 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if ! (  <jln-report-template>off in $(properties) )
-    {
-      if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
-      {
-        flags +=
-          <cxxflags>-fno-elide-type
-          <cxxflags>-fdiagnostics-show-template-tree
-        ;
-      }
-      if (  $(toolset) = clang && ! (  $(version) < 03.04  )  )
-      {
-        flags +=
-          <cxxflags>-fno-elide-type
-        ;
-      }
-    }
     if ! (  <jln-reproducible-build-warnings>off in $(properties) )
     {
       if (  $(toolset) = gcc && ! (  $(version) < 04.09  )  )
@@ -503,6 +503,63 @@ rule jln_flags ( properties * )
             <cxxflags>-fdiagnostics-color=always
           ;
         }
+      }
+    }
+    if ! (  <jln-elide-type>default in $(properties) )
+    {
+      if (  (  $(toolset) = gcc && ! (  $(version) < 08.00  )  ) || (  $(toolset) = clang && ! (  $(version) < 03.04  )  )  )
+      {
+        if <jln-elide-type>on in $(properties)
+        {
+          flags +=
+            <cxxflags>-felide-type
+          ;
+        }
+        else if <jln-elide-type>off in $(properties)
+        {
+          flags +=
+            <cxxflags>-fno-elide-type
+          ;
+        }
+      }
+    }
+    if ! (  <jln-diagnostics-show-template-tree>default in $(properties) )
+    {
+      if (  (  $(toolset) = gcc && ! (  $(version) < 08.00  )  ) || $(toolset) = clang  )
+      {
+        if <jln-diagnostics-show-template-tree>on in $(properties)
+        {
+          flags +=
+            <cxxflags>-fdiagnostics-show-template-tree
+          ;
+        }
+        else if <jln-diagnostics-show-template-tree>off in $(properties)
+        {
+          flags +=
+            <cxxflags>-fno-diagnostics-show-template-tree
+          ;
+        }
+      }
+    }
+    if ! (  <jln-diagnostics-format>default in $(properties) )
+    {
+      if <jln-diagnostics-format>fixits in $(properties)
+      {
+        if (  (  $(toolset) = gcc && ! (  $(version) < 07.00  )  ) || (  $(toolset) = clang && ! (  $(version) < 05.00  )  )  )
+        {
+          flags +=
+            <cxxflags>-fdiagnostics-parseable-fixits
+          ;
+        }
+      }
+      else if <jln-diagnostics-format>patch in $(properties)
+      {
+      }
+      if (  $(toolset) = gcc && ! (  $(version) < 07.00  )  )
+      {
+        flags +=
+          <cxxflags>-fdiagnostics-generate-patch
+        ;
       }
     }
   }

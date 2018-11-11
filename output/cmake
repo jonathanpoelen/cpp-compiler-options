@@ -1,6 +1,6 @@
 # jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
 function(jln_init_flags)
-  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;COVERAGE;DEBUG;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;RELRO;REPORT_TEMPLATE;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;COVERAGE;DEBUG;DIAGNOSTICS;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;RELRO;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
 
   if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)
     set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})
@@ -29,11 +29,51 @@ function(jln_init_flags)
   if(DEFINED JLN_DEFAULT_FLAG_DEBUG)
     set(JLN_DEBUG ${JLN_DEFAULT_FLAG_DEBUG} CACHE STING "")
   else()
-    set(JLN_DEBUG "off" CACHE STRING "")
+    set(JLN_DEBUG "default" CACHE STRING "")
   endif()
 
-  if(NOT(("off" STREQUAL JLN_DEBUG) OR ("on" STREQUAL JLN_DEBUG)))
-    message(FATAL_ERROR "Unknow value \"${JLN_DEBUG}\" for JLN_DEBUG, expected: off, on")
+  if(NOT(("default" STREQUAL JLN_DEBUG) OR ("off" STREQUAL JLN_DEBUG) OR ("on" STREQUAL JLN_DEBUG) OR ("line-tables-only" STREQUAL JLN_DEBUG) OR ("gdb" STREQUAL JLN_DEBUG) OR ("lldb" STREQUAL JLN_DEBUG) OR ("sce" STREQUAL JLN_DEBUG)))
+    message(FATAL_ERROR "Unknow value \"${JLN_DEBUG}\" for JLN_DEBUG, expected: default, off, on, line-tables-only, gdb, lldb, sce")
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_DIAGNOSTICS)
+    set(JLN_DIAGNOSTICS ${JLN_DEFAULT_FLAG_DIAGNOSTICS} CACHE STING "")
+  else()
+    set(JLN_DIAGNOSTICS "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_DIAGNOSTICS) OR ("patch" STREQUAL JLN_DIAGNOSTICS) OR ("fixits" STREQUAL JLN_DIAGNOSTICS)))
+    message(FATAL_ERROR "Unknow value \"${JLN_DIAGNOSTICS}\" for JLN_DIAGNOSTICS, expected: default, patch, fixits")
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_DIAGNOSTICS_FORMAT)
+    set(JLN_DIAGNOSTICS_FORMAT ${JLN_DEFAULT_FLAG_DIAGNOSTICS_FORMAT} CACHE STING "")
+  else()
+    set(JLN_DIAGNOSTICS_FORMAT "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_DIAGNOSTICS_FORMAT) OR ("fixits" STREQUAL JLN_DIAGNOSTICS_FORMAT) OR ("patch" STREQUAL JLN_DIAGNOSTICS_FORMAT) OR ("print-source-range-info" STREQUAL JLN_DIAGNOSTICS_FORMAT)))
+    message(FATAL_ERROR "Unknow value \"${JLN_DIAGNOSTICS_FORMAT}\" for JLN_DIAGNOSTICS_FORMAT, expected: default, fixits, patch, print-source-range-info")
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_DIAGNOSTICS_SHOW_TEMPLATE_TREE)
+    set(JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE ${JLN_DEFAULT_FLAG_DIAGNOSTICS_SHOW_TEMPLATE_TREE} CACHE STING "")
+  else()
+    set(JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE) OR ("off" STREQUAL JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE) OR ("on" STREQUAL JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE)))
+    message(FATAL_ERROR "Unknow value \"${JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE}\" for JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE, expected: default, off, on")
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_ELIDE_TYPE)
+    set(JLN_ELIDE_TYPE ${JLN_DEFAULT_FLAG_ELIDE_TYPE} CACHE STING "")
+  else()
+    set(JLN_ELIDE_TYPE "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_ELIDE_TYPE) OR ("off" STREQUAL JLN_ELIDE_TYPE) OR ("on" STREQUAL JLN_ELIDE_TYPE)))
+    message(FATAL_ERROR "Unknow value \"${JLN_ELIDE_TYPE}\" for JLN_ELIDE_TYPE, expected: default, off, on")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_FAST_MATH)
@@ -62,8 +102,8 @@ function(jln_init_flags)
     set(JLN_OPTIMIZE "default" CACHE STRING "")
   endif()
 
-  if(NOT(("default" STREQUAL JLN_OPTIMIZE) OR ("off" STREQUAL JLN_OPTIMIZE) OR ("on" STREQUAL JLN_OPTIMIZE) OR ("size" STREQUAL JLN_OPTIMIZE) OR ("speed" STREQUAL JLN_OPTIMIZE) OR ("full" STREQUAL JLN_OPTIMIZE)))
-    message(FATAL_ERROR "Unknow value \"${JLN_OPTIMIZE}\" for JLN_OPTIMIZE, expected: default, off, on, size, speed, full")
+  if(NOT(("default" STREQUAL JLN_OPTIMIZE) OR ("off" STREQUAL JLN_OPTIMIZE) OR ("on" STREQUAL JLN_OPTIMIZE) OR ("size" STREQUAL JLN_OPTIMIZE) OR ("speed" STREQUAL JLN_OPTIMIZE) OR ("very-fast" STREQUAL JLN_OPTIMIZE)))
+    message(FATAL_ERROR "Unknow value \"${JLN_OPTIMIZE}\" for JLN_OPTIMIZE, expected: default, off, on, size, speed, very-fast")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_PEDANTIC)
@@ -84,16 +124,6 @@ function(jln_init_flags)
 
   if(NOT(("default" STREQUAL JLN_RELRO) OR ("off" STREQUAL JLN_RELRO) OR ("on" STREQUAL JLN_RELRO) OR ("full" STREQUAL JLN_RELRO)))
     message(FATAL_ERROR "Unknow value \"${JLN_RELRO}\" for JLN_RELRO, expected: default, off, on, full")
-  endif()
-
-  if(DEFINED JLN_DEFAULT_FLAG_REPORT_TEMPLATE)
-    set(JLN_REPORT_TEMPLATE ${JLN_DEFAULT_FLAG_REPORT_TEMPLATE} CACHE STING "")
-  else()
-    set(JLN_REPORT_TEMPLATE "off" CACHE STRING "")
-  endif()
-
-  if(NOT(("off" STREQUAL JLN_REPORT_TEMPLATE) OR ("on" STREQUAL JLN_REPORT_TEMPLATE)))
-    message(FATAL_ERROR "Unknow value \"${JLN_REPORT_TEMPLATE}\" for JLN_REPORT_TEMPLATE, expected: off, on")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_REPRODUCIBLE_BUILD_WARNINGS)
@@ -179,13 +209,16 @@ function(jln_init_flags)
   if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")
     message(STATUS "JLN_COLOR=${JLN_COLOR}	[default, auto, never, always]")
     message(STATUS "JLN_COVERAGE=${JLN_COVERAGE}	[off, on]")
-    message(STATUS "JLN_DEBUG=${JLN_DEBUG}	[off, on]")
+    message(STATUS "JLN_DEBUG=${JLN_DEBUG}	[default, off, on, line-tables-only, gdb, lldb, sce]")
+    message(STATUS "JLN_DIAGNOSTICS=${JLN_DIAGNOSTICS}	[default, patch, fixits]")
+    message(STATUS "JLN_DIAGNOSTICS_FORMAT=${JLN_DIAGNOSTICS_FORMAT}	[default, fixits, patch, print-source-range-info]")
+    message(STATUS "JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE=${JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE}	[default, off, on]")
+    message(STATUS "JLN_ELIDE_TYPE=${JLN_ELIDE_TYPE}	[default, off, on]")
     message(STATUS "JLN_FAST_MATH=${JLN_FAST_MATH}	[off, on]")
     message(STATUS "JLN_LTO=${JLN_LTO}	[off, on, fat]")
-    message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, full]")
+    message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, very-fast]")
     message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[on, off, as_error]")
     message(STATUS "JLN_RELRO=${JLN_RELRO}	[default, off, on, full]")
-    message(STATUS "JLN_REPORT_TEMPLATE=${JLN_REPORT_TEMPLATE}	[off, on]")
     message(STATUS "JLN_REPRODUCIBLE_BUILD_WARNINGS=${JLN_REPRODUCIBLE_BUILD_WARNINGS}	[off, on]")
     message(STATUS "JLN_SANITIZERS=${JLN_SANITIZERS}	[off, on]")
     message(STATUS "JLN_SANITIZERS_EXTRA=${JLN_SANITIZERS_EXTRA}	[off, thread, pointer]")
@@ -209,7 +242,7 @@ endfunction()
 function(jln_flags)
   set(CXX_FLAGS "")
   set(LINK_LINK "")
-  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;COVERAGE;DEBUG;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;RELRO;REPORT_TEMPLATE;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;COVERAGE;DEBUG;DIAGNOSTICS;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;RELRO;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
 
   if(NOT DEFINED JLN_FLAGS_COLOR)
     if(${JLN_FLAGS_DISABLE_OTHERS})
@@ -229,9 +262,41 @@ function(jln_flags)
 
   if(NOT DEFINED JLN_FLAGS_DEBUG)
     if(${JLN_FLAGS_DISABLE_OTHERS})
-      set(JLN_FLAGS_DEBUG "off")
+      set(JLN_FLAGS_DEBUG "default")
     else()
       set(JLN_FLAGS_DEBUG "${JLN_DEBUG}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_DIAGNOSTICS)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_DIAGNOSTICS "default")
+    else()
+      set(JLN_FLAGS_DIAGNOSTICS "${JLN_DIAGNOSTICS}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_DIAGNOSTICS_FORMAT)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_DIAGNOSTICS_FORMAT "default")
+    else()
+      set(JLN_FLAGS_DIAGNOSTICS_FORMAT "${JLN_DIAGNOSTICS_FORMAT}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE "default")
+    else()
+      set(JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE "${JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_ELIDE_TYPE)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_ELIDE_TYPE "default")
+    else()
+      set(JLN_FLAGS_ELIDE_TYPE "${JLN_ELIDE_TYPE}")
     endif()
   endif()
 
@@ -272,14 +337,6 @@ function(jln_flags)
       set(JLN_FLAGS_RELRO "default")
     else()
       set(JLN_FLAGS_RELRO "${JLN_RELRO}")
-    endif()
-  endif()
-
-  if(NOT DEFINED JLN_FLAGS_REPORT_TEMPLATE)
-    if(${JLN_FLAGS_DISABLE_OTHERS})
-      set(JLN_FLAGS_REPORT_TEMPLATE "off")
-    else()
-      set(JLN_FLAGS_REPORT_TEMPLATE "${JLN_REPORT_TEMPLATE}")
     endif()
   endif()
 
@@ -349,6 +406,56 @@ function(jln_flags)
 
   if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
   
+    if (  NOT ( JLN_FLAGS_COVERAGE STREQUAL "off") )
+    
+      set(CXX_FLAGS ${CXX_FLAGS}  "--coverage")
+      set(LINK_FLAGS ${LINK_FLAGS}  "--coverage")
+      if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+      
+        set(LINK_FLAGS ${LINK_FLAGS}  "-lprofile_rt")
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_DEBUG STREQUAL "default") )
+    
+      if (  JLN_FLAGS_DEBUG STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-g0")
+
+      
+      elseif (  JLN_FLAGS_DEBUG STREQUAL "gdb" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-ggdb")
+
+      
+      elseif (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+      
+        if (  JLN_FLAGS_DEBUG STREQUAL "line-tables-only" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-gline-tables-only")
+
+        endif()
+        if (  JLN_FLAGS_DEBUG STREQUAL "lldb" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-glldb")
+
+        
+        elseif (  JLN_FLAGS_DEBUG STREQUAL "sce" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-gsce")
+
+        
+        else()
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-g")
+
+        endif()
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-g")
+
+      endif()
+    endif()
     if (  NOT ( JLN_FLAGS_LTO STREQUAL "off") )
     
       set(CXX_FLAGS ${CXX_FLAGS}  "-flto")
@@ -362,53 +469,63 @@ function(jln_flags)
           set(CXX_FLAGS ${CXX_FLAGS}  "-ffat-lto-objects")
 
         endif()
-      endif()
-    endif()
-    if (  NOT ( JLN_FLAGS_COVERAGE STREQUAL "off") )
-    
-      set(CXX_FLAGS ${CXX_FLAGS}  "--coverage")
-      set(LINK_FLAGS ${LINK_FLAGS}  "--coverage")
-      if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
       
-        set(LINK_FLAGS ${LINK_FLAGS}  "-lprofile_rt")
+      else()
+      
+        if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
+        
+          if (  JLN_FLAGS_OPTIMIZE STREQUAL "very-fast" )
+          
+            if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) ) )
+            
+              set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program-vtables")
+              set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program-vtables")
+            endif()
+          endif()
+        endif()
       endif()
-    endif()
-    if (  NOT ( JLN_FLAGS_DEBUG STREQUAL "off") )
-    
-      set(CXX_FLAGS ${CXX_FLAGS}  "-g")
-
     endif()
     if (  NOT ( JLN_FLAGS_FAST_MATH STREQUAL "off") )
     
       set(CXX_FLAGS ${CXX_FLAGS}  "-ffast-math")
-
+      set(LINK_FLAGS ${LINK_FLAGS}  "-ffast-math")
     endif()
     if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
     
       if (  JLN_FLAGS_OPTIMIZE STREQUAL "on" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O2")
-
+        set(LINK_FLAGS ${LINK_FLAGS}  "-O2")
       
       elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O0")
-
+        set(LINK_FLAGS ${LINK_FLAGS}  "-O0")
       
       elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "size" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-Os")
-
+        set(LINK_FLAGS ${LINK_FLAGS}  "-Os")
       
       elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "speed" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O3")
-
+        set(LINK_FLAGS ${LINK_FLAGS}  "-O3")
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "full" )
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "very-fast" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O3" "-march=native")
-
+        set(LINK_FLAGS ${LINK_FLAGS}  "-s" "-O3" "-march=native")
+        if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fforce-emit-vtables")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-fforce-emit-vtables")
+        
+        elseif (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program")
+        endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "off") )
@@ -431,6 +548,11 @@ function(jln_flags)
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-fstack-protector-strong")
           set(LINK_FLAGS ${LINK_FLAGS}  "-fstack-protector-strong")
+        
+        elseif (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=safe-stack")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-fsanitize=safe-stack")
         endif()
       
       elseif (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "all" )
@@ -620,19 +742,6 @@ function(jln_flags)
         endif()
       endif()
     endif()
-    if (  NOT ( JLN_FLAGS_REPORT_TEMPLATE STREQUAL "off") )
-    
-      if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-elide-type" "-fdiagnostics-show-template-tree")
-
-      endif()
-      if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.4" ) ) )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-elide-type")
-
-      endif()
-    endif()
     if (  NOT ( JLN_FLAGS_REPRODUCIBLE_BUILD_WARNINGS STREQUAL "off") )
     
       if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) ) )
@@ -660,6 +769,57 @@ function(jln_flags)
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-color=always")
 
         endif()
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_ELIDE_TYPE STREQUAL "default") )
+    
+      if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) OR ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.4" ) ) ) )
+      
+        if (  JLN_FLAGS_ELIDE_TYPE STREQUAL "on" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-felide-type")
+
+        
+        elseif (  JLN_FLAGS_ELIDE_TYPE STREQUAL "off" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fno-elide-type")
+
+        endif()
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE STREQUAL "default") )
+    
+      if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
+      
+        if (  JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE STREQUAL "on" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-show-template-tree")
+
+        
+        elseif (  JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE STREQUAL "off" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fno-diagnostics-show-template-tree")
+
+        endif()
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "default") )
+    
+      if (  JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "fixits" )
+      
+        if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) OR ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0" ) ) ) )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-parseable-fixits")
+
+        endif()
+      
+      elseif (  JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "patch" )
+      
+      endif()
+      if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-generate-patch")
+
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "off") )

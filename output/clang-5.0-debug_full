@@ -1,0 +1,9 @@
+-D_GLIBCXX_ASSERTIONS
+-D_LIBCPP_DEBUG=1
+-g
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls
+-fsanitize-address-use-after-scope
+-fsanitize=address
+-fsanitize=leak
+-fsanitize=undefined

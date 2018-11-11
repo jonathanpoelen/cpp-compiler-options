@@ -5,6 +5,14 @@ _jln_flag_names["jln-coverage"] = true
 _jln_flag_names["coverage"] = true
 _jln_flag_names["jln-debug"] = true
 _jln_flag_names["debug"] = true
+_jln_flag_names["jln-diagnostics"] = true
+_jln_flag_names["diagnostics"] = true
+_jln_flag_names["jln-diagnostics-format"] = true
+_jln_flag_names["diagnostics_format"] = true
+_jln_flag_names["jln-diagnostics-show-template-tree"] = true
+_jln_flag_names["diagnostics_show_template_tree"] = true
+_jln_flag_names["jln-elide-type"] = true
+_jln_flag_names["elide_type"] = true
 _jln_flag_names["jln-fast-math"] = true
 _jln_flag_names["fast_math"] = true
 _jln_flag_names["jln-lto"] = true
@@ -15,8 +23,6 @@ _jln_flag_names["jln-pedantic"] = true
 _jln_flag_names["pedantic"] = true
 _jln_flag_names["jln-relro"] = true
 _jln_flag_names["relro"] = true
-_jln_flag_names["jln-report-template"] = true
-_jln_flag_names["report_template"] = true
 _jln_flag_names["jln-reproducible-build-warnings"] = true
 _jln_flag_names["reproducible_build_warnings"] = true
 _jln_flag_names["jln-sanitizers"] = true
@@ -44,20 +50,26 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-color"] then _OPTIONS["jln-color"] = (defaults["color"] or defaults["jln-color"] or "default") end
   newoption{trigger="jln-coverage", allowed={{"off"}, {"on"}}, description="coverage"}
   if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or defaults["jln-coverage"] or "off") end
-  newoption{trigger="jln-debug", allowed={{"off"}, {"on"}}, description="debug"}
-  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "off") end
+  newoption{trigger="jln-debug", allowed={{"default"}, {"off"}, {"on"}, {"line-tables-only"}, {"gdb"}, {"lldb"}, {"sce"}}, description="debug"}
+  if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "default") end
+  newoption{trigger="jln-diagnostics", allowed={{"default"}, {"patch"}, {"fixits"}}, description="diagnostics"}
+  if not _OPTIONS["jln-diagnostics"] then _OPTIONS["jln-diagnostics"] = (defaults["diagnostics"] or defaults["jln-diagnostics"] or "default") end
+  newoption{trigger="jln-diagnostics-format", allowed={{"default"}, {"fixits"}, {"patch"}, {"print-source-range-info"}}, description="diagnostics_format"}
+  if not _OPTIONS["jln-diagnostics-format"] then _OPTIONS["jln-diagnostics-format"] = (defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "default") end
+  newoption{trigger="jln-diagnostics-show-template-tree", allowed={{"default"}, {"off"}, {"on"}}, description="diagnostics_show_template_tree"}
+  if not _OPTIONS["jln-diagnostics-show-template-tree"] then _OPTIONS["jln-diagnostics-show-template-tree"] = (defaults["diagnostics_show_template_tree"] or defaults["jln-diagnostics-show-template-tree"] or "default") end
+  newoption{trigger="jln-elide-type", allowed={{"default"}, {"off"}, {"on"}}, description="elide_type"}
+  if not _OPTIONS["jln-elide-type"] then _OPTIONS["jln-elide-type"] = (defaults["elide_type"] or defaults["jln-elide-type"] or "default") end
   newoption{trigger="jln-fast-math", allowed={{"off"}, {"on"}}, description="fast_math"}
   if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or defaults["jln-fast-math"] or "off") end
   newoption{trigger="jln-lto", allowed={{"off"}, {"on"}, {"fat"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "off") end
-  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"full"}}, description="optimize"}
+  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"very-fast"}}, description="optimize"}
   if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or defaults["jln-optimize"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"on"}, {"off"}, {"as_error"}}, description="pedantic"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "on") end
   newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
   if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or defaults["jln-relro"] or "default") end
-  newoption{trigger="jln-report-template", allowed={{"off"}, {"on"}}, description="report_template"}
-  if not _OPTIONS["jln-report-template"] then _OPTIONS["jln-report-template"] = (defaults["report_template"] or defaults["jln-report-template"] or "off") end
   newoption{trigger="jln-reproducible-build-warnings", allowed={{"off"}, {"on"}}, description="reproducible_build_warnings"}
   if not _OPTIONS["jln-reproducible-build-warnings"] then _OPTIONS["jln-reproducible-build-warnings"] = (defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "off") end
   newoption{trigger="jln-sanitizers", allowed={{"off"}, {"on"}}, description="sanitizers"}
@@ -164,7 +176,19 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     new_value["jln-coverage"] = values["coverage"] or values["jln-coverage"] or (disable_others and "off" or _OPTIONS["jln-coverage"])
     name_list["jln-debug"] = true
     name_list["debug"] = true
-    new_value["jln-debug"] = values["debug"] or values["jln-debug"] or (disable_others and "off" or _OPTIONS["jln-debug"])
+    new_value["jln-debug"] = values["debug"] or values["jln-debug"] or (disable_others and "default" or _OPTIONS["jln-debug"])
+    name_list["jln-diagnostics"] = true
+    name_list["diagnostics"] = true
+    new_value["jln-diagnostics"] = values["diagnostics"] or values["jln-diagnostics"] or (disable_others and "default" or _OPTIONS["jln-diagnostics"])
+    name_list["jln-diagnostics-format"] = true
+    name_list["diagnostics_format"] = true
+    new_value["jln-diagnostics-format"] = values["diagnostics_format"] or values["jln-diagnostics-format"] or (disable_others and "default" or _OPTIONS["jln-diagnostics-format"])
+    name_list["jln-diagnostics-show-template-tree"] = true
+    name_list["diagnostics_show_template_tree"] = true
+    new_value["jln-diagnostics-show-template-tree"] = values["diagnostics_show_template_tree"] or values["jln-diagnostics-show-template-tree"] or (disable_others and "default" or _OPTIONS["jln-diagnostics-show-template-tree"])
+    name_list["jln-elide-type"] = true
+    name_list["elide_type"] = true
+    new_value["jln-elide-type"] = values["elide_type"] or values["jln-elide-type"] or (disable_others and "default" or _OPTIONS["jln-elide-type"])
     name_list["jln-fast-math"] = true
     name_list["fast_math"] = true
     new_value["jln-fast-math"] = values["fast_math"] or values["jln-fast-math"] or (disable_others and "off" or _OPTIONS["jln-fast-math"])
@@ -180,9 +204,6 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-relro"] = true
     name_list["relro"] = true
     new_value["jln-relro"] = values["relro"] or values["jln-relro"] or (disable_others and "default" or _OPTIONS["jln-relro"])
-    name_list["jln-report-template"] = true
-    name_list["report_template"] = true
-    new_value["jln-report-template"] = values["report_template"] or values["jln-report-template"] or (disable_others and "off" or _OPTIONS["jln-report-template"])
     name_list["jln-reproducible-build-warnings"] = true
     name_list["reproducible_build_warnings"] = true
     new_value["jln-reproducible-build-warnings"] = values["reproducible_build_warnings"] or values["jln-reproducible-build-warnings"] or (disable_others and "off" or _OPTIONS["jln-reproducible-build-warnings"])
@@ -216,6 +237,49 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
 
   if ( compiler == "gcc" or compiler == "clang" ) then
   
+    if not ( values["jln-coverage"] == "off") then
+    
+      jln_buildoptions = jln_buildoptions .. " --coverage"
+      jln_linkoptions = jln_linkoptions .. " --coverage"
+      if compiler == "clang" then
+      
+        jln_linkoptions = jln_linkoptions .. " -lprofile_rt"
+      end
+    end
+    if not ( values["jln-debug"] == "default") then
+    
+      if values["jln-debug"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " -g0"
+      
+      elseif values["jln-debug"] == "gdb" then
+      
+        jln_buildoptions = jln_buildoptions .. " -ggdb"
+      
+      elseif compiler == "clang" then
+      
+        if values["jln-debug"] == "line-tables-only" then
+        
+          jln_buildoptions = jln_buildoptions .. " -gline-tables-only"
+        end
+        if values["jln-debug"] == "lldb" then
+        
+          jln_buildoptions = jln_buildoptions .. " -glldb"
+        
+        elseif values["jln-debug"] == "sce" then
+        
+          jln_buildoptions = jln_buildoptions .. " -gsce"
+        
+        else
+        
+          jln_buildoptions = jln_buildoptions .. " -g"
+        end
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " -g"
+      end
+    end
     if not ( values["jln-lto"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -flto"
@@ -228,46 +292,63 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         
           jln_buildoptions = jln_buildoptions .. " -ffat-lto-objects"
         end
-      end
-    end
-    if not ( values["jln-coverage"] == "off") then
-    
-      jln_buildoptions = jln_buildoptions .. " --coverage"
-      jln_linkoptions = jln_linkoptions .. " --coverage"
-      if compiler == "clang" then
       
-        jln_linkoptions = jln_linkoptions .. " -lprofile_rt"
+      else
+      
+        if not ( values["jln-optimize"] == "default") then
+        
+          if values["jln-optimize"] == "very-fast" then
+          
+            if ( compiler == "clang" and not ( compversion < 309 ) ) then
+            
+              jln_buildoptions = jln_buildoptions .. " -fwhole-program-vtables"
+              jln_linkoptions = jln_linkoptions .. " -fwhole-program-vtables"
+            end
+          end
+        end
       end
-    end
-    if not ( values["jln-debug"] == "off") then
-    
-      jln_buildoptions = jln_buildoptions .. " -g"
     end
     if not ( values["jln-fast-math"] == "off") then
     
       jln_buildoptions = jln_buildoptions .. " -ffast-math"
+      jln_linkoptions = jln_linkoptions .. " -ffast-math"
     end
     if not ( values["jln-optimize"] == "default") then
     
       if values["jln-optimize"] == "on" then
       
         jln_buildoptions = jln_buildoptions .. " -O2"
+        jln_linkoptions = jln_linkoptions .. " -O2"
       
       elseif values["jln-optimize"] == "off" then
       
         jln_buildoptions = jln_buildoptions .. " -O0"
+        jln_linkoptions = jln_linkoptions .. " -O0"
       
       elseif values["jln-optimize"] == "size" then
       
         jln_buildoptions = jln_buildoptions .. " -Os"
+        jln_linkoptions = jln_linkoptions .. " -Os"
       
       elseif values["jln-optimize"] == "speed" then
       
         jln_buildoptions = jln_buildoptions .. " -O3"
+        jln_linkoptions = jln_linkoptions .. " -O3"
       
-      elseif values["jln-optimize"] == "full" then
+      elseif values["jln-optimize"] == "very-fast" then
       
         jln_buildoptions = jln_buildoptions .. " -O3 -march=native"
+        jln_linkoptions = jln_linkoptions .. " -s -O3 -march=native"
+        if ( compiler == "clang" and not ( compversion < 700 ) ) then
+        
+          jln_buildoptions = jln_buildoptions .. " -fforce-emit-vtables"
+          jln_linkoptions = jln_linkoptions .. " -fforce-emit-vtables"
+        
+        elseif compiler == "gcc" then
+        
+          jln_buildoptions = jln_buildoptions .. " -fwhole-program"
+          jln_linkoptions = jln_linkoptions .. " -fwhole-program"
+        end
       end
     end
     if not ( values["jln-pedantic"] == "off") then
@@ -288,6 +369,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         
           jln_buildoptions = jln_buildoptions .. " -fstack-protector-strong"
           jln_linkoptions = jln_linkoptions .. " -fstack-protector-strong"
+        
+        elseif compiler == "clang" then
+        
+          jln_buildoptions = jln_buildoptions .. " -fsanitize=safe-stack"
+          jln_linkoptions = jln_linkoptions .. " -fsanitize=safe-stack"
         end
       
       elseif values["jln-stack-protector"] == "all" then
@@ -453,17 +539,6 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
-    if not ( values["jln-report-template"] == "off") then
-    
-      if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-      
-        jln_buildoptions = jln_buildoptions .. " -fno-elide-type -fdiagnostics-show-template-tree"
-      end
-      if ( compiler == "clang" and not ( compversion < 304 ) ) then
-      
-        jln_buildoptions = jln_buildoptions .. " -fno-elide-type"
-      end
-    end
     if not ( values["jln-reproducible-build-warnings"] == "off") then
     
       if ( compiler == "gcc" and not ( compversion < 409 ) ) then
@@ -487,6 +562,51 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         
           jln_buildoptions = jln_buildoptions .. " -fdiagnostics-color=always"
         end
+      end
+    end
+    if not ( values["jln-elide-type"] == "default") then
+    
+      if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or ( compiler == "clang" and not ( compversion < 304 ) ) ) then
+      
+        if values["jln-elide-type"] == "on" then
+        
+          jln_buildoptions = jln_buildoptions .. " -felide-type"
+        
+        elseif values["jln-elide-type"] == "off" then
+        
+          jln_buildoptions = jln_buildoptions .. " -fno-elide-type"
+        end
+      end
+    end
+    if not ( values["jln-diagnostics-show-template-tree"] == "default") then
+    
+      if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or compiler == "clang" ) then
+      
+        if values["jln-diagnostics-show-template-tree"] == "on" then
+        
+          jln_buildoptions = jln_buildoptions .. " -fdiagnostics-show-template-tree"
+        
+        elseif values["jln-diagnostics-show-template-tree"] == "off" then
+        
+          jln_buildoptions = jln_buildoptions .. " -fno-diagnostics-show-template-tree"
+        end
+      end
+    end
+    if not ( values["jln-diagnostics-format"] == "default") then
+    
+      if values["jln-diagnostics-format"] == "fixits" then
+      
+        if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) ) then
+        
+          jln_buildoptions = jln_buildoptions .. " -fdiagnostics-parseable-fixits"
+        end
+      
+      elseif values["jln-diagnostics-format"] == "patch" then
+      
+      end
+      if ( compiler == "gcc" and not ( compversion < 700 ) ) then
+      
+        jln_buildoptions = jln_buildoptions .. " -fdiagnostics-generate-patch"
       end
     end
     if not ( values["jln-warnings-as-error"] == "off") then
