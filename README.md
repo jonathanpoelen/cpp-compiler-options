@@ -24,18 +24,20 @@ Supported options are:
 ```ini
 color = default auto never always
 coverage = off on
-debug = off on
+debug = default off on line-tables-only gdb lldb sce
+diagnostics_format = default fixits patch print-source-range-info
+diagnostics_show_template_tree = default off on
+elide_type = default off on
 fast_math = off on
 lto = off on fat
-optimize = default off on size speed full
+optimize = default off on size speed very-fast
 pedantic = on off as_error
 relro = default off on full
-report_template = off on
 reproducible_build_warnings = off on
 sanitizers = off on
 sanitizers_extra = off thread pointer
 stack_protector = off on strong all
-stl_debug = off on allow_broken_abi assert_as_exceptions
+stl_debug = off on allow_broken_abi assert_as_exception
 suggests = off on
 warnings = on off strict
 warnings_as_error = off on

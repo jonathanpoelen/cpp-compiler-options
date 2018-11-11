@@ -55,16 +55,6 @@ function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 -- gcc and clang
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 G = Or(gcc, clang) {
-  opt'lto' {
-    fl'-flto', -- clang -flto=thin
-    gcc(5) {
-      fl'-flto-odr-type-merging', -- increases size of LTO object files, but enables diagnostics about ODR violations
-      lvl'fat' {
-        cxx'-ffat-lto-objects',
-      },
-    },
-  },
-
   opt'coverage' {
     cxx'--coverage', -- -fprofile-arcs -ftest-coverage
     link'--coverage', -- -lgcov
@@ -75,16 +65,55 @@ G = Or(gcc, clang) {
     },
   },
 
-  opt'debug' { cxx'-g' },
+  opt'debug' {
+    lvl'off' { cxx '-g0' } /
+    lvl'gdb' { cxx '-ggdb' } /
+    clang {
+      lvl'line-tables-only' { cxx'-gline-tables-only' },
+      lvl'lldb' { cxx '-glldb' } /
+      lvl'sce' { cxx '-gsce' } /
+      cxx'-g'
+    } /
+    cxx'-g'
+  },
 
-  opt'fast_math' { cxx'-ffast-math', },
+  opt'lto' {
+    fl'-flto', -- clang -flto=thin
+    gcc(5) {
+      fl'-flto-odr-type-merging', -- increases size of LTO object files, but enables diagnostics about ODR violations
+      lvl'fat' {
+        cxx'-ffat-lto-objects',
+      },
+    } /
+    opt'optimize'{
+      lvl'very-fast' {
+        clang(3,9) {
+          fl'-fwhole-program-vtables'
+        },
+      },
+    },
+  },
 
+  -- link: optimization with lto
+  opt'fast_math' { fl'-ffast-math', },
+
+  -- link: optimization with lto
   opt'optimize' {
-    lvl'on'    { cxx'-O2' } /
-    lvl'off'   { cxx'-O0' } /
-    lvl'size'  { cxx'-Os' } /
-    lvl'speed' { cxx'-O3' } /
-    lvl'full'  { cxx'-O3', cxx'-march=native' },
+    lvl'on'    { fl'-O2' } /
+    lvl'off'   { fl'-O0' } /
+    lvl'size'  { fl'-Os' } /
+    lvl'speed' { fl'-O3' } /
+    lvl'very-fast' {
+      link'-s',
+      fl'-O3',
+      fl'-march=native',
+      clang(7) {
+        fl'-fforce-emit-vtables',
+      } /
+      gcc {
+        fl'-fwhole-program'
+      },
+    },
   },
 
   opt'pedantic' {
@@ -101,7 +130,10 @@ G = Or(gcc, clang) {
     lvl'strong' {
       -gcc(-4,9) {
         fl'-fstack-protector-strong',
-      },
+      } /
+      clang {
+        fl'-fsanitize=safe-stack',
+      }
     } /
     lvl'all' {
       fl'-fstack-protector-all',
@@ -290,6 +322,10 @@ G = Or(gcc, clang) {
     },
   },
 
+  -- opt'control_flow_integrity' {
+  --  clang(3,7) { fl'-fsanitize=cfi' } -- only allowed with '-flto' and '-fvisibility='
+  -- },
+
   opt'sanitizers_extra' {
     lvl'thread' { cxx'-fsanitize=thread', } /
     lvl'pointer' {
@@ -306,16 +342,6 @@ G = Or(gcc, clang) {
     }
   },
 
-  opt'report_template' {
-    gcc(8) {
-      cxx'-fno-elide-type',
-      cxx'-fdiagnostics-show-template-tree',
-    },
-    clang(3,4) {
-      cxx'-fno-elide-type',
-    },
-  },
-
   opt'reproducible_build_warnings' {
     gcc(4,9) {
       cxx'-Wdate-time'
@@ -328,6 +354,34 @@ G = Or(gcc, clang) {
       lvl'never' { cxx'-fdiagnostics-color=never' } /
       lvl'always' { cxx'-fdiagnostics-color=always' },
     },
+  },
+
+  opt'elide_type' {
+    Or(gcc(8), clang(3,4)) {
+      lvl'on' { cxx'-felide-type' } /
+      lvl'off' { cxx'-fno-elide-type' },
+    },
+  },
+
+  opt'diagnostics_show_template_tree' {
+    Or(gcc(8), clang) {
+      lvl'on' { cxx'-fdiagnostics-show-template-tree' } /
+      lvl'off' { cxx'-fno-diagnostics-show-template-tree' },
+    },
+  },
+
+  opt'diagnostics_format' {
+    lvl'fixits' {
+      Or(gcc(7), clang(5)) {
+        cxx'-fdiagnostics-parseable-fixits'
+      }
+    } /
+    lvl'patch', {
+      gcc(7) { cxx'-fdiagnostics-generate-patch' }
+    } /
+    lvl'print-source-range-info' {
+      clang { cxx'-fdiagnostics-print-source-range-info' }
+    }
   },
 
   opt'warnings_as_error' { cxx'-Werror', },
@@ -356,32 +410,37 @@ end
 Vbase = {
   _incidental={
     color=true,
-    pedantic=true,
+    elide_type=true,
+    diagnostics=true,
+    diagnostics_format=true,
+    diagnostics_show_template_tree=true,
+    reproducible_build_warnings=true,
     suggests=true,
     warnings=true,
     warnings_as_error=true,
-    report_template=true,
-    reproducible_build_warnings=true,
   },
 
   _opts=fopts{
-    stack_protector={'off', {'off', 'on', 'strong', 'all'}},
-    relro={'default', {'default', 'off', 'on', 'full'}},
-    lto={'off', {'off', 'on', 'fat'}},
-    fast_math={'off', {'off', 'on'}},
-    optimize={'default', {'default', 'off', 'on', 'size', 'speed', 'full'}},
+    color={'default', {'default', 'auto', 'never', 'always'}},
     coverage={'off', {'off', 'on'}},
+    debug={'default', {'default', 'off', 'on', 'line-tables-only', 'gdb', 'lldb', 'sce'}},
+    diagnostics={'default', {'default', 'patch', 'fixits'}},
+    diagnostics_format={'default', {'default', 'fixits', 'patch', 'print-source-range-info'}},
+    diagnostics_show_template_tree={'default', {'default', 'off', 'on'}},
+    elide_type={'default', {'default', 'off', 'on'}},
+    fast_math={'off', {'off', 'on'}},
+    lto={'off', {'off', 'on', 'fat'}},
+    optimize={'default', {'default', 'off', 'on', 'size', 'speed', 'very-fast'}},
     pedantic={'off', {'on', 'off', 'as_error'}},
-    debug={'off', {'off', 'on'}},
+    relro={'default', {'default', 'off', 'on', 'full'}},
+    reproducible_build_warnings={'off', {'off', 'on'}},
     stl_debug={'off', {'off', 'on', 'allow_broken_abi', 'assert_as_exception'}},
     sanitizers={'off', {'off', 'on'}},
     sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
+    stack_protector={'off', {'off', 'on', 'strong', 'all'}},
     suggests={'off', {'off', 'on'}},
     warnings={'off', {'on', 'off', 'strict'}},
-    report_template={'off', {'off', 'on'}},
     warnings_as_error={'off', {'off', 'on'}},
-    reproducible_build_warnings={'off', {'off', 'on'}},
-    color={'default', {'default', 'auto', 'never', 'always'}},
   },
 
   indent = '',
