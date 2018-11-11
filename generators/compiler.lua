@@ -55,13 +55,35 @@ return {
     end
 
     -- help
-    if compiler == '-h' or compiler == '--help' then
+    local is_help = function(s)
+      return s == 'h' or s =='-h' or s == 'help' or s == '--help'
+    end
+    local has_help = is_help(compiler)
+    if not has_help then
+      for k,v in pairs(arg) do
+        has_help = is_help(v)
+        if has_help then
+          break
+        end
+      end
+    end
+    if has_help then
       print(arg[0] .. ' [-h] | [ {compiler|compiler-version} [[{+|-}]{option}[={level}] ...]] ]')
       print('\nsample:\n  ' .. arg[0] .. ' ' .. arg[1] .. ' gcc warnings=strict')
       print('\nBy default:')
+      local lines={}
       for k,v in pairs(_.d.opts) do
-        print('  ' .. k .. '=' .. v)
+        lines[#lines+1] = '  ' .. k .. '=' .. v
       end
+      table.sort(lines)
+      print(table.concat(lines, '\n'))
+      lines={}
+      print('\nOptions:')
+      for k,v in pairs(_._opts) do
+        lines[#lines+1] = '  ' .. k .. ' = ' .. table.concat(v[2], ', ')
+      end
+      table.sort(lines)
+      print(table.concat(lines, '\n'))
       return 0
     end
 
