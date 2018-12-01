@@ -22,7 +22,7 @@ return {
       endif='endif',
     })
 
-    _:print('# meson_options.txt')
+    _:print('\n# meson_options.txt')
     for optname,args in _:getoptions() do
       _:print("option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'])")
     end
@@ -30,7 +30,7 @@ return {
     _:print([[
 # meson.build
 
-jln_cxx_flags = []
+jln_cpp_flags = []
 jln_link_flags = []
 
 jln_cpp_compiler = meson.get_compiler('cpp')
@@ -46,7 +46,7 @@ jln_cpp_compiler = meson.get_compiler('cpp')
   define=function(_, x) return "'-D" .. x .. "', " end,
 
   _vcond_toflags=function(_, cxx, links, defines)
-    return ((#cxx ~= 0 or #defines ~= 0) and _.indent .. '  jln_cxx_flags += [' .. cxx .. defines .. ']\n' or '')
+    return ((#cxx ~= 0 or #defines ~= 0) and _.indent .. '  jln_cpp_flags += [' .. cxx .. defines .. ']\n' or '')
         .. (#links ~= 0 and _.indent .. '  jln_link_flags += [' .. links .. ']\n' or '')
   end,
 
@@ -97,7 +97,7 @@ jln_cpp_compiler = meson.get_compiler('cpp')
     end
     return table.concat(t, '\n') .. [[
 
-jln_cxx_flags = jln_cpp_compiler.get_supported_arguments(jln_cxx_flags)
+jln_cpp_flags = jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
 jln_link_flags = jln_cpp_compiler.get_supported_arguments(jln_link_flags)
 ]]
   end
