@@ -11,6 +11,7 @@ mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"
 
 cd "$PROJECT_PATH"
 
+# configure temporary paths
 LUA_BIN=$(which luajit 2>/dev/null||:)
 if [ ! -z "$LUA_BIN" ]; then
   for f in compiler-options.lua generators/* ; do

@@ -16,7 +16,7 @@ $ `bjam jln-fast-math=on`
 
 $ `meson -Djln_fast_math=on`
 
-(`jln-` is a parameterizable prefix, see generate.sh)
+(`jln-` is a parameterizable prefix: `./compiler-options.lua generators/meson.lua [prefix]`)
 
 Supported options are:
 
@@ -96,6 +96,18 @@ jln_getoptions([compiler[, version[, values[, disable_others[, print_compiler]]]
 -- use buildoptions and linkoptions then return {buildoptions=string, linkoptions=string}
 jln_setoptions(values[, disable_others[, print_compiler]])
 jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]]])
+```
+
+# Meson Generator
+
+Split `output/meson` to `meson_options.txt` and `something/meson.build`
+
+```meson
+project('test', 'cpp')
+
+subdir('something/meson.build')
+
+executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flags)
 ```
 
 # Bjam/B2 Generator
