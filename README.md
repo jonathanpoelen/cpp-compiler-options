@@ -23,24 +23,26 @@ Supported options are:
 <!-- ./compiler-options.lua generators/options.lua -->
 ```ini
 color = default auto never always
-coverage = off on
-debug = default off on line-tables-only gdb lldb sce
-diagnostics_format = default fixits patch print-source-range-info
+coverage = default off on
+debug = default off on line_tables_only gdb lldb sce
+diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
-fast_math = off on
-lto = off on fat
-optimize = default off on size speed very-fast
-pedantic = on off as_error
+exceptions = default off on
+fast_math = default off on
+lto = default off on fat
+optimize = default off on size speed whole_program
+pedantic = default off on as_error
 relro = default off on full
-reproducible_build_warnings = off on
-sanitizers = off on
-sanitizers_extra = off thread pointer
-stack_protector = off on strong all
-stl_debug = off on allow_broken_abi assert_as_exception
-suggests = off on
-warnings = on off strict
-warnings_as_error = off on
+reproducible_build_warnings = default off on
+rtti = default off on
+sanitizers = default off on
+sanitizers_extra = default off thread pointer
+stack_protector = default off on strong all
+stl_debug = default off on allow_broken_abi assert_as_exception
+suggests = default off on
+warnings = default off on strict
+warnings_as_error = default off on
 ```
 
 

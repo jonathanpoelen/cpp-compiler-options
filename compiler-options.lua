@@ -49,19 +49,20 @@ function link(x) return { link=(x:sub(1,1) == '-' and x or '-l'..x) } end
 function fl(x) return { cxx=x, link=x } end
 function lvl(x) return setmetatable({ lvl=x }, cond_mt) end
 function opt(x) return setmetatable({ opt=x }, cond_mt) end
-function hasopt(x) return setmetatable({ hasopt=x }, cond_mt) end
 function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 
 -- gcc and clang
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 G = Or(gcc, clang) {
   opt'coverage' {
-    cxx'--coverage', -- -fprofile-arcs -ftest-coverage
-    link'--coverage', -- -lgcov
-    clang {
-      link'-lprofile_rt',
-      -- fl'-fprofile-instr-generate',
-      -- fl'-fcoverage-mapping',
+    lvl'on' {
+      cxx'--coverage', -- -fprofile-arcs -ftest-coverage
+      link'--coverage', -- -lgcov
+      clang {
+        link'-lprofile_rt',
+        -- fl'-fprofile-instr-generate',
+        -- fl'-fcoverage-mapping',
+      },
     },
   },
 
@@ -69,7 +70,7 @@ G = Or(gcc, clang) {
     lvl'off' { cxx '-g0' } /
     lvl'gdb' { cxx '-ggdb' } /
     clang {
-      lvl'line-tables-only' { cxx'-gline-tables-only' },
+      lvl'line_tables_only' { cxx'-gline-tables-only' },
       lvl'lldb' { cxx '-glldb' } /
       lvl'sce' { cxx '-gsce' } /
       cxx'-g'
@@ -78,24 +79,30 @@ G = Or(gcc, clang) {
   },
 
   opt'lto' {
-    fl'-flto', -- clang -flto=thin
-    gcc(5) {
-      fl'-flto-odr-type-merging', -- increases size of LTO object files, but enables diagnostics about ODR violations
-      lvl'fat' {
-        cxx'-ffat-lto-objects',
-      },
-    } /
-    opt'optimize'{
-      lvl'very-fast' {
-        clang(3,9) {
-          fl'-fwhole-program-vtables'
+    lvl'off' {
+      fl'-fno-lto',
+    } / {
+      fl'-flto', -- clang -flto=thin
+      gcc(5) {
+        fl'-flto-odr-type-merging', -- increases size of LTO object files, but enables diagnostics about ODR violations
+        lvl'fat' {
+          cxx'-ffat-lto-objects',
+        },
+      } /
+      opt'optimize'{
+        lvl'whole_program' {
+          clang(3,9) {
+            fl'-fwhole-program-vtables'
+          },
         },
       },
     },
   },
 
   -- link: optimization with lto
-  opt'fast_math' { fl'-ffast-math', },
+  opt'fast_math' {
+    lvl'on' { fl'-ffast-math', } / fl'-fno-fast-math',
+  },
 
   -- link: optimization with lto
   opt'optimize' {
@@ -103,7 +110,7 @@ G = Or(gcc, clang) {
     lvl'off'   { fl'-O0' } /
     lvl'size'  { fl'-Os' } /
     lvl'speed' { fl'-O3' } /
-    lvl'very-fast' {
+    lvl'whole_program' {
       link'-s',
       fl'-O3',
       fl'-march=native',
@@ -117,26 +124,30 @@ G = Or(gcc, clang) {
   },
 
   opt'pedantic' {
-    cxx'-pedantic',
-    lvl'as_error' {
-      cxx'-pedantic-errors',
+    -lvl'off' {
+      cxx'-pedantic',
+      lvl'as_error' {
+        cxx'-pedantic-errors',
+      },
     },
   },
 
   opt'stack_protector' {
-    def'_FORTIFY_SOURCE=2',
-    cxx'-Wstack-protector',
-    fl'-fstack-protector',
-    lvl'strong' {
-      -gcc(-4,9) {
-        fl'-fstack-protector-strong',
+    -lvl'off' {
+      def'_FORTIFY_SOURCE=2',
+      cxx'-Wstack-protector',
+      fl'-fstack-protector',
+      lvl'strong' {
+        -gcc(-4,9) {
+          fl'-fstack-protector-strong',
+        } /
+        clang {
+          fl'-fsanitize=safe-stack',
+        }
       } /
-      clang {
-        fl'-fsanitize=safe-stack',
-      }
-    } /
-    lvl'all' {
-      fl'-fstack-protector-all',
+      lvl'all' {
+        fl'-fstack-protector-all',
+      },
     },
   },
 
@@ -147,178 +158,192 @@ G = Or(gcc, clang) {
   },
 
   opt'suggests' {
-    gcc {
-      cxx'-Wsuggest-attribute=pure',
-      cxx'-Wsuggest-attribute=const',
-    }*
-    vers(5) {
-      cxx'-Wsuggest-final-types',
-      cxx'-Wsuggest-final-methods',
-   -- cxx'-Wsuggest-attribute=format',
-    }*
-    vers(5,1) {
-      cxx'-Wnoexcept',
+    -lvl'off' {
+      gcc {
+        cxx'-Wsuggest-attribute=pure',
+        cxx'-Wsuggest-attribute=const',
+      }*
+      vers(5) {
+        cxx'-Wsuggest-final-types',
+        cxx'-Wsuggest-final-methods',
+     -- cxx'-Wsuggest-attribute=format',
+      }*
+      vers(5,1) {
+        cxx'-Wnoexcept',
+      },
     },
   },
 
   opt'stl_debug' {
-    def'_LIBCPP_DEBUG=1',
-    lvl'assert_as_exception' {
-      def'_LIBCPP_DEBUG_USE_EXCEPTIONS'
-    },
-    lvl'allow_broken_abi' {
-      def'_GLIBCXX_DEBUG',
-    } / {
-      def'_GLIBCXX_ASSERTIONS',
-    },
-    hasopt'pedantic' {
-      def'_GLIBCXX_DEBUG_PEDANTIC'
+    -lvl'off' {
+      def'_LIBCPP_DEBUG=1',
+      lvl'assert_as_exception' {
+        def'_LIBCPP_DEBUG_USE_EXCEPTIONS'
+      },
+      lvl'allow_broken_abi' {
+        def'_GLIBCXX_DEBUG',
+      } / {
+        def'_GLIBCXX_ASSERTIONS',
+      },
+      opt'pedantic' {
+        -lvl'off' {
+          def'_GLIBCXX_DEBUG_PEDANTIC'
+        },
+      },
     },
   },
 
   opt'warnings' {
-    gcc {
-      cxx'-Wall',
-      cxx'-Wextra',
-      cxx'-Wcast-align',
-      cxx'-Wcast-qual',
-      cxx'-Wdisabled-optimization',
-      cxx'-Wfloat-equal',
-      cxx'-Wformat-security',
-      cxx'-Wformat-signedness',
-      cxx'-Wformat=2',
-      cxx'-Wmissing-declarations',
-      cxx'-Wmissing-include-dirs',
-      cxx'-Wnon-virtual-dtor',
-      cxx'-Wold-style-cast',
-      cxx'-Woverloaded-virtual',
-   -- cxx'-Weffc++',
-      cxx'-Wpacked',
-      cxx'-Wredundant-decls',
-      cxx'-Wundef',
-      cxx'-Wuninitialized',
-      cxx'-Wunused-macros',
-      cxx'-Wvla',
-   -- cxx'-Winline',
-   -- cxx'-Wswitch-default',
-   -- cxx'-Wswitch-enum',
-    }*
+    lvl'off' {
+      cxx'-w'
+    } / {
+      gcc {
+        cxx'-Wall',
+        cxx'-Wextra',
+        cxx'-Wcast-align',
+        cxx'-Wcast-qual',
+        cxx'-Wdisabled-optimization',
+        cxx'-Wfloat-equal',
+        cxx'-Wformat-security',
+        cxx'-Wformat-signedness',
+        cxx'-Wformat=2',
+        cxx'-Wmissing-declarations',
+        cxx'-Wmissing-include-dirs',
+        cxx'-Wnon-virtual-dtor',
+        cxx'-Wold-style-cast',
+        cxx'-Woverloaded-virtual',
+     -- cxx'-Weffc++',
+        cxx'-Wpacked',
+        cxx'-Wredundant-decls',
+        cxx'-Wundef',
+        cxx'-Wuninitialized',
+        cxx'-Wunused-macros',
+        cxx'-Wvla',
+     -- cxx'-Winline',
+     -- cxx'-Wswitch-default',
+     -- cxx'-Wswitch-enum',
+      }*
 
-    vers(4,7) {
-      cxx'-Wsuggest-attribute=noreturn',
-      cxx'-Wzero-as-null-pointer-constant',
-      cxx'-Wlogical-op',
-   -- cxx'-Wno-aggressive-loop-optimizations',
-   -- cxx'-Wnormalized=nfc',
-      cxx'-Wvector-operation-performance',
-      cxx'-Wdouble-promotion',
-      cxx'-Wtrampolines', -- C only with a nested function ?
-    }*
+      vers(4,7) {
+        cxx'-Wsuggest-attribute=noreturn',
+        cxx'-Wzero-as-null-pointer-constant',
+        cxx'-Wlogical-op',
+     -- cxx'-Wno-aggressive-loop-optimizations',
+     -- cxx'-Wnormalized=nfc',
+        cxx'-Wvector-operation-performance',
+        cxx'-Wdouble-promotion',
+        cxx'-Wtrampolines', -- C only with a nested function ?
+      }*
 
-    vers(4,8) {
-      cxx'-Wuseless-cast',
-    }*
+      vers(4,8) {
+        cxx'-Wuseless-cast',
+      }*
 
-    vers(4,9) {
-      cxx'-Wconditionally-supported',
-      cxx'-Wfloat-conversion',
-      cxx'-Wopenmp-simd',
-    }*
+      vers(4,9) {
+        cxx'-Wconditionally-supported',
+        cxx'-Wfloat-conversion',
+        cxx'-Wopenmp-simd',
+      }*
 
-    vers(5,1) {
-      cxx'-fsized-deallocation',
-      cxx'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
-      cxx'-Wconditionally-supported',
-   -- cxx'-Wctor-dtor-privacy',
-      cxx'-Wsized-deallocation',
-      cxx'-Wstrict-null-sentinel',
-      cxx'-Wsuggest-override',
-    }*
+      vers(5,1) {
+        cxx'-fsized-deallocation',
+        cxx'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
+        cxx'-Wconditionally-supported',
+     -- cxx'-Wctor-dtor-privacy',
+        cxx'-Wsized-deallocation',
+        cxx'-Wstrict-null-sentinel',
+        cxx'-Wsuggest-override',
+      }*
 
-    vers(6,1) {
-      cxx'-Wduplicated-cond',
-      cxx'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
-    }*
+      vers(6,1) {
+        cxx'-Wduplicated-cond',
+        cxx'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
+      }*
 
-    vers(7) {
-      cxx'-Waligned-new',
-    }*
+      vers(7) {
+        cxx'-Waligned-new',
+      }*
 
-    vers(7,1) {
-      cxx'-Walloc-zero',
-      cxx'-Walloca',
-      cxx'-Wformat-overflow', -- =level
-   -- cxx'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
-   -- cxx'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
-      cxx'-Wshadow=compatible-local', -- global (default), local, compatible-local
-      cxx'-Wduplicated-branches',
-    }*
+      vers(7,1) {
+        cxx'-Walloc-zero',
+        cxx'-Walloca',
+        cxx'-Wformat-overflow', -- =level
+     -- cxx'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
+     -- cxx'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
+        cxx'-Wshadow=compatible-local', -- global (default), local, compatible-local
+        cxx'-Wduplicated-branches',
+      }*
 
-    vers(8) {
-      cxx'-Wclass-memaccess',
-    },
+      vers(8) {
+        cxx'-Wclass-memaccess',
+      },
 
-    clang {
-      cxx'-Weverything',
-   -- cxx'-Wno-documentation-unknown-command',
-   -- cxx'-Wno-range-loop-analysis',
-   -- cxx'-Wno-disabled-macro-expansion',
-      cxx'-Wno-c++98-compat',
-      cxx'-Wno-c++98-compat-pedantic',
-      cxx'-Wno-mismatched-tags',
-      cxx'-Wno-padded',
-      cxx'-Wno-shadow',
-      cxx'-Wno-global-constructors',
-      cxx'-Wno-weak-vtables',
-      cxx'-Wno-exit-time-destructors',
-      cxx'-Wno-covered-switch-default',
-   -- cxx'-Qunused-arguments',
-      cxx'-Wno-switch-default',
-      cxx'-Wno-switch-enum',
-      cxx'-Wno-inconsistent-missing-destructor-override',
-    },
+      clang {
+        cxx'-Weverything',
+     -- cxx'-Wno-documentation-unknown-command',
+     -- cxx'-Wno-range-loop-analysis',
+     -- cxx'-Wno-disabled-macro-expansion',
+        cxx'-Wno-c++98-compat',
+        cxx'-Wno-c++98-compat-pedantic',
+        cxx'-Wno-mismatched-tags',
+        cxx'-Wno-padded',
+        cxx'-Wno-shadow',
+        cxx'-Wno-global-constructors',
+        cxx'-Wno-weak-vtables',
+        cxx'-Wno-exit-time-destructors',
+        cxx'-Wno-covered-switch-default',
+     -- cxx'-Qunused-arguments',
+        cxx'-Wno-switch-default',
+        cxx'-Wno-switch-enum',
+        cxx'-Wno-inconsistent-missing-destructor-override',
+      },
 
-    lvl'strict' {
-      cxx'-Wconversion',
-      gcc(8) { cxx'-Wcast-align=strict', }
-    } /
-    clang {
-      cxx'-Wno-conversion',
-      cxx'-Wno-sign-conversion',
+      lvl'strict' {
+        cxx'-Wconversion',
+        gcc(8) { cxx'-Wcast-align=strict', }
+      } /
+      clang {
+        cxx'-Wno-conversion',
+        cxx'-Wno-sign-conversion',
+      },
     },
   },
 
   opt'sanitizers' {
-    clang {
-      vers(3,1) {
-        fl'-fsanitize=undefined',
-        fl'-fsanitize=address', -- memory, thread are mutually exclusive
-        cxx'-fsanitize-address-use-after-scope',
-        cxx'-fno-omit-frame-pointer',
-        cxx'-fno-optimize-sibling-calls',
-      }*
-      vers(3,4) {
-        fl'-fsanitize=leak', -- requires the address sanitizer
-      }*
-      vers(6) {
-        fl'-fsanitize=bounds',
+    lvl'off' {
+      fl'-fno-sanitize=all'
+    } / {
+      clang {
+        vers(3,1) {
+          fl'-fsanitize=undefined',
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          cxx'-fsanitize-address-use-after-scope',
+          cxx'-fno-omit-frame-pointer',
+          cxx'-fno-optimize-sibling-calls',
+        }*
+        vers(3,4) {
+          fl'-fsanitize=leak', -- requires the address sanitizer
+        }*
+        vers(6) {
+          fl'-fsanitize=bounds',
+        },
+      } /
+      -- gcc
+      {
+        vers(4,8) {
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          cxx'-fno-omit-frame-pointer',
+          cxx'-fno-optimize-sibling-calls',
+        }*
+        vers(4,9) {
+          fl'-fsanitize=undefined',
+          fl'-fsanitize=leak', -- requires the address sanitizer
+        }*
+        vers(6) {
+          cxx'-fsanitize=bounds',
+          cxx'-fsanitize=bounds-strict',
+        }
       },
-    } /
-    -- gcc
-    {
-      vers(4,8) {
-        fl'-fsanitize=address', -- memory, thread are mutually exclusive
-        cxx'-fno-omit-frame-pointer',
-        cxx'-fno-optimize-sibling-calls',
-      }*
-      vers(4,9) {
-        fl'-fsanitize=undefined',
-        fl'-fsanitize=leak', -- requires the address sanitizer
-      }*
-      vers(6) {
-        cxx'-fsanitize=bounds',
-        cxx'-fsanitize=bounds-strict',
-      }
     },
   },
 
@@ -344,11 +369,11 @@ G = Or(gcc, clang) {
 
   opt'reproducible_build_warnings' {
     gcc(4,9) {
-      cxx'-Wdate-time'
+      lvl'on' { cxx'-Wdate-time' } / cxx'-Wno-date-time'
     }
   },
 
-  opt'color' {
+  opt'color' {    
     Or(gcc(4,9), clang) {
       lvl'auto' { cxx'-fdiagnostics-color=auto' } /
       lvl'never' { cxx'-fdiagnostics-color=never' } /
@@ -358,15 +383,21 @@ G = Or(gcc, clang) {
 
   opt'elide_type' {
     Or(gcc(8), clang(3,4)) {
-      lvl'on' { cxx'-felide-type' } /
-      lvl'off' { cxx'-fno-elide-type' },
+      lvl'on' { cxx'-felide-type' } / cxx'-fno-elide-type',
     },
+  },
+
+  opt'exceptions' {
+    lvl'on' { cxx'-fexceptions', } / cxx'-fno-exceptions',
+  },
+
+  opt'rtti' {
+    lvl'on' { cxx'-frtti' } / cxx'fno-rtti',
   },
 
   opt'diagnostics_show_template_tree' {
     Or(gcc(8), clang) {
-      lvl'on' { cxx'-fdiagnostics-show-template-tree' } /
-      lvl'off' { cxx'-fno-diagnostics-show-template-tree' },
+      lvl'on' { cxx'-fdiagnostics-show-template-tree' } / cxx'-fno-diagnostics-show-template-tree',
     },
   },
 
@@ -379,68 +410,54 @@ G = Or(gcc, clang) {
     lvl'patch', {
       gcc(7) { cxx'-fdiagnostics-generate-patch' }
     } /
-    lvl'print-source-range-info' {
+    lvl'print_source_range_info' {
       clang { cxx'-fdiagnostics-print-source-range-info' }
     }
   },
 
-  opt'warnings_as_error' { cxx'-Werror', },
+  opt'warnings_as_error' {
+    lvl'on' { cxx'-Werror', } / cxx'-Wno-error',
+  }
 }
 
 function noop() end
 
-function fopt(t)
-  local u = { }
-  for _, v in ipairs(t[2]) do u[v] = true end
-  if not u[t[1]] then
-    error('_opts integrity error: disable value ' .. t[1] .. ' is not used')
-  end
-  t[3] = u
-  return t
-end
-
-function fopts(t)
-  local r = {}
-  for k,v in pairs(t) do
-    r[k] = fopt(v)
-  end
-  return r
-end
-
 Vbase = {
   _incidental={
     color=true,
-    elide_type=true,
     diagnostics=true,
     diagnostics_format=true,
     diagnostics_show_template_tree=true,
+    elide_type=true,
     reproducible_build_warnings=true,
     suggests=true,
     warnings=true,
     warnings_as_error=true,
   },
 
-  _opts=fopts{
-    color={'default', {'default', 'auto', 'never', 'always'}},
-    coverage={'off', {'off', 'on'}},
-    debug={'default', {'default', 'off', 'on', 'line-tables-only', 'gdb', 'lldb', 'sce'}},
-    diagnostics={'default', {'default', 'patch', 'fixits'}},
-    diagnostics_format={'default', {'default', 'fixits', 'patch', 'print-source-range-info'}},
-    diagnostics_show_template_tree={'default', {'default', 'off', 'on'}},
-    elide_type={'default', {'default', 'off', 'on'}},
-    fast_math={'off', {'off', 'on'}},
-    lto={'off', {'off', 'on', 'fat'}},
-    optimize={'default', {'default', 'off', 'on', 'size', 'speed', 'very-fast'}},
-    pedantic={'off', {'on', 'off', 'as_error'}},
-    relro={'default', {'default', 'off', 'on', 'full'}},
-    reproducible_build_warnings={'off', {'off', 'on'}},
-    stl_debug={'off', {'off', 'on', 'allow_broken_abi', 'assert_as_exception'}},
-    sanitizers={'off', {'off', 'on'}},
-    sanitizers_extra={'off', {'off', 'thread', 'pointer'}},
-    stack_protector={'off', {'off', 'on', 'strong', 'all'}},
-    suggests={'off', {'off', 'on'}},
-    warnings={'off', {'on', 'off', 'strict'}},
-    warnings_as_error={'off', {'off', 'on'}},
+  _opts={
+    color=      {'auto', 'never', 'always'},
+    coverage=   {'off', 'on'},
+    debug=      {'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},
+    diagnostics={'patch', 'fixits'},
+    diagnostics_format={'fixits', 'patch', 'print_source_range_info'},
+    diagnostics_show_template_tree={'off', 'on'},
+    elide_type= {'off', 'on'},
+    exceptions= {'off', 'on'},
+    fast_math=  {'off', 'on'},
+    lto=        {'off', 'on', 'fat'},
+    optimize=   {'off', 'on', 'size', 'speed', 'whole_program'},
+    pedantic=   {'off', 'on', 'as_error'},
+    relro=      {'off', 'on', 'full'},
+    reproducible_build_warnings={'off', 'on'},
+    rtti=       {'off', 'on'},
+    stl_debug=  {'off', 'on', 'allow_broken_abi', 'assert_as_exception'},
+    sanitizers= {'off', 'on'},
+    sanitizers_extra={'off', 'thread', 'pointer'},
+    stack_protector= {'off', 'on', 'strong', 'all'},
+    suggests=   {'off', 'on'},
+    warnings=   {'off', 'on', 'strict'},
+    warnings_as_error={'off', 'on'},
   },
 
   indent = '',
@@ -494,18 +511,17 @@ Vbase = {
     _._vcond=function(_, v, optname)
           if v._or      then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._or[1]) ; _:write(' '.._._vcondkeyword._or) _:_vcond(v._or[2]) ; _:write(' '.._._vcondkeyword.close)
       elseif v._and     then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._and[1]); _:write(' '.._._vcondkeyword._and) _:_vcond(v._and[2]); _:write(' '.._._vcondkeyword.close)
-      elseif v._not     then _:write(' '.._._vcondkeyword._not) ; _:_vcond(v._not);
+      elseif v._not     then _:write(' '.._._vcondkeyword._not) ; _:_vcond(v._not, optname);
       elseif v.lvl      then _:write(' '.._:_vcond_lvl(v.lvl, optname))
       elseif v.version  then
         if v.version[1] < 0 then _:write(' '.._:_vcond_verless(-v.version[1], v.version[2]))
         else                     _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_verless(v.version[1], v.version[2])..' '.._._vcondkeyword.close) end
       elseif v.compiler then _:write(' '.._:_vcond_comp(v.compiler))
-      elseif v.hasopt   then _:write(' '.._:_vcond_hasopt(v.hasopt))
       else error('Unknown cond ', ipairs(v))
       end
     end
 
-    _._vcond_hasopt=function(_, optname) return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl(_._opts[optname][1], optname).._._vcondkeyword.close end
+    _._vcond_hasopt=function(_, optname) return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl('default', optname).._._vcondkeyword.close end
 
     _.startopt=function(_, optname)
       _:_vcond_printflags()
@@ -585,7 +601,7 @@ Vbase = {
     _.define = accu('_vcond_flags_define', _.define)
   end,
 
-  -- iterator: optname,args,disable_value
+  -- iterator: optname,args,default_value
   getoptions=function(_)
     local ordered_keys = {}
 
@@ -602,19 +618,33 @@ Vbase = {
       end
       i = i + 1
       local k = ordered_keys[i]
-      local v = _._opts[k]
-      return k, v[2], v[1]
+      return k, _._opts[k], 'default'
     end
   end,
 }
 
+opts_krev = {}
+for k,args in pairs(Vbase._opts) do
+  local u = {}
+  for _, v in ipairs(args) do
+    u[v] = true
+  end
+  if u['default'] then
+    error('_opts[' .. k .. '] integrity error: "default" value is used')
+  end
+  table.insert(args, 1, 'default')
+  opts_krev[k] = u
+  opts_krev['default'] = true
+end
+
+
 function is_cond(t)
-  return t.lvl or t._or or t._and or t._not or t.hasopt or t.compiler or t.version
+  return t.lvl or t._or or t._and or t._not or t.compiler or t.version
 end
 
 function evalflags(t, v, curropt, no_stopcond)
   if is_cond(t) then
-    if t.lvl and not v._opts[curropt][3][t.lvl] then
+    if t.lvl and not opts_krev[curropt][t.lvl] then
        error('Unknown lvl "' .. t.lvl .. '" in ' .. curropt)
     end
     local r = v:startcond(t, curropt)

@@ -30,8 +30,6 @@ return {
        _:write(';' .. optname:upper())
     end
     _:print('" "" ${ARGN})\n')
-    for optname,args,disable_value in _:getoptions() do
-    end
 
     _:print('  if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)')
     _:print('    set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})')
@@ -75,11 +73,11 @@ return {
        _:write(';' .. optname:upper())
     end
     _:print('" "" ${ARGN})\n')
-    for optname,args,disable_value in _:getoptions() do
+    for optname,args,default_value in _:getoptions() do
       local cmake_opt = 'JLN_FLAGS_' .. optname:upper();
       _:print('  if(NOT DEFINED ' .. cmake_opt .. ')')
       _:print('    if(${JLN_FLAGS_DISABLE_OTHERS})')
-      _:print('      set(' .. cmake_opt .. ' "' .. disable_value .. '")')
+      _:print('      set(' .. cmake_opt .. ' "' .. default_value .. '")')
       _:print('    else()')
       _:print('      set(' .. cmake_opt .. ' "${' .. _:tocmakeoption(optname) .. '}")')
       _:print('    endif()')

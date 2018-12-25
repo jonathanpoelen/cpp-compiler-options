@@ -58,7 +58,7 @@ CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
     _:print('\nif $(CXX_BJAM_YEAR_VERSION) < 2016.00 {')
     _:print('  import toolset ;')
-    for optname,args in _:getoptions() do
+    for optname in _:getoptions() do
       if optname ~= 'warnings_as_error' and not _._incidental[optname] then
         local opt = _.optprefix .. tobjamoption(optname)
         _:print('  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;')
