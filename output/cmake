@@ -957,6 +957,203 @@ function(jln_flags)
 
       endif()
     endif()
+  
+  elseif (  CMAKE_CXX_COMPILER_ID MATCHES "MSVC" )
+  
+    if (  NOT ( JLN_FLAGS_DEBUG STREQUAL "default") )
+    
+      if (  JLN_FLAGS_DEBUG STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/DEBUG:NONE")
+
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/Z7")
+
+        if (  JLN_FLAGS_DEBUG STREQUAL "on" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "/DEBUG")
+
+        
+        elseif (  JLN_FLAGS_DEBUG STREQUAL "line_tables_only" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "/DEBUG:FASTLINK")
+
+        endif()
+        if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
+        
+          if (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
+          
+            set(CXX_FLAGS ${CXX_FLAGS}  "/Od")
+
+          
+          else()
+          
+            set(CXX_FLAGS ${CXX_FLAGS}  "/Zi")
+
+          endif()
+        endif()
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_EXCEPTIONS STREQUAL "default") )
+    
+      if (  JLN_FLAGS_EXCEPTIONS STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/EHc")
+
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/EHc-")
+
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_FAST_MATH STREQUAL "default") )
+    
+      if (  JLN_FLAGS_FAST_MATH STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/fp:fast")
+
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/fp:fast-")
+
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
+    
+      if (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/Ob0 /Od /Oi- /Oy-")
+
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O2")
+
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "size" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O1")
+
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "speed" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O2")
+
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "whole_program" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O2" "/GL" "/Gw")
+
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "default") )
+    
+      if (  NOT JLN_FLAGS_PEDANTIC STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/permissive-")
+
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_RTTI STREQUAL "default") )
+    
+      if (  JLN_FLAGS_RTTI STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/GR")
+
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/GR-")
+
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_STL_DEBUG STREQUAL "default") )
+    
+      if (  JLN_FLAGS_STL_DEBUG STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/D_HAS_ITERATOR_DEBUGGING=0")
+
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/D_HAS_ITERATOR_DEBUGGING=1")
+
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_SANITIZERS STREQUAL "default") )
+    
+      if (  JLN_FLAGS_SANITIZERS STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/guard:cf" "/sdl")
+
+      
+      else()
+      
+          set(CXX_FLAGS ${CXX_FLAGS}  "/guard:cf-")
+
+        if (  NOT ( JLN_FLAGS_STACK_PROTECTOR STREQUAL "default") )
+        
+          if (  NOT JLN_FLAGS_STACK_PROTECTOR STREQUAL "off" )
+          
+            set(CXX_FLAGS ${CXX_FLAGS}  "/sdl-")
+
+          endif()
+        endif()
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_STACK_PROTECTOR STREQUAL "default") )
+    
+      if (  NOT JLN_FLAGS_STACK_PROTECTOR STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/GS" "/sdl")
+
+        if (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "strong" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "/RTC1")
+
+        
+        elseif (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "all" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "/RTC1" "/RTCc")
+
+        endif()
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_WARNINGS STREQUAL "default") )
+    
+      if (  JLN_FLAGS_WARNINGS STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/W4")
+
+      
+      elseif (  JLN_FLAGS_WARNINGS STREQUAL "strict" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/Wall")
+
+      
+      elseif (  JLN_FLAGS_WARNINGS STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/W0")
+
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "default") )
+    
+      if (  JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/WX")
+        set(LINK_FLAGS ${LINK_FLAGS}  "/WX")
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/WX-")
+
+      endif()
+    endif()
   endif()
 set(${JLN_FLAGS_CXX_VAR} ${CXX_FLAGS} PARENT_SCOPE)
 set(${JLN_FLAGS_LINK_VAR} ${LINK_FLAGS} PARENT_SCOPE)

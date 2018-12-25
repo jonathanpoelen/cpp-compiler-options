@@ -87,7 +87,19 @@ return {
 
   _vcond_lvl=function(_, lvl, optname) return 'JLN_FLAGS_' .. optname:upper() .. ' STREQUAL "' .. lvl .. '"' end,
   _vcond_verless=function(_, major, minor) return 'CMAKE_CXX_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
-  _vcond_comp=function(_, compiler) return 'CMAKE_CXX_COMPILER_ID MATCHES ' .. (compiler == 'gcc' and '"GNU"' or '"Clang"') end,
+
+  _comp_id = {
+    gcc='"GNU"',
+    clang='"Clang"',
+    msvc='"MSVC"',
+  },
+  _vcond_comp=function(_, compiler)
+    local str_comp = _._comp_id[compiler]
+    if not str_comp then
+      error('Unknown ' .. compiler .. ' compiler')
+    end
+    return 'CMAKE_CXX_COMPILER_ID MATCHES ' .. str_comp
+  end,
 
   cxx=function(_, x) return ' "' .. x .. '"' end,
   link=function(_, x) return ' "' .. x .. '"' end,

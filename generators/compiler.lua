@@ -17,15 +17,15 @@ return {
     -- list compilers
     if not compiler then
       return {
-        t = {},
-        comp = nil,
+        comps = {},
+        comp_versions = nil,
 
         startcond=function(_, x)
           if x.compiler then
-            _.comp = x.compiler
-          end
-          if x.version then
-            _.t[#_.t+1] = _.comp .. '-' .. (x.version[1] < 0 and -x.version[1] or x.version[1]) .. '.' .. x.version[2]
+            _.comp_versions = _.comps[x.compiler] or {}
+            _.comps[x.compiler] = _.comp_versions
+          elseif x.version then
+            _.comp_versions[(x.version[1] < 0 and -x.version[1] or x.version[1]) .. '.' .. x.version[2]] = true
           elseif x._not then
             _:startcond(x._not)
           else
@@ -38,18 +38,20 @@ return {
         end,
 
         stop=function(_)
-          local t = {}
-          for k,v in ipairs(_.t) do
-            t[v] = v
+          local comps = {}
+          for comp,versions in pairs(_.comps) do
+            local has_elem = false
+            for k,v in pairs(versions) do
+              comps[#comps+1] = comp .. '-' .. k
+              has_elem = true
+            end
+            if not has_elem then
+              comps[#comps+1] = comp
+            end
           end
 
-          _.t = {}
-          for k,v in pairs(t) do
-            _.t[#_.t+1] = v
-          end
-
-          table.sort(_.t)
-          return table.concat(_.t, '\n') .. '\n'
+          table.sort(comps)
+          return table.concat(comps, '\n') .. '\n'
         end,
       }
     end
@@ -104,9 +106,20 @@ return {
           elseif name == 'error' then name = 'warnings_as_error'
           else name = name:gsub('-', '_')
           end
-          if not _._opts[name] then
+
+          local opt_args = _._opts_krev[name]
+          if not opt_args then
             error('Unknown `' .. name .. '` option')
           end
+
+          if #lvl == 0 then
+            lvl = 'on'
+          end
+
+          if not opt_args[lvl] or lvl == 'default' then
+            error('Unknown value `' .. lvl .. '` in ' .. name)
+          end
+
           if f == '+' then
             _.d.opts[name] = (lvl or true)
             concat_opts = true

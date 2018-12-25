@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ $# -ge 1 ] ; then
+  echo 'Maybe you wanted to use compiler-options.lua ?'
+  exit 1
+fi
+
 set -e
 
 OUTPUT_DIR_NAME=output

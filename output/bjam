@@ -665,5 +665,146 @@ rule jln_flags ( properties * )
       }
     }
   }
+  else if $(toolset) = msvc
+  {
+    if ! (  <jln-exceptions>default in $(properties) )
+    {
+      if <jln-exceptions>on in $(properties)
+      {
+        flags +=
+          <cxxflags>/EHc
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>/EHc-
+        ;
+      }
+    }
+    if ! (  <jln-fast-math>default in $(properties) )
+    {
+      if <jln-fast-math>on in $(properties)
+      {
+        flags +=
+          <cxxflags>/fp:fast
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>/fp:fast-
+        ;
+      }
+    }
+    if ! (  <jln-pedantic>default in $(properties) )
+    {
+      if ! <jln-pedantic>off in $(properties)
+      {
+        flags +=
+          <cxxflags>/permissive-
+        ;
+      }
+    }
+    if ! (  <jln-rtti>default in $(properties) )
+    {
+      if <jln-rtti>on in $(properties)
+      {
+        flags +=
+          <cxxflags>/GR
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>/GR-
+        ;
+      }
+    }
+    if ! (  <jln-stl-debug>default in $(properties) )
+    {
+      if <jln-stl-debug>off in $(properties)
+      {
+        flags +=
+          <cxxflags>/D_HAS_ITERATOR_DEBUGGING=0
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>/D_HAS_ITERATOR_DEBUGGING=1
+        ;
+      }
+    }
+    if ! (  <jln-sanitizers>default in $(properties) )
+    {
+      if <jln-sanitizers>on in $(properties)
+      {
+        flags +=
+          <cxxflags>/guard:cf
+          <cxxflags>/sdl
+        ;
+      }
+      else
+      {
+          flags +=
+          <cxxflags>/guard:cf-
+          ;
+        if ! (  <jln-stack-protector>default in $(properties) )
+        {
+          if ! <jln-stack-protector>off in $(properties)
+          {
+            flags +=
+              <cxxflags>/sdl-
+            ;
+          }
+        }
+      }
+    }
+    if ! (  <jln-stack-protector>default in $(properties) )
+    {
+      if ! <jln-stack-protector>off in $(properties)
+      {
+        flags +=
+          <cxxflags>/GS
+          <cxxflags>/sdl
+        ;
+        if <jln-stack-protector>strong in $(properties)
+        {
+          flags +=
+            <cxxflags>/RTC1
+          ;
+        }
+        else if <jln-stack-protector>all in $(properties)
+        {
+          flags +=
+            <cxxflags>/RTC1
+            <cxxflags>/RTCc
+          ;
+        }
+      }
+    }
+    if ! (  <jln-warnings>default in $(properties) )
+    {
+      if <jln-warnings>on in $(properties)
+      {
+        flags +=
+          <cxxflags>/W4
+        ;
+      }
+      else if <jln-warnings>strict in $(properties)
+      {
+        flags +=
+          <cxxflags>/Wall
+        ;
+      }
+      else if <jln-warnings>off in $(properties)
+      {
+        flags +=
+          <cxxflags>/W0
+        ;
+      }
+    }
+  }
   return $(flags) ;
 }

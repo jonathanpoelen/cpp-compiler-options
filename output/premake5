@@ -712,6 +712,173 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " -Wno-error"
       end
     end
+  
+  elseif compiler == "msvc" then
+  
+    if not ( values["jln-debug"] == "default") then
+    
+      if values["jln-debug"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /DEBUG:NONE"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /Z7"
+        if values["jln-debug"] == "on" then
+        
+          jln_buildoptions = jln_buildoptions .. " /DEBUG"
+        
+        elseif values["jln-debug"] == "line_tables_only" then
+        
+          jln_buildoptions = jln_buildoptions .. " /DEBUG:FASTLINK"
+        end
+        if not ( values["jln-optimize"] == "default") then
+        
+          if values["jln-optimize"] == "off" then
+          
+            jln_buildoptions = jln_buildoptions .. " /Od"
+          
+          else
+          
+            jln_buildoptions = jln_buildoptions .. " /Zi"
+          end
+        end
+      end
+    end
+    if not ( values["jln-exceptions"] == "default") then
+    
+      if values["jln-exceptions"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /EHc"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /EHc-"
+      end
+    end
+    if not ( values["jln-fast-math"] == "default") then
+    
+      if values["jln-fast-math"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /fp:fast"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /fp:fast-"
+      end
+    end
+    if not ( values["jln-optimize"] == "default") then
+    
+      if values["jln-optimize"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /Ob0 /Od /Oi- /Oy-"
+      
+      elseif values["jln-optimize"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /O2"
+      
+      elseif values["jln-optimize"] == "size" then
+      
+        jln_buildoptions = jln_buildoptions .. " /O1"
+      
+      elseif values["jln-optimize"] == "speed" then
+      
+        jln_buildoptions = jln_buildoptions .. " /O2"
+      
+      elseif values["jln-optimize"] == "whole_program" then
+      
+        jln_buildoptions = jln_buildoptions .. " /O2 /GL /Gw"
+      end
+    end
+    if not ( values["jln-pedantic"] == "default") then
+    
+      if not values["jln-pedantic"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /permissive-"
+      end
+    end
+    if not ( values["jln-rtti"] == "default") then
+    
+      if values["jln-rtti"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /GR"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /GR-"
+      end
+    end
+    if not ( values["jln-stl-debug"] == "default") then
+    
+      if values["jln-stl-debug"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /D_HAS_ITERATOR_DEBUGGING=0"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /D_HAS_ITERATOR_DEBUGGING=1"
+      end
+    end
+    if not ( values["jln-sanitizers"] == "default") then
+    
+      if values["jln-sanitizers"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /guard:cf /sdl"
+      
+      else
+      
+          jln_buildoptions = jln_buildoptions .. " /guard:cf-"
+        if not ( values["jln-stack-protector"] == "default") then
+        
+          if not values["jln-stack-protector"] == "off" then
+          
+            jln_buildoptions = jln_buildoptions .. " /sdl-"
+          end
+        end
+      end
+    end
+    if not ( values["jln-stack-protector"] == "default") then
+    
+      if not values["jln-stack-protector"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /GS /sdl"
+        if values["jln-stack-protector"] == "strong" then
+        
+          jln_buildoptions = jln_buildoptions .. " /RTC1"
+        
+        elseif values["jln-stack-protector"] == "all" then
+        
+          jln_buildoptions = jln_buildoptions .. " /RTC1 /RTCc"
+        end
+      end
+    end
+    if not ( values["jln-warnings"] == "default") then
+    
+      if values["jln-warnings"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /W4"
+      
+      elseif values["jln-warnings"] == "strict" then
+      
+        jln_buildoptions = jln_buildoptions .. " /Wall"
+      
+      elseif values["jln-warnings"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /W0"
+      end
+    end
+    if not ( values["jln-warnings-as-error"] == "default") then
+    
+      if values["jln-warnings-as-error"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /WX"
+        jln_linkoptions = jln_linkoptions .. " /WX"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /WX-"
+      end
+    end
   end
   return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}
 end

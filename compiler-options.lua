@@ -42,6 +42,7 @@ function compiler(name) return setmetatable({ compiler=name }, comp_mt) end
 
 local gcc = compiler('gcc')
 local clang = compiler('clang')
+local msvc = compiler('msvc')
 function vers(major, minor) return setmetatable({ version={major, minor or 0} }, cond_mt) end
 function def(x) return { def=x } end
 function cxx(x) return { cxx=x } end
@@ -180,11 +181,7 @@ G = Or(gcc, clang) {
       lvl'assert_as_exception' {
         def'_LIBCPP_DEBUG_USE_EXCEPTIONS'
       },
-      lvl'allow_broken_abi' {
-        def'_GLIBCXX_DEBUG',
-      } / {
-        def'_GLIBCXX_ASSERTIONS',
-      },
+      lvl'allow_broken_abi' { def'_GLIBCXX_DEBUG', } / def'_GLIBCXX_ASSERTIONS',
       opt'pedantic' {
         -lvl'off' {
           def'_GLIBCXX_DEBUG_PEDANTIC'
@@ -418,7 +415,84 @@ G = Or(gcc, clang) {
   opt'warnings_as_error' {
     lvl'on' { cxx'-Werror', } / cxx'-Wno-error',
   }
+} /
+
+msvc {
+  opt'debug' {
+    lvl'off' { cxx'/DEBUG:NONE' } / {
+      cxx'/Z7',
+      lvl'on' { cxx'/DEBUG' } / -- /DEBUG:FULL
+      lvl'line_tables_only' { cxx'/DEBUG:FASTLINK' },
+
+      opt'optimize' {
+        lvl'off' { cxx'/Od' } / cxx'/Zi',
+      } /
+      cxx'/Od',
+    }
+  },
+
+  opt'exceptions'{
+    lvl'on' { cxx'/EHc' } / { cxx'/EHc-' }
+  },
+
+  opt'fast_math' {
+    lvl'on' { cxx'/fp:fast' } / cxx'/fp:fast-',
+  },
+
+  opt'optimize' {
+    lvl'off' { cxx'/Ob0 /Od /Oi- /Oy-' } /
+    lvl'on' { cxx'/O2' } /
+    lvl'size' { cxx'/O1' } /  -- /Og      /Os  /Oy /Ob2 /GF /Gy
+    lvl'speed' { cxx'/O2' } / -- /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
+    lvl'whole_program' { cxx'/O2', cxx'/GL', cxx'/Gw' },
+  },
+
+  opt'pedantic'{
+    -lvl'off' { cxx'/permissive-' }
+  },
+
+  opt'rtti'{
+    lvl'on' { cxx'/GR' } / { cxx'/GR-' }
+  },
+
+  opt'stl_debug'{
+    lvl'off' { cxx'/D_HAS_ITERATOR_DEBUGGING=0' } / cxx'/D_HAS_ITERATOR_DEBUGGING=1'
+  },
+
+  opt'sanitizers'{
+    lvl'on' {
+      cxx'/guard:cf',
+      cxx'/sdl',
+      
+    } /
+    {
+      cxx'/guard:cf-',
+      opt'stack_protector' {
+        -lvl'off' { cxx'/sdl-' },
+      },
+    },
+  },
+
+  opt'stack_protector'{
+    -lvl'off' {
+      cxx'/GS',
+      cxx'/sdl',
+      lvl'strong' { cxx'/RTC1', } / -- /RTCsu
+      lvl'all' { cxx'/RTC1', cxx'/RTCc', },
+    },
+  },
+
+  opt'warnings'{
+    lvl'on' { cxx'/W4' } /
+    lvl'strict' { cxx'/Wall' } /
+    lvl'off' { cxx'/W0' },
+  },
+
+  opt'warnings_as_error'{
+    lvl'on' { fl'/WX' } / { cxx'/WX-' }
+  },
 }
+
 
 function noop() end
 
@@ -623,7 +697,7 @@ Vbase = {
   end,
 }
 
-opts_krev = {}
+local opts_krev = {}
 for k,args in pairs(Vbase._opts) do
   local u = {}
   for _, v in ipairs(args) do
@@ -634,8 +708,9 @@ for k,args in pairs(Vbase._opts) do
   end
   table.insert(args, 1, 'default')
   opts_krev[k] = u
-  opts_krev['default'] = true
+  opts_krev[k]['default'] = true
 end
+Vbase._opts_krev = opts_krev
 
 
 function is_cond(t)

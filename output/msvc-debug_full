@@ -1,0 +1,5 @@
+/D_HAS_ITERATOR_DEBUGGING=1
+/DEBUG
+/Z7
+/guard:cf
+/sdl

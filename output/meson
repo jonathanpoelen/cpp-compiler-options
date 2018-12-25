@@ -304,6 +304,111 @@ if (  ( jln_cpp_compiler.get_id() == 'gcc' or jln_cpp_compiler.get_id() == 'clan
       jln_cpp_flags += ['-Wno-error', ]
     endif
   endif
+elif (  jln_cpp_compiler.get_id() == 'msvc' )
+  if (  not ( get_option('jln_debug') == 'default') )
+    if (  get_option('jln_debug') == 'off' )
+      jln_cpp_flags += ['/DEBUG:NONE', ]
+    else
+      jln_cpp_flags += ['/Z7', ]
+      if (  get_option('jln_debug') == 'on' )
+        jln_cpp_flags += ['/DEBUG', ]
+      elif (  get_option('jln_debug') == 'line_tables_only' )
+        jln_cpp_flags += ['/DEBUG:FASTLINK', ]
+      endif
+      if (  not ( get_option('jln_optimize') == 'default') )
+        if (  get_option('jln_optimize') == 'off' )
+          jln_cpp_flags += ['/Od', ]
+        else
+          jln_cpp_flags += ['/Zi', ]
+        endif
+      endif
+    endif
+  endif
+  if (  not ( get_option('jln_exceptions') == 'default') )
+    if (  get_option('jln_exceptions') == 'on' )
+      jln_cpp_flags += ['/EHc', ]
+    else
+      jln_cpp_flags += ['/EHc-', ]
+    endif
+  endif
+  if (  not ( get_option('jln_fast_math') == 'default') )
+    if (  get_option('jln_fast_math') == 'on' )
+      jln_cpp_flags += ['/fp:fast', ]
+    else
+      jln_cpp_flags += ['/fp:fast-', ]
+    endif
+  endif
+  if (  not ( get_option('jln_optimize') == 'default') )
+    if (  get_option('jln_optimize') == 'off' )
+      jln_cpp_flags += ['/Ob0 /Od /Oi- /Oy-', ]
+    elif (  get_option('jln_optimize') == 'on' )
+      jln_cpp_flags += ['/O2', ]
+    elif (  get_option('jln_optimize') == 'size' )
+      jln_cpp_flags += ['/O1', ]
+    elif (  get_option('jln_optimize') == 'speed' )
+      jln_cpp_flags += ['/O2', ]
+    elif (  get_option('jln_optimize') == 'whole_program' )
+      jln_cpp_flags += ['/O2', '/GL', '/Gw', ]
+    endif
+  endif
+  if (  not ( get_option('jln_pedantic') == 'default') )
+    if (  not get_option('jln_pedantic') == 'off' )
+      jln_cpp_flags += ['/permissive-', ]
+    endif
+  endif
+  if (  not ( get_option('jln_rtti') == 'default') )
+    if (  get_option('jln_rtti') == 'on' )
+      jln_cpp_flags += ['/GR', ]
+    else
+      jln_cpp_flags += ['/GR-', ]
+    endif
+  endif
+  if (  not ( get_option('jln_stl_debug') == 'default') )
+    if (  get_option('jln_stl_debug') == 'off' )
+      jln_cpp_flags += ['/D_HAS_ITERATOR_DEBUGGING=0', ]
+    else
+      jln_cpp_flags += ['/D_HAS_ITERATOR_DEBUGGING=1', ]
+    endif
+  endif
+  if (  not ( get_option('jln_sanitizers') == 'default') )
+    if (  get_option('jln_sanitizers') == 'on' )
+      jln_cpp_flags += ['/guard:cf', '/sdl', ]
+    else
+      jln_cpp_flags += ['/guard:cf-', ]
+      if (  not ( get_option('jln_stack_protector') == 'default') )
+        if (  not get_option('jln_stack_protector') == 'off' )
+          jln_cpp_flags += ['/sdl-', ]
+        endif
+      endif
+    endif
+  endif
+  if (  not ( get_option('jln_stack_protector') == 'default') )
+    if (  not get_option('jln_stack_protector') == 'off' )
+      jln_cpp_flags += ['/GS', '/sdl', ]
+      if (  get_option('jln_stack_protector') == 'strong' )
+        jln_cpp_flags += ['/RTC1', ]
+      elif (  get_option('jln_stack_protector') == 'all' )
+        jln_cpp_flags += ['/RTC1', '/RTCc', ]
+      endif
+    endif
+  endif
+  if (  not ( get_option('jln_warnings') == 'default') )
+    if (  get_option('jln_warnings') == 'on' )
+      jln_cpp_flags += ['/W4', ]
+    elif (  get_option('jln_warnings') == 'strict' )
+      jln_cpp_flags += ['/Wall', ]
+    elif (  get_option('jln_warnings') == 'off' )
+      jln_cpp_flags += ['/W0', ]
+    endif
+  endif
+  if (  not ( get_option('jln_warnings_as_error') == 'default') )
+    if (  get_option('jln_warnings_as_error') == 'on' )
+      jln_cpp_flags += ['/WX', ]
+      jln_link_flags += ['/WX', ]
+    else
+      jln_cpp_flags += ['/WX-', ]
+    endif
+  endif
 endif
 jln_cpp_flags = jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
 jln_link_flags = jln_cpp_compiler.get_supported_arguments(jln_link_flags)
