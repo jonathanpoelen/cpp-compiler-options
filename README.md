@@ -32,7 +32,7 @@ exceptions = default off on
 fast_math = default off on
 lto = default off on fat
 optimize = default off on size speed whole_program
-pedantic = default off on as_error
+pedantic = on default off as_error
 relro = default off on full
 reproducible_build_warnings = default off on
 rtti = default off on
@@ -40,8 +40,9 @@ sanitizers = default off on
 sanitizers_extra = default off thread pointer
 stack_protector = default off on strong all
 stl_debug = default off on allow_broken_abi assert_as_exception
+stl_fix = on default off
 suggests = default off on
-warnings = default off on strict
+warnings = on default off strict
 warnings_as_error = default off on
 ```
 

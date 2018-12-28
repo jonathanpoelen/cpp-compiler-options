@@ -1,8 +1,8 @@
 return {
-  --ignore={
+  ignore={
   --  optimize=true,
-  --  debug=true,
-  --},
+  --  debug=true, -- reserved
+  },
 
   tobuildoption=function(_, optname)
     return _.optprefix .. optname
@@ -23,8 +23,8 @@ return {
     })
 
     _:print('\n# meson_options.txt')
-    for optname,args in _:getoptions() do
-      _:print("option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'])")
+    for optname,args,default_value,ordered_args in _:getoptions() do
+      _:print("option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(ordered_args, "', '") .. "'])")
     end
 
     _:print([[
@@ -37,9 +37,9 @@ jln_cpp_compiler = meson.get_compiler('cpp')
 ]])
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return  "get_option('" .. _:tobuildoption(optname) .. "') == '" .. lvl .. "'" end,
+  _vcond_lvl=function(_, lvl, optname) return  "(get_option('" .. _:tobuildoption(optname) .. "') == '" .. lvl .. "')" end,
   _vcond_verless=function(_, major, minor) return 'false' end,
-  _vcond_comp=function(_, compiler) return "jln_cpp_compiler.get_id() == '" .. compiler .. "'" end,
+  _vcond_comp=function(_, compiler) return "(jln_cpp_compiler.get_id() == '" .. compiler .. "')" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,

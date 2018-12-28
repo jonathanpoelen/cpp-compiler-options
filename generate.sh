@@ -45,9 +45,9 @@ for g in bjam cmake premake5 meson ; do
 done
 
 gen compiler | while read comp ; do
-  gen compiler $comp warnings pedantic > "$OUTPUT_DIR"/$comp-warnings
-  gen compiler $comp warnings=strict pedantic > "$OUTPUT_DIR"/$comp-warnings_strict
-  gen compiler $comp stl_debug=allow_broken_abi > "$OUTPUT_DIR"/$comp-stl_debug_broken_abi
+  gen compiler $comp stl_fix warnings pedantic > "$OUTPUT_DIR"/$comp-warnings
+  gen compiler $comp stl_fix warnings=strict pedantic > "$OUTPUT_DIR"/$comp-warnings_strict
+  gen compiler $comp stl_fix stl_debug=allow_broken_abi > "$OUTPUT_DIR"/$comp-stl_debug_broken_abi
   gen compiler $comp sanitizers_extra=pointer > "$OUTPUT_DIR"/$comp-sanitizers-pointer
   gen compiler $comp elide_type=off diagnostics_show_template_tree=on > "$OUTPUT_DIR"/$comp-template_tree
   for g in suggests stl_debug debug sanitizers ; do

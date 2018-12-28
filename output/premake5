@@ -5,8 +5,6 @@ _jln_flag_names["jln-coverage"] = true
 _jln_flag_names["coverage"] = true
 _jln_flag_names["jln-debug"] = true
 _jln_flag_names["debug"] = true
-_jln_flag_names["jln-diagnostics"] = true
-_jln_flag_names["diagnostics"] = true
 _jln_flag_names["jln-diagnostics-format"] = true
 _jln_flag_names["diagnostics_format"] = true
 _jln_flag_names["jln-diagnostics-show-template-tree"] = true
@@ -37,6 +35,8 @@ _jln_flag_names["jln-stack-protector"] = true
 _jln_flag_names["stack_protector"] = true
 _jln_flag_names["jln-stl-debug"] = true
 _jln_flag_names["stl_debug"] = true
+_jln_flag_names["jln-stl-fix"] = true
+_jln_flag_names["stl_fix"] = true
 _jln_flag_names["jln-suggests"] = true
 _jln_flag_names["suggests"] = true
 _jln_flag_names["jln-warnings"] = true
@@ -56,8 +56,6 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or defaults["jln-coverage"] or "default") end
   newoption{trigger="jln-debug", allowed={{"default"}, {"off"}, {"on"}, {"line_tables_only"}, {"gdb"}, {"lldb"}, {"sce"}}, description="debug"}
   if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "default") end
-  newoption{trigger="jln-diagnostics", allowed={{"default"}, {"patch"}, {"fixits"}}, description="diagnostics"}
-  if not _OPTIONS["jln-diagnostics"] then _OPTIONS["jln-diagnostics"] = (defaults["diagnostics"] or defaults["jln-diagnostics"] or "default") end
   newoption{trigger="jln-diagnostics-format", allowed={{"default"}, {"fixits"}, {"patch"}, {"print_source_range_info"}}, description="diagnostics_format"}
   if not _OPTIONS["jln-diagnostics-format"] then _OPTIONS["jln-diagnostics-format"] = (defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "default") end
   newoption{trigger="jln-diagnostics-show-template-tree", allowed={{"default"}, {"off"}, {"on"}}, description="diagnostics_show_template_tree"}
@@ -88,6 +86,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
   newoption{trigger="jln-stl-debug", allowed={{"default"}, {"off"}, {"on"}, {"allow_broken_abi"}, {"assert_as_exception"}}, description="stl_debug"}
   if not _OPTIONS["jln-stl-debug"] then _OPTIONS["jln-stl-debug"] = (defaults["stl_debug"] or defaults["jln-stl-debug"] or "default") end
+  newoption{trigger="jln-stl-fix", allowed={{"default"}, {"off"}, {"on"}}, description="stl_fix"}
+  if not _OPTIONS["jln-stl-fix"] then _OPTIONS["jln-stl-fix"] = (defaults["stl_fix"] or defaults["jln-stl-fix"] or "default") end
   newoption{trigger="jln-suggests", allowed={{"default"}, {"off"}, {"on"}}, description="suggests"}
   if not _OPTIONS["jln-suggests"] then _OPTIONS["jln-suggests"] = (defaults["suggests"] or defaults["jln-suggests"] or "default") end
   newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}}, description="warnings"}
@@ -185,9 +185,6 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-debug"] = true
     name_list["debug"] = true
     new_value["jln-debug"] = values["debug"] or values["jln-debug"] or (disable_others and "default" or _OPTIONS["jln-debug"])
-    name_list["jln-diagnostics"] = true
-    name_list["diagnostics"] = true
-    new_value["jln-diagnostics"] = values["diagnostics"] or values["jln-diagnostics"] or (disable_others and "default" or _OPTIONS["jln-diagnostics"])
     name_list["jln-diagnostics-format"] = true
     name_list["diagnostics_format"] = true
     new_value["jln-diagnostics-format"] = values["diagnostics_format"] or values["jln-diagnostics-format"] or (disable_others and "default" or _OPTIONS["jln-diagnostics-format"])
@@ -233,6 +230,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-stl-debug"] = true
     name_list["stl_debug"] = true
     new_value["jln-stl-debug"] = values["stl_debug"] or values["jln-stl-debug"] or (disable_others and "default" or _OPTIONS["jln-stl-debug"])
+    name_list["jln-stl-fix"] = true
+    name_list["stl_fix"] = true
+    new_value["jln-stl-fix"] = values["stl_fix"] or values["jln-stl-fix"] or (disable_others and "default" or _OPTIONS["jln-stl-fix"])
     name_list["jln-suggests"] = true
     name_list["suggests"] = true
     new_value["jln-suggests"] = values["suggests"] or values["jln-suggests"] or (disable_others and "default" or _OPTIONS["jln-suggests"])
@@ -715,6 +715,13 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
   
   elseif compiler == "msvc" then
   
+    if not ( values["jln-stl-fix"] == "default") then
+    
+      if values["jln-stl-fix"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " /DNOMINMAX"
+      end
+    end
     if not ( values["jln-debug"] == "default") then
     
       if values["jln-debug"] == "off" then

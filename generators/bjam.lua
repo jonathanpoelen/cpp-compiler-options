@@ -11,8 +11,8 @@ end
 return {
   ignore={
     warnings_as_error=true,
-    optimize=true,
-    debug=true,
+  -- optimize=true,
+  -- debug=true,
   },
 
   _vcond_lvl=function(_, lvl, optname) return '<' .. _.optprefix .. tobjamoption(optname) .. '>' .. lvl .. ' in $(properties)' end,
@@ -44,13 +44,13 @@ CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
     local relevants = ""
 
-    for optname,args in _:getoptions() do
+    for optname,args,default_value,ordered_args in _:getoptions() do
       if optname ~= 'warnings_as_error' then
         local opt = _.optprefix .. tobjamoption(optname)
         if not _._incidental[optname] then
           relevants = relevants .. "\n      <relevant>" .. opt
         end
-        _:print('feature <' .. opt .. '> : ' .. table.concat(args, ' ')
+        _:print('feature <' .. opt .. '> : ' .. table.concat(ordered_args, ' ')
           .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
       end
     end

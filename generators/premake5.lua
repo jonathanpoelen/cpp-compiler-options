@@ -120,11 +120,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     jln_check_flag_names(values)
     local name_list = {}
     local new_value = {}]])
-    for optname,args,default_value in _:getoptions() do
+    for optname,args in _:getoptions() do
       local opt = _:tostroption(optname)
       _:print('    name_list["' .. opt .. '"] = true')
       _:print('    name_list["' .. optname .. '"] = true')
-      _:print('    new_value["' .. opt .. '"] = values["' .. optname .. '"] or values["' .. opt .. '"] or (disable_others and "' .. default_value .. '" or _OPTIONS["' .. opt .. '"])')
+      _:print('    new_value["' .. opt .. '"] = values["' .. optname .. '"] or values["' .. opt .. '"] or (disable_others and "default" or _OPTIONS["' .. opt .. '"])')
     end
     _:print([[
     values = new_value

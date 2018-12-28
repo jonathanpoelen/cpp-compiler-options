@@ -418,6 +418,10 @@ G = Or(gcc, clang) {
 } /
 
 msvc {
+  opt'stl_fix' {
+    lvl'on' { cxx'/DNOMINMAX', },
+  },
+
   opt'debug' {
     lvl'off' { cxx'/DEBUG:NONE' } / {
       cxx'/Z7',
@@ -499,7 +503,6 @@ function noop() end
 Vbase = {
   _incidental={
     color=true,
-    diagnostics=true,
     diagnostics_format=true,
     diagnostics_show_template_tree=true,
     elide_type=true,
@@ -510,28 +513,28 @@ Vbase = {
   },
 
   _opts={
-    color=      {'auto', 'never', 'always'},
-    coverage=   {'off', 'on'},
-    debug=      {'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},
-    diagnostics={'patch', 'fixits'},
-    diagnostics_format={'fixits', 'patch', 'print_source_range_info'},
-    diagnostics_show_template_tree={'off', 'on'},
-    elide_type= {'off', 'on'},
-    exceptions= {'off', 'on'},
-    fast_math=  {'off', 'on'},
-    lto=        {'off', 'on', 'fat'},
-    optimize=   {'off', 'on', 'size', 'speed', 'whole_program'},
-    pedantic=   {'off', 'on', 'as_error'},
-    relro=      {'off', 'on', 'full'},
-    reproducible_build_warnings={'off', 'on'},
-    rtti=       {'off', 'on'},
-    stl_debug=  {'off', 'on', 'allow_broken_abi', 'assert_as_exception'},
-    sanitizers= {'off', 'on'},
-    sanitizers_extra={'off', 'thread', 'pointer'},
-    stack_protector= {'off', 'on', 'strong', 'all'},
-    suggests=   {'off', 'on'},
-    warnings=   {'off', 'on', 'strict'},
-    warnings_as_error={'off', 'on'},
+    color=      {{'auto', 'never', 'always'},},
+    coverage=   {{'off', 'on'},},
+    debug=      {{'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},},
+    diagnostics_format={{'fixits', 'patch', 'print_source_range_info'},},
+    diagnostics_show_template_tree={{'off', 'on'},},
+    elide_type= {{'off', 'on'},},
+    exceptions= {{'off', 'on'},},
+    fast_math=  {{'off', 'on'},},
+    lto=        {{'off', 'on', 'fat'},},
+    optimize=   {{'off', 'on', 'size', 'speed', 'whole_program'},},
+    pedantic=   {{'off', 'on', 'as_error'}, 'on'},
+    relro=      {{'off', 'on', 'full'},},
+    reproducible_build_warnings={{'off', 'on'},},
+    rtti=       {{'off', 'on'},},
+    stl_debug=  {{'off', 'on', 'allow_broken_abi', 'assert_as_exception'},},
+    stl_fix=    {{'off', 'on'}, 'on'},
+    sanitizers= {{'off', 'on'},},
+    sanitizers_extra={{'off', 'thread', 'pointer'},},
+    stack_protector= {{'off', 'on', 'strong', 'all'},},
+    suggests=   {{'off', 'on'},},
+    warnings=   {{'off', 'on', 'strict'}, 'on'},
+    warnings_as_error={{'off', 'on'},},
   },
 
   indent = '',
@@ -675,24 +678,49 @@ Vbase = {
     _.define = accu('_vcond_flags_define', _.define)
   end,
 
-  -- iterator: optname,args,default_value
+  _computed_options = nil,
+  -- iterator: optname,args,default_value,ordered_args
   getoptions=function(_)
-    local ordered_keys = {}
+    local computed_options = _.__computed_options
 
-    for k in pairs(_._opts) do
-      table.insert(ordered_keys, k)
+    if not computed_options then
+      local ordered_keys = {}
+
+      for k in pairs(_._opts) do
+        table.insert(ordered_keys, k)
+      end
+
+      table.sort(ordered_keys)
+
+      computed_options = {}
+      _._computed_options = computed_options
+      local ignore = _.ignore
+
+      for i,k in ipairs(ordered_keys) do
+        if not ignore[k] then
+          local v = _._opts[k]
+          local ordered_args = v[1]
+          local default_value = v[2] or 'default'
+          if default_value ~= v[1][1] then
+            ordered_args = {default_value}
+            for i,arg in ipairs(v[1]) do
+              if arg ~= default_value then
+                ordered_args[#ordered_args + 1] = arg
+              end
+            end
+          end
+          computed_options[#computed_options + 1] = {k, v[1], default_value, ordered_args}
+        end
+      end
+      -- nil value for iterator
+      computed_options[#computed_options + 1] = {nil,nil,nil,nil}
     end
 
-    table.sort(ordered_keys)
     local i = 0
-
     return function()
-      if i == #ordered_keys then
-        return nil
-      end
       i = i + 1
-      local k = ordered_keys[i]
-      return k, _._opts[k], 'default'
+      local xs = computed_options[i]
+      return xs[1], xs[2], xs[3], xs[4]
     end
   end,
 }
@@ -700,13 +728,13 @@ Vbase = {
 local opts_krev = {}
 for k,args in pairs(Vbase._opts) do
   local u = {}
-  for _, v in ipairs(args) do
+  for _, v in ipairs(args[1]) do
     u[v] = true
   end
   if u['default'] then
     error('_opts[' .. k .. '] integrity error: "default" value is used')
   end
-  table.insert(args, 1, 'default')
+  table.insert(args[1], 1, 'default')
   opts_krev[k] = u
   opts_krev[k]['default'] = true
 end

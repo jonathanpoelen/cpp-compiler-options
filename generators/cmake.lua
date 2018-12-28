@@ -35,13 +35,13 @@ return {
     _:print('    set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})')
     _:print('  endif()\n')
 
-    for optname,args in _:getoptions() do
+    for optname,args,default_value in _:getoptions() do
       local cmake_opt = 'JLN_DEFAULT_FLAG_' .. optname:upper();
       local opt = _:tocmakeoption(optname)
       _:print('  if(DEFINED ' .. cmake_opt .. ')')
       _:print('    set(' .. opt .. ' ${' .. cmake_opt .. '} CACHE STING "")')
       _:print('  else()')
-      _:print('    set(' .. opt .. ' "' .. args[1] .. '" CACHE STRING "")')
+      _:print('    set(' .. opt .. ' "' .. default_value .. '" CACHE STRING "")')
       _:print('  endif()\n')
 
       _:print('  if(NOT(("' .. table.concat(args, '" STREQUAL ' .. opt .. ') OR ("') .. '" STREQUAL ' .. opt .. ')))')
@@ -116,6 +116,5 @@ set(${JLN_FLAGS_CXX_VAR} ${CXX_FLAGS} PARENT_SCOPE)
 set(${JLN_FLAGS_LINK_VAR} ${LINK_FLAGS} PARENT_SCOPE)
 endfunction()
 ]]
-
   end
 }
