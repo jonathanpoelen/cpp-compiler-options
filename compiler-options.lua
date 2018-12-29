@@ -452,7 +452,11 @@ msvc {
   },
 
   opt'pedantic'{
-    -lvl'off' { cxx'/permissive-' }
+    -lvl'off' {
+      cxx'/permissive-', -- implies /Zc:rvaluecast, /Zc:strictstrings, /Zc:ternary, /Zc:twoPhase
+      cxx'/Zc:__cplusplus',
+      -- cxx'/Zc:throwingNew',
+    }
   },
 
   opt'rtti'{

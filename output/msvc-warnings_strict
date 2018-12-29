@@ -1,3 +1,4 @@
 /DNOMINMAX
 /Wall
+/Zc:__cplusplus
 /permissive-

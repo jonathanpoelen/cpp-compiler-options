@@ -358,7 +358,7 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
   endif
   if (  not ( (get_option('jln_pedantic') == 'default')) )
     if (  not (get_option('jln_pedantic') == 'off') )
-      jln_cpp_flags += ['/permissive-', ]
+      jln_cpp_flags += ['/permissive-', '/Zc:__cplusplus', ]
     endif
   endif
   if (  not ( (get_option('jln_rtti') == 'default')) )

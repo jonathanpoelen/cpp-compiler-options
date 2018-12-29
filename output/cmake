@@ -1062,7 +1062,7 @@ function(jln_flags)
     
       if (  NOT JLN_FLAGS_PEDANTIC STREQUAL "off" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/permissive-")
+        set(CXX_FLAGS ${CXX_FLAGS}  "/permissive-" "/Zc:__cplusplus")
 
       endif()
     endif()

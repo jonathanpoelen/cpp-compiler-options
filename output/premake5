@@ -801,7 +801,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     
       if not values["jln-pedantic"] == "off" then
       
-        jln_buildoptions = jln_buildoptions .. " /permissive-"
+        jln_buildoptions = jln_buildoptions .. " /permissive- /Zc:__cplusplus"
       end
     end
     if not ( values["jln-rtti"] == "default") then

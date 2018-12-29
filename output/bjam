@@ -907,6 +907,7 @@ rule jln_flags ( properties * )
       {
         flags +=
           <cxxflags>/permissive-
+          <cxxflags>/Zc:__cplusplus
         ;
       }
     }
