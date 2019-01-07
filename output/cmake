@@ -662,18 +662,18 @@ function(jln_flags)
     
       if (  JLN_FLAGS_PIE STREQUAL "off" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-PIC" "-fno-PIE")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-pic" "-fno-pie")
         set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIC" "-fno-PIE")
       
       elseif (  JLN_FLAGS_PIE STREQUAL "on" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-fno-PIC" "-fPIE")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIC" "-fPIE")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIC" "-fPIE" "-pie")
       
       elseif (  JLN_FLAGS_PIE STREQUAL "pic" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-fno-PIE" "-fPIC")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIE" "-fPIC")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIE" "-fPIC" "-pie")
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_SUGGESTS STREQUAL "default") )

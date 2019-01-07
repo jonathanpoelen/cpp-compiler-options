@@ -447,18 +447,18 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     
       if values["jln-pie"] == "off" then
       
-        jln_buildoptions = jln_buildoptions .. " -fno-PIC -fno-PIE"
+        jln_buildoptions = jln_buildoptions .. " -fno-pic -fno-pie"
         jln_linkoptions = jln_linkoptions .. " -fno-PIC -fno-PIE"
       
       elseif values["jln-pie"] == "on" then
       
         jln_buildoptions = jln_buildoptions .. " -fno-PIC -fPIE"
-        jln_linkoptions = jln_linkoptions .. " -fno-PIC -fPIE"
+        jln_linkoptions = jln_linkoptions .. " -fno-PIC -fPIE -pie"
       
       elseif values["jln-pie"] == "pic" then
       
         jln_buildoptions = jln_buildoptions .. " -fno-PIE -fPIC"
-        jln_linkoptions = jln_linkoptions .. " -fno-PIE -fPIC"
+        jln_linkoptions = jln_linkoptions .. " -fno-PIE -fPIC -pie"
       end
     end
     if not ( values["jln-suggests"] == "default") then

@@ -159,9 +159,9 @@ G = Or(gcc, clang) {
   },
 
   opt'pie' {
-    lvl'off'{ cxx'-fno-PIC', cxx'-fno-PIE', link'-fno-PIC', link'-fno-PIE', } /
-    lvl'on' { cxx'-fno-PIC', cxx'-fPIE', link'-fno-PIC', link'-fPIE', } /
-    lvl'pic'{ cxx'-fno-PIE', cxx'-fPIC', link'-fno-PIE', link'-fPIC', },
+    lvl'off'{ cxx'-fno-pic', cxx'-fno-pie', link'-fno-PIC', link'-fno-PIE', } /
+    lvl'on' { cxx'-fno-PIC', cxx'-fPIE', link'-fno-PIC', link'-fPIE', link'-pie', } /
+    lvl'pic'{ cxx'-fno-PIE', cxx'-fPIC', link'-fno-PIE', link'-fPIC', link'-pie', },
   },
 
   opt'suggests' {

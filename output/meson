@@ -152,14 +152,14 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
   endif
   if (  not ( (get_option('jln_pie') == 'default')) )
     if (  (get_option('jln_pie') == 'off') )
-      jln_cpp_flags += ['-fno-PIC', '-fno-PIE', ]
+      jln_cpp_flags += ['-fno-pic', '-fno-pie', ]
       jln_link_flags += ['-fno-PIC', '-fno-PIE', ]
     elif (  (get_option('jln_pie') == 'on') )
       jln_cpp_flags += ['-fno-PIC', '-fPIE', ]
-      jln_link_flags += ['-fno-PIC', '-fPIE', ]
+      jln_link_flags += ['-fno-PIC', '-fPIE', '-pie', ]
     elif (  (get_option('jln_pie') == 'pic') )
       jln_cpp_flags += ['-fno-PIE', '-fPIC', ]
-      jln_link_flags += ['-fno-PIE', '-fPIC', ]
+      jln_link_flags += ['-fno-PIE', '-fPIC', '-pie', ]
     endif
   endif
   if (  not ( (get_option('jln_suggests') == 'default')) )
