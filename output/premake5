@@ -21,6 +21,8 @@ _jln_flag_names["jln-optimize"] = true
 _jln_flag_names["optimize"] = true
 _jln_flag_names["jln-pedantic"] = true
 _jln_flag_names["pedantic"] = true
+_jln_flag_names["jln-pie"] = true
+_jln_flag_names["pie"] = true
 _jln_flag_names["jln-relro"] = true
 _jln_flag_names["relro"] = true
 _jln_flag_names["jln-reproducible-build-warnings"] = true
@@ -72,6 +74,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or defaults["jln-optimize"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "default") end
+  newoption{trigger="jln-pie", allowed={{"default"}, {"off"}, {"on"}, {"pic"}}, description="pie"}
+  if not _OPTIONS["jln-pie"] then _OPTIONS["jln-pie"] = (defaults["pie"] or defaults["jln-pie"] or "default") end
   newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
   if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or defaults["jln-relro"] or "default") end
   newoption{trigger="jln-reproducible-build-warnings", allowed={{"default"}, {"off"}, {"on"}}, description="reproducible_build_warnings"}
@@ -209,6 +213,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-pedantic"] = true
     name_list["pedantic"] = true
     new_value["jln-pedantic"] = values["pedantic"] or values["jln-pedantic"] or (disable_others and "default" or _OPTIONS["jln-pedantic"])
+    name_list["jln-pie"] = true
+    name_list["pie"] = true
+    new_value["jln-pie"] = values["pie"] or values["jln-pie"] or (disable_others and "default" or _OPTIONS["jln-pie"])
     name_list["jln-relro"] = true
     name_list["relro"] = true
     new_value["jln-relro"] = values["relro"] or values["jln-relro"] or (disable_others and "default" or _OPTIONS["jln-relro"])
@@ -434,6 +441,24 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       elseif values["jln-relro"] == "full" then
       
         jln_linkoptions = jln_linkoptions .. " -Wl,-z,relro,-z,now"
+      end
+    end
+    if not ( values["jln-pie"] == "default") then
+    
+      if values["jln-pie"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " -fno-PIC -fno-PIE"
+        jln_linkoptions = jln_linkoptions .. " -fno-PIC -fno-PIE"
+      
+      elseif values["jln-pie"] == "on" then
+      
+        jln_buildoptions = jln_buildoptions .. " -fno-PIC -fPIE"
+        jln_linkoptions = jln_linkoptions .. " -fno-PIC -fPIE"
+      
+      elseif values["jln-pie"] == "pic" then
+      
+        jln_buildoptions = jln_buildoptions .. " -fno-PIE -fPIC"
+        jln_linkoptions = jln_linkoptions .. " -fno-PIE -fPIC"
       end
     end
     if not ( values["jln-suggests"] == "default") then

@@ -33,6 +33,7 @@ fast_math = default off on
 lto = default off on fat
 optimize = default off on size speed whole_program
 pedantic = on default off as_error
+pie = default off on pic
 relro = default off on full
 reproducible_build_warnings = default off on
 rtti = default off on

@@ -10,6 +10,7 @@ option('jln_fast_math', type : 'combo', choices : ['default', 'off', 'on'])
 option('jln_lto', type : 'combo', choices : ['default', 'off', 'on', 'fat'])
 option('jln_optimize', type : 'combo', choices : ['default', 'off', 'on', 'size', 'speed', 'whole_program'])
 option('jln_pedantic', type : 'combo', choices : ['on', 'default', 'off', 'as_error'])
+option('jln_pie', type : 'combo', choices : ['default', 'off', 'on', 'pic'])
 option('jln_relro', type : 'combo', choices : ['default', 'off', 'on', 'full'])
 option('jln_reproducible_build_warnings', type : 'combo', choices : ['default', 'off', 'on'])
 option('jln_rtti', type : 'combo', choices : ['default', 'off', 'on'])
@@ -147,6 +148,18 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
       jln_link_flags += ['-Wl,-z,relro', ]
     elif (  (get_option('jln_relro') == 'full') )
       jln_link_flags += ['-Wl,-z,relro,-z,now', ]
+    endif
+  endif
+  if (  not ( (get_option('jln_pie') == 'default')) )
+    if (  (get_option('jln_pie') == 'off') )
+      jln_cpp_flags += ['-fno-PIC', '-fno-PIE', ]
+      jln_link_flags += ['-fno-PIC', '-fno-PIE', ]
+    elif (  (get_option('jln_pie') == 'on') )
+      jln_cpp_flags += ['-fno-PIC', '-fPIE', ]
+      jln_link_flags += ['-fno-PIC', '-fPIE', ]
+    elif (  (get_option('jln_pie') == 'pic') )
+      jln_cpp_flags += ['-fno-PIE', '-fPIC', ]
+      jln_link_flags += ['-fno-PIE', '-fPIC', ]
     endif
   endif
   if (  not ( (get_option('jln_suggests') == 'default')) )

@@ -16,6 +16,7 @@ feature <jln-fast-math> : default off on : propagated ;
 feature <jln-lto> : default off on fat : propagated ;
 feature <jln-optimize> : default off on size speed whole_program : propagated ;
 feature <jln-pedantic> : on default off as_error : propagated ;
+feature <jln-pie> : default off on pic : propagated ;
 feature <jln-relro> : default off on full : propagated ;
 feature <jln-reproducible-build-warnings> : default off on : incidental ;
 feature <jln-rtti> : default off on : propagated ;
@@ -36,6 +37,7 @@ if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-optimize JLN_OPTIMIZE : <jln-optimize> ;
   toolset.flags jln-pedantic JLN_PEDANTIC : <jln-pedantic> ;
+  toolset.flags jln-pie JLN_PIE : <jln-pie> ;
   toolset.flags jln-relro JLN_RELRO : <jln-relro> ;
   toolset.flags jln-rtti JLN_RTTI : <jln-rtti> ;
   toolset.flags jln-sanitizers JLN_SANITIZERS : <jln-sanitizers> ;
@@ -96,6 +98,7 @@ rule jln_flags ( properties * )
       <relevant>jln-lto
       <relevant>jln-optimize
       <relevant>jln-pedantic
+      <relevant>jln-pie
       <relevant>jln-relro
       <relevant>jln-rtti
       <relevant>jln-sanitizers
@@ -360,6 +363,36 @@ rule jln_flags ( properties * )
       {
         flags +=
           <linkflags>-Wl,-z,relro,-z,now
+        ;
+      }
+    }
+    if ! (  <jln-pie>default in $(properties) )
+    {
+      if <jln-pie>off in $(properties)
+      {
+        flags +=
+          <cxxflags>-fno-PIC
+          <cxxflags>-fno-PIE
+          <linkflags>-fno-PIC
+          <linkflags>-fno-PIE
+        ;
+      }
+      else if <jln-pie>on in $(properties)
+      {
+        flags +=
+          <cxxflags>-fno-PIC
+          <cxxflags>-fPIE
+          <linkflags>-fno-PIC
+          <linkflags>-fPIE
+        ;
+      }
+      else if <jln-pie>pic in $(properties)
+      {
+        flags +=
+          <cxxflags>-fno-PIE
+          <cxxflags>-fPIC
+          <linkflags>-fno-PIE
+          <linkflags>-fPIC
         ;
       }
     }

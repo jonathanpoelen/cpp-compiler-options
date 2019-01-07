@@ -158,6 +158,12 @@ G = Or(gcc, clang) {
     lvl'full'{ link'-Wl,-z,relro,-z,now', },
   },
 
+  opt'pie' {
+    lvl'off'{ cxx'-fno-PIC', cxx'-fno-PIE', link'-fno-PIC', link'-fno-PIE', } /
+    lvl'on' { cxx'-fno-PIC', cxx'-fPIE', link'-fno-PIC', link'-fPIE', } /
+    lvl'pic'{ cxx'-fno-PIE', cxx'-fPIC', link'-fno-PIE', link'-fPIC', },
+  },
+
   opt'suggests' {
     -lvl'off' {
       gcc {
@@ -529,6 +535,7 @@ Vbase = {
     optimize=   {{'off', 'on', 'size', 'speed', 'whole_program'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     relro=      {{'off', 'on', 'full'},},
+    pie=        {{'off', 'on', 'pic'},},
     reproducible_build_warnings={{'off', 'on'},},
     rtti=       {{'off', 'on'},},
     stl_debug=  {{'off', 'on', 'allow_broken_abi', 'assert_as_exception'},},

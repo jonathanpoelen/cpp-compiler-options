@@ -1,6 +1,6 @@
 # jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
 function(jln_init_flags)
-  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
 
   if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)
     set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})
@@ -114,6 +114,16 @@ function(jln_init_flags)
 
   if(NOT(("default" STREQUAL JLN_PEDANTIC) OR ("off" STREQUAL JLN_PEDANTIC) OR ("on" STREQUAL JLN_PEDANTIC) OR ("as_error" STREQUAL JLN_PEDANTIC)))
     message(FATAL_ERROR "Unknow value \"${JLN_PEDANTIC}\" for JLN_PEDANTIC, expected: default, off, on, as_error")
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_PIE)
+    set(JLN_PIE ${JLN_DEFAULT_FLAG_PIE} CACHE STING "")
+  else()
+    set(JLN_PIE "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_PIE) OR ("off" STREQUAL JLN_PIE) OR ("on" STREQUAL JLN_PIE) OR ("pic" STREQUAL JLN_PIE)))
+    message(FATAL_ERROR "Unknow value \"${JLN_PIE}\" for JLN_PIE, expected: default, off, on, pic")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_RELRO)
@@ -238,6 +248,7 @@ function(jln_init_flags)
     message(STATUS "JLN_LTO=${JLN_LTO}	[default, off, on, fat]")
     message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, whole_program]")
     message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[default, off, on, as_error]")
+    message(STATUS "JLN_PIE=${JLN_PIE}	[default, off, on, pic]")
     message(STATUS "JLN_RELRO=${JLN_RELRO}	[default, off, on, full]")
     message(STATUS "JLN_REPRODUCIBLE_BUILD_WARNINGS=${JLN_REPRODUCIBLE_BUILD_WARNINGS}	[default, off, on]")
     message(STATUS "JLN_RTTI=${JLN_RTTI}	[default, off, on]")
@@ -264,7 +275,7 @@ endfunction()
 function(jln_flags)
   set(CXX_FLAGS "")
   set(LINK_LINK "")
-  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
 
   if(NOT DEFINED JLN_FLAGS_COLOR)
     if(${JLN_FLAGS_DISABLE_OTHERS})
@@ -351,6 +362,14 @@ function(jln_flags)
       set(JLN_FLAGS_PEDANTIC "on")
     else()
       set(JLN_FLAGS_PEDANTIC "${JLN_PEDANTIC}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_PIE)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_PIE "default")
+    else()
+      set(JLN_FLAGS_PIE "${JLN_PIE}")
     endif()
   endif()
 
@@ -637,6 +656,24 @@ function(jln_flags)
       elseif (  JLN_FLAGS_RELRO STREQUAL "full" )
       
         set(LINK_FLAGS ${LINK_FLAGS}  "-Wl,-z,relro,-z,now")
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_PIE STREQUAL "default") )
+    
+      if (  JLN_FLAGS_PIE STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-PIC" "-fno-PIE")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIC" "-fno-PIE")
+      
+      elseif (  JLN_FLAGS_PIE STREQUAL "on" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-PIC" "-fPIE")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIC" "-fPIE")
+      
+      elseif (  JLN_FLAGS_PIE STREQUAL "pic" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-PIE" "-fPIC")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-PIE" "-fPIC")
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_SUGGESTS STREQUAL "default") )
