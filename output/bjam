@@ -6,6 +6,7 @@ import modules ;
 CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
 feature <jln-color> : default auto never always : incidental ;
+feature <jln-control-flow> : default off on : propagated ;
 feature <jln-coverage> : default off on : propagated ;
 feature <jln-debug> : default off on line_tables_only gdb lldb sce : propagated ;
 feature <jln-diagnostics-format> : default fixits patch print_source_range_info : incidental ;
@@ -30,6 +31,7 @@ feature <jln-warnings> : on default off strict : incidental ;
 
 if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   import toolset ;
+  toolset.flags jln-control-flow JLN_CONTROL_FLOW : <jln-control-flow> ;
   toolset.flags jln-coverage JLN_COVERAGE : <jln-coverage> ;
   toolset.flags jln-debug JLN_DEBUG : <jln-debug> ;
   toolset.flags jln-exceptions JLN_EXCEPTIONS : <jln-exceptions> ;
@@ -91,6 +93,7 @@ rule jln_flags ( properties * )
   if $(CXX_BJAM_YEAR_VERSION) >= 2016.00
   {
     flags += 
+      <relevant>jln-control-flow
       <relevant>jln-coverage
       <relevant>jln-debug
       <relevant>jln-exceptions
@@ -311,12 +314,18 @@ rule jln_flags ( properties * )
     }
     if ! (  <jln-stack-protector>default in $(properties) )
     {
-      if ! <jln-stack-protector>off in $(properties)
+      if <jln-stack-protector>off in $(properties)
+      {
+        flags +=
+          <cxxflags>-Wno-stack-protector
+          <cxxflags>-U_FORTIFY_SOURCE
+          <linkflags>-Wno-stack-protector
+        ;
+      }
+      else
       {
         flags +=
           <cxxflags>-Wstack-protector
-          <cxxflags>-fstack-protector
-          <linkflags>-fstack-protector
           <define>_FORTIFY_SOURCE=2
         ;
         if <jln-stack-protector>strong in $(properties)
@@ -331,7 +340,9 @@ rule jln_flags ( properties * )
           else if $(toolset) = clang
           {
             flags +=
+              <cxxflags>-fstack-protector-strong
               <cxxflags>-fsanitize=safe-stack
+              <linkflags>-fstack-protector-strong
               <linkflags>-fsanitize=safe-stack
             ;
           }
@@ -341,6 +352,20 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>-fstack-protector-all
             <linkflags>-fstack-protector-all
+          ;
+          if $(toolset) = clang
+          {
+            flags +=
+              <cxxflags>-fsanitize=safe-stack
+              <linkflags>-fsanitize=safe-stack
+            ;
+          }
+        }
+        else
+        {
+          flags +=
+            <cxxflags>-fstack-protector
+            <linkflags>-fstack-protector
           ;
         }
       }
@@ -371,30 +396,19 @@ rule jln_flags ( properties * )
       if <jln-pie>off in $(properties)
       {
         flags +=
-          <cxxflags>-fno-pic
-          <cxxflags>-fno-pie
-          <linkflags>-fno-PIC
-          <linkflags>-fno-PIE
+          <linkflags>-no-pic
         ;
       }
       else if <jln-pie>on in $(properties)
       {
         flags +=
-          <cxxflags>-fno-PIC
-          <cxxflags>-fPIE
-          <linkflags>-fno-PIC
-          <linkflags>-fPIE
           <linkflags>-pie
         ;
       }
       else if <jln-pie>pic in $(properties)
       {
         flags +=
-          <cxxflags>-fno-PIE
           <cxxflags>-fPIC
-          <linkflags>-fno-PIE
-          <linkflags>-fPIC
-          <linkflags>-pie
         ;
       }
     }
@@ -480,7 +494,6 @@ rule jln_flags ( properties * )
             <cxxflags>-Wdisabled-optimization
             <cxxflags>-Wfloat-equal
             <cxxflags>-Wformat-security
-            <cxxflags>-Wformat-signedness
             <cxxflags>-Wformat=2
             <cxxflags>-Wmissing-declarations
             <cxxflags>-Wmissing-include-dirs
@@ -519,6 +532,7 @@ rule jln_flags ( properties * )
                 if ! (  $(version) < 05.01  )
                 {
                   flags +=
+                    <cxxflags>-Wformat-signedness
                     <cxxflags>-fsized-deallocation
                     <cxxflags>-Warray-bounds=2
                     <cxxflags>-Wconditionally-supported
@@ -666,6 +680,44 @@ rule jln_flags ( properties * )
               }
             }
           }
+        }
+      }
+    }
+    if ! (  <jln-control-flow>default in $(properties) )
+    {
+      if <jln-control-flow>off in $(properties)
+      {
+        if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
+        {
+          flags +=
+            <cxxflags>-fcf-protection=none
+          ;
+        }
+        if $(toolset) = clang
+        {
+          flags +=
+            <cxxflags>-fno-sanitize=cfi
+            <linkflags>-fno-sanitize=cfi
+          ;
+        }
+      }
+      else
+      {
+        if (  $(toolset) = gcc && ! (  $(version) < 08.00  )  )
+        {
+          flags +=
+            <cxxflags>-fcf-protection=full
+          ;
+        }
+        if $(toolset) = clang
+        {
+          flags +=
+            <cxxflags>-fsanitize=cfi
+            <cxxflags>-fvisibility=hidden
+            <cxxflags>-flto
+            <linkflags>-fsanitize=cfi
+            <linkflags>-flto
+          ;
         }
       }
     }
@@ -976,20 +1028,31 @@ rule jln_flags ( properties * )
         ;
       }
     }
+    if ! (  <jln-control-flow>default in $(properties) )
+    {
+      if <jln-control-flow>off in $(properties)
+      {
+        flags +=
+          <cxxflags>/guard:cf-
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>/guard:cf
+        ;
+      }
+    }
     if ! (  <jln-sanitizers>default in $(properties) )
     {
       if <jln-sanitizers>on in $(properties)
       {
         flags +=
-          <cxxflags>/guard:cf
           <cxxflags>/sdl
         ;
       }
       else
       {
-          flags +=
-          <cxxflags>/guard:cf-
-          ;
         if ! (  <jln-stack-protector>default in $(properties) )
         {
           if ! <jln-stack-protector>off in $(properties)

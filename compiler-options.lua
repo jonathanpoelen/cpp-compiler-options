@@ -52,6 +52,8 @@ function lvl(x) return setmetatable({ lvl=x }, cond_mt) end
 function opt(x) return setmetatable({ opt=x }, cond_mt) end
 function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 
+-- opt'build' ? -pipe Avoid temporary files, speeding up builds
+
 -- gcc and clang
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 G = Or(gcc, clang) {
@@ -76,7 +78,8 @@ G = Or(gcc, clang) {
       lvl'sce' { cxx '-gsce' } /
       cxx'-g'
     } /
-    cxx'-g'
+    cxx'-g',
+    -- cxx'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
   },
 
   opt'lto' {
@@ -134,21 +137,29 @@ G = Or(gcc, clang) {
   },
 
   opt'stack_protector' {
-    -lvl'off' {
+    lvl'off' {
+      fl'-Wno-stack-protector',
+      cxx'-U_FORTIFY_SOURCE'
+    } /
+    {
       def'_FORTIFY_SOURCE=2',
       cxx'-Wstack-protector',
-      fl'-fstack-protector',
       lvl'strong' {
         -gcc(-4,9) {
           fl'-fstack-protector-strong',
         } /
         clang {
+          fl'-fstack-protector-strong',
           fl'-fsanitize=safe-stack',
         }
       } /
       lvl'all' {
         fl'-fstack-protector-all',
-      },
+        clang {
+          fl'-fsanitize=safe-stack',
+        }
+      } /
+      fl'-fstack-protector',
     },
   },
 
@@ -159,9 +170,9 @@ G = Or(gcc, clang) {
   },
 
   opt'pie' {
-    lvl'off'{ cxx'-fno-pic', cxx'-fno-pie', link'-fno-PIC', link'-fno-PIE', } /
-    lvl'on' { cxx'-fno-PIC', cxx'-fPIE', link'-fno-PIC', link'-fPIE', link'-pie', } /
-    lvl'pic'{ cxx'-fno-PIE', cxx'-fPIC', link'-fno-PIE', link'-fPIC', link'-pie', },
+    lvl'off'{ link'-no-pic', } /
+    lvl'on' { link'-pie', } /
+    lvl'pic'{ cxx'-fPIC', },
   },
 
   opt'suggests' {
@@ -208,7 +219,6 @@ G = Or(gcc, clang) {
         cxx'-Wdisabled-optimization',
         cxx'-Wfloat-equal',
         cxx'-Wformat-security',
-        cxx'-Wformat-signedness',
         cxx'-Wformat=2',
         cxx'-Wmissing-declarations',
         cxx'-Wmissing-include-dirs',
@@ -249,6 +259,7 @@ G = Or(gcc, clang) {
       }*
 
       vers(5,1) {
+        cxx'-Wformat-signedness',
         cxx'-fsized-deallocation',
         cxx'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
         cxx'-Wconditionally-supported',
@@ -350,9 +361,23 @@ G = Or(gcc, clang) {
     },
   },
 
-  -- opt'control_flow_integrity' {
-  --  clang(3,7) { fl'-fsanitize=cfi' } -- only allowed with '-flto' and '-fvisibility='
-  -- },
+  opt'control_flow' {
+    lvl'off' {
+      gcc(8) { cxx'-fcf-protection=none' },
+      clang { fl'-fno-sanitize=cfi' },
+    } /
+    {
+      gcc(8) {
+        -- cxx'-mcet',
+        cxx'-fcf-protection=full' --  full|branch|return|none
+      },
+      clang {
+        fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
+        cxx'-fvisibility=hidden',
+        fl'-flto',
+      }, 
+    },
+  },
 
   opt'sanitizers_extra' {
     lvl'thread' { cxx'-fsanitize=thread', } /
@@ -457,7 +482,7 @@ msvc {
     lvl'whole_program' { cxx'/O2', cxx'/GL', cxx'/Gw' },
   },
 
-  opt'pedantic'{
+  opt'pedantic' {
     -lvl'off' {
       cxx'/permissive-', -- implies /Zc:rvaluecast, /Zc:strictstrings, /Zc:ternary, /Zc:twoPhase
       cxx'/Zc:__cplusplus',
@@ -465,29 +490,29 @@ msvc {
     }
   },
 
-  opt'rtti'{
+  opt'rtti' {
     lvl'on' { cxx'/GR' } / { cxx'/GR-' }
   },
 
-  opt'stl_debug'{
+  opt'stl_debug' {
     lvl'off' { cxx'/D_HAS_ITERATOR_DEBUGGING=0' } / cxx'/D_HAS_ITERATOR_DEBUGGING=1'
   },
 
-  opt'sanitizers'{
+  opt'control_flow' {
+    lvl'off' { cxx'/guard:cf-', } /
+    cxx'/guard:cf',
+  },
+
+  opt'sanitizers' {
     lvl'on' {
-      cxx'/guard:cf',
       cxx'/sdl',
-      
     } /
-    {
-      cxx'/guard:cf-',
-      opt'stack_protector' {
-        -lvl'off' { cxx'/sdl-' },
-      },
+    opt'stack_protector' {
+      -lvl'off' { cxx'/sdl-' },
     },
   },
 
-  opt'stack_protector'{
+  opt'stack_protector' {
     -lvl'off' {
       cxx'/GS',
       cxx'/sdl',
@@ -496,13 +521,13 @@ msvc {
     },
   },
 
-  opt'warnings'{
+  opt'warnings' {
     lvl'on' { cxx'/W4' } /
     lvl'strict' { cxx'/Wall' } /
     lvl'off' { cxx'/W0' },
   },
 
-  opt'warnings_as_error'{
+  opt'warnings_as_error' {
     lvl'on' { fl'/WX' } / { cxx'/WX-' }
   },
 }
@@ -524,6 +549,7 @@ Vbase = {
 
   _opts={
     color=      {{'auto', 'never', 'always'},},
+    control_flow={{'off', 'on'},},
     coverage=   {{'off', 'on'},},
     debug=      {{'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},},
     diagnostics_format={{'fixits', 'patch', 'print_source_range_info'},},

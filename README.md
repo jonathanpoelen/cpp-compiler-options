@@ -23,6 +23,7 @@ Supported options are:
 <!-- ./compiler-options.lua generators/options.lua -->
 ```ini
 color = default auto never always
+control_flow = default off on
 coverage = default off on
 debug = default off on line_tables_only gdb lldb sce
 diagnostics_format = default fixits patch print_source_range_info

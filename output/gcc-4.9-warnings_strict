@@ -9,7 +9,6 @@
 -Wfloat-conversion
 -Wfloat-equal
 -Wformat-security
--Wformat-signedness
 -Wformat=2
 -Wlogical-op
 -Wmissing-declarations
