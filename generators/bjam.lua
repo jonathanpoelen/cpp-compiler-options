@@ -3,11 +3,6 @@ local normnum=function(x)
   return x:sub(-2)
 end
 
-function tobjamoption(optname)
-  return optname:gsub('_', '-')
-end
-
-
 return {
   ignore={
     warnings_as_error=true,
@@ -15,7 +10,22 @@ return {
   -- debug=true,
   },
 
-  _vcond_lvl=function(_, lvl, optname) return '<' .. _.optprefix .. tobjamoption(optname) .. '>' .. lvl .. ' in $(properties)' end,
+  tobjamoption=function(_, optname)
+    local norm = optname:gsub('_', '-')
+    local opt = _.optprefix .. norm
+    if _._incidental[optname] then
+      return opt
+    end
+    return opt, _.ioptprefix .. norm
+  end,
+
+  _vcond_lvl=function(_, lvl, optname)
+    local opt, iopt = _:tobjamoption(optname)
+    return iopt and
+      '( <' .. opt .. '>' .. lvl .. ' in $(properties) || <'
+            .. iopt .. '>' .. lvl .. ' in $(properties) )'
+     or '<' .. opt .. '>' .. lvl .. ' in $(properties)'
+  end,
   _vcond_verless=function(_, major, minor) return '$(version) < ' .. normnum(major) .. '.' .. normnum(minor) end,
   _vcond_comp=function(_, compiler) return '$(toolset) = ' .. compiler end,
 
@@ -27,6 +37,9 @@ return {
 
   start=function(_, optprefix)
     _.optprefix = optprefix or ''
+    local optprefix_suffix = _.optprefix:sub(#_.optprefix)
+    _.ioptprefix = _.optprefix .. (optprefix_suffix ~= '_' and optprefix_suffix ~= '-' and '-' or '') .. 'incidental-'
+
     _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
     _:print([[# https://boostorg.github.io/build/manual/develop/index.html
@@ -38,20 +51,21 @@ CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 ]])
 
     -- for optname,k in pairs({'compiler', 'compiler-version'}) do
-    --   local opt = _.optprefix .. tobjamoption(optname)
+    --   local opt = _:tobjamoption(optname)
     --   _:print('feature <' .. opt .. '> : : free ;')
     -- end
 
     local relevants = ""
 
     for optname,args,default_value,ordered_args in _:getoptions() do
-      if optname ~= 'warnings_as_error' then
-        local opt = _.optprefix .. tobjamoption(optname)
-        if not _._incidental[optname] then
-          relevants = relevants .. "\n      <relevant>" .. opt
-        end
-        _:print('feature <' .. opt .. '> : ' .. table.concat(ordered_args, ' ')
-          .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
+      local opt, iopt = _:tobjamoption(optname)
+      if not _._incidental[optname] then
+        relevants = relevants .. "\n      <relevant>" .. opt
+      end
+      local joined = table.concat(ordered_args, ' ')
+      _:print('feature <' .. opt .. '> : ' .. joined .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
+      if iopt then
+        _:print('feature <' .. iopt .. '> : ' .. joined .. ' : incidental ;')
       end
     end
     relevants = relevants .. '\n'
@@ -59,9 +73,10 @@ CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     _:print('\nif $(CXX_BJAM_YEAR_VERSION) < 2016.00 {')
     _:print('  import toolset ;')
     for optname in _:getoptions() do
-      if optname ~= 'warnings_as_error' and not _._incidental[optname] then
-        local opt = _.optprefix .. tobjamoption(optname)
-        _:print('  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;')
+      if not _._incidental[optname] then
+        for i,opt in pairs({_:tobjamoption(optname)}) do
+          _:print('  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;')
+        end
       end
     end
     _:print([[}

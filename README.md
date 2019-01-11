@@ -103,6 +103,7 @@ jln_setoptions(values[, disable_others[, print_compiler]])
 jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]]])
 ```
 
+
 # Meson Generator
 
 Split `output/meson` to `meson_options.txt` and `something/meson.build`
@@ -115,6 +116,7 @@ subdir('something/meson.build')
 executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flags)
 ```
 
+
 # Bjam/B2 Generator
 
 ```jam
@@ -124,12 +126,18 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 
 project name : requirements
   <jln-lto>on # enable jln-lto
+  <jln-incidental-relro>on # incidental version of jln-relro
   <conditional>@jln_flags
 : default-build release ;
 ```
 
 
-# Create a bash alias for the compiler
+# Bash alias for the compiler
+
+The script below adds 2 aliases with warnings enabled.
+
+- `gw++` for gcc
+- `cw++` for clang
 
 ```sh
 for comp in g++ clang++ ; do
