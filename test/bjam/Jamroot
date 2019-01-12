@@ -1,7 +1,7 @@
 include ../../output/bjam ;
 
 project test : requirements
-  <jln-sanitizers>on
+  <jln-incidental-sanitizers>on
   <conditional>@jln_flags
 : default-build release ;
 

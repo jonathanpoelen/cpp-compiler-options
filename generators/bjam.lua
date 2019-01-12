@@ -21,16 +21,21 @@ return {
 
   _vcond_lvl=function(_, lvl, optname)
     local opt, iopt = _:tobjamoption(optname)
+    return 
+      (iopt and '$(' .. opt .. '_isdefault) && <' .. iopt .. '>' .. lvl .. ' in $(properties) || ' or '') ..
+      '<' .. opt .. '>' .. lvl .. ' in $(properties)'
+  end,
+  _vcond_hasopt=function(_, optname)
+    local opt, iopt = _:tobjamoption(optname)
     return iopt and
-      '( <' .. opt .. '>' .. lvl .. ' in $(properties) || <'
-            .. iopt .. '>' .. lvl .. ' in $(properties) )'
-     or '<' .. opt .. '>' .. lvl .. ' in $(properties)'
+      '! ( $(' .. opt .. '_isdefault) && <' .. iopt .. '>default in $(properties) )'
+     or '! $(' .. opt .. '_isdefault)'
   end,
   _vcond_verless=function(_, major, minor) return '$(version) < ' .. normnum(major) .. '.' .. normnum(minor) end,
   _vcond_comp=function(_, compiler) return '$(toolset) = ' .. compiler end,
 
-  cxx=function(_, x) return _.indent .. '  <cxxflags>' .. x .. '\n' end,
-  link=function(_, x) return _.indent .. '  <linkflags>' .. x .. '\n' end,
+  cxx=function(_, x) return _.indent .. '  <cxxflags>"' .. x .. '"\n' end,
+  link=function(_, x) return _.indent .. '  <linkflags>"' .. x .. '"\n' end,
   define=function(_, x) return _.indent .. '  <define>' .. x .. '\n' end,
 
   _vcond_toflags=function(_, cxx, links, defines) return _.indent .. '  flags +=\n' .. cxx .. links .. defines .. _.indent .. '  ;' end,
@@ -55,12 +60,13 @@ CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     --   _:print('feature <' .. opt .. '> : : free ;')
     -- end
 
-    local relevants = ""
+    local relevants, isdefaults = '', ''
 
     for optname,args,default_value,ordered_args in _:getoptions() do
       local opt, iopt = _:tobjamoption(optname)
+      isdefaults = isdefaults .. '  local ' .. opt .. '_isdefault ; if <' .. opt .. '>default in $(properties) { ' .. opt .. '_isdefault = 1 ; }\n'
       if not _._incidental[optname] then
-        relevants = relevants .. "\n      <relevant>" .. opt
+        relevants = relevants .. '\n      <relevant>' .. opt
       end
       local joined = table.concat(ordered_args, ' ')
       _:print('feature <' .. opt .. '> : ' .. joined .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
@@ -128,7 +134,7 @@ rule jln_flags ( properties * )
     ;
   }
 
-]])
+]] .. isdefaults)
     _.indent = '  '
   end,
 

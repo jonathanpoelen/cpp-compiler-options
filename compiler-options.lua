@@ -635,7 +635,7 @@ Vbase = {
       end
     end
 
-    _._vcond_hasopt=function(_, optname) return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl('default', optname).._._vcondkeyword.close end
+    _._vcond_hasopt = _._vcond_hasopt or function(_, optname) return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl('default', optname).._._vcondkeyword.close end
 
     _.startopt=function(_, optname)
       _:_vcond_printflags()
