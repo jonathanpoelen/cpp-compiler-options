@@ -8,6 +8,8 @@ return {
     return _.optprefix .. optname
   end,
 
+  _option_strs = {},
+
   start=function(_, optprefix)
     _.optprefix = optprefix and optprefix:gsub('-', '_') or ''
     _:_vcond_init({
@@ -22,14 +24,12 @@ return {
       endif='endif',
     })
 
-    _:print('\n# meson_options.txt')
+    local option_strs = _._option_strs
     for optname,args,default_value,ordered_args in _:getoptions() do
-      _:print("option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(ordered_args, "', '") .. "'])")
+      option_strs[#option_strs+1] = "option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(ordered_args, "', '") .. "'])"
     end
 
     _:print([[
-# meson.build
-
 jln_cpp_flags = []
 jln_link_flags = []
 
@@ -50,7 +50,7 @@ jln_cpp_compiler = meson.get_compiler('cpp')
         .. (#links ~= 0 and _.indent .. '  jln_link_flags += [' .. links .. ']\n' or '')
   end,
 
-  stop=function(_)
+  stop=function(_, filebase)
     -- filter empty line and constant condition ; indent
     local t={}
     local depth={}
@@ -95,10 +95,18 @@ jln_cpp_compiler = meson.get_compiler('cpp')
         append(indent..match)
       end
     end
-    return table.concat(t, '\n') .. [[
+
+    local meson_options = table.concat(_._option_strs, '\n')
+    local meson_build = table.concat(t, '\n') .. [[
 
 jln_cpp_flags = jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
 jln_link_flags = jln_cpp_compiler.get_supported_arguments(jln_link_flags)
 ]]
+
+    return filebase and {
+      {filebase .. '_options.txt', meson_options},
+      {filebase, meson_build}
+    } or '# meson_options.txt\n' .. meson_options ..
+     '\n\n# meson.build\n' .. meson_build
   end
 }

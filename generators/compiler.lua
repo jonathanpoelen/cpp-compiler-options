@@ -81,7 +81,7 @@ return {
       print(table.concat(lines, '\n'))
       lines={}
       print('\nOptions:')
-      for k,args in _.getoptions() do
+      for k,args in _:getoptions() do
         lines[#lines+1] = '  ' .. k .. ' = ' .. table.concat(args, ', ')
       end
       print(table.concat(lines, '\n'))

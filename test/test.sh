@@ -70,13 +70,9 @@ fi
 
 if [ -z "$1" ] || [ "$1" = meson ]; then
   mkdir -p "$TMPDIR"/compgenmeson
+  cp "$d"/../output/meson_options.txt "$TMPDIR"/compgenmeson
+  sed 1i"project('test', 'cpp')" "$d"/../output/meson > "$TMPDIR"/compgenmeson/meson.build
   cd "$TMPDIR"/compgenmeson
-  awk 'BEGIN{f="meson_options.txt"}
-    /meson.build/{
-      f="meson.build"
-      print "project('\''test'\'', '\''cpp'\'')">f
-    }
-    {print > f}' "$d"/../output/meson
   rm -rf b; test_success 'meson b | grep -m1 "Wall.*YES"'
   rm -rf b; test_success 'meson b -Djln_warnings=off | grep -- -w'
   rm -rf b; test_failure 'meson b -Djln_warnings=off  | grep "Wall\|sanitizer"'

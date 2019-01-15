@@ -1,29 +1,3 @@
-# meson_options.txt
-option('jln_color', type : 'combo', choices : ['default', 'auto', 'never', 'always'])
-option('jln_control_flow', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_coverage', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_debug', type : 'combo', choices : ['default', 'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'])
-option('jln_diagnostics_format', type : 'combo', choices : ['default', 'fixits', 'patch', 'print_source_range_info'])
-option('jln_diagnostics_show_template_tree', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_elide_type', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_exceptions', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_fast_math', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_lto', type : 'combo', choices : ['default', 'off', 'on', 'fat'])
-option('jln_optimize', type : 'combo', choices : ['default', 'off', 'on', 'size', 'speed', 'whole_program'])
-option('jln_pedantic', type : 'combo', choices : ['on', 'default', 'off', 'as_error'])
-option('jln_pie', type : 'combo', choices : ['default', 'off', 'on', 'pic'])
-option('jln_relro', type : 'combo', choices : ['default', 'off', 'on', 'full'])
-option('jln_reproducible_build_warnings', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_rtti', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_sanitizers', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_sanitizers_extra', type : 'combo', choices : ['default', 'off', 'thread', 'pointer'])
-option('jln_stack_protector', type : 'combo', choices : ['default', 'off', 'on', 'strong', 'all'])
-option('jln_stl_debug', type : 'combo', choices : ['default', 'off', 'on', 'allow_broken_abi', 'assert_as_exception'])
-option('jln_stl_fix', type : 'combo', choices : ['on', 'default', 'off'])
-option('jln_suggests', type : 'combo', choices : ['default', 'off', 'on'])
-option('jln_warnings', type : 'combo', choices : ['on', 'default', 'off', 'strict'])
-option('jln_warnings_as_error', type : 'combo', choices : ['default', 'off', 'on'])
-# meson.build
 jln_cpp_flags = []
 jln_link_flags = []
 jln_cpp_compiler = meson.get_compiler('cpp')
@@ -131,7 +105,7 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
     else
       jln_cpp_flags += ['-Wstack-protector', '-D_FORTIFY_SOURCE=2', ]
       if (  (get_option('jln_stack_protector') == 'strong') )
-        if (  not ( (jln_cpp_compiler.get_id() == 'gcc') ) )
+        if (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
           jln_cpp_flags += ['-fstack-protector-strong', ]
           jln_link_flags += ['-fstack-protector-strong', ]
         elif (  (jln_cpp_compiler.get_id() == 'clang') )

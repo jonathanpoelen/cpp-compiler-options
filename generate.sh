@@ -14,44 +14,52 @@ PROJECT_PATH=$(realpath $(dirname "$0"))
 
 mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"
 
-cd "$PROJECT_PATH"
+cd -- "$PROJECT_PATH"
+
+OUTPUT_DIR="$TMPDIR/$OUTPUT_DIR_NAME"
+OUTPUT_PROJECT="$OUTPUT_DIR_NAME"
 
 # configure temporary paths
-LUA_BIN=$(which luajit 2>/dev/null||:)
-if [ ! -z "$LUA_BIN" ]; then
-  for f in compiler-options.lua generators/* ; do
-    $LUA_BIN -b "$f" "$TMPDIR/$f"
-  done
-  cd "$TMPDIR"
-  OUTPUT_DIR="$OUTPUT_DIR_NAME"
-  OUTPUT_PROJECT="$PROJECT_PATH/$OUTPUT_DIR_NAME"
-else
-  OUTPUT_DIR="$TMPDIR/$OUTPUT_DIR_NAME"
-  OUTPUT_PROJECT="$OUTPUT_DIR_NAME"
+if [ -z "$LUA_BIN" ]; then
+  LUA_BIN=$(which luajit 2>/dev/null||:)
+  if [ ! -z "$LUA_BIN" ]; then
+    for f in compiler-options.lua generators/* ; do
+      $LUA_BIN -b "$f" "$TMPDIR/$f"
+    done
+    cd "$TMPDIR"
+    OUTPUT_DIR="$OUTPUT_DIR_NAME"
+    OUTPUT_PROJECT="$PROJECT_PATH/$OUTPUT_DIR_NAME"
+  fi
 fi
+
+sgen ()
+{
+  $LUA_BIN ./compiler-options.lua generators/$1.lua
+}
 
 gen ()
 {
-  f=generators/$1.lua
-  shift
-  $LUA_BIN ./compiler-options.lua $f "$@"
+  out="-o$OUTPUT_DIR/$1"
+  f=generators/$2.lua
+  shift 2
+  $LUA_BIN ./compiler-options.lua "$out" $f "$@"
 }
 
 # check options
-gen options
+sgen options
 
 for g in bjam cmake premake5 meson ; do
-  gen $g jln- > "$OUTPUT_DIR"/$g
+  gen $g $g jln-
 done
 
-gen compiler | while read comp ; do
-  gen compiler $comp stl_fix warnings pedantic > "$OUTPUT_DIR"/$comp-warnings
-  gen compiler $comp stl_fix warnings=strict pedantic > "$OUTPUT_DIR"/$comp-warnings_strict
-  gen compiler $comp stl_fix stl_debug=allow_broken_abi > "$OUTPUT_DIR"/$comp-stl_debug_broken_abi
-  gen compiler $comp sanitizers_extra=pointer > "$OUTPUT_DIR"/$comp-sanitizers-pointer
-  gen compiler $comp elide_type=off diagnostics_show_template_tree=on > "$OUTPUT_DIR"/$comp-template_tree
+sgen compiler | while read comp ; do
+  gen $comp-warnings             compiler $comp stl_fix warnings pedantic
+  gen $comp-warnings_strict      compiler $comp stl_fix warnings=strict pedantic
+  gen $comp-stl_debug_broken_abi compiler $comp stl_fix stl_debug=allow_broken_abi
+  gen $comp-sanitizers-pointer   compiler $comp sanitizers_extra=pointer
+  gen $comp-template_tree        compiler $comp elide_type=off diagnostics_show_template_tree=on
   for g in suggests stl_debug debug sanitizers ; do
-    gen compiler $comp $g > "$OUTPUT_DIR"/$comp-$g
+    gen $comp-$g compiler $comp $g
   done
   cat -- "$OUTPUT_DIR"/$comp-stl_debug            "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full
   cat -- "$OUTPUT_DIR"/$comp-stl_debug_broken_abi "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full_broken_abi
@@ -61,8 +69,8 @@ echo -e "\n"Empty and removed:
 find "$OUTPUT_DIR" -size 0 -delete -print
 
 if [ -d "$OUTPUT_PROJECT" ]; then
-  rm -f "$OUTPUT_PROJECT/"*
-  rmdir "$OUTPUT_PROJECT"
+  rm -f -- "$OUTPUT_PROJECT/"*
+  rmdir -- "$OUTPUT_PROJECT"
 fi
-mv "$OUTPUT_DIR" "$OUTPUT_PROJECT"
-rm -rf "$TMPDIR"
+mv -- "$OUTPUT_DIR" "$OUTPUT_PROJECT"
+rm -rf -- "$TMPDIR"

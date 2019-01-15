@@ -649,7 +649,7 @@ function(jln_flags)
 
         if (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "strong" )
         
-          if (  NOT ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
+          if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) ) )
           
             set(CXX_FLAGS ${CXX_FLAGS}  "-fstack-protector-strong")
             set(LINK_FLAGS ${LINK_FLAGS}  "-fstack-protector-strong")

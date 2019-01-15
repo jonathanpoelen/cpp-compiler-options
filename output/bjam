@@ -385,7 +385,7 @@ rule jln_flags ( properties * )
         ;
         if $(jln-stack-protector_isdefault) && <jln-incidental-stack-protector>strong in $(properties) || <jln-stack-protector>strong in $(properties)
         {
-          if ! (  $(toolset) = gcc && $(version) < 04.09  )
+          if (  $(toolset) = gcc && ! (  $(version) < 04.09  )  )
           {
             flags +=
               <cxxflags>"-fstack-protector-strong"

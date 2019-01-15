@@ -36,6 +36,9 @@ local comp_mt = {
   __mul = function(_, x)
     return _({}) * x
   end,
+  __unm = function(_)
+    return -_({})
+  end,
 }
 
 function compiler(name) return setmetatable({ compiler=name }, comp_mt) end
@@ -46,7 +49,7 @@ local msvc = compiler('msvc')
 function vers(major, minor) return setmetatable({ version={major, minor or 0} }, cond_mt) end
 function def(x) return { def=x } end
 function cxx(x) return { cxx=x } end
-function link(x) return { link=(x:sub(1,1) == '-' and x or '-l'..x) } end
+function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
 function fl(x) return { cxx=x, link=x } end
 function lvl(x) return setmetatable({ lvl=x }, cond_mt) end
 function opt(x) return setmetatable({ opt=x }, cond_mt) end
@@ -145,7 +148,7 @@ G = Or(gcc, clang) {
       def'_FORTIFY_SOURCE=2',
       cxx'-Wstack-protector',
       lvl'strong' {
-        -gcc(-4,9) {
+        gcc(4,9) {
           fl'-fstack-protector-strong',
         } /
         clang {
@@ -579,7 +582,7 @@ Vbase = {
   ignore={},
 
   start=noop, -- function(_) end,
-  stop=function(_) return _:get_output() end,
+  stop=function(_, filebase) return _:get_output() end,
 
   _strs={},
   print=function(_, s) _:write(s) ; _:write('\n') end,
@@ -627,9 +630,7 @@ Vbase = {
       elseif v._and     then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._and[1]); _:write(' '.._._vcondkeyword._and) _:_vcond(v._and[2]); _:write(' '.._._vcondkeyword.close)
       elseif v._not     then _:write(' '.._._vcondkeyword._not) ; _:_vcond(v._not, optname);
       elseif v.lvl      then _:write(' '.._:_vcond_lvl(v.lvl, optname))
-      elseif v.version  then
-        if v.version[1] < 0 then _:write(' '.._:_vcond_verless(-v.version[1], v.version[2]))
-        else                     _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_verless(v.version[1], v.version[2])..' '.._._vcondkeyword.close) end
+      elseif v.version  then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_verless(v.version[1], v.version[2])..' '.._._vcondkeyword.close)
       elseif v.compiler then _:write(' '.._:_vcond_comp(v.compiler))
       else error('Unknown cond ', ipairs(v))
       end
@@ -840,17 +841,8 @@ function insert_missing_function(V)
   end
 end
 
-function run(generaton_name, ...)
-  if not generaton_name or generaton_name == '-h' or generaton_name == '--help' then
-    local out = generaton_name and io.stdout or io.stderr
-    out:write(arg[0] .. ' {generator.lua} [-h|{options}...]\n')
-    if not generaton_name then
-      out:write('Missing generator file\n')  
-      os.exit(1)
-    end
-    return
-  end
-  local V = require(generaton_name:gsub('.lua$', ''))
+function run(filebase, generator_name, ...)
+  local V = require(generator_name:gsub('.lua$', ''))
   insert_missing_function(V)
 
   local r = V:start(...)
@@ -871,8 +863,79 @@ function run(generaton_name, ...)
 
   evalflags(G, V)
 
-  local out = V:stop()
-  if out then io.write(out) end
+  local out = V:stop(filebase)
+  if not out then
+    return
+  end
+
+  local write_file = function(filename, data)
+    local outfile, error = io.open(filename, 'w+')
+    if outfile then
+      outfile, error = outfile:write(data)
+    end
+    if error then
+      io.stderr:write(arg[0] .. ': open("' .. filename .. '"):' .. error)
+      os.exit(4)
+    end
+  end
+
+  if type(out) == 'table' then
+    for _,data in pairs(out) do
+      if type(data) == 'table' then
+        write_file(data[1], data[2])        
+      else
+        io.write(data)
+      end
+    end
+  elseif filebase then
+    write_file(filebase, out)
+  else
+    io.write(out)
+  end
 end
 
-run(...)
+function help(out)
+  out:write(arg[0] .. ' [-o filebase] {generator.lua} [-h|{options}...]\n')
+end
+
+if #arg == 0 then
+  help(io.stderr)
+  io.stderr:write('Missing generator file\n')  
+  os.exit(1)
+end
+
+local filebase
+i=1
+while i <= #arg do
+  local s = arg[i]
+  if s:sub(1,1) ~= '-' then
+    break
+  end
+
+  local opt = s:sub(2,2)
+  if opt == 'h' then
+    help(io.stdout)
+    os.exit(0)
+  end
+
+  if opt == 'o' then
+    if #s ~= 2 then
+      filebase = s:sub(3)
+    else
+      i = i+1
+      filebase = arg[i]
+      if not filebase then
+        help(io.stderr)
+        os.exit(2)
+      end
+    end
+
+    if filebase == '-' then
+      filebase = nil
+    end
+  end
+
+  i = i+1
+end
+
+run(filebase, select(i, ...))

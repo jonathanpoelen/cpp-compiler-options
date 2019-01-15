@@ -421,7 +421,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " -Wstack-protector -D_FORTIFY_SOURCE=2"
         if values["jln-stack-protector"] == "strong" then
         
-          if not ( compiler == "gcc" and compversion < 409 ) then
+          if ( compiler == "gcc" and not ( compversion < 409 ) ) then
           
             jln_buildoptions = jln_buildoptions .. " -fstack-protector-strong"
             jln_linkoptions = jln_linkoptions .. " -fstack-protector-strong"

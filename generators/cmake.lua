@@ -16,7 +16,6 @@ return {
       _and='AND',
       _or='OR',
       openblock='',
-      openblock='',
       closeblock='',
       else_of_else_if='else',
       _else='else()',
