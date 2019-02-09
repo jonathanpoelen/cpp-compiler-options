@@ -1,7 +1,17 @@
 return {
-  known_opts = {},
+  knwon_opts = {},
+  errors = {},
 
   start=function(_, color)
+    local knwon_opts = _.knwon_opts
+    local add_opt = function(optname, args)
+      local t = {}
+      for k,v in pairs(args) do
+        t[v] = true
+      end
+      _.knwon_opts[optname] = {t}
+    end
+
     if color then
       local color_map = {
         on='\x1b[32m',
@@ -22,69 +32,54 @@ return {
           str = str .. ' ' .. c .. x
         end
         print(str .. '\x1b[0m')
+        add_opt(optname, args)
       end
     else
       for optname, args, default_value, ordered_args in _:getoptions() do
         print(optname .. ' = ' .. table.concat(ordered_args, ' '))
+        add_opt(optname, args)
       end
     end
   end,
 
   startopt=function(_, optname)
-    _.t = {}
+    local known = _.knwon_opts[optname]
+    if not known then
+      _.errors[#_.errors+1] = '_opts[' .. optname .. ']: unknown key'
+    else
+      known[2] = true
+    end
   end,
 
-  stopopt=function(_, optname)
-    if _.known_opts[optname] then
-      return
-    end
-
-    -- check _._opts with the options inside the tree
-    local m = {}
-    for k,v in ipairs(_.t) do
-      m[v] = true
-    end
-    if m['default'] then
-      error('_opts[' .. optname .. ']: "default" value is used')
-    end
-
-    for k,x in pairs(_.t) do
-      if not m[x] then
-        error('_opts[' .. optname .. ']: unknown ' .. x)
-      end
-      m[x] = nil
-    end
-
-    if #m ~= 0 then
-      error('_opts[' .. optname .. ']: unspecified ' .. table.concat(m, ', '))
-    end
-
-    _.known_opts[optname] = true
-  end,
-
-  startcond=function(_, x)
+  startcond=function(_, x, optname)
     if x.lvl then
-      _.t[#_.t+1] = x.lvl
+      local known = _.knwon_opts[optname]
+      if not known then
+        _.errors[#_.errors+1] = '_opts[' .. optname .. ']: unknown key'
+      elseif not known[1][x.lvl] then
+        _.errors[#_.errors+1] = '_opts[' .. optname .. ']: unknown value: ' .. x.lvl
+      else
+        known[2] = true
+      end
     elseif x._not then
-      _:startcond(x._not)
+      _:startcond(x._not, optname)
     else
       local sub = x._and or x._or
       if sub then
-        _:startcond(sub[1])
-        _:startcond(sub[2])
+        _:startcond(sub[1], optname)
+        _:startcond(sub[2], optname)
       end
     end
   end,
 
   stop=function(_)
-    local kerr = {}
-    for k in pairs(_._opts) do
-      if not _.known_opts[k] then
-        kerr[#kerr + 1] = k
+    for k,opts in pairs(_.knwon_opts) do
+      if not opts[2] then
+        _.errors[#_.errors+1] = '_opts[' .. k .. ']: not used in the tree'
       end
     end
-    if #kerr ~= 0 then
-      error(table.concat(kerr, ', ') .. ': not used in the tree')
+    if #_.errors ~= 0 then
+      error(table.concat(_.errors, '\n'))
     end
   end,
 }
