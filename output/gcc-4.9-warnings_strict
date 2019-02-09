@@ -1,3 +1,4 @@
+-pedantic
 -Wall
 -Wcast-align
 -Wcast-qual
@@ -8,12 +9,13 @@
 -Wextra
 -Wfloat-conversion
 -Wfloat-equal
--Wformat-security
 -Wformat=2
+-Wformat-security
 -Wlogical-op
 -Wmissing-declarations
 -Wmissing-include-dirs
 -Wnon-virtual-dtor
+-Wno-shadow
 -Wold-style-cast
 -Wopenmp-simd
 -Woverloaded-virtual
@@ -28,4 +30,3 @@
 -Wvector-operation-performance
 -Wvla
 -Wzero-as-null-pointer-constant
--pedantic

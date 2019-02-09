@@ -45,6 +45,13 @@ gen ()
   $LUA_BIN ./compiler-options.lua "$out" $f "$@"
 }
 
+gencompopt ()
+{
+  out="$OUTPUT_DIR/$1"
+  shift 1
+  $LUA_BIN ./compiler-options.lua generators/compiler.lua "$@" | sort -u > "$out"
+}
+
 # check options
 sgen options
 
@@ -53,16 +60,16 @@ for g in bjam cmake premake5 meson ; do
 done
 
 sgen compiler | while read comp ; do
-  gen $comp-warnings             compiler $comp stl_fix warnings pedantic
-  gen $comp-warnings_strict      compiler $comp stl_fix warnings=strict pedantic
-  gen $comp-stl_debug_broken_abi compiler $comp stl_fix stl_debug=allow_broken_abi
-  gen $comp-sanitizers-pointer   compiler $comp sanitizers_extra=pointer
-  gen $comp-template_tree        compiler $comp elide_type=off diagnostics_show_template_tree=on
+  gencompopt $comp-warnings             $comp shadow=off stl_fix warnings pedantic
+  gencompopt $comp-warnings_strict      $comp shadow=off stl_fix warnings=strict pedantic
+  gencompopt $comp-stl_debug_broken_abi $comp stl_fix stl_debug=allow_broken_abi
+  gencompopt $comp-sanitizers-pointer   $comp sanitizers_extra=pointer
+  gencompopt $comp-template_tree        $comp elide_type=off diagnostics_show_template_tree=on
   for g in suggests stl_debug debug sanitizers ; do
-    gen $comp-$g compiler $comp $g
+    gencompopt $comp-$g $comp $g
   done
-  cat -- "$OUTPUT_DIR"/$comp-stl_debug            "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full
-  cat -- "$OUTPUT_DIR"/$comp-stl_debug_broken_abi "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full_broken_abi
+  cat -- "$OUTPUT_DIR"/$comp-stl_debug            "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers | sort -u -- > "$OUTPUT_DIR"/$comp-debug_full
+  cat -- "$OUTPUT_DIR"/$comp-stl_debug_broken_abi "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers | sort -u -- > "$OUTPUT_DIR"/$comp-debug_full_broken_abi
 done
 
 echo -e "\n"Empty and removed:

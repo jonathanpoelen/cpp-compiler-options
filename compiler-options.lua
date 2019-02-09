@@ -210,6 +210,26 @@ G = Or(gcc, clang) {
     },
   },
 
+  opt'shadow' {
+    lvl'off' { cxx'-Wno-shadow' } /
+    gcc(7,1) {
+      Or(lvl'local', lvl'global-or-local') {
+        cxx'-Wshadow=local'
+      } /
+      Or(lvl'compatible-local',
+         lvl'global-or-compatible-local',
+         lvl'local-or-compatible-local'
+      ) {
+        cxx'-Wshadow=compatible-local'
+      } /
+      cxx'-Wshadow'
+    } /
+    Or(lvl'local', lvl'compatible-local', lvl'local-or-compatible-local') {
+      cxx'-Wno-shadow'
+    } /
+    cxx'-Wshadow'
+  },
+
   opt'warnings' {
     lvl'off' {
       cxx'-w'
@@ -287,7 +307,6 @@ G = Or(gcc, clang) {
         cxx'-Wformat-overflow', -- =level
      -- cxx'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
      -- cxx'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
-        cxx'-Wshadow=compatible-local', -- global (default), local, compatible-local
         cxx'-Wduplicated-branches',
       }*
 
@@ -304,7 +323,6 @@ G = Or(gcc, clang) {
         cxx'-Wno-c++98-compat-pedantic',
         cxx'-Wno-mismatched-tags',
         cxx'-Wno-padded',
-        cxx'-Wno-shadow',
         cxx'-Wno-global-constructors',
         cxx'-Wno-weak-vtables',
         cxx'-Wno-exit-time-destructors',
@@ -315,7 +333,7 @@ G = Or(gcc, clang) {
         cxx'-Wno-inconsistent-missing-destructor-override',
       },
 
-      lvl'strict' {
+      Or(lvl'strict', lvl'very-strict') {
         cxx'-Wconversion',
         gcc(8) { cxx'-Wcast-align=strict', }
       } /
@@ -524,9 +542,20 @@ msvc {
     },
   },
 
+  opt'shadow' {
+    lvl'off' {
+      cxx'/wd4456', cxx'/wd4459'
+    } /
+    Or(lvl'on', lvl'global-or-compatible-local') {
+      cxx'/w4456', cxx'/w4459'
+    } /
+    { cxx'/w4456', cxx'/wd4459' }
+  },
+
   opt'warnings' {
-    lvl'on' { cxx'/W4' } /
-    lvl'strict' { cxx'/Wall' } /
+    lvl'on' { cxx'/W4', cxx'/wd4244', cxx'/wd4245' } /
+    lvl'strict' { cxx'/Wall', cxx'/wd4820', cxx'/wd4514', cxx'/wd4710' } /
+    lvl'very-strict' { cxx'/Wall' } /
     lvl'off' { cxx'/W0' },
   },
 
@@ -545,6 +574,7 @@ Vbase = {
     diagnostics_show_template_tree=true,
     elide_type=true,
     reproducible_build_warnings=true,
+    shadow=true,
     suggests=true,
     warnings=true,
     warnings_as_error=true,
@@ -571,9 +601,10 @@ Vbase = {
     stl_fix=    {{'off', 'on'}, 'on'},
     sanitizers= {{'off', 'on'},},
     sanitizers_extra={{'off', 'thread', 'pointer'},},
+    shadow=     {{'off', 'on', 'local', 'compatible-local', 'local-or-compatible-local', 'global-or-local', 'global-or-compatible-local'}, 'off'},
     stack_protector= {{'off', 'on', 'strong', 'all'},},
     suggests=   {{'off', 'on'},},
-    warnings=   {{'off', 'on', 'strict'}, 'on'},
+    warnings=   {{'off', 'on', 'strict', 'very-strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},
   },
 
@@ -626,8 +657,8 @@ Vbase = {
     if #_._vcondkeyword.ifclose ~= 0 then _._vcondkeyword.ifclose = ' ' .. _._vcondkeyword.ifclose end
 
     _._vcond=function(_, v, optname)
-          if v._or      then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._or[1]) ; _:write(' '.._._vcondkeyword._or) _:_vcond(v._or[2]) ; _:write(' '.._._vcondkeyword.close)
-      elseif v._and     then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._and[1]); _:write(' '.._._vcondkeyword._and) _:_vcond(v._and[2]); _:write(' '.._._vcondkeyword.close)
+          if v._or      then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._or[1], optname) ; _:write(' '.._._vcondkeyword._or) _:_vcond(v._or[2], optname) ; _:write(' '.._._vcondkeyword.close)
+      elseif v._and     then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._and[1], optname); _:write(' '.._._vcondkeyword._and) _:_vcond(v._and[2], optname); _:write(' '.._._vcondkeyword.close)
       elseif v._not     then _:write(' '.._._vcondkeyword._not) ; _:_vcond(v._not, optname);
       elseif v.lvl      then _:write(' '.._:_vcond_lvl(v.lvl, optname))
       elseif v.version  then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_verless(v.version[1], v.version[2])..' '.._._vcondkeyword.close)

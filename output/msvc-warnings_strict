@@ -1,4 +1,9 @@
 /DNOMINMAX
-/Wall
-/Zc:__cplusplus
 /permissive-
+/Wall
+/wd4456
+/wd4459
+/wd4514
+/wd4710
+/wd4820
+/Zc:__cplusplus

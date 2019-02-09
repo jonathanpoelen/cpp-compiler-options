@@ -1,4 +1,8 @@
 /DNOMINMAX
-/W4
-/Zc:__cplusplus
 /permissive-
+/W4
+/wd4244
+/wd4245
+/wd4456
+/wd4459
+/Zc:__cplusplus

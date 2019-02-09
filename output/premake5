@@ -35,6 +35,8 @@ _jln_flag_names["jln-sanitizers"] = true
 _jln_flag_names["sanitizers"] = true
 _jln_flag_names["jln-sanitizers-extra"] = true
 _jln_flag_names["sanitizers_extra"] = true
+_jln_flag_names["jln-shadow"] = true
+_jln_flag_names["shadow"] = true
 _jln_flag_names["jln-stack-protector"] = true
 _jln_flag_names["stack_protector"] = true
 _jln_flag_names["jln-stl-debug"] = true
@@ -90,6 +92,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
   newoption{trigger="jln-sanitizers-extra", allowed={{"default"}, {"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
   if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default") end
+  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible-local"}, {"local-or-compatible-local"}, {"global-or-local"}, {"global-or-compatible-local"}}, description="shadow"}
+  if not _OPTIONS["jln-shadow"] then _OPTIONS["jln-shadow"] = (defaults["shadow"] or defaults["jln-shadow"] or "default") end
   newoption{trigger="jln-stack-protector", allowed={{"default"}, {"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
   newoption{trigger="jln-stl-debug", allowed={{"default"}, {"off"}, {"on"}, {"allow_broken_abi"}, {"assert_as_exception"}}, description="stl_debug"}
@@ -98,7 +102,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-stl-fix"] then _OPTIONS["jln-stl-fix"] = (defaults["stl_fix"] or defaults["jln-stl-fix"] or "default") end
   newoption{trigger="jln-suggests", allowed={{"default"}, {"off"}, {"on"}}, description="suggests"}
   if not _OPTIONS["jln-suggests"] then _OPTIONS["jln-suggests"] = (defaults["suggests"] or defaults["jln-suggests"] or "default") end
-  newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}}, description="warnings"}
+  newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}, {"very-strict"}}, description="warnings"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "default") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
@@ -238,6 +242,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-sanitizers-extra"] = true
     name_list["sanitizers_extra"] = true
     new_value["jln-sanitizers-extra"] = values["sanitizers_extra"] or values["jln-sanitizers-extra"] or (disable_others and "default" or _OPTIONS["jln-sanitizers-extra"])
+    name_list["jln-shadow"] = true
+    name_list["shadow"] = true
+    new_value["jln-shadow"] = values["shadow"] or values["jln-shadow"] or (disable_others and "default" or _OPTIONS["jln-shadow"])
     name_list["jln-stack-protector"] = true
     name_list["stack_protector"] = true
     new_value["jln-stack-protector"] = values["stack_protector"] or values["jln-stack-protector"] or (disable_others and "default" or _OPTIONS["jln-stack-protector"])
@@ -523,6 +530,36 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
+    if not ( values["jln-shadow"] == "default") then
+    
+      if values["jln-shadow"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
+      
+      elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
+      
+        if ( values["jln-shadow"] == "local" or values["jln-shadow"] == "global-or-local" ) then
+        
+          jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
+        
+        elseif ( values["jln-shadow"] == "compatible-local" or values["jln-shadow"] == "global-or-compatible-local" ) then
+        
+          jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
+        
+        else
+        
+          jln_buildoptions = jln_buildoptions .. " -Wshadow"
+        end
+      
+      elseif ( values["jln-shadow"] == "local" or values["jln-shadow"] == "compatible-local" ) then
+      
+        jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " -Wshadow"
+      end
+    end
     if not ( values["jln-warnings"] == "default") then
     
       if values["jln-warnings"] == "off" then
@@ -554,7 +591,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
                       jln_buildoptions = jln_buildoptions .. " -Waligned-new"
                       if not ( compversion < 701 ) then
                       
-                        jln_buildoptions = jln_buildoptions .. " -Walloc-zero -Walloca -Wformat-overflow -Wshadow=compatible-local -Wduplicated-branches"
+                        jln_buildoptions = jln_buildoptions .. " -Walloc-zero -Walloca -Wformat-overflow -Wduplicated-branches"
                         if not ( compversion < 800 ) then
                         
                           jln_buildoptions = jln_buildoptions .. " -Wclass-memaccess"
@@ -569,9 +606,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
         if compiler == "clang" then
         
-          jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-shadow -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum -Wno-inconsistent-missing-destructor-override"
+          jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum -Wno-inconsistent-missing-destructor-override"
         end
-        if values["jln-warnings"] == "strict" then
+        if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
         
           jln_buildoptions = jln_buildoptions .. " -Wconversion"
           if ( compiler == "gcc" and not ( compversion < 800 ) ) then
@@ -939,13 +976,32 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
+    if not ( values["jln-shadow"] == "default") then
+    
+      if values["jln-shadow"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /wd4456 /wd4459"
+      
+      elseif ( values["jln-shadow"] == "on" or values["jln-shadow"] == "global-or-compatible-local" ) then
+      
+        jln_buildoptions = jln_buildoptions .. " /w4456 /w4459"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /w4456 /wd4459"
+      end
+    end
     if not ( values["jln-warnings"] == "default") then
     
       if values["jln-warnings"] == "on" then
       
-        jln_buildoptions = jln_buildoptions .. " /W4"
+        jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245"
       
       elseif values["jln-warnings"] == "strict" then
+      
+        jln_buildoptions = jln_buildoptions .. " /Wall /wd4820 /wd4514 /wd4710"
+      
+      elseif values["jln-warnings"] == "very-strict" then
       
         jln_buildoptions = jln_buildoptions .. " /Wall"
       

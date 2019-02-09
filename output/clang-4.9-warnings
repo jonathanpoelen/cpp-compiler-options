@@ -1,3 +1,4 @@
+-pedantic
 -Weverything
 -Wno-c++98-compat
 -Wno-c++98-compat-pedantic
@@ -13,4 +14,3 @@
 -Wno-switch-default
 -Wno-switch-enum
 -Wno-weak-vtables
--pedantic

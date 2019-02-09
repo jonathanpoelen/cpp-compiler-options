@@ -1,6 +1,6 @@
 # jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
 function(jln_init_flags)
-  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;CONTROL_FLOW;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;CONTROL_FLOW;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;SHADOW;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
 
   if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)
     set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})
@@ -186,6 +186,16 @@ function(jln_init_flags)
     message(FATAL_ERROR "Unknow value \"${JLN_SANITIZERS_EXTRA}\" for JLN_SANITIZERS_EXTRA, expected: default, off, thread, pointer")
   endif()
 
+  if(DEFINED JLN_DEFAULT_FLAG_SHADOW)
+    set(JLN_SHADOW ${JLN_DEFAULT_FLAG_SHADOW} CACHE STING "")
+  else()
+    set(JLN_SHADOW "off" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_SHADOW) OR ("off" STREQUAL JLN_SHADOW) OR ("on" STREQUAL JLN_SHADOW) OR ("local" STREQUAL JLN_SHADOW) OR ("compatible-local" STREQUAL JLN_SHADOW) OR ("local-or-compatible-local" STREQUAL JLN_SHADOW) OR ("global-or-local" STREQUAL JLN_SHADOW) OR ("global-or-compatible-local" STREQUAL JLN_SHADOW)))
+    message(FATAL_ERROR "Unknow value \"${JLN_SHADOW}\" for JLN_SHADOW, expected: default, off, on, local, compatible-local, local-or-compatible-local, global-or-local, global-or-compatible-local")
+  endif()
+
   if(DEFINED JLN_DEFAULT_FLAG_STACK_PROTECTOR)
     set(JLN_STACK_PROTECTOR ${JLN_DEFAULT_FLAG_STACK_PROTECTOR} CACHE STING "")
   else()
@@ -232,8 +242,8 @@ function(jln_init_flags)
     set(JLN_WARNINGS "on" CACHE STRING "")
   endif()
 
-  if(NOT(("default" STREQUAL JLN_WARNINGS) OR ("off" STREQUAL JLN_WARNINGS) OR ("on" STREQUAL JLN_WARNINGS) OR ("strict" STREQUAL JLN_WARNINGS)))
-    message(FATAL_ERROR "Unknow value \"${JLN_WARNINGS}\" for JLN_WARNINGS, expected: default, off, on, strict")
+  if(NOT(("default" STREQUAL JLN_WARNINGS) OR ("off" STREQUAL JLN_WARNINGS) OR ("on" STREQUAL JLN_WARNINGS) OR ("strict" STREQUAL JLN_WARNINGS) OR ("very-strict" STREQUAL JLN_WARNINGS)))
+    message(FATAL_ERROR "Unknow value \"${JLN_WARNINGS}\" for JLN_WARNINGS, expected: default, off, on, strict, very-strict")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_WARNINGS_AS_ERROR)
@@ -265,11 +275,12 @@ function(jln_init_flags)
     message(STATUS "JLN_RTTI=${JLN_RTTI}	[default, off, on]")
     message(STATUS "JLN_SANITIZERS=${JLN_SANITIZERS}	[default, off, on]")
     message(STATUS "JLN_SANITIZERS_EXTRA=${JLN_SANITIZERS_EXTRA}	[default, off, thread, pointer]")
+    message(STATUS "JLN_SHADOW=${JLN_SHADOW}	[default, off, on, local, compatible-local, local-or-compatible-local, global-or-local, global-or-compatible-local]")
     message(STATUS "JLN_STACK_PROTECTOR=${JLN_STACK_PROTECTOR}	[default, off, on, strong, all]")
     message(STATUS "JLN_STL_DEBUG=${JLN_STL_DEBUG}	[default, off, on, allow_broken_abi, assert_as_exception]")
     message(STATUS "JLN_STL_FIX=${JLN_STL_FIX}	[default, off, on]")
     message(STATUS "JLN_SUGGESTS=${JLN_SUGGESTS}	[default, off, on]")
-    message(STATUS "JLN_WARNINGS=${JLN_WARNINGS}	[default, off, on, strict]")
+    message(STATUS "JLN_WARNINGS=${JLN_WARNINGS}	[default, off, on, strict, very-strict]")
     message(STATUS "JLN_WARNINGS_AS_ERROR=${JLN_WARNINGS_AS_ERROR}	[default, off, on]")
   endif()
 
@@ -286,7 +297,7 @@ endfunction()
 function(jln_flags)
   set(CXX_FLAGS "")
   set(LINK_LINK "")
-  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;CONTROL_FLOW;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;CONTROL_FLOW;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;SHADOW;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
 
   if(NOT DEFINED JLN_FLAGS_COLOR)
     if(${JLN_FLAGS_DISABLE_OTHERS})
@@ -429,6 +440,14 @@ function(jln_flags)
       set(JLN_FLAGS_SANITIZERS_EXTRA "default")
     else()
       set(JLN_FLAGS_SANITIZERS_EXTRA "${JLN_SANITIZERS_EXTRA}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_SHADOW)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_SHADOW "off")
+    else()
+      set(JLN_FLAGS_SHADOW "${JLN_SHADOW}")
     endif()
   endif()
 
@@ -760,6 +779,42 @@ function(jln_flags)
         endif()
       endif()
     endif()
+    if (  NOT ( JLN_FLAGS_SHADOW STREQUAL "default") )
+    
+      if (  JLN_FLAGS_SHADOW STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-shadow")
+
+      
+      elseif (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) ) )
+      
+        if (  ( JLN_FLAGS_SHADOW STREQUAL "local" OR JLN_FLAGS_SHADOW STREQUAL "global-or-local" ) )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=local")
+
+        
+        elseif (  ( JLN_FLAGS_SHADOW STREQUAL "compatible-local" OR JLN_FLAGS_SHADOW STREQUAL "global-or-compatible-local" ) )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=compatible-local")
+
+        
+        else()
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow")
+
+        endif()
+      
+      elseif (  ( JLN_FLAGS_SHADOW STREQUAL "local" OR JLN_FLAGS_SHADOW STREQUAL "compatible-local" ) )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-shadow")
+
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow")
+
+      endif()
+    endif()
     if (  NOT ( JLN_FLAGS_WARNINGS STREQUAL "default") )
     
       if (  JLN_FLAGS_WARNINGS STREQUAL "off" )
@@ -799,7 +854,7 @@ function(jln_flags)
 
                       if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) )
                       
-                        set(CXX_FLAGS ${CXX_FLAGS}  "-Walloc-zero" "-Walloca" "-Wformat-overflow" "-Wshadow=compatible-local" "-Wduplicated-branches")
+                        set(CXX_FLAGS ${CXX_FLAGS}  "-Walloc-zero" "-Walloca" "-Wformat-overflow" "-Wduplicated-branches")
 
                         if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) )
                         
@@ -816,10 +871,10 @@ function(jln_flags)
         endif()
         if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
         
-          set(CXX_FLAGS ${CXX_FLAGS}  "-Weverything" "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-mismatched-tags" "-Wno-padded" "-Wno-shadow" "-Wno-global-constructors" "-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-covered-switch-default" "-Wno-switch-default" "-Wno-switch-enum" "-Wno-inconsistent-missing-destructor-override")
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Weverything" "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-mismatched-tags" "-Wno-padded" "-Wno-global-constructors" "-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-covered-switch-default" "-Wno-switch-default" "-Wno-switch-enum" "-Wno-inconsistent-missing-destructor-override")
 
         endif()
-        if (  JLN_FLAGS_WARNINGS STREQUAL "strict" )
+        if (  ( JLN_FLAGS_WARNINGS STREQUAL "strict" OR JLN_FLAGS_WARNINGS STREQUAL "very-strict" ) )
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wconversion")
 
@@ -1240,14 +1295,37 @@ function(jln_flags)
         endif()
       endif()
     endif()
+    if (  NOT ( JLN_FLAGS_SHADOW STREQUAL "default") )
+    
+      if (  JLN_FLAGS_SHADOW STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/wd4456" "/wd4459")
+
+      
+      elseif (  ( JLN_FLAGS_SHADOW STREQUAL "on" OR JLN_FLAGS_SHADOW STREQUAL "global-or-compatible-local" ) )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/w4456" "/w4459")
+
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/w4456" "/wd4459")
+
+      endif()
+    endif()
     if (  NOT ( JLN_FLAGS_WARNINGS STREQUAL "default") )
     
       if (  JLN_FLAGS_WARNINGS STREQUAL "on" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/W4")
+        set(CXX_FLAGS ${CXX_FLAGS}  "/W4" "/wd4244" "/wd4245")
 
       
       elseif (  JLN_FLAGS_WARNINGS STREQUAL "strict" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/Wall" "/wd4820" "/wd4514" "/wd4710")
+
+      
+      elseif (  JLN_FLAGS_WARNINGS STREQUAL "very-strict" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "/Wall")
 

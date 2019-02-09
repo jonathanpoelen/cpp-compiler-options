@@ -170,6 +170,23 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
       endif
     endif
   endif
+  if (  not ( (get_option('jln_shadow') == 'default')) )
+    if (  (get_option('jln_shadow') == 'off') )
+      jln_cpp_flags += ['-Wno-shadow', ]
+    elif (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
+      if (  ( (get_option('jln_shadow') == 'local') or (get_option('jln_shadow') == 'global-or-local') ) )
+        jln_cpp_flags += ['-Wshadow=local', ]
+      elif (  ( (get_option('jln_shadow') == 'compatible-local') or (get_option('jln_shadow') == 'global-or-compatible-local') ) )
+        jln_cpp_flags += ['-Wshadow=compatible-local', ]
+      else
+        jln_cpp_flags += ['-Wshadow', ]
+      endif
+    elif (  ( (get_option('jln_shadow') == 'local') or (get_option('jln_shadow') == 'compatible-local') ) )
+      jln_cpp_flags += ['-Wno-shadow', ]
+    else
+      jln_cpp_flags += ['-Wshadow', ]
+    endif
+  endif
   if (  not ( (get_option('jln_warnings') == 'default')) )
     if (  (get_option('jln_warnings') == 'off') )
       jln_cpp_flags += ['-w', ]
@@ -182,13 +199,13 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
         jln_cpp_flags += ['-Wformat-signedness', '-fsized-deallocation', '-Warray-bounds=2', '-Wconditionally-supported', '-Wsized-deallocation', '-Wstrict-null-sentinel', '-Wsuggest-override', ]
         jln_cpp_flags += ['-Wduplicated-cond', '-Wnull-dereference', ]
         jln_cpp_flags += ['-Waligned-new', ]
-        jln_cpp_flags += ['-Walloc-zero', '-Walloca', '-Wformat-overflow', '-Wshadow=compatible-local', '-Wduplicated-branches', ]
+        jln_cpp_flags += ['-Walloc-zero', '-Walloca', '-Wformat-overflow', '-Wduplicated-branches', ]
         jln_cpp_flags += ['-Wclass-memaccess', ]
       endif
       if (  (jln_cpp_compiler.get_id() == 'clang') )
-        jln_cpp_flags += ['-Weverything', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-shadow', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', '-Wno-inconsistent-missing-destructor-override', ]
+        jln_cpp_flags += ['-Weverything', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', '-Wno-inconsistent-missing-destructor-override', ]
       endif
-      if (  (get_option('jln_warnings') == 'strict') )
+      if (  ( (get_option('jln_warnings') == 'strict') or (get_option('jln_warnings') == 'very-strict') ) )
         jln_cpp_flags += ['-Wconversion', ]
         if (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
           jln_cpp_flags += ['-Wcast-align=strict', ]
@@ -416,10 +433,21 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
       endif
     endif
   endif
+  if (  not ( (get_option('jln_shadow') == 'default')) )
+    if (  (get_option('jln_shadow') == 'off') )
+      jln_cpp_flags += ['/wd4456', '/wd4459', ]
+    elif (  ( (get_option('jln_shadow') == 'on') or (get_option('jln_shadow') == 'global-or-compatible-local') ) )
+      jln_cpp_flags += ['/w4456', '/w4459', ]
+    else
+      jln_cpp_flags += ['/w4456', '/wd4459', ]
+    endif
+  endif
   if (  not ( (get_option('jln_warnings') == 'default')) )
     if (  (get_option('jln_warnings') == 'on') )
-      jln_cpp_flags += ['/W4', ]
+      jln_cpp_flags += ['/W4', '/wd4244', '/wd4245', ]
     elif (  (get_option('jln_warnings') == 'strict') )
+      jln_cpp_flags += ['/Wall', '/wd4820', '/wd4514', '/wd4710', ]
+    elif (  (get_option('jln_warnings') == 'very-strict') )
       jln_cpp_flags += ['/Wall', ]
     elif (  (get_option('jln_warnings') == 'off') )
       jln_cpp_flags += ['/W0', ]

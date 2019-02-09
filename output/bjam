@@ -36,6 +36,7 @@ feature <jln-sanitizers> : default off on : propagated ;
 feature <jln-incidental-sanitizers> : default off on : incidental ;
 feature <jln-sanitizers-extra> : default off thread pointer : propagated ;
 feature <jln-incidental-sanitizers-extra> : default off thread pointer : incidental ;
+feature <jln-shadow> : off default on local compatible-local local-or-compatible-local global-or-local global-or-compatible-local : incidental ;
 feature <jln-stack-protector> : default off on strong all : propagated ;
 feature <jln-incidental-stack-protector> : default off on strong all : incidental ;
 feature <jln-stl-debug> : default off on allow_broken_abi assert_as_exception : propagated ;
@@ -43,7 +44,7 @@ feature <jln-incidental-stl-debug> : default off on allow_broken_abi assert_as_e
 feature <jln-stl-fix> : on default off : propagated ;
 feature <jln-incidental-stl-fix> : on default off : incidental ;
 feature <jln-suggests> : default off on : incidental ;
-feature <jln-warnings> : on default off strict : incidental ;
+feature <jln-warnings> : on default off strict very-strict : incidental ;
 
 if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   import toolset ;
@@ -162,6 +163,7 @@ rule jln_flags ( properties * )
   local jln-rtti_isdefault ; if <jln-rtti>default in $(properties) { jln-rtti_isdefault = 1 ; }
   local jln-sanitizers_isdefault ; if <jln-sanitizers>default in $(properties) { jln-sanitizers_isdefault = 1 ; }
   local jln-sanitizers-extra_isdefault ; if <jln-sanitizers-extra>default in $(properties) { jln-sanitizers-extra_isdefault = 1 ; }
+  local jln-shadow_isdefault ; if <jln-shadow>default in $(properties) { jln-shadow_isdefault = 1 ; }
   local jln-stack-protector_isdefault ; if <jln-stack-protector>default in $(properties) { jln-stack-protector_isdefault = 1 ; }
   local jln-stl-debug_isdefault ; if <jln-stl-debug>default in $(properties) { jln-stl-debug_isdefault = 1 ; }
   local jln-stl-fix_isdefault ; if <jln-stl-fix>default in $(properties) { jln-stl-fix_isdefault = 1 ; }
@@ -529,6 +531,48 @@ rule jln_flags ( properties * )
         }
       }
     }
+    if ! $(jln-shadow_isdefault)
+    {
+      if <jln-shadow>off in $(properties)
+      {
+        flags +=
+          <cxxflags>"-Wno-shadow"
+        ;
+      }
+      else if (  $(toolset) = gcc && ! (  $(version) < 07.01  )  )
+      {
+        if (  <jln-shadow>local in $(properties) || <jln-shadow>global-or-local in $(properties)  )
+        {
+          flags +=
+            <cxxflags>"-Wshadow=local"
+          ;
+        }
+        else if (  <jln-shadow>compatible-local in $(properties) || <jln-shadow>global-or-compatible-local in $(properties)  )
+        {
+          flags +=
+            <cxxflags>"-Wshadow=compatible-local"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cxxflags>"-Wshadow"
+          ;
+        }
+      }
+      else if (  <jln-shadow>local in $(properties) || <jln-shadow>compatible-local in $(properties)  )
+      {
+        flags +=
+          <cxxflags>"-Wno-shadow"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"-Wshadow"
+        ;
+      }
+    }
     if ! $(jln-warnings_isdefault)
     {
       if <jln-warnings>off in $(properties)
@@ -612,7 +656,6 @@ rule jln_flags ( properties * )
                           <cxxflags>"-Walloc-zero"
                           <cxxflags>"-Walloca"
                           <cxxflags>"-Wformat-overflow"
-                          <cxxflags>"-Wshadow=compatible-local"
                           <cxxflags>"-Wduplicated-branches"
                         ;
                         if ! (  $(version) < 08.00  )
@@ -637,7 +680,6 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wno-c++98-compat-pedantic"
             <cxxflags>"-Wno-mismatched-tags"
             <cxxflags>"-Wno-padded"
-            <cxxflags>"-Wno-shadow"
             <cxxflags>"-Wno-global-constructors"
             <cxxflags>"-Wno-weak-vtables"
             <cxxflags>"-Wno-exit-time-destructors"
@@ -647,7 +689,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wno-inconsistent-missing-destructor-override"
           ;
         }
-        if <jln-warnings>strict in $(properties)
+        if (  <jln-warnings>strict in $(properties) || <jln-warnings>very-strict in $(properties)  )
         {
           flags +=
             <cxxflags>"-Wconversion"
@@ -1142,15 +1184,50 @@ rule jln_flags ( properties * )
         }
       }
     }
+    if ! $(jln-shadow_isdefault)
+    {
+      if <jln-shadow>off in $(properties)
+      {
+        flags +=
+          <cxxflags>"/wd4456"
+          <cxxflags>"/wd4459"
+        ;
+      }
+      else if (  <jln-shadow>on in $(properties) || <jln-shadow>global-or-compatible-local in $(properties)  )
+      {
+        flags +=
+          <cxxflags>"/w4456"
+          <cxxflags>"/w4459"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"/w4456"
+          <cxxflags>"/wd4459"
+        ;
+      }
+    }
     if ! $(jln-warnings_isdefault)
     {
       if <jln-warnings>on in $(properties)
       {
         flags +=
           <cxxflags>"/W4"
+          <cxxflags>"/wd4244"
+          <cxxflags>"/wd4245"
         ;
       }
       else if <jln-warnings>strict in $(properties)
+      {
+        flags +=
+          <cxxflags>"/Wall"
+          <cxxflags>"/wd4820"
+          <cxxflags>"/wd4514"
+          <cxxflags>"/wd4710"
+        ;
+      }
+      else if <jln-warnings>very-strict in $(properties)
       {
         flags +=
           <cxxflags>"/Wall"

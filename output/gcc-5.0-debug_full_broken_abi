@@ -1,8 +1,8 @@
 -D_GLIBCXX_DEBUG
 -D_LIBCPP_DEBUG=1
--g
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
 -fsanitize=address
 -fsanitize=leak
 -fsanitize=undefined
+-g

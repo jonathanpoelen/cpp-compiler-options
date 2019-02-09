@@ -18,6 +18,7 @@ $ `meson -Djln_fast_math=on`
 
 (`jln-` is a parameterizable prefix: `./compiler-options.lua generators/meson.lua [prefix]`)
 
+<!-- summary -->
 1. [Options](#options)
 2. [Use generated files](#use-generated-files)
     1. [Cmake](#cmake)
@@ -31,6 +32,8 @@ $ `meson -Djln_fast_math=on`
     3. [generators/{bjam,cmake,meson,premake5}.lua](#generatorsbjamcmakemesonpremake5lua)
 4. [How to add options?](#how-to-add-options)
     1. [Update the options tree](#update-the-options-tree)
+        1. [cond_mt](#cond_mt)
+<!-- /summary -->
 
 # Options
 
@@ -56,13 +59,15 @@ reproducible_build_warnings = default off on
 rtti = default off on
 sanitizers = default off on
 sanitizers_extra = default off thread pointer
+shadow = off default on local compatible-local local-or-compatible-local global-or-local global-or-compatible-local
 stack_protector = default off on strong all
 stl_debug = default off on allow_broken_abi assert_as_exception
 stl_fix = on default off
 suggests = default off on
-warnings = on default off strict
+warnings = on default off strict very-strict
 warnings_as_error = default off on
 ```
+<!-- ./compiler-options.lua -->
 
 The value `default` does nothing.
 
@@ -128,7 +133,7 @@ jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]
 
 ## Meson
 
-Split `output/meson` to `meson_options.txt` and `something/meson.build`
+Copy `meson_options.txt` and rename `output/meson` to `something/meson.build`.
 
 ```meson
 project('test', 'cpp')
