@@ -516,7 +516,12 @@ msvc {
   },
 
   opt'stl_debug' {
-    lvl'off' { cxx'/D_HAS_ITERATOR_DEBUGGING=0' } / cxx'/D_HAS_ITERATOR_DEBUGGING=1'
+    lvl'off' { 
+      cxx'/D_HAS_ITERATOR_DEBUGGING=0'
+    } / {
+      cxx'/D_DEBUG', -- set by /MDd /MTd or /LDd
+      cxx'/D_HAS_ITERATOR_DEBUGGING=1',
+    }
   },
 
   opt'control_flow' {

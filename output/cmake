@@ -1241,7 +1241,7 @@ function(jln_flags)
       
       else()
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/D_HAS_ITERATOR_DEBUGGING=1")
+        set(CXX_FLAGS ${CXX_FLAGS}  "/D_DEBUG" "/D_HAS_ITERATOR_DEBUGGING=1")
 
       endif()
     endif()

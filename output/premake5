@@ -930,7 +930,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
       else
       
-        jln_buildoptions = jln_buildoptions .. " /D_HAS_ITERATOR_DEBUGGING=1"
+        jln_buildoptions = jln_buildoptions .. " /D_DEBUG /D_HAS_ITERATOR_DEBUGGING=1"
       end
     end
     if not ( values["jln-control-flow"] == "default") then

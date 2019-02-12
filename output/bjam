@@ -1121,6 +1121,7 @@ rule jln_flags ( properties * )
       else
       {
         flags +=
+          <cxxflags>"/D_DEBUG"
           <cxxflags>"/D_HAS_ITERATOR_DEBUGGING=1"
         ;
       }

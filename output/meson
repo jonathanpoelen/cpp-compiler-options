@@ -402,7 +402,7 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
     if (  (get_option('jln_stl_debug') == 'off') )
       jln_cpp_flags += ['/D_HAS_ITERATOR_DEBUGGING=0', ]
     else
-      jln_cpp_flags += ['/D_HAS_ITERATOR_DEBUGGING=1', ]
+      jln_cpp_flags += ['/D_DEBUG', '/D_HAS_ITERATOR_DEBUGGING=1', ]
     endif
   endif
   if (  not ( (get_option('jln_control_flow') == 'default')) )
