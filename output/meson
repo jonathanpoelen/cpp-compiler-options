@@ -78,6 +78,9 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
     elif (  (get_option('jln_optimize') == 'speed') )
       jln_cpp_flags += ['-O3', ]
       jln_link_flags += ['-O3', ]
+    elif (  (get_option('jln_optimize') == 'native') )
+      jln_cpp_flags += ['-O3', '-march=native', ]
+      jln_link_flags += ['-O3', '-march=native', ]
     elif (  (get_option('jln_optimize') == 'whole_program') )
       jln_cpp_flags += ['-O3', '-march=native', ]
       jln_link_flags += ['-s', '-O3', '-march=native', ]
@@ -381,6 +384,8 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
     elif (  (get_option('jln_optimize') == 'size') )
       jln_cpp_flags += ['/O1', ]
     elif (  (get_option('jln_optimize') == 'speed') )
+      jln_cpp_flags += ['/O2', ]
+    elif (  (get_option('jln_optimize') == 'native') )
       jln_cpp_flags += ['/O2', ]
     elif (  (get_option('jln_optimize') == 'whole_program') )
       jln_cpp_flags += ['/O2', '/GL', '/Gw', ]

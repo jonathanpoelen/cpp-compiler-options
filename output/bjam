@@ -21,8 +21,8 @@ feature <jln-fast-math> : default off on : propagated ;
 feature <jln-incidental-fast-math> : default off on : incidental ;
 feature <jln-lto> : default off on fat : propagated ;
 feature <jln-incidental-lto> : default off on fat : incidental ;
-feature <jln-optimize> : default off on size speed whole_program : propagated ;
-feature <jln-incidental-optimize> : default off on size speed whole_program : incidental ;
+feature <jln-optimize> : default off on size speed native whole_program : propagated ;
+feature <jln-incidental-optimize> : default off on size speed native whole_program : incidental ;
 feature <jln-pedantic> : on default off as_error : propagated ;
 feature <jln-incidental-pedantic> : on default off as_error : incidental ;
 feature <jln-pie> : default off on pic : propagated ;
@@ -327,6 +327,15 @@ rule jln_flags ( properties * )
         flags +=
           <cxxflags>"-O3"
           <linkflags>"-O3"
+        ;
+      }
+      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>native in $(properties) || <jln-optimize>native in $(properties)
+      {
+        flags +=
+          <cxxflags>"-O3"
+          <cxxflags>"-march=native"
+          <linkflags>"-O3"
+          <linkflags>"-march=native"
         ;
       }
       else if $(jln-optimize_isdefault) && <jln-incidental-optimize>whole_program in $(properties) || <jln-optimize>whole_program in $(properties)
@@ -1071,6 +1080,12 @@ rule jln_flags ( properties * )
         ;
       }
       else if $(jln-optimize_isdefault) && <jln-incidental-optimize>speed in $(properties) || <jln-optimize>speed in $(properties)
+      {
+        flags +=
+          <cxxflags>"/O2"
+        ;
+      }
+      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>native in $(properties) || <jln-optimize>native in $(properties)
       {
         flags +=
           <cxxflags>"/O2"

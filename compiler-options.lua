@@ -117,6 +117,7 @@ G = Or(gcc, clang) {
     lvl'off'   { fl'-O0' } /
     lvl'size'  { fl'-Os' } /
     lvl'speed' { fl'-O3' } /
+    lvl'native' { fl'-O3', fl'-march=native' } /
     lvl'whole_program' {
       link'-s',
       fl'-O3',
@@ -500,6 +501,7 @@ msvc {
     lvl'on' { cxx'/O2' } /
     lvl'size' { cxx'/O1' } /  -- /Og      /Os  /Oy /Ob2 /GF /Gy
     lvl'speed' { cxx'/O2' } / -- /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
+    lvl'native' { cxx'/O2' } / -- /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
     lvl'whole_program' { cxx'/O2', cxx'/GL', cxx'/Gw' },
   },
 
@@ -596,7 +598,7 @@ Vbase = {
     exceptions= {{'off', 'on'},},
     fast_math=  {{'off', 'on'},},
     lto=        {{'off', 'on', 'fat'},},
-    optimize=   {{'off', 'on', 'size', 'speed', 'whole_program'},},
+    optimize=   {{'off', 'on', 'size', 'speed', 'native', 'whole_program'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     relro=      {{'off', 'on', 'full'},},
     pie=        {{'off', 'on', 'pic'},},

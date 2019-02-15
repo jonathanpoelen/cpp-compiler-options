@@ -112,8 +112,8 @@ function(jln_init_flags)
     set(JLN_OPTIMIZE "default" CACHE STRING "")
   endif()
 
-  if(NOT(("default" STREQUAL JLN_OPTIMIZE) OR ("off" STREQUAL JLN_OPTIMIZE) OR ("on" STREQUAL JLN_OPTIMIZE) OR ("size" STREQUAL JLN_OPTIMIZE) OR ("speed" STREQUAL JLN_OPTIMIZE) OR ("whole_program" STREQUAL JLN_OPTIMIZE)))
-    message(FATAL_ERROR "Unknow value \"${JLN_OPTIMIZE}\" for JLN_OPTIMIZE, expected: default, off, on, size, speed, whole_program")
+  if(NOT(("default" STREQUAL JLN_OPTIMIZE) OR ("off" STREQUAL JLN_OPTIMIZE) OR ("on" STREQUAL JLN_OPTIMIZE) OR ("size" STREQUAL JLN_OPTIMIZE) OR ("speed" STREQUAL JLN_OPTIMIZE) OR ("native" STREQUAL JLN_OPTIMIZE) OR ("whole_program" STREQUAL JLN_OPTIMIZE)))
+    message(FATAL_ERROR "Unknow value \"${JLN_OPTIMIZE}\" for JLN_OPTIMIZE, expected: default, off, on, size, speed, native, whole_program")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_PEDANTIC)
@@ -267,7 +267,7 @@ function(jln_init_flags)
     message(STATUS "JLN_EXCEPTIONS=${JLN_EXCEPTIONS}	[default, off, on]")
     message(STATUS "JLN_FAST_MATH=${JLN_FAST_MATH}	[default, off, on]")
     message(STATUS "JLN_LTO=${JLN_LTO}	[default, off, on, fat]")
-    message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, whole_program]")
+    message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, native, whole_program]")
     message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[default, off, on, as_error]")
     message(STATUS "JLN_PIE=${JLN_PIE}	[default, off, on, pic]")
     message(STATUS "JLN_RELRO=${JLN_RELRO}	[default, off, on, full]")
@@ -625,6 +625,11 @@ function(jln_flags)
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O3")
         set(LINK_FLAGS ${LINK_FLAGS}  "-O3")
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "native" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-O3" "-march=native")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-O3" "-march=native")
       
       elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "whole_program" )
       
@@ -1201,6 +1206,11 @@ function(jln_flags)
 
       
       elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "speed" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O2")
+
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "native" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "/O2")
 

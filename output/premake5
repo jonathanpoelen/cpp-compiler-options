@@ -76,7 +76,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or defaults["jln-fast-math"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
-  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"whole_program"}}, description="optimize"}
+  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"native"}, {"whole_program"}}, description="optimize"}
   if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or defaults["jln-optimize"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "default") end
@@ -388,6 +388,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
         jln_buildoptions = jln_buildoptions .. " -O3"
         jln_linkoptions = jln_linkoptions .. " -O3"
+      
+      elseif values["jln-optimize"] == "native" then
+      
+        jln_buildoptions = jln_buildoptions .. " -O3 -march=native"
+        jln_linkoptions = jln_linkoptions .. " -O3 -march=native"
       
       elseif values["jln-optimize"] == "whole_program" then
       
@@ -896,6 +901,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " /O1"
       
       elseif values["jln-optimize"] == "speed" then
+      
+        jln_buildoptions = jln_buildoptions .. " /O2"
+      
+      elseif values["jln-optimize"] == "native" then
       
         jln_buildoptions = jln_buildoptions .. " /O2"
       
