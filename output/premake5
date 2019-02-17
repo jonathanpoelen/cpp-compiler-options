@@ -607,8 +607,8 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
               end
             end
           end
-        end
-        if compiler == "clang" then
+        
+        else
         
           jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum -Wno-inconsistent-missing-destructor-override"
         end

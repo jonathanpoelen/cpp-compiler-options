@@ -314,9 +314,10 @@ G = Or(gcc, clang) {
 
       vers(8) {
         cxx'-Wclass-memaccess',
-      },
+      }
 
-      clang {
+      / -- clang
+      {
         cxx'-Weverything',
      -- cxx'-Wno-documentation-unknown-command',
      -- cxx'-Wno-range-loop-analysis',

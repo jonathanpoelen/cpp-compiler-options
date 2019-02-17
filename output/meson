@@ -204,8 +204,7 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
         jln_cpp_flags += ['-Waligned-new', ]
         jln_cpp_flags += ['-Walloc-zero', '-Walloca', '-Wformat-overflow', '-Wduplicated-branches', ]
         jln_cpp_flags += ['-Wclass-memaccess', ]
-      endif
-      if (  (jln_cpp_compiler.get_id() == 'clang') )
+      else
         jln_cpp_flags += ['-Weverything', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', '-Wno-inconsistent-missing-destructor-override', ]
       endif
       if (  ( (get_option('jln_warnings') == 'strict') or (get_option('jln_warnings') == 'very-strict') ) )

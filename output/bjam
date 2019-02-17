@@ -679,7 +679,7 @@ rule jln_flags ( properties * )
             }
           }
         }
-        if $(toolset) = clang
+        else
         {
           flags +=
             <cxxflags>"-Weverything"

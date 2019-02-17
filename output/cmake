@@ -872,8 +872,8 @@ function(jln_flags)
               endif()
             endif()
           endif()
-        endif()
-        if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+        
+        else()
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-Weverything" "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-mismatched-tags" "-Wno-padded" "-Wno-global-constructors" "-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-covered-switch-default" "-Wno-switch-default" "-Wno-switch-enum" "-Wno-inconsistent-missing-destructor-override")
 
