@@ -133,12 +133,12 @@ jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]
 
 ## Meson
 
-Copy `meson_options.txt` and rename `output/meson` to `something/meson.build`.
+Copy `meson_options.txt` and rename `output/meson` to `meson_jln_flags/meson.build`.
 
 ```meson
 project('test', 'cpp')
 
-subdir('something/meson.build')
+subdir('meson_jln_flags')
 
 executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flags)
 ```
