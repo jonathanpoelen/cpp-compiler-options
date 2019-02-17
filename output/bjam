@@ -329,37 +329,35 @@ rule jln_flags ( properties * )
           <linkflags>"-O3"
         ;
       }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>native in $(properties) || <jln-optimize>native in $(properties)
+      else
       {
         flags +=
           <cxxflags>"-O3"
           <cxxflags>"-march=native"
+          <cxxflags>"-mtune=native"
           <linkflags>"-O3"
           <linkflags>"-march=native"
+          <linkflags>"-mtune=native"
         ;
-      }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>whole_program in $(properties) || <jln-optimize>whole_program in $(properties)
-      {
-        flags +=
-          <cxxflags>"-O3"
-          <cxxflags>"-march=native"
-          <linkflags>"-s"
-          <linkflags>"-O3"
-          <linkflags>"-march=native"
-        ;
-        if (  $(toolset) = clang && ! (  $(version) < 07.00  )  )
+        if $(jln-optimize_isdefault) && <jln-incidental-optimize>whole_program in $(properties) || <jln-optimize>whole_program in $(properties)
         {
           flags +=
-            <cxxflags>"-fforce-emit-vtables"
-            <linkflags>"-fforce-emit-vtables"
+            <linkflags>"-s"
           ;
-        }
-        else if $(toolset) = gcc
-        {
-          flags +=
-            <cxxflags>"-fwhole-program"
-            <linkflags>"-fwhole-program"
-          ;
+          if (  $(toolset) = clang && ! (  $(version) < 07.00  )  )
+          {
+            flags +=
+              <cxxflags>"-fforce-emit-vtables"
+              <linkflags>"-fforce-emit-vtables"
+            ;
+          }
+          else if $(toolset) = gcc
+          {
+            flags +=
+              <cxxflags>"-fwhole-program"
+              <linkflags>"-fwhole-program"
+            ;
+          }
         }
       }
     }

@@ -389,24 +389,23 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " -O3"
         jln_linkoptions = jln_linkoptions .. " -O3"
       
-      elseif values["jln-optimize"] == "native" then
+      else
       
-        jln_buildoptions = jln_buildoptions .. " -O3 -march=native"
-        jln_linkoptions = jln_linkoptions .. " -O3 -march=native"
-      
-      elseif values["jln-optimize"] == "whole_program" then
-      
-        jln_buildoptions = jln_buildoptions .. " -O3 -march=native"
-        jln_linkoptions = jln_linkoptions .. " -s -O3 -march=native"
-        if ( compiler == "clang" and not ( compversion < 700 ) ) then
+        jln_buildoptions = jln_buildoptions .. " -O3 -march=native -mtune=native"
+        jln_linkoptions = jln_linkoptions .. " -O3 -march=native -mtune=native"
+        if values["jln-optimize"] == "whole_program" then
         
-          jln_buildoptions = jln_buildoptions .. " -fforce-emit-vtables"
-          jln_linkoptions = jln_linkoptions .. " -fforce-emit-vtables"
-        
-        elseif compiler == "gcc" then
-        
-          jln_buildoptions = jln_buildoptions .. " -fwhole-program"
-          jln_linkoptions = jln_linkoptions .. " -fwhole-program"
+          jln_linkoptions = jln_linkoptions .. " -s"
+          if ( compiler == "clang" and not ( compversion < 700 ) ) then
+          
+            jln_buildoptions = jln_buildoptions .. " -fforce-emit-vtables"
+            jln_linkoptions = jln_linkoptions .. " -fforce-emit-vtables"
+          
+          elseif compiler == "gcc" then
+          
+            jln_buildoptions = jln_buildoptions .. " -fwhole-program"
+            jln_linkoptions = jln_linkoptions .. " -fwhole-program"
+          end
         end
       end
     end

@@ -116,17 +116,18 @@ G = Or(gcc, clang) {
     lvl'on'    { fl'-O2' } /
     lvl'off'   { fl'-O0' } /
     lvl'size'  { fl'-Os' } /
-    lvl'speed' { fl'-O3' } /
-    lvl'native' { fl'-O3', fl'-march=native' } /
-    lvl'whole_program' {
-      link'-s',
+    lvl'speed' { fl'-O3' } / {
       fl'-O3',
       fl'-march=native',
-      clang(7) {
-        fl'-fforce-emit-vtables',
-      } /
-      gcc {
-        fl'-fwhole-program'
+      fl'-mtune=native',
+      lvl'whole_program' {
+        link'-s',
+        clang(7) {
+          fl'-fforce-emit-vtables',
+        } /
+        gcc {
+          fl'-fwhole-program'
+        },
       },
     },
   },

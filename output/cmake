@@ -626,24 +626,23 @@ function(jln_flags)
         set(CXX_FLAGS ${CXX_FLAGS}  "-O3")
         set(LINK_FLAGS ${LINK_FLAGS}  "-O3")
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "native" )
+      else()
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-O3" "-march=native")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-O3" "-march=native")
-      
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "whole_program" )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-O3" "-march=native")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-s" "-O3" "-march=native")
-        if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
+        set(CXX_FLAGS ${CXX_FLAGS}  "-O3" "-march=native" "-mtune=native")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-O3" "-march=native" "-mtune=native")
+        if (  JLN_FLAGS_OPTIMIZE STREQUAL "whole_program" )
         
-          set(CXX_FLAGS ${CXX_FLAGS}  "-fforce-emit-vtables")
-          set(LINK_FLAGS ${LINK_FLAGS}  "-fforce-emit-vtables")
-        
-        elseif (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
-        
-          set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program")
-          set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-s")
+          if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
+          
+            set(CXX_FLAGS ${CXX_FLAGS}  "-fforce-emit-vtables")
+            set(LINK_FLAGS ${LINK_FLAGS}  "-fforce-emit-vtables")
+          
+          elseif (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
+          
+            set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program")
+            set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program")
+          endif()
         endif()
       endif()
     endif()

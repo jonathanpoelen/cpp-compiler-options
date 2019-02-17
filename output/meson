@@ -78,18 +78,18 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
     elif (  (get_option('jln_optimize') == 'speed') )
       jln_cpp_flags += ['-O3', ]
       jln_link_flags += ['-O3', ]
-    elif (  (get_option('jln_optimize') == 'native') )
-      jln_cpp_flags += ['-O3', '-march=native', ]
-      jln_link_flags += ['-O3', '-march=native', ]
-    elif (  (get_option('jln_optimize') == 'whole_program') )
-      jln_cpp_flags += ['-O3', '-march=native', ]
-      jln_link_flags += ['-s', '-O3', '-march=native', ]
-      if (  ( (jln_cpp_compiler.get_id() == 'clang') ) )
-        jln_cpp_flags += ['-fforce-emit-vtables', ]
-        jln_link_flags += ['-fforce-emit-vtables', ]
-      elif (  (jln_cpp_compiler.get_id() == 'gcc') )
-        jln_cpp_flags += ['-fwhole-program', ]
-        jln_link_flags += ['-fwhole-program', ]
+    else
+      jln_cpp_flags += ['-O3', '-march=native', '-mtune=native', ]
+      jln_link_flags += ['-O3', '-march=native', '-mtune=native', ]
+      if (  (get_option('jln_optimize') == 'whole_program') )
+        jln_link_flags += ['-s', ]
+        if (  ( (jln_cpp_compiler.get_id() == 'clang') ) )
+          jln_cpp_flags += ['-fforce-emit-vtables', ]
+          jln_link_flags += ['-fforce-emit-vtables', ]
+        elif (  (jln_cpp_compiler.get_id() == 'gcc') )
+          jln_cpp_flags += ['-fwhole-program', ]
+          jln_link_flags += ['-fwhole-program', ]
+        endif
       endif
     endif
   endif
