@@ -5,6 +5,8 @@ _jln_flag_names["jln-control-flow"] = true
 _jln_flag_names["control_flow"] = true
 _jln_flag_names["jln-coverage"] = true
 _jln_flag_names["coverage"] = true
+_jln_flag_names["jln-cpu"] = true
+_jln_flag_names["cpu"] = true
 _jln_flag_names["jln-debug"] = true
 _jln_flag_names["debug"] = true
 _jln_flag_names["jln-diagnostics-format"] = true
@@ -15,8 +17,6 @@ _jln_flag_names["jln-elide-type"] = true
 _jln_flag_names["elide_type"] = true
 _jln_flag_names["jln-exceptions"] = true
 _jln_flag_names["exceptions"] = true
-_jln_flag_names["jln-fast-math"] = true
-_jln_flag_names["fast_math"] = true
 _jln_flag_names["jln-lto"] = true
 _jln_flag_names["lto"] = true
 _jln_flag_names["jln-optimize"] = true
@@ -49,6 +49,8 @@ _jln_flag_names["jln-warnings"] = true
 _jln_flag_names["warnings"] = true
 _jln_flag_names["jln-warnings-as-error"] = true
 _jln_flag_names["warnings_as_error"] = true
+_jln_flag_names["jln-whole-program"] = true
+_jln_flag_names["whole_program"] = true
 
 function jln_newoptions(defaults)
   if defaults then
@@ -62,6 +64,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-control-flow"] then _OPTIONS["jln-control-flow"] = (defaults["control_flow"] or defaults["jln-control-flow"] or "default") end
   newoption{trigger="jln-coverage", allowed={{"default"}, {"off"}, {"on"}}, description="coverage"}
   if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or defaults["jln-coverage"] or "default") end
+  newoption{trigger="jln-cpu", allowed={{"default"}, {"generic"}, {"native"}}, description="cpu"}
+  if not _OPTIONS["jln-cpu"] then _OPTIONS["jln-cpu"] = (defaults["cpu"] or defaults["jln-cpu"] or "default") end
   newoption{trigger="jln-debug", allowed={{"default"}, {"off"}, {"on"}, {"line_tables_only"}, {"gdb"}, {"lldb"}, {"sce"}}, description="debug"}
   if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "default") end
   newoption{trigger="jln-diagnostics-format", allowed={{"default"}, {"fixits"}, {"patch"}, {"print_source_range_info"}}, description="diagnostics_format"}
@@ -72,11 +76,9 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-elide-type"] then _OPTIONS["jln-elide-type"] = (defaults["elide_type"] or defaults["jln-elide-type"] or "default") end
   newoption{trigger="jln-exceptions", allowed={{"default"}, {"off"}, {"on"}}, description="exceptions"}
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
-  newoption{trigger="jln-fast-math", allowed={{"default"}, {"off"}, {"on"}}, description="fast_math"}
-  if not _OPTIONS["jln-fast-math"] then _OPTIONS["jln-fast-math"] = (defaults["fast_math"] or defaults["jln-fast-math"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
-  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"on"}, {"size"}, {"speed"}, {"native"}, {"whole_program"}}, description="optimize"}
+  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"debugoptimized"}, {"minsize"}, {"release"}, {"fast"}}, description="optimize"}
   if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or defaults["jln-optimize"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "default") end
@@ -106,6 +108,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "default") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
+  newoption{trigger="jln-whole-program", allowed={{"default"}, {"on"}}, description="whole_program"}
+  if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
   newoption{trigger="jln-compiler", description="Path or name of the compiler"}
   newoption{trigger="jln-compiler-version", description="Force the compiler version"}
 end
@@ -197,6 +201,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-coverage"] = true
     name_list["coverage"] = true
     new_value["jln-coverage"] = values["coverage"] or values["jln-coverage"] or (disable_others and "default" or _OPTIONS["jln-coverage"])
+    name_list["jln-cpu"] = true
+    name_list["cpu"] = true
+    new_value["jln-cpu"] = values["cpu"] or values["jln-cpu"] or (disable_others and "default" or _OPTIONS["jln-cpu"])
     name_list["jln-debug"] = true
     name_list["debug"] = true
     new_value["jln-debug"] = values["debug"] or values["jln-debug"] or (disable_others and "default" or _OPTIONS["jln-debug"])
@@ -212,9 +219,6 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-exceptions"] = true
     name_list["exceptions"] = true
     new_value["jln-exceptions"] = values["exceptions"] or values["jln-exceptions"] or (disable_others and "default" or _OPTIONS["jln-exceptions"])
-    name_list["jln-fast-math"] = true
-    name_list["fast_math"] = true
-    new_value["jln-fast-math"] = values["fast_math"] or values["jln-fast-math"] or (disable_others and "default" or _OPTIONS["jln-fast-math"])
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"])
@@ -263,6 +267,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-warnings-as-error"] = true
     name_list["warnings_as_error"] = true
     new_value["jln-warnings-as-error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "default" or _OPTIONS["jln-warnings-as-error"])
+    name_list["jln-whole-program"] = true
+    name_list["whole_program"] = true
+    new_value["jln-whole-program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "default" or _OPTIONS["jln-whole-program"])
     values = new_value
   else
     values = _OPTIONS
@@ -337,74 +344,74 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           
             jln_buildoptions = jln_buildoptions .. " -ffat-lto-objects"
           end
-        
-        else
-        
-          if not ( values["jln-optimize"] == "default") then
-          
-            if values["jln-optimize"] == "whole_program" then
-            
-              if ( compiler == "clang" and not ( compversion < 309 ) ) then
-              
-                jln_buildoptions = jln_buildoptions .. " -fwhole-program-vtables"
-                jln_linkoptions = jln_linkoptions .. " -fwhole-program-vtables"
-              end
-            end
-          end
         end
-      end
-    end
-    if not ( values["jln-fast-math"] == "default") then
-    
-      if values["jln-fast-math"] == "on" then
-      
-        jln_buildoptions = jln_buildoptions .. " -ffast-math"
-        jln_linkoptions = jln_linkoptions .. " -ffast-math"
-      
-      else
-      
-        jln_buildoptions = jln_buildoptions .. " -fno-fast-math"
-        jln_linkoptions = jln_linkoptions .. " -fno-fast-math"
       end
     end
     if not ( values["jln-optimize"] == "default") then
     
-      if values["jln-optimize"] == "on" then
-      
-        jln_buildoptions = jln_buildoptions .. " -O2"
-        jln_linkoptions = jln_linkoptions .. " -O2"
-      
-      elseif values["jln-optimize"] == "off" then
+      if values["jln-optimize"] == "off" then
       
         jln_buildoptions = jln_buildoptions .. " -O0"
         jln_linkoptions = jln_linkoptions .. " -O0"
       
-      elseif values["jln-optimize"] == "size" then
+      elseif values["jln-optimize"] == "debugoptimized" then
+      
+        jln_buildoptions = jln_buildoptions .. " -Og"
+        jln_linkoptions = jln_linkoptions .. " -Og"
+      
+      elseif values["jln-optimize"] == "minsize" then
       
         jln_buildoptions = jln_buildoptions .. " -Os"
         jln_linkoptions = jln_linkoptions .. " -Os"
       
-      elseif values["jln-optimize"] == "speed" then
+      elseif values["jln-optimize"] == "fast" then
+      
+        jln_buildoptions = jln_buildoptions .. " -Ofast"
+        jln_linkoptions = jln_linkoptions .. " -Ofast"
+      
+      elseif values["jln-optimize"] == "release" then
       
         jln_buildoptions = jln_buildoptions .. " -O3"
         jln_linkoptions = jln_linkoptions .. " -O3"
+      end
+    end
+    if not ( values["jln-cpu"] == "default") then
+    
+      if values["jln-cpu"] == "generic" then
+      
+        jln_buildoptions = jln_buildoptions .. " -mtune=generic"
+        jln_linkoptions = jln_linkoptions .. " -mtune=generic"
       
       else
       
-        jln_buildoptions = jln_buildoptions .. " -O3 -march=native -mtune=native"
-        jln_linkoptions = jln_linkoptions .. " -O3 -march=native -mtune=native"
-        if values["jln-optimize"] == "whole_program" then
+        jln_buildoptions = jln_buildoptions .. " -march=native -mtune=native"
+        jln_linkoptions = jln_linkoptions .. " -march=native -mtune=native"
+      end
+    end
+    if not ( values["jln-whole-program"] == "default") then
+    
+      jln_linkoptions = jln_linkoptions .. " -s"
+      if compiler == "gcc" then
+      
+        jln_buildoptions = jln_buildoptions .. " -fwhole-program"
+        jln_linkoptions = jln_linkoptions .. " -fwhole-program"
+      
+      else
+      
+        if ( compiler == "clang" and not ( compversion < 309 ) ) then
         
-          jln_linkoptions = jln_linkoptions .. " -s"
-          if ( compiler == "clang" and not ( compversion < 700 ) ) then
+          if not ( values["jln-lto"] == "default") then
+          
+            if not values["jln-lto"] == "off" then
+            
+              jln_buildoptions = jln_buildoptions .. " -fwhole-program-vtables"
+              jln_linkoptions = jln_linkoptions .. " -fwhole-program-vtables"
+            end
+          end
+          if not ( compversion < 700 ) then
           
             jln_buildoptions = jln_buildoptions .. " -fforce-emit-vtables"
             jln_linkoptions = jln_linkoptions .. " -fforce-emit-vtables"
-          
-          elseif compiler == "gcc" then
-          
-            jln_buildoptions = jln_buildoptions .. " -fwhole-program"
-            jln_linkoptions = jln_linkoptions .. " -fwhole-program"
           end
         end
       end
@@ -841,7 +848,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
       else
       
-        jln_buildoptions = jln_buildoptions .. " /Z7"
+        jln_buildoptions = jln_buildoptions .. " /RTC1 /Od"
         if values["jln-debug"] == "on" then
         
           jln_buildoptions = jln_buildoptions .. " /DEBUG"
@@ -852,14 +859,18 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
         if not ( values["jln-optimize"] == "default") then
         
-          if values["jln-optimize"] == "off" then
+          if values["jln-optimize"] == "debugoptimized" then
           
-            jln_buildoptions = jln_buildoptions .. " /Od"
+            jln_buildoptions = jln_buildoptions .. " /Zi"
           
           else
           
-            jln_buildoptions = jln_buildoptions .. " /Zi"
+            jln_buildoptions = jln_buildoptions .. " /ZI"
           end
+        
+        else
+        
+          jln_buildoptions = jln_buildoptions .. " /ZI"
         end
       end
     end
@@ -874,43 +885,35 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " /EHc-"
       end
     end
-    if not ( values["jln-fast-math"] == "default") then
-    
-      if values["jln-fast-math"] == "on" then
-      
-        jln_buildoptions = jln_buildoptions .. " /fp:fast"
-      
-      else
-      
-        jln_buildoptions = jln_buildoptions .. " /fp:fast-"
-      end
-    end
     if not ( values["jln-optimize"] == "default") then
     
       if values["jln-optimize"] == "off" then
       
         jln_buildoptions = jln_buildoptions .. " /Ob0 /Od /Oi- /Oy-"
       
-      elseif values["jln-optimize"] == "on" then
+      elseif values["jln-optimize"] == "debugoptimized" then
       
-        jln_buildoptions = jln_buildoptions .. " /O2"
+        jln_buildoptions = jln_buildoptions .. " /Ob1"
       
-      elseif values["jln-optimize"] == "size" then
+      elseif values["jln-optimize"] == "release" then
       
-        jln_buildoptions = jln_buildoptions .. " /O1"
+        jln_buildoptions = jln_buildoptions .. " /O2 /OPT:REF"
+        jln_linkoptions = jln_linkoptions .. " /OPT:REF"
       
-      elseif values["jln-optimize"] == "speed" then
+      elseif values["jln-optimize"] == "minsize" then
       
-        jln_buildoptions = jln_buildoptions .. " /O2"
+        jln_buildoptions = jln_buildoptions .. " /O1 /OPT:REF /Gw"
+        jln_linkoptions = jln_linkoptions .. " /OPT:REF"
       
-      elseif values["jln-optimize"] == "native" then
+      elseif values["jln-optimize"] == "fast" then
       
-        jln_buildoptions = jln_buildoptions .. " /O2"
-      
-      elseif values["jln-optimize"] == "whole_program" then
-      
-        jln_buildoptions = jln_buildoptions .. " /O2 /GL /Gw"
+        jln_buildoptions = jln_buildoptions .. " /O2 /OPT:REF /fp:fast"
+        jln_linkoptions = jln_linkoptions .. " /OPT:REF"
       end
+    end
+    if not ( values["jln-whole-program"] == "default") then
+    
+      jln_buildoptions = jln_buildoptions .. " /GL /Gw"
     end
     if not ( values["jln-pedantic"] == "default") then
     

@@ -162,9 +162,6 @@ return {
     return _.d.opts[name] and true or false
   end,
 
-  stopopt=function(_)
-  end,
-
   cond=function(_, v)
     local r = true
         if v._or  then r = _:cond(v._or[1]) or _:cond(v._or[2])

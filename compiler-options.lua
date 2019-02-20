@@ -95,41 +95,39 @@ G = Or(gcc, clang) {
         lvl'fat' {
           cxx'-ffat-lto-objects',
         },
-      } /
-      opt'optimize'{
-        lvl'whole_program' {
-          clang(3,9) {
-            fl'-fwhole-program-vtables'
-          },
-        },
-      },
+      }
     },
   },
 
-  -- link: optimization with lto
-  opt'fast_math' {
-    lvl'on' { fl'-ffast-math', } / fl'-fno-fast-math',
-  },
-
-  -- link: optimization with lto
   opt'optimize' {
-    lvl'on'    { fl'-O2' } /
-    lvl'off'   { fl'-O0' } /
-    lvl'size'  { fl'-Os' } /
-    lvl'speed' { fl'-O3' } / {
-      fl'-O3',
-      fl'-march=native',
-      fl'-mtune=native',
-      lvl'whole_program' {
-        link'-s',
-        clang(7) {
-          fl'-fforce-emit-vtables',
-        } /
-        gcc {
-          fl'-fwhole-program'
-        },
-      },
-    },
+    lvl'off'     { fl'-O0' } /
+    lvl'debugoptimized' { fl'-Og' } /
+    lvl'minsize' { fl'-Os' } /
+    lvl'fast'    { fl'-Ofast' } /
+    lvl'release' { fl'-O3' }
+  },
+
+  opt'cpu' {
+    lvl'generic' { fl'-mtune=generic' } /
+    { fl'-march=native', fl'-mtune=native', }
+  },
+
+  opt'whole_program' {
+    link'-s',
+    gcc {
+      fl'-fwhole-program'
+    } / {
+      clang(3,9) {
+        opt'lto'{
+          -lvl'off' {
+            fl'-fwhole-program-vtables'
+          }
+        }
+      }*    
+      vers(7) {
+        fl'-fforce-emit-vtables',
+      }
+    }
   },
 
   opt'pedantic' {
@@ -479,14 +477,11 @@ msvc {
 
   opt'debug' {
     lvl'off' { cxx'/DEBUG:NONE' } / {
-      cxx'/Z7',
+      cxx'/RTC1',
+      cxx'/Od',
       lvl'on' { cxx'/DEBUG' } / -- /DEBUG:FULL
       lvl'line_tables_only' { cxx'/DEBUG:FASTLINK' },
-
-      opt'optimize' {
-        lvl'off' { cxx'/Od' } / cxx'/Zi',
-      } /
-      cxx'/Od',
+      opt'optimize' { lvl'debugoptimized' { cxx'/Zi' } / cxx'/ZI' } / cxx'/ZI',
     }
   },
 
@@ -494,17 +489,18 @@ msvc {
     lvl'on' { cxx'/EHc' } / { cxx'/EHc-' }
   },
 
-  opt'fast_math' {
-    lvl'on' { cxx'/fp:fast' } / cxx'/fp:fast-',
-  },
-
   opt'optimize' {
     lvl'off' { cxx'/Ob0 /Od /Oi- /Oy-' } /
-    lvl'on' { cxx'/O2' } /
-    lvl'size' { cxx'/O1' } /  -- /Og      /Os  /Oy /Ob2 /GF /Gy
-    lvl'speed' { cxx'/O2' } / -- /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-    lvl'native' { cxx'/O2' } / -- /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-    lvl'whole_program' { cxx'/O2', cxx'/GL', cxx'/Gw' },
+    lvl'debugoptimized' { cxx'/Ob1' } /
+    -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
+    -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
+    lvl'release' { cxx'/O2', fl'/OPT:REF', } /
+    lvl'minsize' { cxx'/O1', fl'/OPT:REF', cxx'/Gw' } /
+    lvl'fast' { cxx'/O2', fl'/OPT:REF', cxx'/fp:fast' }
+  },
+
+  opt'whole_program' {
+    cxx'/GL', cxx'/Gw'
   },
 
   opt'pedantic' {
@@ -593,17 +589,17 @@ Vbase = {
     color=      {{'auto', 'never', 'always'},},
     control_flow={{'off', 'on'},},
     coverage=   {{'off', 'on'},},
+    cpu=        {{'generic', 'native'},},
     debug=      {{'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},},
     diagnostics_format={{'fixits', 'patch', 'print_source_range_info'},},
     diagnostics_show_template_tree={{'off', 'on'},},
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
-    fast_math=  {{'off', 'on'},},
     lto=        {{'off', 'on', 'fat'},},
-    optimize=   {{'off', 'on', 'size', 'speed', 'native', 'whole_program'},},
+    optimize=   {{'off', 'debugoptimized', 'minsize', 'release', 'fast'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
-    relro=      {{'off', 'on', 'full'},},
     pie=        {{'off', 'on', 'pic'},},
+    relro=      {{'off', 'on', 'full'},},
     reproducible_build_warnings={{'off', 'on'},},
     rtti=       {{'off', 'on'},},
     stl_debug=  {{'off', 'on', 'allow_broken_abi', 'assert_as_exception'},},
@@ -615,6 +611,7 @@ Vbase = {
     suggests=   {{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very-strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},
+    whole_program={{'on'},},
   },
 
   indent = '',
@@ -683,13 +680,6 @@ Vbase = {
       _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
       if _._vcondkeyword.openblock then
         _:print(_.indent .. _._vcondkeyword.openblock)
-      end
-    end
-
-    _.stopopt=function(_)
-      _:_vcond_printflags()
-      if _._vcondkeyword.endif then
-        _:print(_.indent .. _._vcondkeyword.endif)
       end
     end
 
@@ -823,6 +813,22 @@ function is_cond(t)
   return t.lvl or t._or or t._and or t._not or t.compiler or t.version
 end
 
+function evalflagselse(t, v, curropt)
+  local n = #t._else
+  for k,x in ipairs(t._else) do
+    mark_elseif = (k ~= n or is_cond(x))
+    if mark_elseif then
+      v:markelseif()
+      evalflags(x, v, curropt, mark_elseif)
+    else
+      v:elsecond(curropt)
+      v.indent = v.indent .. '  '
+      evalflags(x, v, curropt, mark_elseif)
+      v.indent = v.indent:sub(1, #v.indent-2)
+    end
+  end
+end
+
 function evalflags(t, v, curropt, no_stopcond)
   if is_cond(t) then
     if t.lvl and not opts_krev[curropt][t.lvl] then
@@ -835,19 +841,7 @@ function evalflags(t, v, curropt, no_stopcond)
       v.indent = v.indent:sub(1, #v.indent-2)
     end
     if r ~= true and t._else then
-      local n = #t._else
-      for k,x in ipairs(t._else) do
-        mark_elseif = (k ~= n or is_cond(x))
-        if mark_elseif then
-          v:markelseif()
-          evalflags(x, v, curropt, mark_elseif)
-        else
-          v:elsecond(curropt)
-          v.indent = v.indent .. '  '
-          evalflags(x, v, curropt, mark_elseif)
-          v.indent = v.indent:sub(1, #v.indent-2)
-        end
-      end
+      evalflagselse(t, v, curropt)
     end
     if not no_stopcond then
       v:stopcond(curropt)
@@ -856,11 +850,20 @@ function evalflags(t, v, curropt, no_stopcond)
     if not v._opts[t.opt] then
       error('Unknown "' .. t.opt .. '" option')
     end
-    if not v.ignore[t.opt] and v:startopt(t.opt) ~= false then
-      v.indent = v.indent .. '  '
-      evalflags(t._t, v, t.opt)
-      v.indent = v.indent:sub(1, #v.indent-2)
-      v:stopopt(t.opt)
+    if not v.ignore[t.opt] then
+      local r = v:startopt(t.opt)
+      if r ~= false then
+        v.indent = v.indent .. '  '
+        evalflags(t._t, v, t.opt)
+        v.indent = v.indent:sub(1, #v.indent-2)
+        v:stopopt(t.opt)
+      end
+      if r ~= true and t._else then
+        evalflagselse(t, v, curropt)
+      end
+      v:stopcond(t.opt)
+    elseif t._else then
+      error('unimplemented')
     end
   elseif t.cxx or t.link or t.def then
     if t.cxx  then v:cxx(t.cxx, curropt) end

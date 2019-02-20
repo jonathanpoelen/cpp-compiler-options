@@ -1,6 +1,6 @@
 # jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
 function(jln_init_flags)
-  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;CONTROL_FLOW;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;SHADOW;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;CONTROL_FLOW;COVERAGE;CPU;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;SHADOW;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR;WHOLE_PROGRAM" "" ${ARGN})
 
   if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)
     set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})
@@ -34,6 +34,16 @@ function(jln_init_flags)
 
   if(NOT(("default" STREQUAL JLN_COVERAGE) OR ("off" STREQUAL JLN_COVERAGE) OR ("on" STREQUAL JLN_COVERAGE)))
     message(FATAL_ERROR "Unknow value \"${JLN_COVERAGE}\" for JLN_COVERAGE, expected: default, off, on")
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_CPU)
+    set(JLN_CPU ${JLN_DEFAULT_FLAG_CPU} CACHE STING "")
+  else()
+    set(JLN_CPU "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_CPU) OR ("generic" STREQUAL JLN_CPU) OR ("native" STREQUAL JLN_CPU)))
+    message(FATAL_ERROR "Unknow value \"${JLN_CPU}\" for JLN_CPU, expected: default, generic, native")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_DEBUG)
@@ -86,16 +96,6 @@ function(jln_init_flags)
     message(FATAL_ERROR "Unknow value \"${JLN_EXCEPTIONS}\" for JLN_EXCEPTIONS, expected: default, off, on")
   endif()
 
-  if(DEFINED JLN_DEFAULT_FLAG_FAST_MATH)
-    set(JLN_FAST_MATH ${JLN_DEFAULT_FLAG_FAST_MATH} CACHE STING "")
-  else()
-    set(JLN_FAST_MATH "default" CACHE STRING "")
-  endif()
-
-  if(NOT(("default" STREQUAL JLN_FAST_MATH) OR ("off" STREQUAL JLN_FAST_MATH) OR ("on" STREQUAL JLN_FAST_MATH)))
-    message(FATAL_ERROR "Unknow value \"${JLN_FAST_MATH}\" for JLN_FAST_MATH, expected: default, off, on")
-  endif()
-
   if(DEFINED JLN_DEFAULT_FLAG_LTO)
     set(JLN_LTO ${JLN_DEFAULT_FLAG_LTO} CACHE STING "")
   else()
@@ -112,8 +112,8 @@ function(jln_init_flags)
     set(JLN_OPTIMIZE "default" CACHE STRING "")
   endif()
 
-  if(NOT(("default" STREQUAL JLN_OPTIMIZE) OR ("off" STREQUAL JLN_OPTIMIZE) OR ("on" STREQUAL JLN_OPTIMIZE) OR ("size" STREQUAL JLN_OPTIMIZE) OR ("speed" STREQUAL JLN_OPTIMIZE) OR ("native" STREQUAL JLN_OPTIMIZE) OR ("whole_program" STREQUAL JLN_OPTIMIZE)))
-    message(FATAL_ERROR "Unknow value \"${JLN_OPTIMIZE}\" for JLN_OPTIMIZE, expected: default, off, on, size, speed, native, whole_program")
+  if(NOT(("default" STREQUAL JLN_OPTIMIZE) OR ("off" STREQUAL JLN_OPTIMIZE) OR ("debugoptimized" STREQUAL JLN_OPTIMIZE) OR ("minsize" STREQUAL JLN_OPTIMIZE) OR ("release" STREQUAL JLN_OPTIMIZE) OR ("fast" STREQUAL JLN_OPTIMIZE)))
+    message(FATAL_ERROR "Unknow value \"${JLN_OPTIMIZE}\" for JLN_OPTIMIZE, expected: default, off, debugoptimized, minsize, release, fast")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_PEDANTIC)
@@ -256,18 +256,28 @@ function(jln_init_flags)
     message(FATAL_ERROR "Unknow value \"${JLN_WARNINGS_AS_ERROR}\" for JLN_WARNINGS_AS_ERROR, expected: default, off, on")
   endif()
 
+  if(DEFINED JLN_DEFAULT_FLAG_WHOLE_PROGRAM)
+    set(JLN_WHOLE_PROGRAM ${JLN_DEFAULT_FLAG_WHOLE_PROGRAM} CACHE STING "")
+  else()
+    set(JLN_WHOLE_PROGRAM "default" CACHE STRING "")
+  endif()
+
+  if(NOT(("default" STREQUAL JLN_WHOLE_PROGRAM) OR ("on" STREQUAL JLN_WHOLE_PROGRAM)))
+    message(FATAL_ERROR "Unknow value \"${JLN_WHOLE_PROGRAM}\" for JLN_WHOLE_PROGRAM, expected: default, on")
+  endif()
+
   if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")
     message(STATUS "JLN_COLOR=${JLN_COLOR}	[default, auto, never, always]")
     message(STATUS "JLN_CONTROL_FLOW=${JLN_CONTROL_FLOW}	[default, off, on]")
     message(STATUS "JLN_COVERAGE=${JLN_COVERAGE}	[default, off, on]")
+    message(STATUS "JLN_CPU=${JLN_CPU}	[default, generic, native]")
     message(STATUS "JLN_DEBUG=${JLN_DEBUG}	[default, off, on, line_tables_only, gdb, lldb, sce]")
     message(STATUS "JLN_DIAGNOSTICS_FORMAT=${JLN_DIAGNOSTICS_FORMAT}	[default, fixits, patch, print_source_range_info]")
     message(STATUS "JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE=${JLN_DIAGNOSTICS_SHOW_TEMPLATE_TREE}	[default, off, on]")
     message(STATUS "JLN_ELIDE_TYPE=${JLN_ELIDE_TYPE}	[default, off, on]")
     message(STATUS "JLN_EXCEPTIONS=${JLN_EXCEPTIONS}	[default, off, on]")
-    message(STATUS "JLN_FAST_MATH=${JLN_FAST_MATH}	[default, off, on]")
     message(STATUS "JLN_LTO=${JLN_LTO}	[default, off, on, fat]")
-    message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, on, size, speed, native, whole_program]")
+    message(STATUS "JLN_OPTIMIZE=${JLN_OPTIMIZE}	[default, off, debugoptimized, minsize, release, fast]")
     message(STATUS "JLN_PEDANTIC=${JLN_PEDANTIC}	[default, off, on, as_error]")
     message(STATUS "JLN_PIE=${JLN_PIE}	[default, off, on, pic]")
     message(STATUS "JLN_RELRO=${JLN_RELRO}	[default, off, on, full]")
@@ -282,6 +292,7 @@ function(jln_init_flags)
     message(STATUS "JLN_SUGGESTS=${JLN_SUGGESTS}	[default, off, on]")
     message(STATUS "JLN_WARNINGS=${JLN_WARNINGS}	[default, off, on, strict, very-strict]")
     message(STATUS "JLN_WARNINGS_AS_ERROR=${JLN_WARNINGS_AS_ERROR}	[default, off, on]")
+    message(STATUS "JLN_WHOLE_PROGRAM=${JLN_WHOLE_PROGRAM}	[default, on]")
   endif()
 
 endfunction()
@@ -297,7 +308,7 @@ endfunction()
 function(jln_flags)
   set(CXX_FLAGS "")
   set(LINK_LINK "")
-  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;CONTROL_FLOW;COVERAGE;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FAST_MATH;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;SHADOW;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR" "" ${ARGN})
+  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR;COLOR;CONTROL_FLOW;COVERAGE;CPU;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;LTO;OPTIMIZE;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;SHADOW;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTS;WARNINGS;WARNINGS_AS_ERROR;WHOLE_PROGRAM" "" ${ARGN})
 
   if(NOT DEFINED JLN_FLAGS_COLOR)
     if(${JLN_FLAGS_DISABLE_OTHERS})
@@ -320,6 +331,14 @@ function(jln_flags)
       set(JLN_FLAGS_COVERAGE "default")
     else()
       set(JLN_FLAGS_COVERAGE "${JLN_COVERAGE}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_CPU)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_CPU "default")
+    else()
+      set(JLN_FLAGS_CPU "${JLN_CPU}")
     endif()
   endif()
 
@@ -360,14 +379,6 @@ function(jln_flags)
       set(JLN_FLAGS_EXCEPTIONS "default")
     else()
       set(JLN_FLAGS_EXCEPTIONS "${JLN_EXCEPTIONS}")
-    endif()
-  endif()
-
-  if(NOT DEFINED JLN_FLAGS_FAST_MATH)
-    if(${JLN_FLAGS_DISABLE_OTHERS})
-      set(JLN_FLAGS_FAST_MATH "default")
-    else()
-      set(JLN_FLAGS_FAST_MATH "${JLN_FAST_MATH}")
     endif()
   endif()
 
@@ -499,6 +510,14 @@ function(jln_flags)
     endif()
   endif()
 
+  if(NOT DEFINED JLN_FLAGS_WHOLE_PROGRAM)
+    if(${JLN_FLAGS_DISABLE_OTHERS})
+      set(JLN_FLAGS_WHOLE_PROGRAM "default")
+    else()
+      set(JLN_FLAGS_WHOLE_PROGRAM "${JLN_WHOLE_PROGRAM}")
+    endif()
+  endif()
+
   if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
   
     if (  NOT ( JLN_FLAGS_COVERAGE STREQUAL "default") )
@@ -574,74 +593,74 @@ function(jln_flags)
             set(CXX_FLAGS ${CXX_FLAGS}  "-ffat-lto-objects")
 
           endif()
-        
-        else()
-        
-          if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
-          
-            if (  JLN_FLAGS_OPTIMIZE STREQUAL "whole_program" )
-            
-              if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) ) )
-              
-                set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program-vtables")
-                set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program-vtables")
-              endif()
-            endif()
-          endif()
         endif()
-      endif()
-    endif()
-    if (  NOT ( JLN_FLAGS_FAST_MATH STREQUAL "default") )
-    
-      if (  JLN_FLAGS_FAST_MATH STREQUAL "on" )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-ffast-math")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-ffast-math")
-      
-      else()
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-fast-math")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-fno-fast-math")
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
     
-      if (  JLN_FLAGS_OPTIMIZE STREQUAL "on" )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-O2")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-O2")
-      
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
+      if (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O0")
         set(LINK_FLAGS ${LINK_FLAGS}  "-O0")
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "size" )
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "debugoptimized" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Og")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-Og")
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "minsize" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-Os")
         set(LINK_FLAGS ${LINK_FLAGS}  "-Os")
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "speed" )
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "fast" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Ofast")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-Ofast")
+      
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "release" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "-O3")
         set(LINK_FLAGS ${LINK_FLAGS}  "-O3")
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_CPU STREQUAL "default") )
+    
+      if (  JLN_FLAGS_CPU STREQUAL "generic" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-mtune=generic")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-mtune=generic")
       
       else()
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-O3" "-march=native" "-mtune=native")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-O3" "-march=native" "-mtune=native")
-        if (  JLN_FLAGS_OPTIMIZE STREQUAL "whole_program" )
+        set(CXX_FLAGS ${CXX_FLAGS}  "-march=native" "-mtune=native")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-march=native" "-mtune=native")
+      endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_WHOLE_PROGRAM STREQUAL "default") )
+    
+      set(LINK_FLAGS ${LINK_FLAGS}  "-s")
+      if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program")
+        set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program")
+      
+      else()
+      
+        if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) ) )
         
-          set(LINK_FLAGS ${LINK_FLAGS}  "-s")
-          if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
+          if (  NOT ( JLN_FLAGS_LTO STREQUAL "default") )
+          
+            if (  NOT JLN_FLAGS_LTO STREQUAL "off" )
+            
+              set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program-vtables")
+              set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program-vtables")
+            endif()
+          endif()
+          if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) )
           
             set(CXX_FLAGS ${CXX_FLAGS}  "-fforce-emit-vtables")
             set(LINK_FLAGS ${LINK_FLAGS}  "-fforce-emit-vtables")
-          
-          elseif (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
-          
-            set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program")
-            set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program")
           endif()
         endif()
       endif()
@@ -1134,7 +1153,7 @@ function(jln_flags)
       
       else()
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/Z7")
+        set(CXX_FLAGS ${CXX_FLAGS}  "/RTC1" "/Od")
 
         if (  JLN_FLAGS_DEBUG STREQUAL "on" )
         
@@ -1148,16 +1167,21 @@ function(jln_flags)
         endif()
         if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
         
-          if (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
+          if (  JLN_FLAGS_OPTIMIZE STREQUAL "debugoptimized" )
           
-            set(CXX_FLAGS ${CXX_FLAGS}  "/Od")
+            set(CXX_FLAGS ${CXX_FLAGS}  "/Zi")
 
           
           else()
           
-            set(CXX_FLAGS ${CXX_FLAGS}  "/Zi")
+            set(CXX_FLAGS ${CXX_FLAGS}  "/ZI")
 
           endif()
+        
+        else()
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "/ZI")
+
         endif()
       endif()
     endif()
@@ -1174,19 +1198,6 @@ function(jln_flags)
 
       endif()
     endif()
-    if (  NOT ( JLN_FLAGS_FAST_MATH STREQUAL "default") )
-    
-      if (  JLN_FLAGS_FAST_MATH STREQUAL "on" )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "/fp:fast")
-
-      
-      else()
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "/fp:fast-")
-
-      endif()
-    endif()
     if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
     
       if (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
@@ -1194,31 +1205,31 @@ function(jln_flags)
         set(CXX_FLAGS ${CXX_FLAGS}  "/Ob0 /Od /Oi- /Oy-")
 
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "on" )
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "debugoptimized" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/O2")
+        set(CXX_FLAGS ${CXX_FLAGS}  "/Ob1")
 
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "size" )
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "release" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/O1")
-
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O2" "/OPT:REF")
+        set(LINK_FLAGS ${LINK_FLAGS}  "/OPT:REF")
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "speed" )
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "minsize" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/O2")
-
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O1" "/OPT:REF" "/Gw")
+        set(LINK_FLAGS ${LINK_FLAGS}  "/OPT:REF")
       
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "native" )
+      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "fast" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "/O2")
-
-      
-      elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "whole_program" )
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "/O2" "/GL" "/Gw")
-
+        set(CXX_FLAGS ${CXX_FLAGS}  "/O2" "/OPT:REF" "/fp:fast")
+        set(LINK_FLAGS ${LINK_FLAGS}  "/OPT:REF")
       endif()
+    endif()
+    if (  NOT ( JLN_FLAGS_WHOLE_PROGRAM STREQUAL "default") )
+    
+      set(CXX_FLAGS ${CXX_FLAGS}  "/GL" "/Gw")
+
     endif()
     if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "default") )
     

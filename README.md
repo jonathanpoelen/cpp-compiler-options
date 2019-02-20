@@ -44,14 +44,14 @@ Supported options are:
 color = default auto never always
 control_flow = default off on
 coverage = default off on
+cpu = default generic native
 debug = default off on line_tables_only gdb lldb sce
 diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
 exceptions = default off on
-fast_math = default off on
 lto = default off on fat
-optimize = default off on size speed native whole_program
+optimize = default off debugoptimized minsize release fast
 pedantic = on default off as_error
 pie = default off on pic
 relro = default off on full
@@ -66,6 +66,7 @@ stl_fix = on default off
 suggests = default off on
 warnings = on default off strict very-strict
 warnings_as_error = default off on
+whole_program = default on
 ```
 <!-- ./compiler-options.lua -->
 
