@@ -849,7 +849,7 @@ function(jln_flags)
       
         if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
         
-          set(CXX_FLAGS ${CXX_FLAGS}  "-Wall" "-Wextra" "-Wcast-align" "-Wcast-qual" "-Wdisabled-optimization" "-Wfloat-equal" "-Wformat-security" "-Wformat=2" "-Wmissing-declarations" "-Wmissing-include-dirs" "-Wnon-virtual-dtor" "-Wold-style-cast" "-Woverloaded-virtual" "-Wpacked" "-Wredundant-decls" "-Wundef" "-Wuninitialized" "-Wunused-macros" "-Wvla")
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Wall" "-Wextra" "-Wcast-align" "-Wcast-qual" "-Wdisabled-optimization" "-Wfloat-equal" "-Wformat-security" "-Wformat=2" "-Wmissing-declarations" "-Wmissing-include-dirs" "-Wnon-virtual-dtor" "-Wold-style-cast" "-Woverloaded-virtual" "-Wpacked" "-Wredundant-decls" "-Wundef" "-Wunused-macros")
 
           if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7" ) )
           
@@ -861,11 +861,11 @@ function(jln_flags)
 
               if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
               
-                set(CXX_FLAGS ${CXX_FLAGS}  "-Wconditionally-supported" "-Wfloat-conversion" "-Wopenmp-simd")
+                set(CXX_FLAGS ${CXX_FLAGS}  "-Wconditionally-supported" "-Wfloat-conversion")
 
                 if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1" ) )
                 
-                  set(CXX_FLAGS ${CXX_FLAGS}  "-Wformat-signedness" "-fsized-deallocation" "-Warray-bounds=2" "-Wconditionally-supported" "-Wsized-deallocation" "-Wstrict-null-sentinel" "-Wsuggest-override")
+                  set(CXX_FLAGS ${CXX_FLAGS}  "-Wformat-signedness" "-Warray-bounds=2" "-Wconditionally-supported" "-Wstrict-null-sentinel" "-Wsuggest-override")
 
                   if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.1" ) )
                   
@@ -877,7 +877,7 @@ function(jln_flags)
 
                       if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) )
                       
-                        set(CXX_FLAGS ${CXX_FLAGS}  "-Walloc-zero" "-Walloca" "-Wformat-overflow" "-Wduplicated-branches")
+                        set(CXX_FLAGS ${CXX_FLAGS}  "-Walloc-zero" "-Walloca" "-Wformat-overflow=2" "-Wduplicated-branches")
 
                         if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) )
                         

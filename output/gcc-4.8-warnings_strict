@@ -21,9 +21,7 @@
 -Wsuggest-attribute=noreturn
 -Wtrampolines
 -Wundef
--Wuninitialized
 -Wunused-macros
 -Wuseless-cast
 -Wvector-operation-performance
--Wvla
 -Wzero-as-null-pointer-constant

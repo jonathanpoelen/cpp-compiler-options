@@ -299,7 +299,7 @@ G = Or(gcc, clang) {
       vers(7,1) {
         cxx'-Walloc-zero',
         cxx'-Walloca',
-        cxx'-Wformat-overflow', -- =level
+        cxx'-Wformat-overflow=2',
      -- cxx'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
      -- cxx'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
         cxx'-Wduplicated-branches',

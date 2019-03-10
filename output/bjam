@@ -613,9 +613,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wpacked"
             <cxxflags>"-Wredundant-decls"
             <cxxflags>"-Wundef"
-            <cxxflags>"-Wuninitialized"
             <cxxflags>"-Wunused-macros"
-            <cxxflags>"-Wvla"
           ;
           if ! (  $(version) < 04.07  )
           {
@@ -637,16 +635,13 @@ rule jln_flags ( properties * )
                 flags +=
                   <cxxflags>"-Wconditionally-supported"
                   <cxxflags>"-Wfloat-conversion"
-                  <cxxflags>"-Wopenmp-simd"
                 ;
                 if ! (  $(version) < 05.01  )
                 {
                   flags +=
                     <cxxflags>"-Wformat-signedness"
-                    <cxxflags>"-fsized-deallocation"
                     <cxxflags>"-Warray-bounds=2"
                     <cxxflags>"-Wconditionally-supported"
-                    <cxxflags>"-Wsized-deallocation"
                     <cxxflags>"-Wstrict-null-sentinel"
                     <cxxflags>"-Wsuggest-override"
                   ;
@@ -666,7 +661,7 @@ rule jln_flags ( properties * )
                         flags +=
                           <cxxflags>"-Walloc-zero"
                           <cxxflags>"-Walloca"
-                          <cxxflags>"-Wformat-overflow"
+                          <cxxflags>"-Wformat-overflow=2"
                           <cxxflags>"-Wduplicated-branches"
                         ;
                         if ! (  $(version) < 08.00  )
