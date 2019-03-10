@@ -36,7 +36,7 @@ feature <jln-sanitizers> : default off on : propagated ;
 feature <jln-incidental-sanitizers> : default off on : incidental ;
 feature <jln-sanitizers-extra> : default off thread pointer : propagated ;
 feature <jln-incidental-sanitizers-extra> : default off thread pointer : incidental ;
-feature <jln-shadow> : off default on local compatible-local local-or-compatible-local global-or-local global-or-compatible-local : incidental ;
+feature <jln-shadow> : off default on local compatible-local compatible-local-or-local local-or-global compatible-local-or-global : incidental ;
 feature <jln-stack-protector> : default off on strong all : propagated ;
 feature <jln-incidental-stack-protector> : default off on strong all : incidental ;
 feature <jln-stl-debug> : default off on allow_broken_abi assert_as_exception : propagated ;
@@ -552,13 +552,13 @@ rule jln_flags ( properties * )
       }
       else if (  $(toolset) = gcc && ! (  $(version) < 07.01  )  )
       {
-        if (  <jln-shadow>local in $(properties) || <jln-shadow>global-or-local in $(properties)  )
+        if (  <jln-shadow>local in $(properties) || <jln-shadow>local-or-global in $(properties)  )
         {
           flags +=
             <cxxflags>"-Wshadow=local"
           ;
         }
-        else if (  <jln-shadow>compatible-local in $(properties) || <jln-shadow>global-or-compatible-local in $(properties)  )
+        else if (  <jln-shadow>compatible-local in $(properties) || <jln-shadow>compatible-local-or-global in $(properties)  )
         {
           flags +=
             <cxxflags>"-Wshadow=compatible-local"
@@ -1210,7 +1210,7 @@ rule jln_flags ( properties * )
           <cxxflags>"/wd4459"
         ;
       }
-      else if (  <jln-shadow>on in $(properties) || <jln-shadow>global-or-compatible-local in $(properties)  )
+      else if (  <jln-shadow>on in $(properties) || <jln-shadow>compatible-local-or-global in $(properties)  )
       {
         flags +=
           <cxxflags>"/w4456"

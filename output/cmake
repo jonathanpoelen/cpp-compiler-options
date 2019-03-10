@@ -192,8 +192,8 @@ function(jln_init_flags)
     set(JLN_SHADOW "off" CACHE STRING "")
   endif()
 
-  if(NOT(("default" STREQUAL JLN_SHADOW) OR ("off" STREQUAL JLN_SHADOW) OR ("on" STREQUAL JLN_SHADOW) OR ("local" STREQUAL JLN_SHADOW) OR ("compatible-local" STREQUAL JLN_SHADOW) OR ("local-or-compatible-local" STREQUAL JLN_SHADOW) OR ("global-or-local" STREQUAL JLN_SHADOW) OR ("global-or-compatible-local" STREQUAL JLN_SHADOW)))
-    message(FATAL_ERROR "Unknow value \"${JLN_SHADOW}\" for JLN_SHADOW, expected: default, off, on, local, compatible-local, local-or-compatible-local, global-or-local, global-or-compatible-local")
+  if(NOT(("default" STREQUAL JLN_SHADOW) OR ("off" STREQUAL JLN_SHADOW) OR ("on" STREQUAL JLN_SHADOW) OR ("local" STREQUAL JLN_SHADOW) OR ("compatible-local" STREQUAL JLN_SHADOW) OR ("compatible-local-or-local" STREQUAL JLN_SHADOW) OR ("local-or-global" STREQUAL JLN_SHADOW) OR ("compatible-local-or-global" STREQUAL JLN_SHADOW)))
+    message(FATAL_ERROR "Unknow value \"${JLN_SHADOW}\" for JLN_SHADOW, expected: default, off, on, local, compatible-local, compatible-local-or-local, local-or-global, compatible-local-or-global")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_STACK_PROTECTOR)
@@ -285,7 +285,7 @@ function(jln_init_flags)
     message(STATUS "JLN_RTTI=${JLN_RTTI}	[default, off, on]")
     message(STATUS "JLN_SANITIZERS=${JLN_SANITIZERS}	[default, off, on]")
     message(STATUS "JLN_SANITIZERS_EXTRA=${JLN_SANITIZERS_EXTRA}	[default, off, thread, pointer]")
-    message(STATUS "JLN_SHADOW=${JLN_SHADOW}	[default, off, on, local, compatible-local, local-or-compatible-local, global-or-local, global-or-compatible-local]")
+    message(STATUS "JLN_SHADOW=${JLN_SHADOW}	[default, off, on, local, compatible-local, compatible-local-or-local, local-or-global, compatible-local-or-global]")
     message(STATUS "JLN_STACK_PROTECTOR=${JLN_STACK_PROTECTOR}	[default, off, on, strong, all]")
     message(STATUS "JLN_STL_DEBUG=${JLN_STL_DEBUG}	[default, off, on, allow_broken_abi, assert_as_exception]")
     message(STATUS "JLN_STL_FIX=${JLN_STL_FIX}	[default, off, on]")
@@ -811,12 +811,12 @@ function(jln_flags)
       
       elseif (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) ) )
       
-        if (  ( JLN_FLAGS_SHADOW STREQUAL "local" OR JLN_FLAGS_SHADOW STREQUAL "global-or-local" ) )
+        if (  ( JLN_FLAGS_SHADOW STREQUAL "local" OR JLN_FLAGS_SHADOW STREQUAL "local-or-global" ) )
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=local")
 
         
-        elseif (  ( JLN_FLAGS_SHADOW STREQUAL "compatible-local" OR JLN_FLAGS_SHADOW STREQUAL "global-or-compatible-local" ) )
+        elseif (  ( JLN_FLAGS_SHADOW STREQUAL "compatible-local" OR JLN_FLAGS_SHADOW STREQUAL "compatible-local-or-global" ) )
         
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=compatible-local")
 
@@ -1322,7 +1322,7 @@ function(jln_flags)
         set(CXX_FLAGS ${CXX_FLAGS}  "/wd4456" "/wd4459")
 
       
-      elseif (  ( JLN_FLAGS_SHADOW STREQUAL "on" OR JLN_FLAGS_SHADOW STREQUAL "global-or-compatible-local" ) )
+      elseif (  ( JLN_FLAGS_SHADOW STREQUAL "on" OR JLN_FLAGS_SHADOW STREQUAL "compatible-local-or-global" ) )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "/w4456" "/w4459")
 

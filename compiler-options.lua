@@ -213,18 +213,18 @@ G = Or(gcc, clang) {
   opt'shadow' {
     lvl'off' { cxx'-Wno-shadow' } /
     gcc(7,1) {
-      Or(lvl'local', lvl'global-or-local') {
+      Or(lvl'local', lvl'local-or-global') {
         cxx'-Wshadow=local'
       } /
       Or(lvl'compatible-local',
-         lvl'global-or-compatible-local',
-         lvl'local-or-compatible-local'
+         lvl'compatible-local-or-global',
+         lvl'compatible-local-or-local'
       ) {
         cxx'-Wshadow=compatible-local'
       } /
       cxx'-Wshadow'
     } /
-    Or(lvl'local', lvl'compatible-local', lvl'local-or-compatible-local') {
+    Or(lvl'local', lvl'compatible-local', lvl'compatible-local-or-local') {
       cxx'-Wno-shadow'
     } /
     cxx'-Wshadow'
@@ -252,9 +252,7 @@ G = Or(gcc, clang) {
         cxx'-Wpacked',
         cxx'-Wredundant-decls',
         cxx'-Wundef',
-        cxx'-Wuninitialized',
         cxx'-Wunused-macros',
-        cxx'-Wvla',
      -- cxx'-Winline',
      -- cxx'-Wswitch-default',
      -- cxx'-Wswitch-enum',
@@ -278,16 +276,13 @@ G = Or(gcc, clang) {
       vers(4,9) {
         cxx'-Wconditionally-supported',
         cxx'-Wfloat-conversion',
-        cxx'-Wopenmp-simd',
       }*
 
       vers(5,1) {
         cxx'-Wformat-signedness',
-        cxx'-fsized-deallocation',
         cxx'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
         cxx'-Wconditionally-supported',
      -- cxx'-Wctor-dtor-privacy',
-        cxx'-Wsized-deallocation',
         cxx'-Wstrict-null-sentinel',
         cxx'-Wsuggest-override',
       }*
@@ -551,7 +546,7 @@ msvc {
     lvl'off' {
       cxx'/wd4456', cxx'/wd4459'
     } /
-    Or(lvl'on', lvl'global-or-compatible-local') {
+    Or(lvl'on', lvl'compatible-local-or-global') {
       cxx'/w4456', cxx'/w4459'
     } /
     { cxx'/w4456', cxx'/wd4459' }
@@ -606,7 +601,7 @@ Vbase = {
     stl_fix=    {{'off', 'on'}, 'on'},
     sanitizers= {{'off', 'on'},},
     sanitizers_extra={{'off', 'thread', 'pointer'},},
-    shadow=     {{'off', 'on', 'local', 'compatible-local', 'local-or-compatible-local', 'global-or-local', 'global-or-compatible-local'}, 'off'},
+    shadow=     {{'off', 'on', 'local', 'compatible-local', 'compatible-local-or-local', 'local-or-global', 'compatible-local-or-global'}, 'off'},
     stack_protector= {{'off', 'on', 'strong', 'all'},},
     suggests=   {{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very-strict'}, 'on'},

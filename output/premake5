@@ -94,7 +94,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
   newoption{trigger="jln-sanitizers-extra", allowed={{"default"}, {"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
   if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default") end
-  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible-local"}, {"local-or-compatible-local"}, {"global-or-local"}, {"global-or-compatible-local"}}, description="shadow"}
+  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible-local"}, {"compatible-local-or-local"}, {"local-or-global"}, {"compatible-local-or-global"}}, description="shadow"}
   if not _OPTIONS["jln-shadow"] then _OPTIONS["jln-shadow"] = (defaults["shadow"] or defaults["jln-shadow"] or "default") end
   newoption{trigger="jln-stack-protector", allowed={{"default"}, {"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
@@ -549,11 +549,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
       elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
       
-        if ( values["jln-shadow"] == "local" or values["jln-shadow"] == "global-or-local" ) then
+        if ( values["jln-shadow"] == "local" or values["jln-shadow"] == "local-or-global" ) then
         
           jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
         
-        elseif ( values["jln-shadow"] == "compatible-local" or values["jln-shadow"] == "global-or-compatible-local" ) then
+        elseif ( values["jln-shadow"] == "compatible-local" or values["jln-shadow"] == "compatible-local-or-global" ) then
         
           jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
         
@@ -993,7 +993,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
         jln_buildoptions = jln_buildoptions .. " /wd4456 /wd4459"
       
-      elseif ( values["jln-shadow"] == "on" or values["jln-shadow"] == "global-or-compatible-local" ) then
+      elseif ( values["jln-shadow"] == "on" or values["jln-shadow"] == "compatible-local-or-global" ) then
       
         jln_buildoptions = jln_buildoptions .. " /w4456 /w4459"
       

@@ -176,9 +176,9 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
     if (  (get_option('jln_shadow') == 'off') )
       jln_cpp_flags += ['-Wno-shadow', ]
     elif (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
-      if (  ( (get_option('jln_shadow') == 'local') or (get_option('jln_shadow') == 'global-or-local') ) )
+      if (  ( (get_option('jln_shadow') == 'local') or (get_option('jln_shadow') == 'local-or-global') ) )
         jln_cpp_flags += ['-Wshadow=local', ]
-      elif (  ( (get_option('jln_shadow') == 'compatible-local') or (get_option('jln_shadow') == 'global-or-compatible-local') ) )
+      elif (  ( (get_option('jln_shadow') == 'compatible-local') or (get_option('jln_shadow') == 'compatible-local-or-global') ) )
         jln_cpp_flags += ['-Wshadow=compatible-local', ]
       else
         jln_cpp_flags += ['-Wshadow', ]
@@ -438,7 +438,7 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
   if (  not ( (get_option('jln_shadow') == 'default')) )
     if (  (get_option('jln_shadow') == 'off') )
       jln_cpp_flags += ['/wd4456', '/wd4459', ]
-    elif (  ( (get_option('jln_shadow') == 'on') or (get_option('jln_shadow') == 'global-or-compatible-local') ) )
+    elif (  ( (get_option('jln_shadow') == 'on') or (get_option('jln_shadow') == 'compatible-local-or-global') ) )
       jln_cpp_flags += ['/w4456', '/w4459', ]
     else
       jln_cpp_flags += ['/w4456', '/wd4459', ]
