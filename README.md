@@ -139,6 +139,7 @@ Copy `meson_options.txt` and rename `output/meson` to `meson_jln_flags/meson.bui
 ```meson
 project('test', 'cpp')
 
+# jln_default_flags = {'jln_rtti': 'off'}
 subdir('meson_jln_flags')
 
 executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flags)

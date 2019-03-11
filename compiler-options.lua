@@ -623,7 +623,7 @@ Vbase = {
   stop=function(_, filebase) return _:get_output() end,
 
   _strs={},
-  print=function(_, s) _:write(s) ; _:write('\n') end,
+  print=function(_, s) _:write(s) _:write('\n') end,
   write=function(_, s) _._strs[#_._strs+1] = s end,
   get_output=function(_) return table.concat(_._strs) end,
 

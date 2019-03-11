@@ -9,6 +9,7 @@ return {
   end,
 
   _option_strs = {},
+  _preface_opt = {},
 
   start=function(_, optprefix)
     _.optprefix = optprefix and optprefix:gsub('-', '_') or ''
@@ -24,20 +25,25 @@ return {
       endif='endif',
     })
 
+    local _preface_opt = _._preface_opt
     local option_strs = _._option_strs
+    _preface_opt[#_preface_opt+1] = "___jln_default_flags = get_variable('jln_default_flags', {})\n___jln_flags = {\n"
     for optname,args,default_value,ordered_args in _:getoptions() do
-      option_strs[#option_strs+1] = "option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
+      local name = _:tobuildoption(optname)
+      option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
+      _preface_opt[#_preface_opt+1] = "  '" .. name .. "': ___jln_default_flags.get('" .. name .. "', get_option('" .. name .. "')),\n"
     end
 
-    _:print([[
+    _preface_opt[#_preface_opt+1] = [[}
+
 jln_cpp_flags = []
 jln_link_flags = []
 
 jln_cpp_compiler = meson.get_compiler('cpp')
-]])
+]]
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return  "(get_option('" .. _:tobuildoption(optname) .. "') == '" .. lvl .. "')" end,
+  _vcond_lvl=function(_, lvl, optname) return  "(___jln_flags.get('" .. _:tobuildoption(optname) .. "') == '" .. lvl .. "')" end,
   _vcond_verless=function(_, major, minor) return 'false' end,
   _vcond_comp=function(_, compiler) return "(jln_cpp_compiler.get_id() == '" .. compiler .. "')" end,
 
@@ -97,7 +103,7 @@ jln_cpp_compiler = meson.get_compiler('cpp')
     end
 
     local meson_options = table.concat(_._option_strs, '\n')
-    local meson_build = table.concat(t, '\n') .. [[
+    local meson_build = table.concat(_._preface_opt) .. table.concat(t, '\n') .. [[
 
 jln_cpp_flags = jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
 jln_link_flags = jln_cpp_compiler.get_supported_arguments(jln_link_flags)
