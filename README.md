@@ -59,14 +59,14 @@ reproducible_build_warnings = default off on
 rtti = default off on
 sanitizers = default off on
 sanitizers_extra = default off thread pointer
-shadow = off default on local compatible-local compatible-local-or-local local-or-global compatible-local-or-global
+shadow = off default on all local compatible-local
 stack_protector = default off on strong all
 stl_debug = default off on allow_broken_abi assert_as_exception
 stl_fix = on default off
 suggests = default off on
 warnings = on default off strict very-strict
 warnings_as_error = default off on
-whole_program = default on
+whole_program = default off on
 ```
 <!-- ./compiler-options.lua -->
 

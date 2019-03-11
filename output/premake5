@@ -94,7 +94,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
   newoption{trigger="jln-sanitizers-extra", allowed={{"default"}, {"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
   if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default") end
-  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible-local"}, {"compatible-local-or-local"}, {"local-or-global"}, {"compatible-local-or-global"}}, description="shadow"}
+  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible-local"}, {"all"}}, description="shadow"}
   if not _OPTIONS["jln-shadow"] then _OPTIONS["jln-shadow"] = (defaults["shadow"] or defaults["jln-shadow"] or "default") end
   newoption{trigger="jln-stack-protector", allowed={{"default"}, {"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
@@ -108,7 +108,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "default") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
-  newoption{trigger="jln-whole-program", allowed={{"default"}, {"on"}}, description="whole_program"}
+  newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}}, description="whole_program"}
   if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
   newoption{trigger="jln-compiler", description="Path or name of the compiler"}
   newoption{trigger="jln-compiler-version", description="Force the compiler version"}
@@ -390,28 +390,40 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     end
     if not ( values["jln-whole-program"] == "default") then
     
-      jln_linkoptions = jln_linkoptions .. " -s"
-      if compiler == "gcc" then
+      if values["jln-whole-program"] == "off" then
       
-        jln_buildoptions = jln_buildoptions .. " -fwhole-program"
-        jln_linkoptions = jln_linkoptions .. " -fwhole-program"
+        jln_buildoptions = jln_buildoptions .. " -fno-whole-program"
+        if ( compiler == "clang" and not ( compversion < 309 ) ) then
+        
+          jln_buildoptions = jln_buildoptions .. " -fno-whole-program-vtables"
+          jln_linkoptions = jln_linkoptions .. " -fno-whole-program-vtables"
+        end
       
       else
       
-        if ( compiler == "clang" and not ( compversion < 309 ) ) then
+        jln_linkoptions = jln_linkoptions .. " -s"
+        if compiler == "gcc" then
         
-          if not ( values["jln-lto"] == "default") then
+          jln_buildoptions = jln_buildoptions .. " -fwhole-program"
+          jln_linkoptions = jln_linkoptions .. " -fwhole-program"
+        
+        else
+        
+          if ( compiler == "clang" and not ( compversion < 309 ) ) then
           
-            if not values["jln-lto"] == "off" then
+            if not ( values["jln-lto"] == "default") then
             
-              jln_buildoptions = jln_buildoptions .. " -fwhole-program-vtables"
-              jln_linkoptions = jln_linkoptions .. " -fwhole-program-vtables"
+              if not values["jln-lto"] == "off" then
+              
+                jln_buildoptions = jln_buildoptions .. " -fwhole-program-vtables"
+                jln_linkoptions = jln_linkoptions .. " -fwhole-program-vtables"
+              end
             end
-          end
-          if not ( compversion < 700 ) then
-          
-            jln_buildoptions = jln_buildoptions .. " -fforce-emit-vtables"
-            jln_linkoptions = jln_linkoptions .. " -fforce-emit-vtables"
+            if not ( compversion < 700 ) then
+            
+              jln_buildoptions = jln_buildoptions .. " -fforce-emit-vtables"
+              jln_linkoptions = jln_linkoptions .. " -fforce-emit-vtables"
+            end
           end
         end
       end
@@ -547,28 +559,31 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
         jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
       
-      elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
+      elseif values["jln-shadow"] == "on" then
       
-        if ( values["jln-shadow"] == "local" or values["jln-shadow"] == "local-or-global" ) then
+        jln_buildoptions = jln_buildoptions .. " -Wshadow"
+      
+      elseif values["jln-shadow"] == "all" then
+      
+        if compiler == "clang" then
         
-          jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
-        
-        elseif ( values["jln-shadow"] == "compatible-local" or values["jln-shadow"] == "compatible-local-or-global" ) then
-        
-          jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
+          jln_buildoptions = jln_buildoptions .. " -Wshadow-all"
         
         else
         
           jln_buildoptions = jln_buildoptions .. " -Wshadow"
         end
       
-      elseif ( values["jln-shadow"] == "local" or values["jln-shadow"] == "compatible-local" ) then
+      elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
       
-        jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
-      
-      else
-      
-        jln_buildoptions = jln_buildoptions .. " -Wshadow"
+        if values["jln-shadow"] == "local" then
+        
+          jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
+        
+        elseif values["jln-shadow"] == "compatible-local" then
+        
+          jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
+        end
       end
     end
     if not ( values["jln-warnings"] == "default") then
@@ -913,7 +928,14 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     end
     if not ( values["jln-whole-program"] == "default") then
     
-      jln_buildoptions = jln_buildoptions .. " /GL /Gw"
+      if values["jln-whole-program"] == "off" then
+      
+        jln_buildoptions = jln_buildoptions .. " /GL-"
+      
+      else
+      
+        jln_buildoptions = jln_buildoptions .. " /GL /Gw"
+      end
     end
     if not ( values["jln-pedantic"] == "default") then
     
@@ -993,11 +1015,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
         jln_buildoptions = jln_buildoptions .. " /wd4456 /wd4459"
       
-      elseif ( values["jln-shadow"] == "on" or values["jln-shadow"] == "compatible-local-or-global" ) then
+      elseif ( values["jln-shadow"] == "on" or values["jln-shadow"] == "all" ) then
       
         jln_buildoptions = jln_buildoptions .. " /w4456 /w4459"
       
-      else
+      elseif values["jln-shadow"] == "local" then
       
         jln_buildoptions = jln_buildoptions .. " /w4456 /wd4459"
       end

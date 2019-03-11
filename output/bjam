@@ -36,7 +36,7 @@ feature <jln-sanitizers> : default off on : propagated ;
 feature <jln-incidental-sanitizers> : default off on : incidental ;
 feature <jln-sanitizers-extra> : default off thread pointer : propagated ;
 feature <jln-incidental-sanitizers-extra> : default off thread pointer : incidental ;
-feature <jln-shadow> : off default on local compatible-local compatible-local-or-local local-or-global compatible-local-or-global : incidental ;
+feature <jln-shadow> : off default on local compatible-local all : incidental ;
 feature <jln-stack-protector> : default off on strong all : propagated ;
 feature <jln-incidental-stack-protector> : default off on strong all : incidental ;
 feature <jln-stl-debug> : default off on allow_broken_abi assert_as_exception : propagated ;
@@ -45,8 +45,8 @@ feature <jln-stl-fix> : on default off : propagated ;
 feature <jln-incidental-stl-fix> : on default off : incidental ;
 feature <jln-suggests> : default off on : incidental ;
 feature <jln-warnings> : on default off strict very-strict : incidental ;
-feature <jln-whole-program> : default on : propagated ;
-feature <jln-incidental-whole-program> : default on : incidental ;
+feature <jln-whole-program> : default off on : propagated ;
+feature <jln-incidental-whole-program> : default off on : incidental ;
 
 if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   import toolset ;
@@ -331,36 +331,52 @@ rule jln_flags ( properties * )
     }
     if ! ( $(jln-whole-program_isdefault) && <jln-incidental-whole-program>default in $(properties) )
     {
-      flags +=
-        <linkflags>"-s"
-      ;
-      if $(toolset) = gcc
+      if $(jln-whole-program_isdefault) && <jln-incidental-whole-program>off in $(properties) || <jln-whole-program>off in $(properties)
       {
         flags +=
-          <cxxflags>"-fwhole-program"
-          <linkflags>"-fwhole-program"
+          <cxxflags>"-fno-whole-program"
         ;
+        if (  $(toolset) = clang && ! (  $(version) < 03.09  )  )
+        {
+          flags +=
+            <cxxflags>"-fno-whole-program-vtables"
+            <linkflags>"-fno-whole-program-vtables"
+          ;
+        }
       }
       else
       {
-        if (  $(toolset) = clang && ! (  $(version) < 03.09  )  )
+        flags +=
+          <linkflags>"-s"
+        ;
+        if $(toolset) = gcc
         {
-          if ! ( $(jln-lto_isdefault) && <jln-incidental-lto>default in $(properties) )
+          flags +=
+            <cxxflags>"-fwhole-program"
+            <linkflags>"-fwhole-program"
+          ;
+        }
+        else
+        {
+          if (  $(toolset) = clang && ! (  $(version) < 03.09  )  )
           {
-            if ! $(jln-lto_isdefault) && <jln-incidental-lto>off in $(properties) || <jln-lto>off in $(properties)
+            if ! ( $(jln-lto_isdefault) && <jln-incidental-lto>default in $(properties) )
+            {
+              if ! $(jln-lto_isdefault) && <jln-incidental-lto>off in $(properties) || <jln-lto>off in $(properties)
+              {
+                flags +=
+                  <cxxflags>"-fwhole-program-vtables"
+                  <linkflags>"-fwhole-program-vtables"
+                ;
+              }
+            }
+            if ! (  $(version) < 07.00  )
             {
               flags +=
-                <cxxflags>"-fwhole-program-vtables"
-                <linkflags>"-fwhole-program-vtables"
+                <cxxflags>"-fforce-emit-vtables"
+                <linkflags>"-fforce-emit-vtables"
               ;
             }
-          }
-          if ! (  $(version) < 07.00  )
-          {
-            flags +=
-              <cxxflags>"-fforce-emit-vtables"
-              <linkflags>"-fforce-emit-vtables"
-            ;
           }
         }
       }
@@ -550,18 +566,18 @@ rule jln_flags ( properties * )
           <cxxflags>"-Wno-shadow"
         ;
       }
-      else if (  $(toolset) = gcc && ! (  $(version) < 07.01  )  )
+      else if <jln-shadow>on in $(properties)
       {
-        if (  <jln-shadow>local in $(properties) || <jln-shadow>local-or-global in $(properties)  )
+        flags +=
+          <cxxflags>"-Wshadow"
+        ;
+      }
+      else if <jln-shadow>all in $(properties)
+      {
+        if $(toolset) = clang
         {
           flags +=
-            <cxxflags>"-Wshadow=local"
-          ;
-        }
-        else if (  <jln-shadow>compatible-local in $(properties) || <jln-shadow>compatible-local-or-global in $(properties)  )
-        {
-          flags +=
-            <cxxflags>"-Wshadow=compatible-local"
+            <cxxflags>"-Wshadow-all"
           ;
         }
         else
@@ -571,17 +587,20 @@ rule jln_flags ( properties * )
           ;
         }
       }
-      else if (  <jln-shadow>local in $(properties) || <jln-shadow>compatible-local in $(properties)  )
+      else if (  $(toolset) = gcc && ! (  $(version) < 07.01  )  )
       {
-        flags +=
-          <cxxflags>"-Wno-shadow"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"-Wshadow"
-        ;
+        if <jln-shadow>local in $(properties)
+        {
+          flags +=
+            <cxxflags>"-Wshadow=local"
+          ;
+        }
+        else if <jln-shadow>compatible-local in $(properties)
+        {
+          flags +=
+            <cxxflags>"-Wshadow=compatible-local"
+          ;
+        }
       }
     }
     if ! $(jln-warnings_isdefault)
@@ -1091,10 +1110,19 @@ rule jln_flags ( properties * )
     }
     if ! ( $(jln-whole-program_isdefault) && <jln-incidental-whole-program>default in $(properties) )
     {
-      flags +=
-        <cxxflags>"/GL"
-        <cxxflags>"/Gw"
-      ;
+      if $(jln-whole-program_isdefault) && <jln-incidental-whole-program>off in $(properties) || <jln-whole-program>off in $(properties)
+      {
+        flags +=
+          <cxxflags>"/GL-"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"/GL"
+          <cxxflags>"/Gw"
+        ;
+      }
     }
     if ! ( $(jln-pedantic_isdefault) && <jln-incidental-pedantic>default in $(properties) )
     {
@@ -1205,14 +1233,14 @@ rule jln_flags ( properties * )
           <cxxflags>"/wd4459"
         ;
       }
-      else if (  <jln-shadow>on in $(properties) || <jln-shadow>compatible-local-or-global in $(properties)  )
+      else if (  <jln-shadow>on in $(properties) || <jln-shadow>all in $(properties)  )
       {
         flags +=
           <cxxflags>"/w4456"
           <cxxflags>"/w4459"
         ;
       }
-      else
+      else if <jln-shadow>local in $(properties)
       {
         flags +=
           <cxxflags>"/w4456"

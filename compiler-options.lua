@@ -113,19 +113,25 @@ G = Or(gcc, clang) {
   },
 
   opt'whole_program' {
-    link'-s',
-    gcc {
-      fl'-fwhole-program'
-    } / {
-      clang(3,9) {
-        opt'lto'{
-          -lvl'off' {
-            fl'-fwhole-program-vtables'
+    lvl'off' {
+      cxx'-fno-whole-program',
+      clang(3,9) { fl'-fno-whole-program-vtables' }
+    } /
+    {
+      link'-s',
+      gcc {
+        fl'-fwhole-program'
+      } / {
+        clang(3,9) {
+          opt'lto'{
+            -lvl'off' {
+              fl'-fwhole-program-vtables'
+            }
           }
+        }*    
+        vers(7) {
+          fl'-fforce-emit-vtables',
         }
-      }*    
-      vers(7) {
-        fl'-fforce-emit-vtables',
       }
     }
   },
@@ -212,22 +218,19 @@ G = Or(gcc, clang) {
 
   opt'shadow' {
     lvl'off' { cxx'-Wno-shadow' } /
-    gcc(7,1) {
-      Or(lvl'local', lvl'local-or-global') {
-        cxx'-Wshadow=local'
-      } /
-      Or(lvl'compatible-local',
-         lvl'compatible-local-or-global',
-         lvl'compatible-local-or-local'
-      ) {
-        cxx'-Wshadow=compatible-local'
-      } /
+    lvl'on' { cxx'-Wshadow' } /
+    lvl'all' {
+      clang { cxx'-Wshadow-all', } /
       cxx'-Wshadow'
     } /
-    Or(lvl'local', lvl'compatible-local', lvl'compatible-local-or-local') {
-      cxx'-Wno-shadow'
-    } /
-    cxx'-Wshadow'
+    gcc(7,1) {
+      lvl'local' {
+        cxx'-Wshadow=local'
+      } /
+      lvl'compatible-local' {
+        cxx'-Wshadow=compatible-local'
+      }
+    }
   },
 
   opt'warnings' {
@@ -495,7 +498,8 @@ msvc {
   },
 
   opt'whole_program' {
-    cxx'/GL', cxx'/Gw'
+    lvl'off' { cxx'/GL-' } /
+    { cxx'/GL', cxx'/Gw' }
   },
 
   opt'pedantic' {
@@ -546,10 +550,12 @@ msvc {
     lvl'off' {
       cxx'/wd4456', cxx'/wd4459'
     } /
-    Or(lvl'on', lvl'compatible-local-or-global') {
+    Or(lvl'on', lvl'all') {
       cxx'/w4456', cxx'/w4459'
     } /
-    { cxx'/w4456', cxx'/wd4459' }
+    lvl 'local' {
+      cxx'/w4456', cxx'/wd4459'
+    }
   },
 
   opt'warnings' {
@@ -601,12 +607,12 @@ Vbase = {
     stl_fix=    {{'off', 'on'}, 'on'},
     sanitizers= {{'off', 'on'},},
     sanitizers_extra={{'off', 'thread', 'pointer'},},
-    shadow=     {{'off', 'on', 'local', 'compatible-local', 'compatible-local-or-local', 'local-or-global', 'compatible-local-or-global'}, 'off'},
+    shadow=     {{'off', 'on', 'local', 'compatible-local', 'all'}, 'off'},
     stack_protector= {{'off', 'on', 'strong', 'all'},},
     suggests=   {{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very-strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},
-    whole_program={{'on'},},
+    whole_program={{'off', 'on'},},
   },
 
   indent = '',

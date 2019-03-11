@@ -75,20 +75,28 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
     endif
   endif
   if (  not ( (get_option('jln_whole_program') == 'default')) )
-    jln_link_flags += ['-s', ]
-    if (  (jln_cpp_compiler.get_id() == 'gcc') )
-      jln_cpp_flags += ['-fwhole-program', ]
-      jln_link_flags += ['-fwhole-program', ]
-    else
+    if (  (get_option('jln_whole_program') == 'off') )
+      jln_cpp_flags += ['-fno-whole-program', ]
       if (  ( (jln_cpp_compiler.get_id() == 'clang') ) )
-        if (  not ( (get_option('jln_lto') == 'default')) )
-          if (  not (get_option('jln_lto') == 'off') )
-            jln_cpp_flags += ['-fwhole-program-vtables', ]
-            jln_link_flags += ['-fwhole-program-vtables', ]
+        jln_cpp_flags += ['-fno-whole-program-vtables', ]
+        jln_link_flags += ['-fno-whole-program-vtables', ]
+      endif
+    else
+      jln_link_flags += ['-s', ]
+      if (  (jln_cpp_compiler.get_id() == 'gcc') )
+        jln_cpp_flags += ['-fwhole-program', ]
+        jln_link_flags += ['-fwhole-program', ]
+      else
+        if (  ( (jln_cpp_compiler.get_id() == 'clang') ) )
+          if (  not ( (get_option('jln_lto') == 'default')) )
+            if (  not (get_option('jln_lto') == 'off') )
+              jln_cpp_flags += ['-fwhole-program-vtables', ]
+              jln_link_flags += ['-fwhole-program-vtables', ]
+            endif
           endif
+          jln_cpp_flags += ['-fforce-emit-vtables', ]
+          jln_link_flags += ['-fforce-emit-vtables', ]
         endif
-        jln_cpp_flags += ['-fforce-emit-vtables', ]
-        jln_link_flags += ['-fforce-emit-vtables', ]
       endif
     endif
   endif
@@ -175,18 +183,20 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
   if (  not ( (get_option('jln_shadow') == 'default')) )
     if (  (get_option('jln_shadow') == 'off') )
       jln_cpp_flags += ['-Wno-shadow', ]
-    elif (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
-      if (  ( (get_option('jln_shadow') == 'local') or (get_option('jln_shadow') == 'local-or-global') ) )
-        jln_cpp_flags += ['-Wshadow=local', ]
-      elif (  ( (get_option('jln_shadow') == 'compatible-local') or (get_option('jln_shadow') == 'compatible-local-or-global') ) )
-        jln_cpp_flags += ['-Wshadow=compatible-local', ]
+    elif (  (get_option('jln_shadow') == 'on') )
+      jln_cpp_flags += ['-Wshadow', ]
+    elif (  (get_option('jln_shadow') == 'all') )
+      if (  (jln_cpp_compiler.get_id() == 'clang') )
+        jln_cpp_flags += ['-Wshadow-all', ]
       else
         jln_cpp_flags += ['-Wshadow', ]
       endif
-    elif (  ( (get_option('jln_shadow') == 'local') or (get_option('jln_shadow') == 'compatible-local') ) )
-      jln_cpp_flags += ['-Wno-shadow', ]
-    else
-      jln_cpp_flags += ['-Wshadow', ]
+    elif (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
+      if (  (get_option('jln_shadow') == 'local') )
+        jln_cpp_flags += ['-Wshadow=local', ]
+      elif (  (get_option('jln_shadow') == 'compatible-local') )
+        jln_cpp_flags += ['-Wshadow=compatible-local', ]
+      endif
     endif
   endif
   if (  not ( (get_option('jln_warnings') == 'default')) )
@@ -386,7 +396,11 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
     endif
   endif
   if (  not ( (get_option('jln_whole_program') == 'default')) )
-    jln_cpp_flags += ['/GL', '/Gw', ]
+    if (  (get_option('jln_whole_program') == 'off') )
+      jln_cpp_flags += ['/GL-', ]
+    else
+      jln_cpp_flags += ['/GL', '/Gw', ]
+    endif
   endif
   if (  not ( (get_option('jln_pedantic') == 'default')) )
     if (  not (get_option('jln_pedantic') == 'off') )
@@ -438,9 +452,9 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
   if (  not ( (get_option('jln_shadow') == 'default')) )
     if (  (get_option('jln_shadow') == 'off') )
       jln_cpp_flags += ['/wd4456', '/wd4459', ]
-    elif (  ( (get_option('jln_shadow') == 'on') or (get_option('jln_shadow') == 'compatible-local-or-global') ) )
+    elif (  ( (get_option('jln_shadow') == 'on') or (get_option('jln_shadow') == 'all') ) )
       jln_cpp_flags += ['/w4456', '/w4459', ]
-    else
+    elif (  (get_option('jln_shadow') == 'local') )
       jln_cpp_flags += ['/w4456', '/wd4459', ]
     endif
   endif

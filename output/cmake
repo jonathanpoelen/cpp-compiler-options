@@ -192,8 +192,8 @@ function(jln_init_flags)
     set(JLN_SHADOW "off" CACHE STRING "")
   endif()
 
-  if(NOT(("default" STREQUAL JLN_SHADOW) OR ("off" STREQUAL JLN_SHADOW) OR ("on" STREQUAL JLN_SHADOW) OR ("local" STREQUAL JLN_SHADOW) OR ("compatible-local" STREQUAL JLN_SHADOW) OR ("compatible-local-or-local" STREQUAL JLN_SHADOW) OR ("local-or-global" STREQUAL JLN_SHADOW) OR ("compatible-local-or-global" STREQUAL JLN_SHADOW)))
-    message(FATAL_ERROR "Unknow value \"${JLN_SHADOW}\" for JLN_SHADOW, expected: default, off, on, local, compatible-local, compatible-local-or-local, local-or-global, compatible-local-or-global")
+  if(NOT(("default" STREQUAL JLN_SHADOW) OR ("off" STREQUAL JLN_SHADOW) OR ("on" STREQUAL JLN_SHADOW) OR ("local" STREQUAL JLN_SHADOW) OR ("compatible-local" STREQUAL JLN_SHADOW) OR ("all" STREQUAL JLN_SHADOW)))
+    message(FATAL_ERROR "Unknow value \"${JLN_SHADOW}\" for JLN_SHADOW, expected: default, off, on, local, compatible-local, all")
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_STACK_PROTECTOR)
@@ -262,8 +262,8 @@ function(jln_init_flags)
     set(JLN_WHOLE_PROGRAM "default" CACHE STRING "")
   endif()
 
-  if(NOT(("default" STREQUAL JLN_WHOLE_PROGRAM) OR ("on" STREQUAL JLN_WHOLE_PROGRAM)))
-    message(FATAL_ERROR "Unknow value \"${JLN_WHOLE_PROGRAM}\" for JLN_WHOLE_PROGRAM, expected: default, on")
+  if(NOT(("default" STREQUAL JLN_WHOLE_PROGRAM) OR ("off" STREQUAL JLN_WHOLE_PROGRAM) OR ("on" STREQUAL JLN_WHOLE_PROGRAM)))
+    message(FATAL_ERROR "Unknow value \"${JLN_WHOLE_PROGRAM}\" for JLN_WHOLE_PROGRAM, expected: default, off, on")
   endif()
 
   if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")
@@ -285,14 +285,14 @@ function(jln_init_flags)
     message(STATUS "JLN_RTTI=${JLN_RTTI}	[default, off, on]")
     message(STATUS "JLN_SANITIZERS=${JLN_SANITIZERS}	[default, off, on]")
     message(STATUS "JLN_SANITIZERS_EXTRA=${JLN_SANITIZERS_EXTRA}	[default, off, thread, pointer]")
-    message(STATUS "JLN_SHADOW=${JLN_SHADOW}	[default, off, on, local, compatible-local, compatible-local-or-local, local-or-global, compatible-local-or-global]")
+    message(STATUS "JLN_SHADOW=${JLN_SHADOW}	[default, off, on, local, compatible-local, all]")
     message(STATUS "JLN_STACK_PROTECTOR=${JLN_STACK_PROTECTOR}	[default, off, on, strong, all]")
     message(STATUS "JLN_STL_DEBUG=${JLN_STL_DEBUG}	[default, off, on, allow_broken_abi, assert_as_exception]")
     message(STATUS "JLN_STL_FIX=${JLN_STL_FIX}	[default, off, on]")
     message(STATUS "JLN_SUGGESTS=${JLN_SUGGESTS}	[default, off, on]")
     message(STATUS "JLN_WARNINGS=${JLN_WARNINGS}	[default, off, on, strict, very-strict]")
     message(STATUS "JLN_WARNINGS_AS_ERROR=${JLN_WARNINGS_AS_ERROR}	[default, off, on]")
-    message(STATUS "JLN_WHOLE_PROGRAM=${JLN_WHOLE_PROGRAM}	[default, on]")
+    message(STATUS "JLN_WHOLE_PROGRAM=${JLN_WHOLE_PROGRAM}	[default, off, on]")
   endif()
 
 endfunction()
@@ -639,28 +639,41 @@ function(jln_flags)
     endif()
     if (  NOT ( JLN_FLAGS_WHOLE_PROGRAM STREQUAL "default") )
     
-      set(LINK_FLAGS ${LINK_FLAGS}  "-s")
-      if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
+      if (  JLN_FLAGS_WHOLE_PROGRAM STREQUAL "off" )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program")
-        set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-whole-program")
+
+        if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) ) )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fno-whole-program-vtables")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-fno-whole-program-vtables")
+        endif()
       
       else()
       
-        if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) ) )
+        set(LINK_FLAGS ${LINK_FLAGS}  "-s")
+        if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
         
-          if (  NOT ( JLN_FLAGS_LTO STREQUAL "default") )
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program")
+          set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program")
+        
+        else()
+        
+          if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) ) )
           
-            if (  NOT JLN_FLAGS_LTO STREQUAL "off" )
+            if (  NOT ( JLN_FLAGS_LTO STREQUAL "default") )
             
-              set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program-vtables")
-              set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program-vtables")
+              if (  NOT JLN_FLAGS_LTO STREQUAL "off" )
+              
+                set(CXX_FLAGS ${CXX_FLAGS}  "-fwhole-program-vtables")
+                set(LINK_FLAGS ${LINK_FLAGS}  "-fwhole-program-vtables")
+              endif()
             endif()
-          endif()
-          if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) )
-          
-            set(CXX_FLAGS ${CXX_FLAGS}  "-fforce-emit-vtables")
-            set(LINK_FLAGS ${LINK_FLAGS}  "-fforce-emit-vtables")
+            if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) )
+            
+              set(CXX_FLAGS ${CXX_FLAGS}  "-fforce-emit-vtables")
+              set(LINK_FLAGS ${LINK_FLAGS}  "-fforce-emit-vtables")
+            endif()
           endif()
         endif()
       endif()
@@ -809,16 +822,16 @@ function(jln_flags)
         set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-shadow")
 
       
-      elseif (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) ) )
+      elseif (  JLN_FLAGS_SHADOW STREQUAL "on" )
       
-        if (  ( JLN_FLAGS_SHADOW STREQUAL "local" OR JLN_FLAGS_SHADOW STREQUAL "local-or-global" ) )
-        
-          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=local")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow")
 
+      
+      elseif (  JLN_FLAGS_SHADOW STREQUAL "all" )
+      
+        if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
         
-        elseif (  ( JLN_FLAGS_SHADOW STREQUAL "compatible-local" OR JLN_FLAGS_SHADOW STREQUAL "compatible-local-or-global" ) )
-        
-          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=compatible-local")
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow-all")
 
         
         else()
@@ -827,15 +840,18 @@ function(jln_flags)
 
         endif()
       
-      elseif (  ( JLN_FLAGS_SHADOW STREQUAL "local" OR JLN_FLAGS_SHADOW STREQUAL "compatible-local" ) )
+      elseif (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) ) )
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-shadow")
+        if (  JLN_FLAGS_SHADOW STREQUAL "local" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=local")
 
-      
-      else()
-      
-        set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow")
+        
+        elseif (  JLN_FLAGS_SHADOW STREQUAL "compatible-local" )
+        
+          set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=compatible-local")
 
+        endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS STREQUAL "default") )
@@ -1228,8 +1244,16 @@ function(jln_flags)
     endif()
     if (  NOT ( JLN_FLAGS_WHOLE_PROGRAM STREQUAL "default") )
     
-      set(CXX_FLAGS ${CXX_FLAGS}  "/GL" "/Gw")
+      if (  JLN_FLAGS_WHOLE_PROGRAM STREQUAL "off" )
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/GL-")
 
+      
+      else()
+      
+        set(CXX_FLAGS ${CXX_FLAGS}  "/GL" "/Gw")
+
+      endif()
     endif()
     if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "default") )
     
@@ -1322,12 +1346,12 @@ function(jln_flags)
         set(CXX_FLAGS ${CXX_FLAGS}  "/wd4456" "/wd4459")
 
       
-      elseif (  ( JLN_FLAGS_SHADOW STREQUAL "on" OR JLN_FLAGS_SHADOW STREQUAL "compatible-local-or-global" ) )
+      elseif (  ( JLN_FLAGS_SHADOW STREQUAL "on" OR JLN_FLAGS_SHADOW STREQUAL "all" ) )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "/w4456" "/w4459")
 
       
-      else()
+      elseif (  JLN_FLAGS_SHADOW STREQUAL "local" )
       
         set(CXX_FLAGS ${CXX_FLAGS}  "/w4456" "/wd4459")
 
