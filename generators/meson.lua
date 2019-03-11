@@ -26,7 +26,7 @@ return {
 
     local option_strs = _._option_strs
     for optname,args,default_value,ordered_args in _:getoptions() do
-      option_strs[#option_strs+1] = "option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(ordered_args, "', '") .. "'])"
+      option_strs[#option_strs+1] = "option('" .. _:tobuildoption(optname) .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
     end
 
     _:print([[
