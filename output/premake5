@@ -800,7 +800,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       
       else
       
-        jln_buildoptions = jln_buildoptions .. " fno-rtti"
+        jln_buildoptions = jln_buildoptions .. " -fno-rtti"
       end
     end
     if not ( values["jln-diagnostics-show-template-tree"] == "default") then

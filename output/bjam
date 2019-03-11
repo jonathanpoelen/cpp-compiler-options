@@ -948,7 +948,7 @@ rule jln_flags ( properties * )
       else
       {
         flags +=
-          <cxxflags>"fno-rtti"
+          <cxxflags>"-fno-rtti"
         ;
       }
     }

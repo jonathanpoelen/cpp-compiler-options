@@ -346,7 +346,7 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
     if (  (___jln_flags.get('jln_rtti') == 'on') )
       jln_cpp_flags += ['-frtti', ]
     else
-      jln_cpp_flags += ['fno-rtti', ]
+      jln_cpp_flags += ['-fno-rtti', ]
     endif
   endif
   if (  not ( (___jln_flags.get('jln_diagnostics_show_template_tree') == 'default')) )

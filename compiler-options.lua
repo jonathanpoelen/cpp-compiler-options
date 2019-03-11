@@ -440,7 +440,7 @@ G = Or(gcc, clang) {
   },
 
   opt'rtti' {
-    lvl'on' { cxx'-frtti' } / cxx'fno-rtti',
+    lvl'on' { cxx'-frtti' } / cxx'-fno-rtti',
   },
 
   opt'diagnostics_show_template_tree' {

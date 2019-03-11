@@ -1097,7 +1097,7 @@ function(jln_flags)
       
       else()
       
-        set(CXX_FLAGS ${CXX_FLAGS}  "fno-rtti")
+        set(CXX_FLAGS ${CXX_FLAGS}  "-fno-rtti")
 
       endif()
     endif()
