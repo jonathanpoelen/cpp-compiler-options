@@ -22,7 +22,9 @@ OUTPUT_PROJECT="$OUTPUT_DIR_NAME"
 # configure temporary paths
 if [ -z "$LUA_BIN" ]; then
   LUA_BIN=$(which luajit 2>/dev/null||:)
-  if [ ! -z "$LUA_BIN" ]; then
+  if [ -z "$LUA_BIN" ]; then
+    LUA_BIN=lua
+  else
     for f in compiler-options.lua generators/* ; do
       $LUA_BIN -b "$f" "$TMPDIR/$f"
     done
