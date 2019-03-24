@@ -1,12 +1,5 @@
 return {
-  d = {comp={}, test={true}, opts={
-    stl_debug='allow_broken_abi',
-    debug='on',
-    pedantic='on',
-    sanitizers='on',
-    suggests='on',
-    warnings='on',
-  }},
+  d = {comp={}, test={true}, opts={}},
 
   ignore={
   },
@@ -54,6 +47,12 @@ return {
           return table.concat(comps, '\n') .. '\n'
         end,
       }
+    end
+
+    for k,args,default_value in _:getoptions() do
+      if default_value ~= 'default' then
+        _.d.opts[k] = default_value
+      end
     end
 
     -- help
