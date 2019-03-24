@@ -685,7 +685,7 @@ Vbase = {
     _.startopt=function(_, optname)
       _:_vcond_printflags()
       _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
-      if _._vcondkeyword.openblock then
+      if #_._vcondkeyword.openblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.openblock)
       end
     end
@@ -698,25 +698,25 @@ Vbase = {
       _.if_prefix = ''
       _:_vcond(x, optname)
       _:print(_._vcondkeyword.ifclose)
-      if #_._vcondkeyword.openblock then
+      if #_._vcondkeyword.openblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.openblock)
       end
     end
 
     _.elsecond=function(_)
       _:_vcond_printflags()
-      if #_._vcondkeyword.closeblock then
+      if #_._vcondkeyword.closeblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.closeblock)
       end
       _:print(_.indent .. _._vcondkeyword._else)
-      if #_._vcondkeyword.openblock then
+      if #_._vcondkeyword.openblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.openblock)
       end
     end
 
     _.markelseif=function(_)
       _:_vcond_printflags()
-      if #_._vcondkeyword.closeblock then
+      if #_._vcondkeyword.closeblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.closeblock)
       end
       _.if_prefix = _._vcondkeyword.else_of_else_if
@@ -724,7 +724,7 @@ Vbase = {
 
     _.stopcond=function(_)
       _:_vcond_printflags()
-      if #_._vcondkeyword.endif then
+      if #_._vcondkeyword.endif ~= 0 then
         _:print(_.indent .. _._vcondkeyword.endif)
       end
     end

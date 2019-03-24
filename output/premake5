@@ -285,163 +285,108 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
   local jln_buildoptions, jln_linkoptions = '', ''
 
   if ( compiler == "gcc" or compiler == "clang" ) then
-  
     if not ( values["jln-narrowing-error"] == "default") then
-    
       if values["jln-narrowing-error"] == "on" then
-      
         if ( compiler == "gcc" and not ( compversion < 407 ) ) then
-        
           jln_buildoptions = jln_buildoptions .. " -Werror=narrowing"
         end
-      
       elseif compiler == "clang" then
-      
         jln_buildoptions = jln_buildoptions .. " -Wno-error=c++11-narrowing"
       end
     end
     if not ( values["jln-coverage"] == "default") then
-    
       if values["jln-coverage"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " --coverage"
         jln_linkoptions = jln_linkoptions .. " --coverage"
         if compiler == "clang" then
-        
           jln_linkoptions = jln_linkoptions .. " -lprofile_rt"
         end
       end
     end
     if not ( values["jln-debug"] == "default") then
-    
       if values["jln-debug"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -g0"
-      
       elseif values["jln-debug"] == "gdb" then
-      
         jln_buildoptions = jln_buildoptions .. " -ggdb"
-      
       elseif compiler == "clang" then
-      
         if values["jln-debug"] == "line_tables_only" then
-        
           jln_buildoptions = jln_buildoptions .. " -gline-tables-only"
         end
         if values["jln-debug"] == "lldb" then
-        
           jln_buildoptions = jln_buildoptions .. " -glldb"
-        
         elseif values["jln-debug"] == "sce" then
-        
           jln_buildoptions = jln_buildoptions .. " -gsce"
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -g"
         end
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " -g"
       end
     end
     if not ( values["jln-lto"] == "default") then
-    
       if values["jln-lto"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -fno-lto"
         jln_linkoptions = jln_linkoptions .. " -fno-lto"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " -flto"
         jln_linkoptions = jln_linkoptions .. " -flto"
         if ( compiler == "gcc" and not ( compversion < 500 ) ) then
-        
           jln_buildoptions = jln_buildoptions .. " -flto-odr-type-merging"
           jln_linkoptions = jln_linkoptions .. " -flto-odr-type-merging"
           if values["jln-lto"] == "fat" then
-          
             jln_buildoptions = jln_buildoptions .. " -ffat-lto-objects"
           end
         end
       end
     end
     if not ( values["jln-optimize"] == "default") then
-    
       if values["jln-optimize"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -O0"
         jln_linkoptions = jln_linkoptions .. " -O0"
-      
       elseif values["jln-optimize"] == "debugoptimized" then
-      
         jln_buildoptions = jln_buildoptions .. " -Og"
         jln_linkoptions = jln_linkoptions .. " -Og"
-      
       elseif values["jln-optimize"] == "minsize" then
-      
         jln_buildoptions = jln_buildoptions .. " -Os"
         jln_linkoptions = jln_linkoptions .. " -Os"
-      
       elseif values["jln-optimize"] == "fast" then
-      
         jln_buildoptions = jln_buildoptions .. " -Ofast"
         jln_linkoptions = jln_linkoptions .. " -Ofast"
-      
       elseif values["jln-optimize"] == "release" then
-      
         jln_buildoptions = jln_buildoptions .. " -O3"
         jln_linkoptions = jln_linkoptions .. " -O3"
       end
     end
     if not ( values["jln-cpu"] == "default") then
-    
       if values["jln-cpu"] == "generic" then
-      
         jln_buildoptions = jln_buildoptions .. " -mtune=generic"
         jln_linkoptions = jln_linkoptions .. " -mtune=generic"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " -march=native -mtune=native"
         jln_linkoptions = jln_linkoptions .. " -march=native -mtune=native"
       end
     end
     if not ( values["jln-whole-program"] == "default") then
-    
       if values["jln-whole-program"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -fno-whole-program"
         if ( compiler == "clang" and not ( compversion < 309 ) ) then
-        
           jln_buildoptions = jln_buildoptions .. " -fno-whole-program-vtables"
           jln_linkoptions = jln_linkoptions .. " -fno-whole-program-vtables"
         end
-      
       else
-      
         jln_linkoptions = jln_linkoptions .. " -s"
         if compiler == "gcc" then
-        
           jln_buildoptions = jln_buildoptions .. " -fwhole-program"
           jln_linkoptions = jln_linkoptions .. " -fwhole-program"
-        
         else
-        
           if ( compiler == "clang" and not ( compversion < 309 ) ) then
-          
             if not ( values["jln-lto"] == "default") then
-            
               if not values["jln-lto"] == "off" then
-              
                 jln_buildoptions = jln_buildoptions .. " -fwhole-program-vtables"
                 jln_linkoptions = jln_linkoptions .. " -fwhole-program-vtables"
               end
             end
             if not ( compversion < 700 ) then
-            
               jln_buildoptions = jln_buildoptions .. " -fforce-emit-vtables"
               jln_linkoptions = jln_linkoptions .. " -fforce-emit-vtables"
             end
@@ -450,98 +395,65 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       end
     end
     if not ( values["jln-pedantic"] == "default") then
-    
       if not values["jln-pedantic"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -pedantic"
         if values["jln-pedantic"] == "as_error" then
-        
           jln_buildoptions = jln_buildoptions .. " -pedantic-errors"
         end
       end
     end
     if not ( values["jln-stack-protector"] == "default") then
-    
       if values["jln-stack-protector"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -Wno-stack-protector -U_FORTIFY_SOURCE"
         jln_linkoptions = jln_linkoptions .. " -Wno-stack-protector"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " -Wstack-protector -D_FORTIFY_SOURCE=2"
         if values["jln-stack-protector"] == "strong" then
-        
           if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-          
             jln_buildoptions = jln_buildoptions .. " -fstack-protector-strong"
             jln_linkoptions = jln_linkoptions .. " -fstack-protector-strong"
-          
           elseif compiler == "clang" then
-          
             jln_buildoptions = jln_buildoptions .. " -fstack-protector-strong -fsanitize=safe-stack"
             jln_linkoptions = jln_linkoptions .. " -fstack-protector-strong -fsanitize=safe-stack"
           end
-        
         elseif values["jln-stack-protector"] == "all" then
-        
           jln_buildoptions = jln_buildoptions .. " -fstack-protector-all"
           jln_linkoptions = jln_linkoptions .. " -fstack-protector-all"
           if compiler == "clang" then
-          
             jln_buildoptions = jln_buildoptions .. " -fsanitize=safe-stack"
             jln_linkoptions = jln_linkoptions .. " -fsanitize=safe-stack"
           end
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -fstack-protector"
           jln_linkoptions = jln_linkoptions .. " -fstack-protector"
         end
       end
     end
     if not ( values["jln-relro"] == "default") then
-    
       if values["jln-relro"] == "off" then
-      
         jln_linkoptions = jln_linkoptions .. " -Wl,-z,norelro"
-      
       elseif values["jln-relro"] == "on" then
-      
         jln_linkoptions = jln_linkoptions .. " -Wl,-z,relro"
-      
       elseif values["jln-relro"] == "full" then
-      
         jln_linkoptions = jln_linkoptions .. " -Wl,-z,relro,-z,now"
       end
     end
     if not ( values["jln-pie"] == "default") then
-    
       if values["jln-pie"] == "off" then
-      
         jln_linkoptions = jln_linkoptions .. " -no-pic"
-      
       elseif values["jln-pie"] == "on" then
-      
         jln_linkoptions = jln_linkoptions .. " -pie"
-      
       elseif values["jln-pie"] == "pic" then
-      
         jln_buildoptions = jln_buildoptions .. " -fPIC"
       end
     end
     if not ( values["jln-suggests"] == "default") then
-    
       if not values["jln-suggests"] == "off" then
-      
         if compiler == "gcc" then
-        
           jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=pure -Wsuggest-attribute=const"
           if not ( compversion < 500 ) then
-          
             jln_buildoptions = jln_buildoptions .. " -Wsuggest-final-types -Wsuggest-final-methods"
             if not ( compversion < 501 ) then
-            
               jln_buildoptions = jln_buildoptions .. " -Wnoexcept"
             end
           end
@@ -549,98 +461,63 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       end
     end
     if not ( values["jln-stl-debug"] == "default") then
-    
       if not values["jln-stl-debug"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG=1"
         if values["jln-stl-debug"] == "assert_as_exception" then
-        
           jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG_USE_EXCEPTIONS"
         end
         if values["jln-stl-debug"] == "allow_broken_abi" then
-        
           jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG"
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_ASSERTIONS"
         end
         if not ( values["jln-pedantic"] == "default") then
-        
           if not values["jln-pedantic"] == "off" then
-          
             jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG_PEDANTIC"
           end
         end
       end
     end
     if not ( values["jln-shadow"] == "default") then
-    
       if values["jln-shadow"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
-      
       elseif values["jln-shadow"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " -Wshadow"
-      
       elseif values["jln-shadow"] == "all" then
-      
         if compiler == "clang" then
-        
           jln_buildoptions = jln_buildoptions .. " -Wshadow-all"
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -Wshadow"
         end
-      
       elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
-      
         if values["jln-shadow"] == "local" then
-        
           jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
-        
         elseif values["jln-shadow"] == "compatible-local" then
-        
           jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
         end
       end
     end
     if not ( values["jln-warnings"] == "default") then
-    
       if values["jln-warnings"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -w"
-      
       else
-      
         if compiler == "gcc" then
-        
           jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wpacked -Wredundant-decls -Wundef -Wunused-macros"
           if not ( compversion < 407 ) then
-          
             jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=noreturn -Wzero-as-null-pointer-constant -Wlogical-op -Wvector-operation-performance -Wdouble-promotion -Wtrampolines"
             if not ( compversion < 408 ) then
-            
               jln_buildoptions = jln_buildoptions .. " -Wuseless-cast"
               if not ( compversion < 409 ) then
-              
                 jln_buildoptions = jln_buildoptions .. " -Wconditionally-supported -Wfloat-conversion"
                 if not ( compversion < 501 ) then
-                
                   jln_buildoptions = jln_buildoptions .. " -Wformat-signedness -Warray-bounds=2 -Wconditionally-supported -Wstrict-null-sentinel -Wsuggest-override"
                   if not ( compversion < 601 ) then
-                  
                     jln_buildoptions = jln_buildoptions .. " -Wduplicated-cond -Wnull-dereference"
                     if not ( compversion < 700 ) then
-                    
                       jln_buildoptions = jln_buildoptions .. " -Waligned-new"
                       if not ( compversion < 701 ) then
-                      
                         jln_buildoptions = jln_buildoptions .. " -Walloc-zero -Walloca -Wformat-overflow=2 -Wduplicated-branches"
                         if not ( compversion < 800 ) then
-                        
                           jln_buildoptions = jln_buildoptions .. " -Wclass-memaccess"
                         end
                       end
@@ -650,64 +527,45 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
               end
             end
           end
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum -Wno-inconsistent-missing-destructor-override"
         end
         if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
-        
           jln_buildoptions = jln_buildoptions .. " -Wconversion"
           if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-          
             jln_buildoptions = jln_buildoptions .. " -Wcast-align=strict"
           end
-        
         elseif compiler == "clang" then
-        
           jln_buildoptions = jln_buildoptions .. " -Wno-conversion -Wno-sign-conversion"
         end
       end
     end
     if not ( values["jln-sanitizers"] == "default") then
-    
       if values["jln-sanitizers"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " -fno-sanitize=all"
         jln_linkoptions = jln_linkoptions .. " -fno-sanitize=all"
-      
       else
-      
         if compiler == "clang" then
-        
           if not ( compversion < 301 ) then
-          
             jln_buildoptions = jln_buildoptions .. " -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer -fno-optimize-sibling-calls"
             jln_linkoptions = jln_linkoptions .. " -fsanitize=undefined -fsanitize=address"
             if not ( compversion < 304 ) then
-            
               jln_buildoptions = jln_buildoptions .. " -fsanitize=leak"
               jln_linkoptions = jln_linkoptions .. " -fsanitize=leak"
               if not ( compversion < 600 ) then
-              
                 jln_buildoptions = jln_buildoptions .. " -fsanitize=bounds"
                 jln_linkoptions = jln_linkoptions .. " -fsanitize=bounds"
               end
             end
           end
-        
         else
-        
           if not ( compversion < 408 ) then
-          
             jln_buildoptions = jln_buildoptions .. " -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"
             jln_linkoptions = jln_linkoptions .. " -fsanitize=address"
             if not ( compversion < 409 ) then
-            
               jln_buildoptions = jln_buildoptions .. " -fsanitize=undefined -fsanitize=leak"
               jln_linkoptions = jln_linkoptions .. " -fsanitize=undefined -fsanitize=leak"
               if not ( compversion < 600 ) then
-              
                 jln_buildoptions = jln_buildoptions .. " -fsanitize=bounds -fsanitize=bounds-strict"
               end
             end
@@ -716,363 +574,232 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       end
     end
     if not ( values["jln-control-flow"] == "default") then
-    
       if values["jln-control-flow"] == "off" then
-      
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-        
           jln_buildoptions = jln_buildoptions .. " -fcf-protection=none"
         end
         if compiler == "clang" then
-        
           jln_buildoptions = jln_buildoptions .. " -fno-sanitize=cfi"
           jln_linkoptions = jln_linkoptions .. " -fno-sanitize=cfi"
         end
-      
       else
-      
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-        
           jln_buildoptions = jln_buildoptions .. " -fcf-protection=full"
         end
         if compiler == "clang" then
-        
           jln_buildoptions = jln_buildoptions .. " -fsanitize=cfi -fvisibility=hidden -flto"
           jln_linkoptions = jln_linkoptions .. " -fsanitize=cfi -flto"
         end
       end
     end
     if not ( values["jln-sanitizers-extra"] == "default") then
-    
       if values["jln-sanitizers-extra"] == "thread" then
-      
         jln_buildoptions = jln_buildoptions .. " -fsanitize=thread"
-      
       elseif values["jln-sanitizers-extra"] == "pointer" then
-      
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-        
           jln_buildoptions = jln_buildoptions .. " -fsanitize=pointer-compare -fsanitize=pointer-subtract"
         end
       end
     end
     if not ( values["jln-reproducible-build-warnings"] == "default") then
-    
       if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-      
         if values["jln-reproducible-build-warnings"] == "on" then
-        
           jln_buildoptions = jln_buildoptions .. " -Wdate-time"
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -Wno-date-time"
         end
       end
     end
     if not ( values["jln-color"] == "default") then
-    
       if ( ( compiler == "gcc" and not ( compversion < 409 ) ) or compiler == "clang" ) then
-      
         if values["jln-color"] == "auto" then
-        
           jln_buildoptions = jln_buildoptions .. " -fdiagnostics-color=auto"
-        
         elseif values["jln-color"] == "never" then
-        
           jln_buildoptions = jln_buildoptions .. " -fdiagnostics-color=never"
-        
         elseif values["jln-color"] == "always" then
-        
           jln_buildoptions = jln_buildoptions .. " -fdiagnostics-color=always"
         end
       end
     end
     if not ( values["jln-elide-type"] == "default") then
-    
       if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or ( compiler == "clang" and not ( compversion < 304 ) ) ) then
-      
         if values["jln-elide-type"] == "on" then
-        
           jln_buildoptions = jln_buildoptions .. " -felide-type"
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -fno-elide-type"
         end
       end
     end
     if not ( values["jln-exceptions"] == "default") then
-    
       if values["jln-exceptions"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " -fexceptions"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " -fno-exceptions"
       end
     end
     if not ( values["jln-rtti"] == "default") then
-    
       if values["jln-rtti"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " -frtti"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " -fno-rtti"
       end
     end
     if not ( values["jln-diagnostics-show-template-tree"] == "default") then
-    
       if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or compiler == "clang" ) then
-      
         if values["jln-diagnostics-show-template-tree"] == "on" then
-        
           jln_buildoptions = jln_buildoptions .. " -fdiagnostics-show-template-tree"
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " -fno-diagnostics-show-template-tree"
         end
       end
     end
     if not ( values["jln-diagnostics-format"] == "default") then
-    
       if values["jln-diagnostics-format"] == "fixits" then
-      
         if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) ) then
-        
           jln_buildoptions = jln_buildoptions .. " -fdiagnostics-parseable-fixits"
         end
-      
       elseif values["jln-diagnostics-format"] == "patch" then
-      
       end
       if ( compiler == "gcc" and not ( compversion < 700 ) ) then
-      
         jln_buildoptions = jln_buildoptions .. " -fdiagnostics-generate-patch"
       end
     end
     if not ( values["jln-warnings-as-error"] == "default") then
-    
       if values["jln-warnings-as-error"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " -Werror"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " -Wno-error"
       end
     end
-  
   elseif compiler == "msvc" then
-  
     if not ( values["jln-stl-fix"] == "default") then
-    
       if values["jln-stl-fix"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " /DNOMINMAX"
       end
     end
     if not ( values["jln-debug"] == "default") then
-    
       if values["jln-debug"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /DEBUG:NONE"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " /RTC1 /Od"
         if values["jln-debug"] == "on" then
-        
           jln_buildoptions = jln_buildoptions .. " /DEBUG"
-        
         elseif values["jln-debug"] == "line_tables_only" then
-        
           jln_buildoptions = jln_buildoptions .. " /DEBUG:FASTLINK"
         end
         if not ( values["jln-optimize"] == "default") then
-        
           if values["jln-optimize"] == "debugoptimized" then
-          
             jln_buildoptions = jln_buildoptions .. " /Zi"
-          
           else
-          
             jln_buildoptions = jln_buildoptions .. " /ZI"
           end
-        
         else
-        
           jln_buildoptions = jln_buildoptions .. " /ZI"
         end
       end
     end
     if not ( values["jln-exceptions"] == "default") then
-    
       if values["jln-exceptions"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " /EHc"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " /EHc-"
       end
     end
     if not ( values["jln-optimize"] == "default") then
-    
       if values["jln-optimize"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /Ob0 /Od /Oi- /Oy-"
-      
       elseif values["jln-optimize"] == "debugoptimized" then
-      
         jln_buildoptions = jln_buildoptions .. " /Ob1"
-      
       elseif values["jln-optimize"] == "release" then
-      
         jln_buildoptions = jln_buildoptions .. " /O2 /OPT:REF"
         jln_linkoptions = jln_linkoptions .. " /OPT:REF"
-      
       elseif values["jln-optimize"] == "minsize" then
-      
         jln_buildoptions = jln_buildoptions .. " /O1 /OPT:REF /Gw"
         jln_linkoptions = jln_linkoptions .. " /OPT:REF"
-      
       elseif values["jln-optimize"] == "fast" then
-      
         jln_buildoptions = jln_buildoptions .. " /O2 /OPT:REF /fp:fast"
         jln_linkoptions = jln_linkoptions .. " /OPT:REF"
       end
     end
     if not ( values["jln-whole-program"] == "default") then
-    
       if values["jln-whole-program"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /GL-"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " /GL /Gw"
       end
     end
     if not ( values["jln-pedantic"] == "default") then
-    
       if not values["jln-pedantic"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /permissive- /Zc:__cplusplus"
       end
     end
     if not ( values["jln-rtti"] == "default") then
-    
       if values["jln-rtti"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " /GR"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " /GR-"
       end
     end
     if not ( values["jln-stl-debug"] == "default") then
-    
       if values["jln-stl-debug"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /D_HAS_ITERATOR_DEBUGGING=0"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " /D_DEBUG /D_HAS_ITERATOR_DEBUGGING=1"
       end
     end
     if not ( values["jln-control-flow"] == "default") then
-    
       if values["jln-control-flow"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /guard:cf-"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " /guard:cf"
       end
     end
     if not ( values["jln-sanitizers"] == "default") then
-    
       if values["jln-sanitizers"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " /sdl"
-      
       else
-      
         if not ( values["jln-stack-protector"] == "default") then
-        
           if not values["jln-stack-protector"] == "off" then
-          
             jln_buildoptions = jln_buildoptions .. " /sdl-"
           end
         end
       end
     end
     if not ( values["jln-stack-protector"] == "default") then
-    
       if not values["jln-stack-protector"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /GS /sdl"
         if values["jln-stack-protector"] == "strong" then
-        
           jln_buildoptions = jln_buildoptions .. " /RTC1"
-        
         elseif values["jln-stack-protector"] == "all" then
-        
           jln_buildoptions = jln_buildoptions .. " /RTC1 /RTCc"
         end
       end
     end
     if not ( values["jln-shadow"] == "default") then
-    
       if values["jln-shadow"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /wd4456 /wd4459"
-      
       elseif ( values["jln-shadow"] == "on" or values["jln-shadow"] == "all" ) then
-      
         jln_buildoptions = jln_buildoptions .. " /w4456 /w4459"
-      
       elseif values["jln-shadow"] == "local" then
-      
         jln_buildoptions = jln_buildoptions .. " /w4456 /wd4459"
       end
     end
     if not ( values["jln-warnings"] == "default") then
-    
       if values["jln-warnings"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245"
-      
       elseif values["jln-warnings"] == "strict" then
-      
         jln_buildoptions = jln_buildoptions .. " /Wall /wd4820 /wd4514 /wd4710"
-      
       elseif values["jln-warnings"] == "very-strict" then
-      
         jln_buildoptions = jln_buildoptions .. " /Wall"
-      
       elseif values["jln-warnings"] == "off" then
-      
         jln_buildoptions = jln_buildoptions .. " /W0"
       end
     end
     if not ( values["jln-warnings-as-error"] == "default") then
-    
       if values["jln-warnings-as-error"] == "on" then
-      
         jln_buildoptions = jln_buildoptions .. " /WX"
         jln_linkoptions = jln_linkoptions .. " /WX"
-      
       else
-      
         jln_buildoptions = jln_buildoptions .. " /WX-"
       end
     end
