@@ -10,6 +10,7 @@ ___jln_flags = {
   'jln_elide_type': ___jln_default_flags.get('jln_elide_type', get_option('jln_elide_type')),
   'jln_exceptions': ___jln_default_flags.get('jln_exceptions', get_option('jln_exceptions')),
   'jln_lto': ___jln_default_flags.get('jln_lto', get_option('jln_lto')),
+  'jln_narrowing_error': ___jln_default_flags.get('jln_narrowing_error', get_option('jln_narrowing_error')),
   'jln_optimize': ___jln_default_flags.get('jln_optimize', get_option('jln_optimize')),
   'jln_pedantic': ___jln_default_flags.get('jln_pedantic', get_option('jln_pedantic')),
   'jln_pie': ___jln_default_flags.get('jln_pie', get_option('jln_pie')),
@@ -33,6 +34,15 @@ jln_link_flags = []
 
 jln_cpp_compiler = meson.get_compiler('cpp')
 if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'clang') ) )
+  if (  not ( (___jln_flags.get('jln_narrowing_error') == 'default')) )
+    if (  (___jln_flags.get('jln_narrowing_error') == 'on') )
+      if (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
+        jln_cpp_flags += ['-Werror=narrowing', ]
+      endif
+    elif (  (jln_cpp_compiler.get_id() == 'clang') )
+      jln_cpp_flags += ['-Wno-error=c++11-narrowing', ]
+    endif
+  endif
   if (  not ( (___jln_flags.get('jln_coverage') == 'default')) )
     if (  (___jln_flags.get('jln_coverage') == 'on') )
       jln_cpp_flags += ['--coverage', ]

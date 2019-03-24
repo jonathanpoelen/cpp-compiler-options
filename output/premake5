@@ -19,6 +19,8 @@ _jln_flag_names["jln-exceptions"] = true
 _jln_flag_names["exceptions"] = true
 _jln_flag_names["jln-lto"] = true
 _jln_flag_names["lto"] = true
+_jln_flag_names["jln-narrowing-error"] = true
+_jln_flag_names["narrowing_error"] = true
 _jln_flag_names["jln-optimize"] = true
 _jln_flag_names["optimize"] = true
 _jln_flag_names["jln-pedantic"] = true
@@ -78,6 +80,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
+  newoption{trigger="jln-narrowing-error", allowed={{"default"}, {"off"}, {"on"}}, description="narrowing_error"}
+  if not _OPTIONS["jln-narrowing-error"] then _OPTIONS["jln-narrowing-error"] = (defaults["narrowing_error"] or defaults["jln-narrowing-error"] or "default") end
   newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"debugoptimized"}, {"minsize"}, {"release"}, {"fast"}}, description="optimize"}
   if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or defaults["jln-optimize"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
@@ -222,6 +226,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"])
+    name_list["jln-narrowing-error"] = true
+    name_list["narrowing_error"] = true
+    new_value["jln-narrowing-error"] = values["narrowing_error"] or values["jln-narrowing-error"] or (disable_others and "default" or _OPTIONS["jln-narrowing-error"])
     name_list["jln-optimize"] = true
     name_list["optimize"] = true
     new_value["jln-optimize"] = values["optimize"] or values["jln-optimize"] or (disable_others and "default" or _OPTIONS["jln-optimize"])
@@ -279,6 +286,20 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
 
   if ( compiler == "gcc" or compiler == "clang" ) then
   
+    if not ( values["jln-narrowing-error"] == "default") then
+    
+      if values["jln-narrowing-error"] == "on" then
+      
+        if ( compiler == "gcc" and not ( compversion < 407 ) ) then
+        
+          jln_buildoptions = jln_buildoptions .. " -Werror=narrowing"
+        end
+      
+      elseif compiler == "clang" then
+      
+        jln_buildoptions = jln_buildoptions .. " -Wno-error=c++11-narrowing"
+      end
+    end
     if not ( values["jln-coverage"] == "default") then
     
       if values["jln-coverage"] == "on" then

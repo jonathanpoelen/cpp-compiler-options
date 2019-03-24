@@ -51,6 +51,7 @@ diagnostics_show_template_tree = default off on
 elide_type = default off on
 exceptions = default off on
 lto = default off on fat
+narrowing_error = on default off
 optimize = default off debugoptimized minsize release fast
 pedantic = on default off as_error
 pie = default off on pic
@@ -59,7 +60,7 @@ reproducible_build_warnings = default off on
 rtti = default off on
 sanitizers = default off on
 sanitizers_extra = default off thread pointer
-shadow = off default on all local compatible-local
+shadow = off default on local compatible-local all
 stack_protector = default off on strong all
 stl_debug = default off on allow_broken_abi assert_as_exception
 stl_fix = on default off
@@ -72,7 +73,7 @@ whole_program = default off on
 
 The value `default` does nothing.
 
-If not specified, the values of `warnings`, `stl_fix` and `pedantic` are `on`.
+If not specified, `error`, `pedantic`, `fix` and `warnings` are `on` ; `shadow` is `off`.
 
 
 # Use generated files

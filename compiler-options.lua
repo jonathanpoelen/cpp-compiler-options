@@ -60,6 +60,11 @@ function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 -- gcc and clang
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 G = Or(gcc, clang) {
+  opt'narrowing_error' {
+    lvl'on' { gcc(4,7) { cxx'-Werror=narrowing' } } /
+    clang { cxx'-Wno-error=c++11-narrowing' }
+  },
+
   opt'coverage' {
     lvl'on' {
       cxx'--coverage', -- -fprofile-arcs -ftest-coverage
@@ -597,6 +602,7 @@ Vbase = {
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
     lto=        {{'off', 'on', 'fat'},},
+    narrowing_error={{'off', 'on'}, 'on'},
     optimize=   {{'off', 'debugoptimized', 'minsize', 'release', 'fast'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     pie=        {{'off', 'on', 'pic'},},

@@ -21,6 +21,8 @@ feature <jln-exceptions> : default off on : propagated ;
 feature <jln-incidental-exceptions> : default off on : incidental ;
 feature <jln-lto> : default off on fat : propagated ;
 feature <jln-incidental-lto> : default off on fat : incidental ;
+feature <jln-narrowing-error> : on default off : propagated ;
+feature <jln-incidental-narrowing-error> : on default off : incidental ;
 feature <jln-optimize> : default off debugoptimized minsize release fast : propagated ;
 feature <jln-incidental-optimize> : default off debugoptimized minsize release fast : incidental ;
 feature <jln-pedantic> : on default off as_error : propagated ;
@@ -62,6 +64,8 @@ if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   toolset.flags jln-incidental-exceptions JLN_INCIDENTAL_EXCEPTIONS : <jln-incidental-exceptions> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-incidental-lto JLN_INCIDENTAL_LTO : <jln-incidental-lto> ;
+  toolset.flags jln-narrowing-error JLN_NARROWING_ERROR : <jln-narrowing-error> ;
+  toolset.flags jln-incidental-narrowing-error JLN_INCIDENTAL_NARROWING_ERROR : <jln-incidental-narrowing-error> ;
   toolset.flags jln-optimize JLN_OPTIMIZE : <jln-optimize> ;
   toolset.flags jln-incidental-optimize JLN_INCIDENTAL_OPTIMIZE : <jln-incidental-optimize> ;
   toolset.flags jln-pedantic JLN_PEDANTIC : <jln-pedantic> ;
@@ -136,6 +140,7 @@ rule jln_flags ( properties * )
       <relevant>jln-debug
       <relevant>jln-exceptions
       <relevant>jln-lto
+      <relevant>jln-narrowing-error
       <relevant>jln-optimize
       <relevant>jln-pedantic
       <relevant>jln-pie
@@ -160,6 +165,7 @@ rule jln_flags ( properties * )
   local jln-elide-type_isdefault ; if <jln-elide-type>default in $(properties) { jln-elide-type_isdefault = 1 ; }
   local jln-exceptions_isdefault ; if <jln-exceptions>default in $(properties) { jln-exceptions_isdefault = 1 ; }
   local jln-lto_isdefault ; if <jln-lto>default in $(properties) { jln-lto_isdefault = 1 ; }
+  local jln-narrowing-error_isdefault ; if <jln-narrowing-error>default in $(properties) { jln-narrowing-error_isdefault = 1 ; }
   local jln-optimize_isdefault ; if <jln-optimize>default in $(properties) { jln-optimize_isdefault = 1 ; }
   local jln-pedantic_isdefault ; if <jln-pedantic>default in $(properties) { jln-pedantic_isdefault = 1 ; }
   local jln-pie_isdefault ; if <jln-pie>default in $(properties) { jln-pie_isdefault = 1 ; }
@@ -178,6 +184,24 @@ rule jln_flags ( properties * )
 
   if (  $(toolset) = gcc || $(toolset) = clang  )
   {
+    if ! ( $(jln-narrowing-error_isdefault) && <jln-incidental-narrowing-error>default in $(properties) )
+    {
+      if $(jln-narrowing-error_isdefault) && <jln-incidental-narrowing-error>on in $(properties) || <jln-narrowing-error>on in $(properties)
+      {
+        if (  $(toolset) = gcc && ! (  $(version) < 04.07  )  )
+        {
+          flags +=
+            <cxxflags>"-Werror=narrowing"
+          ;
+        }
+      }
+      else if $(toolset) = clang
+      {
+        flags +=
+          <cxxflags>"-Wno-error=c++11-narrowing"
+        ;
+      }
+    }
     if ! ( $(jln-coverage_isdefault) && <jln-incidental-coverage>default in $(properties) )
     {
       if $(jln-coverage_isdefault) && <jln-incidental-coverage>on in $(properties) || <jln-coverage>on in $(properties)
