@@ -38,7 +38,7 @@ feature <jln-sanitizers> : default off on : propagated ;
 feature <jln-incidental-sanitizers> : default off on : incidental ;
 feature <jln-sanitizers-extra> : default off thread pointer : propagated ;
 feature <jln-incidental-sanitizers-extra> : default off thread pointer : incidental ;
-feature <jln-shadow> : off default on local compatible-local all : incidental ;
+feature <jln-shadow> : off default on local compatible_local all : incidental ;
 feature <jln-stack-protector> : default off on strong all : propagated ;
 feature <jln-incidental-stack-protector> : default off on strong all : incidental ;
 feature <jln-stl-debug> : default off on allow_broken_abi assert_as_exception : propagated ;
@@ -46,7 +46,7 @@ feature <jln-incidental-stl-debug> : default off on allow_broken_abi assert_as_e
 feature <jln-stl-fix> : on default off : propagated ;
 feature <jln-incidental-stl-fix> : on default off : incidental ;
 feature <jln-suggests> : default off on : incidental ;
-feature <jln-warnings> : on default off strict very-strict : incidental ;
+feature <jln-warnings> : on default off strict very_strict : incidental ;
 feature <jln-whole-program> : default off on strip_all : propagated ;
 feature <jln-incidental-whole-program> : default off on strip_all : incidental ;
 
@@ -632,7 +632,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wshadow=local"
           ;
         }
-        else if <jln-shadow>compatible-local in $(properties)
+        else if <jln-shadow>compatible_local in $(properties)
         {
           flags +=
             <cxxflags>"-Wshadow=compatible-local"
@@ -751,7 +751,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wno-inconsistent-missing-destructor-override"
           ;
         }
-        if (  <jln-warnings>strict in $(properties) || <jln-warnings>very-strict in $(properties)  )
+        if (  <jln-warnings>strict in $(properties) || <jln-warnings>very_strict in $(properties)  )
         {
           flags +=
             <cxxflags>"-Wconversion"
@@ -1304,7 +1304,7 @@ rule jln_flags ( properties * )
           <cxxflags>"/wd4710"
         ;
       }
-      else if <jln-warnings>very-strict in $(properties)
+      else if <jln-warnings>very_strict in $(properties)
       {
         flags +=
           <cxxflags>"/Wall"

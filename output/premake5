@@ -98,7 +98,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
   newoption{trigger="jln-sanitizers-extra", allowed={{"default"}, {"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
   if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default") end
-  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible-local"}, {"all"}}, description="shadow"}
+  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible_local"}, {"all"}}, description="shadow"}
   if not _OPTIONS["jln-shadow"] then _OPTIONS["jln-shadow"] = (defaults["shadow"] or defaults["jln-shadow"] or "default") end
   newoption{trigger="jln-stack-protector", allowed={{"default"}, {"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
@@ -108,7 +108,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-stl-fix"] then _OPTIONS["jln-stl-fix"] = (defaults["stl_fix"] or defaults["jln-stl-fix"] or "default") end
   newoption{trigger="jln-suggests", allowed={{"default"}, {"off"}, {"on"}}, description="suggests"}
   if not _OPTIONS["jln-suggests"] then _OPTIONS["jln-suggests"] = (defaults["suggests"] or defaults["jln-suggests"] or "default") end
-  newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}, {"very-strict"}}, description="warnings"}
+  newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}, {"very_strict"}}, description="warnings"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "default") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
@@ -498,7 +498,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
         if values["jln-shadow"] == "local" then
           jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
-        elseif values["jln-shadow"] == "compatible-local" then
+        elseif values["jln-shadow"] == "compatible_local" then
           jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
         end
       end
@@ -536,7 +536,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         else
           jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum -Wno-inconsistent-missing-destructor-override"
         end
-        if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
+        if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very_strict" ) then
           jln_buildoptions = jln_buildoptions .. " -Wconversion"
           if ( compiler == "gcc" and not ( compversion < 800 ) ) then
             jln_buildoptions = jln_buildoptions .. " -Wcast-align=strict"
@@ -795,7 +795,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245"
       elseif values["jln-warnings"] == "strict" then
         jln_buildoptions = jln_buildoptions .. " /Wall /wd4820 /wd4514 /wd4710"
-      elseif values["jln-warnings"] == "very-strict" then
+      elseif values["jln-warnings"] == "very_strict" then
         jln_buildoptions = jln_buildoptions .. " /Wall"
       elseif values["jln-warnings"] == "off" then
         jln_buildoptions = jln_buildoptions .. " /W0"

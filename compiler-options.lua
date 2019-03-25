@@ -235,7 +235,7 @@ G = Or(gcc, clang) {
       lvl'local' {
         cxx'-Wshadow=local'
       } /
-      lvl'compatible-local' {
+      lvl'compatible_local' {
         cxx'-Wshadow=compatible-local'
       }
     }
@@ -340,7 +340,7 @@ G = Or(gcc, clang) {
         cxx'-Wno-inconsistent-missing-destructor-override',
       },
 
-      Or(lvl'strict', lvl'very-strict') {
+      Or(lvl'strict', lvl'very_strict') {
         cxx'-Wconversion',
         gcc(8) { cxx'-Wcast-align=strict', }
       } /
@@ -569,7 +569,7 @@ msvc {
   opt'warnings' {
     lvl'on' { cxx'/W4', cxx'/wd4244', cxx'/wd4245' } /
     lvl'strict' { cxx'/Wall', cxx'/wd4820', cxx'/wd4514', cxx'/wd4710' } /
-    lvl'very-strict' { cxx'/Wall' } /
+    lvl'very_strict' { cxx'/Wall' } /
     lvl'off' { cxx'/W0' },
   },
 
@@ -616,10 +616,10 @@ Vbase = {
     stl_fix=    {{'off', 'on'}, 'on'},
     sanitizers= {{'off', 'on'},},
     sanitizers_extra={{'off', 'thread', 'pointer'},},
-    shadow=     {{'off', 'on', 'local', 'compatible-local', 'all'}, 'off'},
+    shadow=     {{'off', 'on', 'local', 'compatible_local', 'all'}, 'off'},
     stack_protector= {{'off', 'on', 'strong', 'all'},},
     suggests=   {{'off', 'on'},},
-    warnings=   {{'off', 'on', 'strict', 'very-strict'}, 'on'},
+    warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},
     whole_program={{'off', 'on', 'strip_all'},},
   },

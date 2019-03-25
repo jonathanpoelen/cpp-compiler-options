@@ -241,7 +241,7 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
     elif (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
       if (  (___jln_flags.get('jln_shadow') == 'local') )
         jln_cpp_flags += ['-Wshadow=local', ]
-      elif (  (___jln_flags.get('jln_shadow') == 'compatible-local') )
+      elif (  (___jln_flags.get('jln_shadow') == 'compatible_local') )
         jln_cpp_flags += ['-Wshadow=compatible-local', ]
       endif
     endif
@@ -263,7 +263,7 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
       else
         jln_cpp_flags += ['-Weverything', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', '-Wno-inconsistent-missing-destructor-override', ]
       endif
-      if (  ( (___jln_flags.get('jln_warnings') == 'strict') or (___jln_flags.get('jln_warnings') == 'very-strict') ) )
+      if (  ( (___jln_flags.get('jln_warnings') == 'strict') or (___jln_flags.get('jln_warnings') == 'very_strict') ) )
         jln_cpp_flags += ['-Wconversion', ]
         if (  ( (jln_cpp_compiler.get_id() == 'gcc') ) )
           jln_cpp_flags += ['-Wcast-align=strict', ]
@@ -510,7 +510,7 @@ elif (  (jln_cpp_compiler.get_id() == 'msvc') )
       jln_cpp_flags += ['/W4', '/wd4244', '/wd4245', ]
     elif (  (___jln_flags.get('jln_warnings') == 'strict') )
       jln_cpp_flags += ['/Wall', '/wd4820', '/wd4514', '/wd4710', ]
-    elif (  (___jln_flags.get('jln_warnings') == 'very-strict') )
+    elif (  (___jln_flags.get('jln_warnings') == 'very_strict') )
       jln_cpp_flags += ['/Wall', ]
     elif (  (___jln_flags.get('jln_warnings') == 'off') )
       jln_cpp_flags += ['/W0', ]

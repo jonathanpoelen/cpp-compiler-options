@@ -60,12 +60,12 @@ reproducible_build_warnings = default off on
 rtti = default off on
 sanitizers = default off on
 sanitizers_extra = default off thread pointer
-shadow = off default on local compatible-local all
+shadow = off default on local compatible_local all
 stack_protector = default off on strong all
 stl_debug = default off on allow_broken_abi assert_as_exception
 stl_fix = on default off
 suggests = default off on
-warnings = on default off strict very-strict
+warnings = on default off strict very_strict
 warnings_as_error = default off on
 whole_program = default off on strip_all
 ```
@@ -73,7 +73,7 @@ whole_program = default off on strip_all
 
 The value `default` does nothing.
 
-If not specified, `error`, `pedantic`, `fix` and `warnings` are `on` ; `shadow` is `off`.
+If not specified, `shadow` is `off` ; `error`, `pedantic`, `fix` and `warnings` are `on`.
 
 
 # Use generated files
