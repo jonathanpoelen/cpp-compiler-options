@@ -97,9 +97,8 @@ G = Or(gcc, clang) {
       fl'-flto', -- clang -flto=thin
       gcc(5) {
         fl'-flto-odr-type-merging', -- increases size of LTO object files, but enables diagnostics about ODR violations
-        lvl'fat' {
-          cxx'-ffat-lto-objects',
-        },
+        lvl'fat' { cxx'-ffat-lto-objects', },
+        lvl'linker_plugin' { link'-fuse-linker-plugin' }
       }
     },
   },
@@ -124,6 +123,10 @@ G = Or(gcc, clang) {
     } /
     {
       link'-s',
+      lvl'strip_all'{
+        link'-Wl,--gc-sections',
+        link'-Wl,--strip-all',
+      },
       gcc {
         fl'-fwhole-program'
       } / {
@@ -601,7 +604,7 @@ Vbase = {
     diagnostics_show_template_tree={{'off', 'on'},},
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
-    lto=        {{'off', 'on', 'fat'},},
+    lto=        {{'off', 'on', 'fat', 'linker_plugin'},},
     narrowing_error={{'off', 'on'}, 'on'},
     optimize=   {{'off', 'debugoptimized', 'minsize', 'release', 'fast'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
@@ -618,7 +621,7 @@ Vbase = {
     suggests=   {{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very-strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},
-    whole_program={{'off', 'on'},},
+    whole_program={{'off', 'on', 'strip_all'},},
   },
 
   indent = '',

@@ -78,7 +78,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-elide-type"] then _OPTIONS["jln-elide-type"] = (defaults["elide_type"] or defaults["jln-elide-type"] or "default") end
   newoption{trigger="jln-exceptions", allowed={{"default"}, {"off"}, {"on"}}, description="exceptions"}
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
-  newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}}, description="lto"}
+  newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"linker_plugin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
   newoption{trigger="jln-narrowing-error", allowed={{"default"}, {"off"}, {"on"}}, description="narrowing_error"}
   if not _OPTIONS["jln-narrowing-error"] then _OPTIONS["jln-narrowing-error"] = (defaults["narrowing_error"] or defaults["jln-narrowing-error"] or "default") end
@@ -112,7 +112,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "default") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
-  newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}}, description="whole_program"}
+  newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}, {"strip_all"}}, description="whole_program"}
   if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
   newoption{trigger="jln-compiler", description="Path or name of the compiler"}
   newoption{trigger="jln-compiler-version", description="Force the compiler version"}
@@ -336,6 +336,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           if values["jln-lto"] == "fat" then
             jln_buildoptions = jln_buildoptions .. " -ffat-lto-objects"
           end
+          if values["jln-lto"] == "linker_plugin" then
+            jln_linkoptions = jln_linkoptions .. " -fuse-linker-plugin"
+          end
         end
       end
     end
@@ -375,6 +378,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       else
         jln_linkoptions = jln_linkoptions .. " -s"
+        if values["jln-whole-program"] == "strip_all" then
+          jln_linkoptions = jln_linkoptions .. " -Wl,--gc-sections -Wl,--strip-all"
+        end
         if compiler == "gcc" then
           jln_buildoptions = jln_buildoptions .. " -fwhole-program"
           jln_linkoptions = jln_linkoptions .. " -fwhole-program"

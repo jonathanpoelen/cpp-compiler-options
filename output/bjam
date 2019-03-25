@@ -19,8 +19,8 @@ feature <jln-diagnostics-show-template-tree> : default off on : incidental ;
 feature <jln-elide-type> : default off on : incidental ;
 feature <jln-exceptions> : default off on : propagated ;
 feature <jln-incidental-exceptions> : default off on : incidental ;
-feature <jln-lto> : default off on fat : propagated ;
-feature <jln-incidental-lto> : default off on fat : incidental ;
+feature <jln-lto> : default off on fat linker_plugin : propagated ;
+feature <jln-incidental-lto> : default off on fat linker_plugin : incidental ;
 feature <jln-narrowing-error> : on default off : propagated ;
 feature <jln-incidental-narrowing-error> : on default off : incidental ;
 feature <jln-optimize> : default off debugoptimized minsize release fast : propagated ;
@@ -47,8 +47,8 @@ feature <jln-stl-fix> : on default off : propagated ;
 feature <jln-incidental-stl-fix> : on default off : incidental ;
 feature <jln-suggests> : default off on : incidental ;
 feature <jln-warnings> : on default off strict very-strict : incidental ;
-feature <jln-whole-program> : default off on : propagated ;
-feature <jln-incidental-whole-program> : default off on : incidental ;
+feature <jln-whole-program> : default off on strip_all : propagated ;
+feature <jln-incidental-whole-program> : default off on strip_all : incidental ;
 
 if $(CXX_BJAM_YEAR_VERSION) < 2016.00 {
   import toolset ;
@@ -293,6 +293,12 @@ rule jln_flags ( properties * )
               <cxxflags>"-ffat-lto-objects"
             ;
           }
+          if $(jln-lto_isdefault) && <jln-incidental-lto>linker_plugin in $(properties) || <jln-lto>linker_plugin in $(properties)
+          {
+            flags +=
+              <linkflags>"-fuse-linker-plugin"
+            ;
+          }
         }
       }
     }
@@ -373,6 +379,13 @@ rule jln_flags ( properties * )
         flags +=
           <linkflags>"-s"
         ;
+        if $(jln-whole-program_isdefault) && <jln-incidental-whole-program>strip_all in $(properties) || <jln-whole-program>strip_all in $(properties)
+        {
+          flags +=
+            <linkflags>"-Wl,--gc-sections"
+            <linkflags>"-Wl,--strip-all"
+          ;
+        }
         if $(toolset) = gcc
         {
           flags +=

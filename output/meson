@@ -85,6 +85,9 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
         if (  (___jln_flags.get('jln_lto') == 'fat') )
           jln_cpp_flags += ['-ffat-lto-objects', ]
         endif
+        if (  (___jln_flags.get('jln_lto') == 'linker_plugin') )
+          jln_link_flags += ['-fuse-linker-plugin', ]
+        endif
       endif
     endif
   endif
@@ -124,6 +127,9 @@ if (  ( (jln_cpp_compiler.get_id() == 'gcc') or (jln_cpp_compiler.get_id() == 'c
       endif
     else
       jln_link_flags += ['-s', ]
+      if (  (___jln_flags.get('jln_whole_program') == 'strip_all') )
+        jln_link_flags += ['-Wl,--gc-sections', '-Wl,--strip-all', ]
+      endif
       if (  (jln_cpp_compiler.get_id() == 'gcc') )
         jln_cpp_flags += ['-fwhole-program', ]
         jln_link_flags += ['-fwhole-program', ]
