@@ -73,7 +73,7 @@ whole_program = default off on strip_all
 
 The value `default` does nothing.
 
-If not specified, `shadow` is `off` ; `error`, `pedantic`, `fix` and `warnings` are `on`.
+If not specified, `error`, `pedantic`, `fix` and `warnings` are `on` ; `shadow` is `off`.
 
 
 # Use generated files
