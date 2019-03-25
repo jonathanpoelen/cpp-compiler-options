@@ -1,8 +1,12 @@
+local tostrlvl=function(lvl)
+  return lvl:gsub('_', '-')
+end
+
 return {
   -- inogre = { optimize=true, }
 
   tostroption=function(_, optname)
-    return _.optprefix .. string.gsub(optname, '_', '-')
+    return _.optprefix .. optname:gsub('_', '-')
   end,
 
   start=function(_, optprefix)
@@ -136,7 +140,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
 ]])
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return 'values["' .. _:tostroption(optname) .. '"] == "' .. lvl .. '"' end,
+  _vcond_lvl=function(_, lvl, optname) return 'values["' .. _:tostroption(optname) .. '"] == "' .. tostrlvl(lvl) .. '"' end,
   _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
   _vcond_comp=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
 

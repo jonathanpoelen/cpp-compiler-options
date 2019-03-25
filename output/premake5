@@ -309,7 +309,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       elseif values["jln-debug"] == "gdb" then
         jln_buildoptions = jln_buildoptions .. " -ggdb"
       elseif compiler == "clang" then
-        if values["jln-debug"] == "line_tables_only" then
+        if values["jln-debug"] == "line-tables-only" then
           jln_buildoptions = jln_buildoptions .. " -gline-tables-only"
         end
         if values["jln-debug"] == "lldb" then
@@ -336,7 +336,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           if values["jln-lto"] == "fat" then
             jln_buildoptions = jln_buildoptions .. " -ffat-lto-objects"
           end
-          if values["jln-lto"] == "linker_plugin" then
+          if values["jln-lto"] == "linker-plugin" then
             jln_linkoptions = jln_linkoptions .. " -fuse-linker-plugin"
           end
         end
@@ -378,7 +378,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       else
         jln_linkoptions = jln_linkoptions .. " -s"
-        if values["jln-whole-program"] == "strip_all" then
+        if values["jln-whole-program"] == "strip-all" then
           jln_linkoptions = jln_linkoptions .. " -Wl,--gc-sections -Wl,--strip-all"
         end
         if compiler == "gcc" then
@@ -403,7 +403,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     if not ( values["jln-pedantic"] == "default") then
       if not values["jln-pedantic"] == "off" then
         jln_buildoptions = jln_buildoptions .. " -pedantic"
-        if values["jln-pedantic"] == "as_error" then
+        if values["jln-pedantic"] == "as-error" then
           jln_buildoptions = jln_buildoptions .. " -pedantic-errors"
         end
       end
@@ -469,10 +469,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     if not ( values["jln-stl-debug"] == "default") then
       if not values["jln-stl-debug"] == "off" then
         jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG=1"
-        if values["jln-stl-debug"] == "assert_as_exception" then
+        if values["jln-stl-debug"] == "assert-as-exception" then
           jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG_USE_EXCEPTIONS"
         end
-        if values["jln-stl-debug"] == "allow_broken_abi" then
+        if values["jln-stl-debug"] == "allow-broken-abi" then
           jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG"
         else
           jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_ASSERTIONS"
@@ -498,7 +498,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
         if values["jln-shadow"] == "local" then
           jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
-        elseif values["jln-shadow"] == "compatible_local" then
+        elseif values["jln-shadow"] == "compatible-local" then
           jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
         end
       end
@@ -536,7 +536,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         else
           jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-weak-vtables -Wno-exit-time-destructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum -Wno-inconsistent-missing-destructor-override"
         end
-        if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very_strict" ) then
+        if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
           jln_buildoptions = jln_buildoptions .. " -Wconversion"
           if ( compiler == "gcc" and not ( compversion < 800 ) ) then
             jln_buildoptions = jln_buildoptions .. " -Wcast-align=strict"
@@ -690,7 +690,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " /RTC1 /Od"
         if values["jln-debug"] == "on" then
           jln_buildoptions = jln_buildoptions .. " /DEBUG"
-        elseif values["jln-debug"] == "line_tables_only" then
+        elseif values["jln-debug"] == "line-tables-only" then
           jln_buildoptions = jln_buildoptions .. " /DEBUG:FASTLINK"
         end
         if not ( values["jln-optimize"] == "default") then
@@ -795,7 +795,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245"
       elseif values["jln-warnings"] == "strict" then
         jln_buildoptions = jln_buildoptions .. " /Wall /wd4820 /wd4514 /wd4710"
-      elseif values["jln-warnings"] == "very_strict" then
+      elseif values["jln-warnings"] == "very-strict" then
         jln_buildoptions = jln_buildoptions .. " /Wall"
       elseif values["jln-warnings"] == "off" then
         jln_buildoptions = jln_buildoptions .. " /W0"

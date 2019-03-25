@@ -234,7 +234,7 @@ rule jln_flags ( properties * )
       }
       else if $(toolset) = clang
       {
-        if $(jln-debug_isdefault) && <jln-incidental-debug>line_tables_only in $(properties) || <jln-debug>line_tables_only in $(properties)
+        if $(jln-debug_isdefault) && <jln-incidental-debug>line-tables-only in $(properties) || <jln-debug>line-tables-only in $(properties)
         {
           flags +=
             <cxxflags>"-gline-tables-only"
@@ -293,7 +293,7 @@ rule jln_flags ( properties * )
               <cxxflags>"-ffat-lto-objects"
             ;
           }
-          if $(jln-lto_isdefault) && <jln-incidental-lto>linker_plugin in $(properties) || <jln-lto>linker_plugin in $(properties)
+          if $(jln-lto_isdefault) && <jln-incidental-lto>linker-plugin in $(properties) || <jln-lto>linker-plugin in $(properties)
           {
             flags +=
               <linkflags>"-fuse-linker-plugin"
@@ -379,7 +379,7 @@ rule jln_flags ( properties * )
         flags +=
           <linkflags>"-s"
         ;
-        if $(jln-whole-program_isdefault) && <jln-incidental-whole-program>strip_all in $(properties) || <jln-whole-program>strip_all in $(properties)
+        if $(jln-whole-program_isdefault) && <jln-incidental-whole-program>strip-all in $(properties) || <jln-whole-program>strip-all in $(properties)
         {
           flags +=
             <linkflags>"-Wl,--gc-sections"
@@ -425,7 +425,7 @@ rule jln_flags ( properties * )
         flags +=
           <cxxflags>"-pedantic"
         ;
-        if $(jln-pedantic_isdefault) && <jln-incidental-pedantic>as_error in $(properties) || <jln-pedantic>as_error in $(properties)
+        if $(jln-pedantic_isdefault) && <jln-incidental-pedantic>as-error in $(properties) || <jln-pedantic>as-error in $(properties)
         {
           flags +=
             <cxxflags>"-pedantic-errors"
@@ -566,13 +566,13 @@ rule jln_flags ( properties * )
         flags +=
           <define>_LIBCPP_DEBUG=1
         ;
-        if $(jln-stl-debug_isdefault) && <jln-incidental-stl-debug>assert_as_exception in $(properties) || <jln-stl-debug>assert_as_exception in $(properties)
+        if $(jln-stl-debug_isdefault) && <jln-incidental-stl-debug>assert-as-exception in $(properties) || <jln-stl-debug>assert-as-exception in $(properties)
         {
           flags +=
             <define>_LIBCPP_DEBUG_USE_EXCEPTIONS
           ;
         }
-        if $(jln-stl-debug_isdefault) && <jln-incidental-stl-debug>allow_broken_abi in $(properties) || <jln-stl-debug>allow_broken_abi in $(properties)
+        if $(jln-stl-debug_isdefault) && <jln-incidental-stl-debug>allow-broken-abi in $(properties) || <jln-stl-debug>allow-broken-abi in $(properties)
         {
           flags +=
             <define>_GLIBCXX_DEBUG
@@ -632,7 +632,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wshadow=local"
           ;
         }
-        else if <jln-shadow>compatible_local in $(properties)
+        else if <jln-shadow>compatible-local in $(properties)
         {
           flags +=
             <cxxflags>"-Wshadow=compatible-local"
@@ -751,7 +751,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wno-inconsistent-missing-destructor-override"
           ;
         }
-        if (  <jln-warnings>strict in $(properties) || <jln-warnings>very_strict in $(properties)  )
+        if (  <jln-warnings>strict in $(properties) || <jln-warnings>very-strict in $(properties)  )
         {
           flags +=
             <cxxflags>"-Wconversion"
@@ -1060,7 +1060,7 @@ rule jln_flags ( properties * )
             <cxxflags>"/DEBUG"
           ;
         }
-        else if $(jln-debug_isdefault) && <jln-incidental-debug>line_tables_only in $(properties) || <jln-debug>line_tables_only in $(properties)
+        else if $(jln-debug_isdefault) && <jln-incidental-debug>line-tables-only in $(properties) || <jln-debug>line-tables-only in $(properties)
         {
           flags +=
             <cxxflags>"/DEBUG:FASTLINK"
@@ -1304,7 +1304,7 @@ rule jln_flags ( properties * )
           <cxxflags>"/wd4710"
         ;
       }
-      else if <jln-warnings>very_strict in $(properties)
+      else if <jln-warnings>very-strict in $(properties)
       {
         flags +=
           <cxxflags>"/Wall"

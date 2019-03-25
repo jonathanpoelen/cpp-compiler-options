@@ -3,6 +3,10 @@ local normnum=function(x)
   return x:sub(-2)
 end
 
+local jamlvl=function(lvl)
+  return lvl:gsub('_', '-')
+end
+
 return {
   ignore={
     warnings_as_error=true,
@@ -21,6 +25,7 @@ return {
 
   _vcond_lvl=function(_, lvl, optname)
     local opt, iopt = _:tobjamoption(optname)
+    lvl = jamlvl(lvl)
     return 
       (iopt and '$(' .. opt .. '_isdefault) && <' .. iopt .. '>' .. lvl .. ' in $(properties) || ' or '') ..
       '<' .. opt .. '>' .. lvl .. ' in $(properties)'
