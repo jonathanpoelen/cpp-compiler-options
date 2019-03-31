@@ -37,7 +37,7 @@ while true do
   end
 end
 
-local options = io.popen('./compiler-options.lua generators/options.lua', 'r'):read('a')
+local options = io.popen('./compiler-options.lua generators/list_options.lua', 'r'):read('a')
 local notdefaults = {}
 for opt,v in options:gmatch('(%w+) = (%w+)') do
   if v ~= 'default' then
@@ -64,6 +64,6 @@ end
 table.sort(strnotdefaults)
 contents = contents
 :gsub('(<!%-%- summary %-%->)\n.+(\n<!%-%- /summary %-%->)', '%1' .. summary:gsub('%%%%', '%%') .. '%2')
-:gsub('(<!%-%- %./compiler%-options%.lua generators/options%.lua color %-%->\n```ini\n).+(```\n<!%-%- %./compiler%-options%.lua %-%->)\n\n.-\n\n.-\n', '%1' .. options .. '%2\n\nThe value `default` does nothing.\n\nIf not specified, `' .. table.concat(strnotdefaults, '` ; `') .. '`.\n')
+:gsub('(<!%-%- %./compiler%-options%.lua generators/list_options%.lua color %-%->\n```ini\n)[^`]*(```\n<!%-%- %./compiler%-options%.lua %-%->)\n\n.-\n\n.-\n', '%1' .. options .. '%2\n\nThe value `default` does nothing.\n\nIf not specified, `' .. table.concat(strnotdefaults, '` ; `') .. '`.\n')
 
 io.open(README, 'w'):write(contents)

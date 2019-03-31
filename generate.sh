@@ -55,7 +55,7 @@ gencompopt ()
 }
 
 # check options
-sgen options
+sgen list_options
 
 for g in bjam cmake premake5 meson ; do
   gen $g $g jln-

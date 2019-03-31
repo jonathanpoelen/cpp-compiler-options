@@ -28,7 +28,7 @@ $ `meson -Djln_fast_math=on`
     5. [Bash alias for gcc/clang](#bash-alias-for-gccclang)
 3. [Generators](#generators)
     1. [generators/compiler.lua](#generatorscompilerlua)
-    2. [generators/options.lua](#generatorsoptionslua)
+    2. [generators/list_options.lua](#generatorslist_optionslua)
     3. [generators/{bjam,cmake,meson,premake5}.lua](#generatorsbjamcmakemesonpremake5lua)
 4. [How to add options?](#how-to-add-options)
     1. [Update the options tree](#update-the-options-tree)
@@ -39,7 +39,7 @@ $ `meson -Djln_fast_math=on`
 
 Supported options are:
 
-<!-- ./compiler-options.lua generators/options.lua color -->
+<!-- ./compiler-options.lua generators/list_options.lua color -->
 ```ini
 color = default auto never always
 control_flow = default off on
@@ -184,7 +184,7 @@ $ `./compiler-options.lua [-o filebase] {generator} [options...]`
 
 See `./compiler-options.lua generators/compiler.lua -h` for detailed usage information.
 
-## generators/options.lua
+## generators/list_options.lua
 
 Checks and displays options and their values. Put a parameter adds color.
 
