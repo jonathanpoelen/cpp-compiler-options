@@ -672,9 +672,19 @@ Vbase = {
     if #_._vcondkeyword.ifopen ~= 0 then _._vcondkeyword.ifopen = ' ' .. _._vcondkeyword.ifopen .. ' ' end
     if #_._vcondkeyword.ifclose ~= 0 then _._vcondkeyword.ifclose = ' ' .. _._vcondkeyword.ifclose end
 
+    local write_logical=function(_,a,k,optname)
+      _:write(' '.._._vcondkeyword.open)
+      _:_vcond(a[1], optname)
+      for i=2,#a do
+        _:write(' '..k)
+        _:_vcond(a[i], optname)
+      end
+      _:write(' '.._._vcondkeyword.close)
+    end
+
     _._vcond=function(_, v, optname)
-          if v._or      then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._or[1], optname) ; _:write(' '.._._vcondkeyword._or) _:_vcond(v._or[2], optname) ; _:write(' '.._._vcondkeyword.close)
-      elseif v._and     then _:write(' '.._._vcondkeyword.open) ; _:_vcond(v._and[1], optname); _:write(' '.._._vcondkeyword._and) _:_vcond(v._and[2], optname); _:write(' '.._._vcondkeyword.close)
+          if v._or      then write_logical(_, v._or, _._vcondkeyword._or, optname)
+      elseif v._and     then write_logical(_, v._and, _._vcondkeyword._and, optname)
       elseif v._not     then _:write(' '.._._vcondkeyword._not) ; _:_vcond(v._not, optname);
       elseif v.lvl      then _:write(' '.._:_vcond_lvl(v.lvl, optname))
       elseif v.version  then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_verless(v.version[1], v.version[2])..' '.._._vcondkeyword.close)
