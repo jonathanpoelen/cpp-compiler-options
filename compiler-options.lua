@@ -883,7 +883,16 @@ function evalflags(t, v, curropt, no_stopcond)
       end
       v:stopcond(t.opt)
     elseif t._else then
-      error('unimplemented')
+      local newt = table.remove(t._else, 1)
+      if newt._else then
+        error('unimplemented')
+      end
+      if #t._else == 0 then
+        t._else = nil
+      else
+        newt._else = t._else
+      end
+      evalflags(newt, v, curropt, no_stopcond)
     end
   elseif t.cxx or t.link or t.def then
     if t.cxx  then v:cxx(t.cxx, curropt) end
@@ -904,9 +913,19 @@ function insert_missing_function(V)
   end
 end
 
-function run(filebase, generator_name, ...)
+function run(filebase, ignore_options, generator_name, ...)
   local V = require(generator_name:gsub('.lua$', ''))
   insert_missing_function(V)
+
+  for k,mem in pairs(V.ignore) do
+    if not Vbase._opts[k] then
+      error('Unknown ' .. k .. ' in ignore table')
+    end
+  end
+
+  for name in pairs(ignore_options) do
+    V.ignore[name] = true
+  end
 
   local r = V:start(...)
   if r == false then
@@ -916,12 +935,6 @@ function run(filebase, generator_name, ...)
   elseif r ~= nil and r ~= V then
     V = r
     insert_missing_function(V)
-  end
-
-  for k,mem in pairs(V.ignore) do
-    if not Vbase._opts[k] then
-      error('Unknown ' .. k .. ' in ignore table')
-    end
   end
 
   evalflags(G, V)
@@ -958,16 +971,12 @@ function run(filebase, generator_name, ...)
 end
 
 function help(out)
-  out:write(arg[0] .. ' [-o filebase] {generator.lua} [-h|{options}...]\n')
-end
-
-if #arg == 0 then
-  help(io.stderr)
-  io.stderr:write('Missing generator file\n')  
-  os.exit(1)
+  out:write(arg[0] .. ' [-o filebase] [-f [-]option_list[,...]] {generator.lua} [-h|{options}...]\n')
 end
 
 local filebase
+local ignore_options = {}
+
 i=1
 while i <= #arg do
   local s = arg[i]
@@ -981,24 +990,46 @@ while i <= #arg do
     os.exit(0)
   end
 
+  local value
+  if #arg[i] ~= 2 then
+    value = s:sub(3)
+  else
+    i = i+1
+    value = arg[i]
+    if not value then
+      help(io.stderr)
+      os.exit(2)
+    end
+  end
+
   if opt == 'o' then
-    if #s ~= 2 then
-      filebase = s:sub(3)
-    else
-      i = i+1
-      filebase = arg[i]
-      if not filebase then
-        help(io.stderr)
+    filebase = (value ~= '-') and value or nil
+  elseif opt == 'f' then
+    for name in value:gmatch('([_%w]+)') do
+      if not Vbase._opts[name] then
+        io.strerr:write(arg[0] .. ": Unknown option: " .. name)
         os.exit(2)
       end
+      ignore_options[name] = true
     end
-
-    if filebase == '-' then
-      filebase = nil
+    if value:sub(1,1) ~= '-' then
+      local select_options = ignore_options
+      ignore_options = {}
+      for name in pairs(Vbase._opts) do
+        if not select_options[name] then
+          ignore_options[name] = true
+        end
+      end
     end
   end
 
   i = i+1
 end
 
-run(filebase, select(i, ...))
+if i > #arg then
+  help(io.stderr)
+  io.stderr:write('Missing generator file\n')  
+  os.exit(1)
+end
+
+run(filebase, ignore_options, select(i, ...))
