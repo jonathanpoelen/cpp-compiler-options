@@ -18,7 +18,6 @@ return {
       _and='and',
       _or='or',
       openblock='',
-      openblock='',
       closeblock='',
       else_of_else_if='el',
       _else='else',
@@ -36,16 +35,24 @@ return {
 
     _preface_opt[#_preface_opt+1] = [[}
 
+jln_custom_cpp_flags = []
+jln_custom_link_flags = []
+
+___jln_cpp_compiler = meson.get_compiler('cpp')
+___jln_compiler_id = ___jln_cpp_compiler.get_id()
+
+___jln_custom_flags = get_variable('jln_custom_flags', []) + [___jln_flags]
+
+foreach ___jln_flags : ___jln_custom_flags
 jln_cpp_flags = []
 jln_link_flags = []
 
-jln_cpp_compiler = meson.get_compiler('cpp')
 ]]
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return  "(___jln_flags.get('" .. _:tobuildoption(optname) .. "') == '" .. lvl .. "')" end,
+  _vcond_lvl=function(_, lvl, optname) return  "(___jln_flags.get('" .. _:tobuildoption(optname) .. "', 'default') == '" .. lvl .. "')" end,
   _vcond_verless=function(_, major, minor) return 'false' end,
-  _vcond_comp=function(_, compiler) return "(jln_cpp_compiler.get_id() == '" .. compiler .. "')" end,
+  _vcond_comp=function(_, compiler) return "(___jln_compiler_id == '" .. compiler .. "')" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,
@@ -90,7 +97,7 @@ jln_cpp_compiler = meson.get_compiler('cpp')
         table.insert(depth, #depth)
         append(indent..match)
         indent = indent..'  '
-      elseif match:find('^jln_cxx') or match:find('^jln_link') then
+      elseif match:find('^jln_cpp') or match:find('^jln_link') then
         local i = match:byte(5) == l_byte and 2 or 1
         if flags[i] then
           flags[i] = flags[i]:sub(1, #flags[i]-1) .. match:sub(18+i)
@@ -105,8 +112,12 @@ jln_cpp_compiler = meson.get_compiler('cpp')
     local meson_options = table.concat(_._option_strs, '\n')
     local meson_build = table.concat(_._preface_opt) .. table.concat(t, '\n') .. [[
 
-jln_cpp_flags = jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
-jln_link_flags = jln_cpp_compiler.get_supported_arguments(jln_link_flags)
+
+  jln_cpp_flags = ___jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
+  jln_link_flags = ___jln_cpp_compiler.get_supported_arguments(jln_link_flags)
+  jln_custom_cpp_flags += [jln_cpp_flags]
+  jln_custom_link_flags += [jln_link_flags]
+endforeach
 ]]
 
     return filebase and {
