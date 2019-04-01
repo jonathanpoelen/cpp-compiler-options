@@ -423,7 +423,7 @@ G = Or(gcc, clang) {
     }
   },
 
-  opt'reproducible_build_warnings' {
+  opt'reproductible_build_warnings' {
     gcc(4,9) {
       lvl'on' { cxx'-Wdate-time' } / cxx'-Wno-date-time'
     }
@@ -587,7 +587,7 @@ Vbase = {
     diagnostics_format=true,
     diagnostics_show_template_tree=true,
     elide_type=true,
-    reproducible_build_warnings=true,
+    reproductible_build_warnings=true,
     shadow=true,
     suggests=true,
     warnings=true,
@@ -610,7 +610,7 @@ Vbase = {
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     pie=        {{'off', 'on', 'pic'},},
     relro=      {{'off', 'on', 'full'},},
-    reproducible_build_warnings={{'off', 'on'},},
+    reproductible_build_warnings={{'off', 'on'},},
     rtti=       {{'off', 'on'},},
     stl_debug=  {{'off', 'on', 'allow_broken_abi', 'assert_as_exception'},},
     stl_fix=    {{'off', 'on'}, 'on'},

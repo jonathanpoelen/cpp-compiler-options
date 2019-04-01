@@ -15,7 +15,7 @@ ___jln_flags = {
   'jln_pedantic': ___jln_default_flags.get('jln_pedantic', get_option('jln_pedantic')),
   'jln_pie': ___jln_default_flags.get('jln_pie', get_option('jln_pie')),
   'jln_relro': ___jln_default_flags.get('jln_relro', get_option('jln_relro')),
-  'jln_reproducible_build_warnings': ___jln_default_flags.get('jln_reproducible_build_warnings', get_option('jln_reproducible_build_warnings')),
+  'jln_reproductible_build_warnings': ___jln_default_flags.get('jln_reproductible_build_warnings', get_option('jln_reproductible_build_warnings')),
   'jln_rtti': ___jln_default_flags.get('jln_rtti', get_option('jln_rtti')),
   'jln_sanitizers': ___jln_default_flags.get('jln_sanitizers', get_option('jln_sanitizers')),
   'jln_sanitizers_extra': ___jln_default_flags.get('jln_sanitizers_extra', get_option('jln_sanitizers_extra')),
@@ -313,9 +313,9 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
       endif
     endif
   endif
-  if (  not ( (___jln_flags.get('jln_reproducible_build_warnings', 'default') == 'default')) )
+  if (  not ( (___jln_flags.get('jln_reproductible_build_warnings', 'default') == 'default')) )
     if (  ( (___jln_compiler_id == 'gcc') ) )
-      if (  (___jln_flags.get('jln_reproducible_build_warnings', 'default') == 'on') )
+      if (  (___jln_flags.get('jln_reproductible_build_warnings', 'default') == 'on') )
         jln_cpp_flags += ['-Wdate-time', ]
       else
         jln_cpp_flags += ['-Wno-date-time', ]
