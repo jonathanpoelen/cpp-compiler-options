@@ -47,8 +47,12 @@ return {
 
   start=function(_, optprefix)
     _.optprefix = optprefix or ''
-    local optprefix_suffix = _.optprefix:sub(#_.optprefix)
-    _.ioptprefix = _.optprefix .. (optprefix_suffix ~= '_' and optprefix_suffix ~= '-' and '-' or '') .. 'incidental-'
+    if #_.optprefix == 0 then
+      _.ioptprefix = 'incidental-'
+    else
+      local optprefix_suffix = _.optprefix:sub(#_.optprefix)
+      _.ioptprefix = _.optprefix .. (optprefix_suffix ~= '_' and optprefix_suffix ~= '-' and '-' or '') .. 'incidental-'
+    end
 
     _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
