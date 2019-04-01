@@ -39,7 +39,7 @@ end
 
 local options = io.popen('./compiler-options.lua generators/list_options.lua', 'r'):read('a')
 local notdefaults = {}
-for opt,v in options:gmatch('(%w+) = (%w+)') do
+for opt,v in options:gmatch('([-_%w]+) = ([-_%w]+)') do
   if v ~= 'default' then
     local t = notdefaults[v]
     if not t then
