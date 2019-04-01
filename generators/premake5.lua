@@ -27,7 +27,9 @@ return {
     for optname in _:getoptions() do
       local opt = _:tostroption(optname)
       _:print('_jln_flag_names["' .. opt .. '"] = true')
-      _:print('_jln_flag_names["' .. optname .. '"] = true')
+      if opt ~= optname then
+        _:print('_jln_flag_names["' .. optname .. '"] = true')
+      end
     end
 
     _:print('\nfunction jln_newoptions(defaults)')
@@ -39,7 +41,7 @@ return {
     for optname,args in _:getoptions() do
       local opt = _:tostroption(optname)
       _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(args, '"}, {"') .. '"}}, description="' .. optname .. '"}')
-      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] or defaults["' .. opt .. '"] or "' .. args[1] .. '") end')
+      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. args[1] .. '") end')
     end
     _:print('  newoption{trigger="' .. _.optprefix .. 'compiler", description="Path or name of the compiler"}')
     _:print('  newoption{trigger="' .. _.optprefix .. 'compiler-version", description="Force the compiler version"}')
@@ -127,8 +129,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     for optname,args in _:getoptions() do
       local opt = _:tostroption(optname)
       _:print('    name_list["' .. opt .. '"] = true')
-      _:print('    name_list["' .. optname .. '"] = true')
-      _:print('    new_value["' .. opt .. '"] = values["' .. optname .. '"] or values["' .. opt .. '"] or (disable_others and "default" or _OPTIONS["' .. opt .. '"])')
+      local isnotsamename = (opt ~= optname)
+      if isnotsamename then
+        _:print('    name_list["' .. optname .. '"] = true')
+      end
+      _:print('    new_value["' .. opt .. '"] = values["' .. optname .. '"] ' .. (isnotsamename and 'or values["' .. opt .. '"] ' or '') .. 'or (disable_others and "default" or _OPTIONS["' .. opt .. '"])')
     end
     _:print([[
     values = new_value
