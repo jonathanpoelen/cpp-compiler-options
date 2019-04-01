@@ -189,7 +189,12 @@ done >> ~/.bashrc
 
 # Generators
 
-$ `./compiler-options.lua [-o filebase] {generator} [options...]`
+$ `./compiler-options.lua [-o filebase] [-f [-]option_list[,...]] {generator} [options...]`
+
+```bash
+./compiler-options.lua -f debug,warning generators/cmake.lua # only with debug and warning
+./compiler-options.lua -f -debug,warning generators/cmake.lua # without debug nor warning
+```
 
 ## generators/compiler.lua
 
@@ -202,6 +207,8 @@ Checks and displays options and their values. Put a parameter adds color.
 ## generators/{bjam,cmake,meson,premake5}.lua
 
 Generators for different build system.
+
+$ `./compiler-options.lua [-o filebase] {generator} [option-prefix]`
 
 
 # How to add options?
