@@ -347,8 +347,12 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " -flto"
         jln_linkoptions = jln_linkoptions .. " -flto"
         if ( compiler == "gcc" and not ( compversion < 500 ) ) then
-          jln_buildoptions = jln_buildoptions .. " -flto-odr-type-merging"
-          jln_linkoptions = jln_linkoptions .. " -flto-odr-type-merging"
+          if not ( values["jln-warnings"] == "default") then
+            if not values["jln-warnings"] == "off" then
+              jln_buildoptions = jln_buildoptions .. " -flto-odr-type-merging"
+              jln_linkoptions = jln_linkoptions .. " -flto-odr-type-merging"
+            end
+          end
           if values["jln-lto"] == "fat" then
             jln_buildoptions = jln_buildoptions .. " -ffat-lto-objects"
           end

@@ -98,8 +98,12 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
       jln_cpp_flags += ['-flto', ]
       jln_link_flags += ['-flto', ]
       if (  ( (___jln_compiler_id == 'gcc') ) )
-        jln_cpp_flags += ['-flto-odr-type-merging', ]
-        jln_link_flags += ['-flto-odr-type-merging', ]
+        if (  not ( (___jln_flags.get('jln_warnings', 'default') == 'default')) )
+          if (  not (___jln_flags.get('jln_warnings', 'default') == 'off') )
+            jln_cpp_flags += ['-flto-odr-type-merging', ]
+            jln_link_flags += ['-flto-odr-type-merging', ]
+          endif
+        endif
         if (  (___jln_flags.get('jln_lto', 'default') == 'fat') )
           jln_cpp_flags += ['-ffat-lto-objects', ]
         endif

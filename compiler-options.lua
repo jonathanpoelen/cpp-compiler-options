@@ -101,7 +101,9 @@ G = Or(gcc, clang) {
     } / {
       fl'-flto', -- clang -flto=thin
       gcc(5) {
-        fl'-flto-odr-type-merging', -- increases size of LTO object files, but enables diagnostics about ODR violations
+        opt'warnings' {
+          -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
+        },
         lvl'fat' { cxx'-ffat-lto-objects', },
         lvl'linker_plugin' { link'-fuse-linker-plugin' }
       }

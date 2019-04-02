@@ -306,10 +306,16 @@ rule jln_flags ( properties * )
         ;
         if (  $(toolset) = gcc && ! (  $(version) < 05.00  )  )
         {
-          flags +=
-            <cxxflags>"-flto-odr-type-merging"
-            <linkflags>"-flto-odr-type-merging"
-          ;
+          if ! $(jln-warnings_isdefault)
+          {
+            if ! <jln-warnings>off in $(properties)
+            {
+              flags +=
+                <cxxflags>"-flto-odr-type-merging"
+                <linkflags>"-flto-odr-type-merging"
+              ;
+            }
+          }
           if $(jln-lto_isdefault) && <jln-incidental-lto>fat in $(properties) || <jln-lto>fat in $(properties)
           {
             flags +=
