@@ -47,7 +47,6 @@ local gcc = compiler('gcc')
 local clang = compiler('clang')
 local msvc = compiler('msvc')
 function vers(major, minor) return setmetatable({ version={major, minor or 0} }, cond_mt) end
-function def(x) return { def=x } end
 function cxx(x) return { cxx=x } end
 function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
 function fl(x) return { cxx=x, link=x } end
@@ -111,10 +110,12 @@ G = Or(gcc, clang) {
 
   opt'optimize' {
     lvl'off'     { fl'-O0' } /
-    lvl'debugoptimized' { fl'-Og' } /
-    lvl'minsize' { fl'-Os' } /
-    lvl'fast'    { fl'-Ofast' } /
-    lvl'release' { fl'-O3' }
+    lvl'debugoptimized' { fl'-Og' } / {
+      cxx'-DNDEBUG',
+      lvl'minsize' { fl'-Os' } /
+      lvl'fast'    { fl'-Ofast' } /
+      lvl'release' { fl'-O3' }
+    }
   },
 
   opt'cpu' {
@@ -165,7 +166,7 @@ G = Or(gcc, clang) {
       cxx'-U_FORTIFY_SOURCE'
     } /
     {
-      def'_FORTIFY_SOURCE=2',
+      cxx'-D_FORTIFY_SOURCE=2',
       cxx'-Wstack-protector',
       lvl'strong' {
         gcc(4,9) {
@@ -217,14 +218,14 @@ G = Or(gcc, clang) {
 
   opt'stl_debug' {
     -lvl'off' {
-      def'_LIBCPP_DEBUG=1',
+      cxx'-D_LIBCPP_DEBUG=1',
       lvl'assert_as_exception' {
-        def'_LIBCPP_DEBUG_USE_EXCEPTIONS'
+        cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
       },
-      lvl'allow_broken_abi' { def'_GLIBCXX_DEBUG', } / def'_GLIBCXX_ASSERTIONS',
+      lvl'allow_broken_abi' { cxx'-D_GLIBCXX_DEBUG', } / cxx'-D_GLIBCXX_ASSERTIONS',
       opt'pedantic' {
         -lvl'off' {
-          def'_GLIBCXX_DEBUG_PEDANTIC'
+          cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
         },
       },
     },
@@ -503,12 +504,14 @@ msvc {
 
   opt'optimize' {
     lvl'off' { cxx'/Ob0 /Od /Oi- /Oy-' } /
-    lvl'debugoptimized' { cxx'/Ob1' } /
-    -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
-    -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-    lvl'release' { cxx'/O2', fl'/OPT:REF', } /
-    lvl'minsize' { cxx'/O1', fl'/OPT:REF', cxx'/Gw' } /
-    lvl'fast' { cxx'/O2', fl'/OPT:REF', cxx'/fp:fast' }
+    lvl'debugoptimized' { cxx'/Ob1' } / {
+      cxx'/DNDEBUG',
+      -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
+      -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
+      lvl'release' { cxx'/O2', fl'/OPT:REF', } /
+      lvl'minsize' { cxx'/O1', fl'/OPT:REF', cxx'/Gw' } /
+      lvl'fast' { cxx'/O2', fl'/OPT:REF', cxx'/fp:fast' }
+    }
   },
 
   opt'whole_program' {
@@ -654,7 +657,6 @@ Vbase = {
 
   cxx=noop,
   link=noop,
-  define=noop,
 
   _vcond_init=function(_, keywords)
     _._vcondkeyword = keywords or {}
@@ -701,7 +703,9 @@ Vbase = {
       end
     end
 
-    _._vcond_hasopt = _._vcond_hasopt or function(_, optname) return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl('default', optname).._._vcondkeyword.close end
+    _._vcond_hasopt = _._vcond_hasopt or function(_, optname)
+      return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl('default', optname).._._vcondkeyword.close
+    end
 
     _.startopt=function(_, optname)
       _:_vcond_printflags()
@@ -752,15 +756,13 @@ Vbase = {
 
     _._vcond_flags_cxx = ''
     _._vcond_flags_link = ''
-    _._vcond_flags_define = ''
     _._vcond_printflags=function(_)
-      if #_._vcond_flags_cxx ~= 0 or #_._vcond_flags_link ~= 0 or #_._vcond_flags_define ~= 0 then
-        local s = _:_vcond_toflags(_._vcond_flags_cxx, _._vcond_flags_link, _._vcond_flags_define)
+      if #_._vcond_flags_cxx ~= 0 or #_._vcond_flags_link ~= 0 then
+        local s = _:_vcond_toflags(_._vcond_flags_cxx, _._vcond_flags_link)
         if s and #s ~= 0 then _:print(s) end
       end
       _._vcond_flags_cxx = ''
       _._vcond_flags_link = ''
-      _._vcond_flags_define = ''
     end
 
     local accu=function(k, f)
@@ -771,7 +773,6 @@ Vbase = {
 
     _.cxx = accu('_vcond_flags_cxx', _.cxx)
     _.link = accu('_vcond_flags_link', _.link)
-    _.define = accu('_vcond_flags_define', _.define)
   end,
 
   _computed_options = nil,
@@ -902,10 +903,9 @@ function evalflags(t, v, curropt, no_stopcond)
       end
       evalflags(newt, v, curropt, no_stopcond)
     end
-  elseif t.cxx or t.link or t.def then
+  elseif t.cxx or t.link then
     if t.cxx  then v:cxx(t.cxx, curropt) end
     if t.link then v:link(t.link, curropt) end
-    if t.def  then v:define(t.def, curropt) end
   else
     for k,x in ipairs(t) do
       evalflags(x, v, curropt)

@@ -341,26 +341,32 @@ rule jln_flags ( properties * )
           <linkflags>"-Og"
         ;
       }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>minsize in $(properties) || <jln-optimize>minsize in $(properties)
+      else
       {
         flags +=
-          <cxxflags>"-Os"
-          <linkflags>"-Os"
+          <cxxflags>"-DNDEBUG"
         ;
-      }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>fast in $(properties) || <jln-optimize>fast in $(properties)
-      {
-        flags +=
-          <cxxflags>"-Ofast"
-          <linkflags>"-Ofast"
-        ;
-      }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>release in $(properties) || <jln-optimize>release in $(properties)
-      {
-        flags +=
-          <cxxflags>"-O3"
-          <linkflags>"-O3"
-        ;
+        if $(jln-optimize_isdefault) && <jln-incidental-optimize>minsize in $(properties) || <jln-optimize>minsize in $(properties)
+        {
+          flags +=
+            <cxxflags>"-Os"
+            <linkflags>"-Os"
+          ;
+        }
+        else if $(jln-optimize_isdefault) && <jln-incidental-optimize>fast in $(properties) || <jln-optimize>fast in $(properties)
+        {
+          flags +=
+            <cxxflags>"-Ofast"
+            <linkflags>"-Ofast"
+          ;
+        }
+        else if $(jln-optimize_isdefault) && <jln-incidental-optimize>release in $(properties) || <jln-optimize>release in $(properties)
+        {
+          flags +=
+            <cxxflags>"-O3"
+            <linkflags>"-O3"
+          ;
+        }
       }
     }
     if ! ( $(jln-cpu_isdefault) && <jln-incidental-cpu>default in $(properties) )
@@ -469,8 +475,8 @@ rule jln_flags ( properties * )
       else
       {
         flags +=
+          <cxxflags>"-D_FORTIFY_SOURCE=2"
           <cxxflags>"-Wstack-protector"
-          <define>_FORTIFY_SOURCE=2
         ;
         if $(jln-stack-protector_isdefault) && <jln-incidental-stack-protector>strong in $(properties) || <jln-stack-protector>strong in $(properties)
         {
@@ -587,24 +593,24 @@ rule jln_flags ( properties * )
       if ! $(jln-stl-debug_isdefault) && <jln-incidental-stl-debug>off in $(properties) || <jln-stl-debug>off in $(properties)
       {
         flags +=
-          <define>_LIBCPP_DEBUG=1
+          <cxxflags>"-D_LIBCPP_DEBUG=1"
         ;
         if $(jln-stl-debug_isdefault) && <jln-incidental-stl-debug>assert-as-exception in $(properties) || <jln-stl-debug>assert-as-exception in $(properties)
         {
           flags +=
-            <define>_LIBCPP_DEBUG_USE_EXCEPTIONS
+            <cxxflags>"-D_LIBCPP_DEBUG_USE_EXCEPTIONS"
           ;
         }
         if $(jln-stl-debug_isdefault) && <jln-incidental-stl-debug>allow-broken-abi in $(properties) || <jln-stl-debug>allow-broken-abi in $(properties)
         {
           flags +=
-            <define>_GLIBCXX_DEBUG
+            <cxxflags>"-D_GLIBCXX_DEBUG"
           ;
         }
         else
         {
           flags +=
-            <define>_GLIBCXX_ASSERTIONS
+            <cxxflags>"-D_GLIBCXX_ASSERTIONS"
           ;
         }
         if ! ( $(jln-pedantic_isdefault) && <jln-incidental-pedantic>default in $(properties) )
@@ -612,7 +618,7 @@ rule jln_flags ( properties * )
           if ! $(jln-pedantic_isdefault) && <jln-incidental-pedantic>off in $(properties) || <jln-pedantic>off in $(properties)
           {
             flags +=
-              <define>_GLIBCXX_DEBUG_PEDANTIC
+              <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
             ;
           }
         }
@@ -1141,31 +1147,37 @@ rule jln_flags ( properties * )
           <cxxflags>"/Ob1"
         ;
       }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>release in $(properties) || <jln-optimize>release in $(properties)
+      else
       {
         flags +=
-          <cxxflags>"/O2"
-          <cxxflags>"/OPT:REF"
-          <linkflags>"/OPT:REF"
+          <cxxflags>"/DNDEBUG"
         ;
-      }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>minsize in $(properties) || <jln-optimize>minsize in $(properties)
-      {
-        flags +=
-          <cxxflags>"/O1"
-          <cxxflags>"/OPT:REF"
-          <cxxflags>"/Gw"
-          <linkflags>"/OPT:REF"
-        ;
-      }
-      else if $(jln-optimize_isdefault) && <jln-incidental-optimize>fast in $(properties) || <jln-optimize>fast in $(properties)
-      {
-        flags +=
-          <cxxflags>"/O2"
-          <cxxflags>"/OPT:REF"
-          <cxxflags>"/fp:fast"
-          <linkflags>"/OPT:REF"
-        ;
+        if $(jln-optimize_isdefault) && <jln-incidental-optimize>release in $(properties) || <jln-optimize>release in $(properties)
+        {
+          flags +=
+            <cxxflags>"/O2"
+            <cxxflags>"/OPT:REF"
+            <linkflags>"/OPT:REF"
+          ;
+        }
+        else if $(jln-optimize_isdefault) && <jln-incidental-optimize>minsize in $(properties) || <jln-optimize>minsize in $(properties)
+        {
+          flags +=
+            <cxxflags>"/O1"
+            <cxxflags>"/OPT:REF"
+            <cxxflags>"/Gw"
+            <linkflags>"/OPT:REF"
+          ;
+        }
+        else if $(jln-optimize_isdefault) && <jln-incidental-optimize>fast in $(properties) || <jln-optimize>fast in $(properties)
+        {
+          flags +=
+            <cxxflags>"/O2"
+            <cxxflags>"/OPT:REF"
+            <cxxflags>"/fp:fast"
+            <linkflags>"/OPT:REF"
+          ;
+        }
       }
     }
     if ! ( $(jln-whole-program_isdefault) && <jln-incidental-whole-program>default in $(properties) )

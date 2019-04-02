@@ -151,11 +151,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
 
   cxx=function(_, x) return ' ' .. x end,
   link=function(_, x) return ' ' .. x end,
-  define=function(_, x) return ' -D' .. x end,
 
-  _vcond_toflags=function(_, cxx, links, defines)
-    return ((#cxx ~= 0 or #defines ~= 0) and _.indent .. '  jln_buildoptions = jln_buildoptions .. "' .. cxx .. defines .. '"' or '')
-        .. ((#cxx ~= 0 or #defines ~= 0) and #links ~= 0 and '\n' or '')
+  _vcond_toflags=function(_, cxx, links)
+    return (#cxx ~= 0 and _.indent .. '  jln_buildoptions = jln_buildoptions .. "' .. cxx .. '"' or '')
+        .. (#cxx ~= 0 and #links ~= 0 and '\n' or '')
         .. (#links ~= 0                  and _.indent .. '  jln_linkoptions = jln_linkoptions .. "' .. links .. '"' or '')
   end,
 

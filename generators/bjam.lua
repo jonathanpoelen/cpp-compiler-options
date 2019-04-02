@@ -39,11 +39,12 @@ return {
   _vcond_verless=function(_, major, minor) return '$(version) < ' .. normnum(major) .. '.' .. normnum(minor) end,
   _vcond_comp=function(_, compiler) return '$(toolset) = ' .. compiler end,
 
-  cxx=function(_, x) return _.indent .. '  <cxxflags>"' .. x .. '"\n' end,
+  cxx=function(_, x)
+    return _.indent .. '  <cxxflags>"' .. x .. '"\n'
+  end,
   link=function(_, x) return _.indent .. '  <linkflags>"' .. x .. '"\n' end,
-  define=function(_, x) return _.indent .. '  <define>' .. x .. '\n' end,
 
-  _vcond_toflags=function(_, cxx, links, defines) return _.indent .. '  flags +=\n' .. cxx .. links .. defines .. _.indent .. '  ;' end,
+  _vcond_toflags=function(_, cxx, links) return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;' end,
 
   start=function(_, optprefix)
     _.optprefix = optprefix or ''

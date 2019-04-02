@@ -38,14 +38,7 @@ return {
   link=function(_, x)
   end,
 
-  define=function(_, x)
-  end,
-
   stop=function(_) return table.concat(_.strs) end,
-
-  cxx=noop,
-  link=noop,
-  define=noop,
 
   strs={},
   print=function(_, s) _:write(s) ; _:write('\n') end,
@@ -69,7 +62,7 @@ return {
     keywords.ifclose = keywords.close
     keywords.else_of_else_if = keywords._else .. ' ',
     -- _vcond_* functions initialize
-    -- Override startopt, stopopt, startcond, elsecond, markelseif, stopcond, cxx, link, define
+    -- Override startopt, stopopt, startcond, elsecond, markelseif, stopcond, cxx, link
     _:_vcond_init(keywords)
   end,
 
@@ -78,10 +71,10 @@ return {
   _vcond_lvl=function(_, lvl, optname) return lvl .. 'in option[' .. optname .. ']' end,
   _vcond_verless=function(_, major, minor) return 'version < ' .. major .. '.' minor end,
   _vcond_comp=function(_, compiler) return 'compiler == ' .. compiler end,
-  _vcond_toflags=function(_, cxx, links, defines) return cxx .. ' ' .. links .. ' ' .. defines end,
+  _vcond_toflags=function(_, cxx, links) return cxx .. ' ' .. links end,
   -- optional:
   _vcond=function(_, v, optname) return '' end,
   _vcond_hasopt=function(_, optname) return '' end,
-  _vcond_printflags=function(_) --[[ used _vcond_toflags(_._vcond_flags_cxx, _._vcond_flags_link, _._vcond_flags_define) ]] end,
+  _vcond_printflags=function(_) --[[ used _vcond_toflags(_._vcond_flags_cxx, _._vcond_flags_link) ]] end,
   -- END
 }

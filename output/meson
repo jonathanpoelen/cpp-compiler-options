@@ -116,15 +116,18 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
     elif (  (___jln_flags.get('jln_optimize', 'default') == 'debugoptimized') )
       jln_cpp_flags += ['-Og', ]
       jln_link_flags += ['-Og', ]
-    elif (  (___jln_flags.get('jln_optimize', 'default') == 'minsize') )
-      jln_cpp_flags += ['-Os', ]
-      jln_link_flags += ['-Os', ]
-    elif (  (___jln_flags.get('jln_optimize', 'default') == 'fast') )
-      jln_cpp_flags += ['-Ofast', ]
-      jln_link_flags += ['-Ofast', ]
-    elif (  (___jln_flags.get('jln_optimize', 'default') == 'release') )
-      jln_cpp_flags += ['-O3', ]
-      jln_link_flags += ['-O3', ]
+    else
+      jln_cpp_flags += ['-DNDEBUG', ]
+      if (  (___jln_flags.get('jln_optimize', 'default') == 'minsize') )
+        jln_cpp_flags += ['-Os', ]
+        jln_link_flags += ['-Os', ]
+      elif (  (___jln_flags.get('jln_optimize', 'default') == 'fast') )
+        jln_cpp_flags += ['-Ofast', ]
+        jln_link_flags += ['-Ofast', ]
+      elif (  (___jln_flags.get('jln_optimize', 'default') == 'release') )
+        jln_cpp_flags += ['-O3', ]
+        jln_link_flags += ['-O3', ]
+      endif
     endif
   endif
   if (  not ( (___jln_flags.get('jln_cpu', 'default') == 'default')) )
@@ -178,7 +181,7 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
       jln_cpp_flags += ['-Wno-stack-protector', '-U_FORTIFY_SOURCE', ]
       jln_link_flags += ['-Wno-stack-protector', ]
     else
-      jln_cpp_flags += ['-Wstack-protector', '-D_FORTIFY_SOURCE=2', ]
+      jln_cpp_flags += ['-D_FORTIFY_SOURCE=2', '-Wstack-protector', ]
       if (  (___jln_flags.get('jln_stack_protector', 'default') == 'strong') )
         if (  ( (___jln_compiler_id == 'gcc') ) )
           jln_cpp_flags += ['-fstack-protector-strong', ]
@@ -432,15 +435,18 @@ elif (  (___jln_compiler_id == 'msvc') )
       jln_cpp_flags += ['/Ob0 /Od /Oi- /Oy-', ]
     elif (  (___jln_flags.get('jln_optimize', 'default') == 'debugoptimized') )
       jln_cpp_flags += ['/Ob1', ]
-    elif (  (___jln_flags.get('jln_optimize', 'default') == 'release') )
-      jln_cpp_flags += ['/O2', '/OPT:REF', ]
-      jln_link_flags += ['/OPT:REF', ]
-    elif (  (___jln_flags.get('jln_optimize', 'default') == 'minsize') )
-      jln_cpp_flags += ['/O1', '/OPT:REF', '/Gw', ]
-      jln_link_flags += ['/OPT:REF', ]
-    elif (  (___jln_flags.get('jln_optimize', 'default') == 'fast') )
-      jln_cpp_flags += ['/O2', '/OPT:REF', '/fp:fast', ]
-      jln_link_flags += ['/OPT:REF', ]
+    else
+      jln_cpp_flags += ['/DNDEBUG', ]
+      if (  (___jln_flags.get('jln_optimize', 'default') == 'release') )
+        jln_cpp_flags += ['/O2', '/OPT:REF', ]
+        jln_link_flags += ['/OPT:REF', ]
+      elif (  (___jln_flags.get('jln_optimize', 'default') == 'minsize') )
+        jln_cpp_flags += ['/O1', '/OPT:REF', '/Gw', ]
+        jln_link_flags += ['/OPT:REF', ]
+      elif (  (___jln_flags.get('jln_optimize', 'default') == 'fast') )
+        jln_cpp_flags += ['/O2', '/OPT:REF', '/fp:fast', ]
+        jln_link_flags += ['/OPT:REF', ]
+      endif
     endif
   endif
   if (  not ( (___jln_flags.get('jln_whole_program', 'default') == 'default')) )

@@ -214,5 +214,4 @@ return {
     end
   end,
   link=function(_, x) _:cxx(x) end,
-  define=function(_, x) _:cxx('-D'..x) end,
 }

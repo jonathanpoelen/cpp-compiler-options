@@ -56,10 +56,9 @@ jln_link_flags = []
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,
-  define=function(_, x) return "'-D" .. x .. "', " end,
 
-  _vcond_toflags=function(_, cxx, links, defines)
-    return ((#cxx ~= 0 or #defines ~= 0) and _.indent .. '  jln_cpp_flags += [' .. cxx .. defines .. ']\n' or '')
+  _vcond_toflags=function(_, cxx, links)
+    return (#cxx ~= 0 and _.indent .. '  jln_cpp_flags += [' .. cxx .. ']\n' or '')
         .. (#links ~= 0 and _.indent .. '  jln_link_flags += [' .. links .. ']\n' or '')
   end,
 
