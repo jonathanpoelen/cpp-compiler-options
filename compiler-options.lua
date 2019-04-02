@@ -329,8 +329,7 @@ G = Or(gcc, clang) {
         cxx'-Wclass-memaccess',
       }
 
-      / -- clang
-      {
+      / clang {
         cxx'-Weverything',
      -- cxx'-Wno-documentation-unknown-command',
      -- cxx'-Wno-range-loop-analysis',
@@ -346,7 +345,12 @@ G = Or(gcc, clang) {
      -- cxx'-Qunused-arguments',
         cxx'-Wno-switch-default',
         cxx'-Wno-switch-enum',
-        cxx'-Wno-inconsistent-missing-destructor-override',
+        vers(3,9) {
+          cxx'-Wno-undefined-var-template',
+        },
+        vers(5) {
+          cxx'-Wno-inconsistent-missing-destructor-override',
+        },
       },
 
       Or(lvl'strict', lvl'very_strict') {

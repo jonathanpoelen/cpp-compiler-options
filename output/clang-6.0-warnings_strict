@@ -12,4 +12,5 @@
 -Wno-shadow
 -Wno-switch-default
 -Wno-switch-enum
+-Wno-undefined-var-template
 -Wno-weak-vtables

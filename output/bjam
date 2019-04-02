@@ -769,7 +769,7 @@ rule jln_flags ( properties * )
             }
           }
         }
-        else
+        else if $(toolset) = clang
         {
           flags +=
             <cxxflags>"-Weverything"
@@ -783,8 +783,19 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wno-covered-switch-default"
             <cxxflags>"-Wno-switch-default"
             <cxxflags>"-Wno-switch-enum"
-            <cxxflags>"-Wno-inconsistent-missing-destructor-override"
           ;
+          if ! (  $(version) < 03.09  )
+          {
+            flags +=
+              <cxxflags>"-Wno-undefined-var-template"
+            ;
+          }
+          if ! (  $(version) < 05.00  )
+          {
+            flags +=
+              <cxxflags>"-Wno-inconsistent-missing-destructor-override"
+            ;
+          }
         }
         if (  <jln-warnings>strict in $(properties) || <jln-warnings>very-strict in $(properties)  )
         {
