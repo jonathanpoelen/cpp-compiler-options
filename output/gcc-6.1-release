@@ -1,0 +1,7 @@
+-DNDEBUG
+-flto
+-flto-odr-type-merging
+-fuse-ld=gold
+-march=native
+-mtune=native
+-O3

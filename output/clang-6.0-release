@@ -1,0 +1,6 @@
+-DNDEBUG
+-flto
+-fuse-ld=gold
+-march=native
+-mtune=native
+-O3
