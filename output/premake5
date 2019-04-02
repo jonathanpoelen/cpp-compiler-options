@@ -17,6 +17,8 @@ _jln_flag_names["jln-elide-type"] = true
 _jln_flag_names["elide_type"] = true
 _jln_flag_names["jln-exceptions"] = true
 _jln_flag_names["exceptions"] = true
+_jln_flag_names["jln-linker"] = true
+_jln_flag_names["linker"] = true
 _jln_flag_names["jln-lto"] = true
 _jln_flag_names["lto"] = true
 _jln_flag_names["jln-narrowing-error"] = true
@@ -78,6 +80,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-elide-type"] then _OPTIONS["jln-elide-type"] = (defaults["elide_type"] or defaults["jln-elide-type"] or "default") end
   newoption{trigger="jln-exceptions", allowed={{"default"}, {"off"}, {"on"}}, description="exceptions"}
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
+  newoption{trigger="jln-linker", allowed={{"default"}, {"bfd"}, {"gold"}, {"lld"}}, description="linker"}
+  if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"linker_plugin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
   newoption{trigger="jln-narrowing-error", allowed={{"default"}, {"off"}, {"on"}}, description="narrowing_error"}
@@ -223,6 +227,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-exceptions"] = true
     name_list["exceptions"] = true
     new_value["jln-exceptions"] = values["exceptions"] or values["jln-exceptions"] or (disable_others and "default" or _OPTIONS["jln-exceptions"])
+    name_list["jln-linker"] = true
+    name_list["linker"] = true
+    new_value["jln-linker"] = values["linker"] or values["jln-linker"] or (disable_others and "default" or _OPTIONS["jln-linker"])
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"])
@@ -321,6 +328,15 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       else
         jln_buildoptions = jln_buildoptions .. " -g"
+      end
+    end
+    if not ( values["jln-linker"] == "default") then
+      if values["jln-linker"] == "bfd" then
+        jln_linkoptions = jln_linkoptions .. " -fuse-ld=bfd"
+      elseif ( values["jln-linker"] == "gold" or compiler == "gcc" ) then
+        jln_linkoptions = jln_linkoptions .. " -fuse-ld=gold"
+      else
+        jln_linkoptions = jln_linkoptions .. " -fuse-ld=lld"
       end
     end
     if not ( values["jln-lto"] == "default") then

@@ -9,6 +9,7 @@ ___jln_flags = {
   'jln_diagnostics_show_template_tree': ___jln_default_flags.get('jln_diagnostics_show_template_tree', get_option('jln_diagnostics_show_template_tree')),
   'jln_elide_type': ___jln_default_flags.get('jln_elide_type', get_option('jln_elide_type')),
   'jln_exceptions': ___jln_default_flags.get('jln_exceptions', get_option('jln_exceptions')),
+  'jln_linker': ___jln_default_flags.get('jln_linker', get_option('jln_linker')),
   'jln_lto': ___jln_default_flags.get('jln_lto', get_option('jln_lto')),
   'jln_narrowing_error': ___jln_default_flags.get('jln_narrowing_error', get_option('jln_narrowing_error')),
   'jln_optimize': ___jln_default_flags.get('jln_optimize', get_option('jln_optimize')),
@@ -78,6 +79,15 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
       endif
     else
       jln_cpp_flags += ['-g', ]
+    endif
+  endif
+  if (  not ( (___jln_flags.get('jln_linker', 'default') == 'default')) )
+    if (  (___jln_flags.get('jln_linker', 'default') == 'bfd') )
+      jln_link_flags += ['-fuse-ld=bfd', ]
+    elif (  ( (___jln_flags.get('jln_linker', 'default') == 'gold') or (___jln_compiler_id == 'gcc') ) )
+      jln_link_flags += ['-fuse-ld=gold', ]
+    else
+      jln_link_flags += ['-fuse-ld=lld', ]
     endif
   endif
   if (  not ( (___jln_flags.get('jln_lto', 'default') == 'default')) )

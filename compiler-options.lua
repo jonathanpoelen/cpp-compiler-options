@@ -90,6 +90,12 @@ G = Or(gcc, clang) {
     -- cxx'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
   },
 
+  opt'linker' {
+    lvl'bfd' { link'-fuse-ld=bfd' } /
+    Or(lvl'gold', gcc) { link'-fuse-ld=gold' } /
+    link'-fuse-ld=lld',
+  },
+
   opt'lto' {
     lvl'off' {
       fl'-fno-lto',
@@ -587,6 +593,7 @@ Vbase = {
     diagnostics_format=true,
     diagnostics_show_template_tree=true,
     elide_type=true,
+    linker=true,
     reproductible_build_warnings=true,
     shadow=true,
     suggests=true,
@@ -604,6 +611,7 @@ Vbase = {
     diagnostics_show_template_tree={{'off', 'on'},},
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
+    linker=     {{'bfd', 'gold', 'lld'},},
     lto=        {{'off', 'on', 'fat', 'linker_plugin'},},
     narrowing_error={{'off', 'on'}, 'on'},
     optimize=   {{'off', 'debugoptimized', 'minsize', 'release', 'fast'},},

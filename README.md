@@ -50,6 +50,7 @@ diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
 exceptions = default off on
+linker = default bfd gold lld
 lto = default off on fat linker_plugin
 narrowing_error = on default off
 optimize = default off debugoptimized minsize release fast

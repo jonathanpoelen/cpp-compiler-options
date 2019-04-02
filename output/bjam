@@ -19,6 +19,7 @@ feature <jln-diagnostics-show-template-tree> : default off on : incidental ;
 feature <jln-elide-type> : default off on : incidental ;
 feature <jln-exceptions> : default off on : propagated ;
 feature <jln-incidental-exceptions> : default off on : incidental ;
+feature <jln-linker> : default bfd gold lld : incidental ;
 feature <jln-lto> : default off on fat linker_plugin : propagated ;
 feature <jln-incidental-lto> : default off on fat linker_plugin : incidental ;
 feature <jln-narrowing-error> : on default off : propagated ;
@@ -164,6 +165,7 @@ rule jln_flags ( properties * )
   local jln-diagnostics-show-template-tree_isdefault ; if <jln-diagnostics-show-template-tree>default in $(properties) { jln-diagnostics-show-template-tree_isdefault = 1 ; }
   local jln-elide-type_isdefault ; if <jln-elide-type>default in $(properties) { jln-elide-type_isdefault = 1 ; }
   local jln-exceptions_isdefault ; if <jln-exceptions>default in $(properties) { jln-exceptions_isdefault = 1 ; }
+  local jln-linker_isdefault ; if <jln-linker>default in $(properties) { jln-linker_isdefault = 1 ; }
   local jln-lto_isdefault ; if <jln-lto>default in $(properties) { jln-lto_isdefault = 1 ; }
   local jln-narrowing-error_isdefault ; if <jln-narrowing-error>default in $(properties) { jln-narrowing-error_isdefault = 1 ; }
   local jln-optimize_isdefault ; if <jln-optimize>default in $(properties) { jln-optimize_isdefault = 1 ; }
@@ -263,6 +265,27 @@ rule jln_flags ( properties * )
       {
         flags +=
           <cxxflags>"-g"
+        ;
+      }
+    }
+    if ! $(jln-linker_isdefault)
+    {
+      if <jln-linker>bfd in $(properties)
+      {
+        flags +=
+          <linkflags>"-fuse-ld=bfd"
+        ;
+      }
+      else if (  <jln-linker>gold in $(properties) || $(toolset) = gcc  )
+      {
+        flags +=
+          <linkflags>"-fuse-ld=gold"
+        ;
+      }
+      else
+      {
+        flags +=
+          <linkflags>"-fuse-ld=lld"
         ;
       }
     }
