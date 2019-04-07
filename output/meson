@@ -453,11 +453,20 @@ elif (  (___jln_compiler_id == 'msvc') )
       endif
     endif
   endif
+  if (  not ( (___jln_flags.get('jln_lto', 'default') == 'default')) )
+    if (  (___jln_flags.get('jln_lto', 'default') == 'off') )
+      jln_cpp_flags += ['/LTCG:OFF', ]
+    else
+      jln_cpp_flags += ['/GL', ]
+      jln_link_flags += ['/LTCG', ]
+    endif
+  endif
   if (  not ( (___jln_flags.get('jln_whole_program', 'default') == 'default')) )
     if (  (___jln_flags.get('jln_whole_program', 'default') == 'off') )
       jln_cpp_flags += ['/GL-', ]
     else
       jln_cpp_flags += ['/GL', '/Gw', ]
+      jln_link_flags += ['/LTCG', ]
     endif
   endif
   if (  not ( (___jln_flags.get('jln_pedantic', 'default') == 'default')) )

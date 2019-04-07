@@ -520,9 +520,14 @@ msvc {
     }
   },
 
+  opt'lto' {
+    lvl'off' { cxx'/LTCG:OFF' } /
+    { cxx'/GL', link'/LTCG' }
+  },
+
   opt'whole_program' {
     lvl'off' { cxx'/GL-' } /
-    { cxx'/GL', cxx'/Gw' }
+    { cxx'/GL', cxx'/Gw', link'/LTCG' }
   },
 
   opt'pedantic' {

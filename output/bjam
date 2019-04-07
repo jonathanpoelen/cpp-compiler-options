@@ -1197,6 +1197,22 @@ rule jln_flags ( properties * )
         }
       }
     }
+    if ! ( $(jln-lto_isdefault) && <jln-incidental-lto>default in $(properties) )
+    {
+      if $(jln-lto_isdefault) && <jln-incidental-lto>off in $(properties) || <jln-lto>off in $(properties)
+      {
+        flags +=
+          <cxxflags>"/LTCG:OFF"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"/GL"
+          <linkflags>"/LTCG"
+        ;
+      }
+    }
     if ! ( $(jln-whole-program_isdefault) && <jln-incidental-whole-program>default in $(properties) )
     {
       if $(jln-whole-program_isdefault) && <jln-incidental-whole-program>off in $(properties) || <jln-whole-program>off in $(properties)
@@ -1210,6 +1226,7 @@ rule jln_flags ( properties * )
         flags +=
           <cxxflags>"/GL"
           <cxxflags>"/Gw"
+          <linkflags>"/LTCG"
         ;
       }
     }

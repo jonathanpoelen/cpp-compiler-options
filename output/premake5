@@ -759,11 +759,20 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
+    if not ( values["jln-lto"] == "default") then
+      if values["jln-lto"] == "off" then
+        jln_buildoptions = jln_buildoptions .. " /LTCG:OFF"
+      else
+        jln_buildoptions = jln_buildoptions .. " /GL"
+        jln_linkoptions = jln_linkoptions .. " /LTCG"
+      end
+    end
     if not ( values["jln-whole-program"] == "default") then
       if values["jln-whole-program"] == "off" then
         jln_buildoptions = jln_buildoptions .. " /GL-"
       else
         jln_buildoptions = jln_buildoptions .. " /GL /Gw"
+        jln_linkoptions = jln_linkoptions .. " /LTCG"
       end
     end
     if not ( values["jln-pedantic"] == "default") then
