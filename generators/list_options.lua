@@ -29,7 +29,9 @@ return {
             c = color_map[ic % color_size]
             ic = ic + 1
           end
-          str = str .. ' ' .. c .. x
+          str = str .. ' ' .. (i == 1
+            and (c:sub(0,-2) .. ';7m' .. x .. '\x1b[0m')
+            or (c .. x))
         end
         print(str .. '\x1b[0m')
         add_opt(optname, args)
