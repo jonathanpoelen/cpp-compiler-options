@@ -14,7 +14,7 @@ option('jln_optimize', type : 'combo', choices : ['default', 'off', 'debugoptimi
 option('jln_pedantic', type : 'combo', choices : ['default', 'off', 'on', 'as_error'], value : 'on')
 option('jln_pie', type : 'combo', choices : ['default', 'off', 'on', 'pic'], value : 'default')
 option('jln_relro', type : 'combo', choices : ['default', 'off', 'on', 'full'], value : 'default')
-option('jln_reproductible_build_warnings', type : 'combo', choices : ['default', 'off', 'on'], value : 'default')
+option('jln_reproducible_build_warnings', type : 'combo', choices : ['default', 'off', 'on'], value : 'default')
 option('jln_rtti', type : 'combo', choices : ['default', 'off', 'on'], value : 'default')
 option('jln_sanitizers', type : 'combo', choices : ['default', 'off', 'on'], value : 'default')
 option('jln_sanitizers_extra', type : 'combo', choices : ['default', 'off', 'thread', 'pointer'], value : 'default')

@@ -31,8 +31,8 @@ _jln_flag_names["jln-pie"] = true
 _jln_flag_names["pie"] = true
 _jln_flag_names["jln-relro"] = true
 _jln_flag_names["relro"] = true
-_jln_flag_names["jln-reproductible-build-warnings"] = true
-_jln_flag_names["reproductible_build_warnings"] = true
+_jln_flag_names["jln-reproducible-build-warnings"] = true
+_jln_flag_names["reproducible_build_warnings"] = true
 _jln_flag_names["jln-rtti"] = true
 _jln_flag_names["rtti"] = true
 _jln_flag_names["jln-sanitizers"] = true
@@ -94,8 +94,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-pie"] then _OPTIONS["jln-pie"] = (defaults["pie"] or defaults["jln-pie"] or "default") end
   newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
   if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or defaults["jln-relro"] or "default") end
-  newoption{trigger="jln-reproductible-build-warnings", allowed={{"default"}, {"off"}, {"on"}}, description="reproductible_build_warnings"}
-  if not _OPTIONS["jln-reproductible-build-warnings"] then _OPTIONS["jln-reproductible-build-warnings"] = (defaults["reproductible_build_warnings"] or defaults["jln-reproductible-build-warnings"] or "default") end
+  newoption{trigger="jln-reproducible-build-warnings", allowed={{"default"}, {"off"}, {"on"}}, description="reproducible_build_warnings"}
+  if not _OPTIONS["jln-reproducible-build-warnings"] then _OPTIONS["jln-reproducible-build-warnings"] = (defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "default") end
   newoption{trigger="jln-rtti", allowed={{"default"}, {"off"}, {"on"}}, description="rtti"}
   if not _OPTIONS["jln-rtti"] then _OPTIONS["jln-rtti"] = (defaults["rtti"] or defaults["jln-rtti"] or "default") end
   newoption{trigger="jln-sanitizers", allowed={{"default"}, {"off"}, {"on"}}, description="sanitizers"}
@@ -248,9 +248,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-relro"] = true
     name_list["relro"] = true
     new_value["jln-relro"] = values["relro"] or values["jln-relro"] or (disable_others and "default" or _OPTIONS["jln-relro"])
-    name_list["jln-reproductible-build-warnings"] = true
-    name_list["reproductible_build_warnings"] = true
-    new_value["jln-reproductible-build-warnings"] = values["reproductible_build_warnings"] or values["jln-reproductible-build-warnings"] or (disable_others and "default" or _OPTIONS["jln-reproductible-build-warnings"])
+    name_list["jln-reproducible-build-warnings"] = true
+    name_list["reproducible_build_warnings"] = true
+    new_value["jln-reproducible-build-warnings"] = values["reproducible_build_warnings"] or values["jln-reproducible-build-warnings"] or (disable_others and "default" or _OPTIONS["jln-reproducible-build-warnings"])
     name_list["jln-rtti"] = true
     name_list["rtti"] = true
     new_value["jln-rtti"] = values["rtti"] or values["jln-rtti"] or (disable_others and "default" or _OPTIONS["jln-rtti"])
@@ -636,9 +636,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
-    if not ( values["jln-reproductible-build-warnings"] == "default") then
+    if not ( values["jln-reproducible-build-warnings"] == "default") then
       if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-        if values["jln-reproductible-build-warnings"] == "on" then
+        if values["jln-reproducible-build-warnings"] == "on" then
           jln_buildoptions = jln_buildoptions .. " -Wdate-time"
         else
           jln_buildoptions = jln_buildoptions .. " -Wno-date-time"

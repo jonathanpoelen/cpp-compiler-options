@@ -32,7 +32,7 @@ feature <jln-pie> : default off on pic : propagated ;
 feature <jln-incidental-pie> : default off on pic : incidental ;
 feature <jln-relro> : default off on full : propagated ;
 feature <jln-incidental-relro> : default off on full : incidental ;
-feature <jln-reproductible-build-warnings> : default off on : incidental ;
+feature <jln-reproducible-build-warnings> : default off on : incidental ;
 feature <jln-rtti> : default off on : propagated ;
 feature <jln-incidental-rtti> : default off on : incidental ;
 feature <jln-sanitizers> : default off on : propagated ;
@@ -172,7 +172,7 @@ rule jln_flags ( properties * )
   local jln-pedantic_isdefault ; if <jln-pedantic>default in $(properties) { jln-pedantic_isdefault = 1 ; }
   local jln-pie_isdefault ; if <jln-pie>default in $(properties) { jln-pie_isdefault = 1 ; }
   local jln-relro_isdefault ; if <jln-relro>default in $(properties) { jln-relro_isdefault = 1 ; }
-  local jln-reproductible-build-warnings_isdefault ; if <jln-reproductible-build-warnings>default in $(properties) { jln-reproductible-build-warnings_isdefault = 1 ; }
+  local jln-reproducible-build-warnings_isdefault ; if <jln-reproducible-build-warnings>default in $(properties) { jln-reproducible-build-warnings_isdefault = 1 ; }
   local jln-rtti_isdefault ; if <jln-rtti>default in $(properties) { jln-rtti_isdefault = 1 ; }
   local jln-sanitizers_isdefault ; if <jln-sanitizers>default in $(properties) { jln-sanitizers_isdefault = 1 ; }
   local jln-sanitizers-extra_isdefault ; if <jln-sanitizers-extra>default in $(properties) { jln-sanitizers-extra_isdefault = 1 ; }
@@ -945,11 +945,11 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if ! $(jln-reproductible-build-warnings_isdefault)
+    if ! $(jln-reproducible-build-warnings_isdefault)
     {
       if (  $(toolset) = gcc && ! (  $(version) < 04.09  )  )
       {
-        if <jln-reproductible-build-warnings>on in $(properties)
+        if <jln-reproducible-build-warnings>on in $(properties)
         {
           flags +=
             <cxxflags>"-Wdate-time"
