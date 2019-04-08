@@ -5,6 +5,7 @@ if [ $# -ge 1 ] ; then
   exit 1
 fi
 
+set -o pipefail
 set -e
 
 OUTPUT_DIR_NAME=output
@@ -63,8 +64,8 @@ done
 
 sgen compiler | while read comp ; do
   gencompopt $comp-release              $comp cpu=native lto optimize=release linker=gold
-  gencompopt $comp-warnings             $comp shadow=off stl_fix warnings pedantic
-  gencompopt $comp-warnings_strict      $comp shadow=off stl_fix warnings=strict pedantic
+  gencompopt $comp-warnings             $comp shadow_warnings=off stl_fix warnings pedantic
+  gencompopt $comp-warnings_strict      $comp shadow_warnings=off stl_fix warnings=strict pedantic
   gencompopt $comp-stl_debug_broken_abi $comp stl_fix stl_debug=allow_broken_abi
   gencompopt $comp-sanitizers-pointer   $comp sanitizers_extra=pointer
   gencompopt $comp-template_tree        $comp elide_type=off diagnostics_show_template_tree=on

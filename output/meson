@@ -20,7 +20,7 @@ ___jln_flags = {
   'jln_rtti': ___jln_default_flags.get('jln_rtti', get_option('jln_rtti')),
   'jln_sanitizers': ___jln_default_flags.get('jln_sanitizers', get_option('jln_sanitizers')),
   'jln_sanitizers_extra': ___jln_default_flags.get('jln_sanitizers_extra', get_option('jln_sanitizers_extra')),
-  'jln_shadow': ___jln_default_flags.get('jln_shadow', get_option('jln_shadow')),
+  'jln_shadow_warnings': ___jln_default_flags.get('jln_shadow_warnings', get_option('jln_shadow_warnings')),
   'jln_stack_protector': ___jln_default_flags.get('jln_stack_protector', get_option('jln_stack_protector')),
   'jln_stl_debug': ___jln_default_flags.get('jln_stl_debug', get_option('jln_stl_debug')),
   'jln_stl_fix': ___jln_default_flags.get('jln_stl_fix', get_option('jln_stl_fix')),
@@ -250,21 +250,21 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
       endif
     endif
   endif
-  if (  not ( (___jln_flags.get('jln_shadow', 'default') == 'default')) )
-    if (  (___jln_flags.get('jln_shadow', 'default') == 'off') )
+  if (  not ( (___jln_flags.get('jln_shadow_warnings', 'default') == 'default')) )
+    if (  (___jln_flags.get('jln_shadow_warnings', 'default') == 'off') )
       jln_cpp_flags += ['-Wno-shadow', ]
-    elif (  (___jln_flags.get('jln_shadow', 'default') == 'on') )
+    elif (  (___jln_flags.get('jln_shadow_warnings', 'default') == 'on') )
       jln_cpp_flags += ['-Wshadow', ]
-    elif (  (___jln_flags.get('jln_shadow', 'default') == 'all') )
+    elif (  (___jln_flags.get('jln_shadow_warnings', 'default') == 'all') )
       if (  (___jln_compiler_id == 'clang') )
         jln_cpp_flags += ['-Wshadow-all', ]
       else
         jln_cpp_flags += ['-Wshadow', ]
       endif
     elif (  ( (___jln_compiler_id == 'gcc') ) )
-      if (  (___jln_flags.get('jln_shadow', 'default') == 'local') )
+      if (  (___jln_flags.get('jln_shadow_warnings', 'default') == 'local') )
         jln_cpp_flags += ['-Wshadow=local', ]
-      elif (  (___jln_flags.get('jln_shadow', 'default') == 'compatible_local') )
+      elif (  (___jln_flags.get('jln_shadow_warnings', 'default') == 'compatible_local') )
         jln_cpp_flags += ['-Wshadow=compatible-local', ]
       endif
     endif
@@ -516,12 +516,12 @@ elif (  (___jln_compiler_id == 'msvc') )
       endif
     endif
   endif
-  if (  not ( (___jln_flags.get('jln_shadow', 'default') == 'default')) )
-    if (  (___jln_flags.get('jln_shadow', 'default') == 'off') )
+  if (  not ( (___jln_flags.get('jln_shadow_warnings', 'default') == 'default')) )
+    if (  (___jln_flags.get('jln_shadow_warnings', 'default') == 'off') )
       jln_cpp_flags += ['/wd4456', '/wd4459', ]
-    elif (  ( (___jln_flags.get('jln_shadow', 'default') == 'on') or (___jln_flags.get('jln_shadow', 'default') == 'all') ) )
+    elif (  ( (___jln_flags.get('jln_shadow_warnings', 'default') == 'on') or (___jln_flags.get('jln_shadow_warnings', 'default') == 'all') ) )
       jln_cpp_flags += ['/w4456', '/w4459', ]
-    elif (  (___jln_flags.get('jln_shadow', 'default') == 'local') )
+    elif (  (___jln_flags.get('jln_shadow_warnings', 'default') == 'local') )
       jln_cpp_flags += ['/w4456', '/wd4459', ]
     endif
   endif

@@ -39,8 +39,8 @@ _jln_flag_names["jln-sanitizers"] = true
 _jln_flag_names["sanitizers"] = true
 _jln_flag_names["jln-sanitizers-extra"] = true
 _jln_flag_names["sanitizers_extra"] = true
-_jln_flag_names["jln-shadow"] = true
-_jln_flag_names["shadow"] = true
+_jln_flag_names["jln-shadow-warnings"] = true
+_jln_flag_names["shadow_warnings"] = true
 _jln_flag_names["jln-stack-protector"] = true
 _jln_flag_names["stack_protector"] = true
 _jln_flag_names["jln-stl-debug"] = true
@@ -102,8 +102,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
   newoption{trigger="jln-sanitizers-extra", allowed={{"default"}, {"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
   if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default") end
-  newoption{trigger="jln-shadow", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible_local"}, {"all"}}, description="shadow"}
-  if not _OPTIONS["jln-shadow"] then _OPTIONS["jln-shadow"] = (defaults["shadow"] or defaults["jln-shadow"] or "default") end
+  newoption{trigger="jln-shadow-warnings", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible_local"}, {"all"}}, description="shadow_warnings"}
+  if not _OPTIONS["jln-shadow-warnings"] then _OPTIONS["jln-shadow-warnings"] = (defaults["shadow_warnings"] or defaults["jln-shadow-warnings"] or "default") end
   newoption{trigger="jln-stack-protector", allowed={{"default"}, {"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
   newoption{trigger="jln-stl-debug", allowed={{"default"}, {"off"}, {"on"}, {"allow_broken_abi"}, {"assert_as_exception"}}, description="stl_debug"}
@@ -260,9 +260,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-sanitizers-extra"] = true
     name_list["sanitizers_extra"] = true
     new_value["jln-sanitizers-extra"] = values["sanitizers_extra"] or values["jln-sanitizers-extra"] or (disable_others and "default" or _OPTIONS["jln-sanitizers-extra"])
-    name_list["jln-shadow"] = true
-    name_list["shadow"] = true
-    new_value["jln-shadow"] = values["shadow"] or values["jln-shadow"] or (disable_others and "default" or _OPTIONS["jln-shadow"])
+    name_list["jln-shadow-warnings"] = true
+    name_list["shadow_warnings"] = true
+    new_value["jln-shadow-warnings"] = values["shadow_warnings"] or values["jln-shadow-warnings"] or (disable_others and "default" or _OPTIONS["jln-shadow-warnings"])
     name_list["jln-stack-protector"] = true
     name_list["stack_protector"] = true
     new_value["jln-stack-protector"] = values["stack_protector"] or values["jln-stack-protector"] or (disable_others and "default" or _OPTIONS["jln-stack-protector"])
@@ -507,21 +507,21 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
-    if not ( values["jln-shadow"] == "default") then
-      if values["jln-shadow"] == "off" then
+    if not ( values["jln-shadow-warnings"] == "default") then
+      if values["jln-shadow-warnings"] == "off" then
         jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
-      elseif values["jln-shadow"] == "on" then
+      elseif values["jln-shadow-warnings"] == "on" then
         jln_buildoptions = jln_buildoptions .. " -Wshadow"
-      elseif values["jln-shadow"] == "all" then
+      elseif values["jln-shadow-warnings"] == "all" then
         if compiler == "clang" then
           jln_buildoptions = jln_buildoptions .. " -Wshadow-all"
         else
           jln_buildoptions = jln_buildoptions .. " -Wshadow"
         end
       elseif ( compiler == "gcc" and not ( compversion < 701 ) ) then
-        if values["jln-shadow"] == "local" then
+        if values["jln-shadow-warnings"] == "local" then
           jln_buildoptions = jln_buildoptions .. " -Wshadow=local"
-        elseif values["jln-shadow"] == "compatible-local" then
+        elseif values["jln-shadow-warnings"] == "compatible-local" then
           jln_buildoptions = jln_buildoptions .. " -Wshadow=compatible-local"
         end
       end
@@ -822,12 +822,12 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
-    if not ( values["jln-shadow"] == "default") then
-      if values["jln-shadow"] == "off" then
+    if not ( values["jln-shadow-warnings"] == "default") then
+      if values["jln-shadow-warnings"] == "off" then
         jln_buildoptions = jln_buildoptions .. " /wd4456 /wd4459"
-      elseif ( values["jln-shadow"] == "on" or values["jln-shadow"] == "all" ) then
+      elseif ( values["jln-shadow-warnings"] == "on" or values["jln-shadow-warnings"] == "all" ) then
         jln_buildoptions = jln_buildoptions .. " /w4456 /w4459"
-      elseif values["jln-shadow"] == "local" then
+      elseif values["jln-shadow-warnings"] == "local" then
         jln_buildoptions = jln_buildoptions .. " /w4456 /wd4459"
       end
     end

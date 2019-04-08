@@ -233,7 +233,7 @@ G = Or(gcc, clang) {
     },
   },
 
-  opt'shadow' {
+  opt'shadow_warnings' {
     lvl'off' { cxx'-Wno-shadow' } /
     lvl'on' { cxx'-Wshadow' } /
     lvl'all' {
@@ -574,7 +574,7 @@ msvc {
     },
   },
 
-  opt'shadow' {
+  opt'shadow_warnings' {
     lvl'off' {
       cxx'/wd4456', cxx'/wd4459'
     } /
@@ -609,7 +609,7 @@ Vbase = {
     elide_type=true,
     linker=true,
     reproducible_build_warnings=true,
-    shadow=true,
+    shadow_warnings=true,
     suggests=true,
     warnings=true,
     warnings_as_error=true,
@@ -638,8 +638,8 @@ Vbase = {
     stl_fix=    {{'off', 'on'}, 'on'},
     sanitizers= {{'off', 'on'},},
     sanitizers_extra={{'off', 'thread', 'pointer'},},
-    shadow=     {{'off', 'on', 'local', 'compatible_local', 'all'}, 'off'},
-    stack_protector= {{'off', 'on', 'strong', 'all'},},
+    shadow_warnings={{'off', 'on', 'local', 'compatible_local', 'all'}, 'off'},
+    stack_protector={{'off', 'on', 'strong', 'all'},},
     suggests=   {{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},

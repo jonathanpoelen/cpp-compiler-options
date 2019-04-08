@@ -57,11 +57,11 @@ optimize = default off debugoptimized minsize release fast
 pedantic = on default off as_error
 pie = default off on pic
 relro = default off on full
-reproductible_build_warnings = default off on
+reproducible_build_warnings = default off on
 rtti = default off on
 sanitizers = default off on
 sanitizers_extra = default off thread pointer
-shadow = off default on local compatible_local all
+shadow_warnings = off default on local compatible_local all
 stack_protector = default off on strong all
 stl_debug = default off on allow_broken_abi assert_as_exception
 stl_fix = on default off
@@ -74,7 +74,7 @@ whole_program = default off on strip_all
 
 The value `default` does nothing.
 
-If not specified, `narrowing_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow` is `off`.
+If not specified, `narrowing_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
 
 
 # Use generated files
