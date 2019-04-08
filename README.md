@@ -16,7 +16,7 @@ $ `bjam jln-fast-math=on`
 
 $ `meson -Djln_fast_math=on`
 
-(`jln-` is a parameterizable prefix: `./compiler-options.lua generators/meson.lua [prefix]`)
+(`jln` is a parameterizable prefix: `./compiler-options.lua generators/cmake.lua [prefix]`)
 
 <!-- summary -->
 1. [Options](#options)
@@ -37,7 +37,7 @@ $ `meson -Djln_fast_math=on`
 
 # Options
 
-Supported options are:
+Supported options are (in alphabetical order):
 
 <!-- ./compiler-options.lua generators/list_options.lua color -->
 ```ini
@@ -224,12 +224,11 @@ The variable `G` contains the options tree.
 
 ## Update the options tree
 
-- `cxx`, `def`, `link`, `fl`
+- `cxx`, `link`, `fl`
 ```lua
 cxx'-Wall'
-def'NAME=3'
 link'-option'
-link'libname'
+link'libname' -- alias of link'-llibname'
 fl'xxx' -- is a alias of {cxx'xxx',link'xxx'}
 ```
 
