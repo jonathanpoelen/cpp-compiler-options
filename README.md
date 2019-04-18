@@ -20,6 +20,7 @@ $ `meson -Djln_fast_math=on`
 
 <!-- summary -->
 1. [Options](#options)
+    1. [Recommended options](#recommended-options)
 2. [Use generated files](#use-generated-files)
     1. [Cmake](#cmake)
     2. [Premake5](#premake5)
@@ -75,6 +76,15 @@ whole_program = default off on strip_all
 The value `default` does nothing.
 
 If not specified, `narrowing_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
+
+## Recommended options
+
+category | options
+---------|---------
+debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>
+release | `cpu=native`<br>`linker=gold`<br>`lto=linker_plugin` or `on`<br>`optimize=release`<br>`rtti=off`<br>`whole_program=strip_all`
+security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`
+really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggests=on`<br>`warnings=very_strict`
 
 
 # Use generated files
