@@ -1024,10 +1024,15 @@ function(jln_flags)
 
         endif()
       elseif (  JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "patch" )
-      endif()
-      if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
-        set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-generate-patch")
+        if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-generate-patch")
 
+        endif()
+      elseif (  JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "print_source_range_info" )
+        if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+          set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-print-source-range-info")
+
+        endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "default") )

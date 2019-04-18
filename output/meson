@@ -388,9 +388,13 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
         jln_cpp_flags += ['-fdiagnostics-parseable-fixits', ]
       endif
     elif (  (___jln_flags.get('jln_diagnostics_format', 'default') == 'patch') )
-    endif
-    if (  ( (___jln_compiler_id == 'gcc') ) )
-      jln_cpp_flags += ['-fdiagnostics-generate-patch', ]
+      if (  ( (___jln_compiler_id == 'gcc') ) )
+        jln_cpp_flags += ['-fdiagnostics-generate-patch', ]
+      endif
+    elif (  (___jln_flags.get('jln_diagnostics_format', 'default') == 'print_source_range_info') )
+      if (  (___jln_compiler_id == 'clang') )
+        jln_cpp_flags += ['-fdiagnostics-print-source-range-info', ]
+      endif
     endif
   endif
   if (  not ( (___jln_flags.get('jln_warnings_as_error', 'default') == 'default')) )

@@ -694,9 +694,13 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           jln_buildoptions = jln_buildoptions .. " -fdiagnostics-parseable-fixits"
         end
       elseif values["jln-diagnostics-format"] == "patch" then
-      end
-      if ( compiler == "gcc" and not ( compversion < 700 ) ) then
-        jln_buildoptions = jln_buildoptions .. " -fdiagnostics-generate-patch"
+        if ( compiler == "gcc" and not ( compversion < 700 ) ) then
+          jln_buildoptions = jln_buildoptions .. " -fdiagnostics-generate-patch"
+        end
+      elseif values["jln-diagnostics-format"] == "print-source-range-info" then
+        if compiler == "clang" then
+          jln_buildoptions = jln_buildoptions .. " -fdiagnostics-print-source-range-info"
+        end
       end
     end
     if not ( values["jln-warnings-as-error"] == "default") then

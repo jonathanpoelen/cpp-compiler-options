@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ $# -ge 1 ] ; then
   echo 'Maybe you wanted to use compiler-options.lua ?'
