@@ -476,7 +476,7 @@ G = Or(gcc, clang) {
         cxx'-fdiagnostics-parseable-fixits'
       }
     } /
-    lvl'patch', {
+    lvl'patch' {
       gcc(7) { cxx'-fdiagnostics-generate-patch' }
     } /
     lvl'print_source_range_info' {
