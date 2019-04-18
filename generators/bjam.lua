@@ -17,27 +17,19 @@ return {
   tobjamoption=function(_, optname)
     local norm = optname:gsub('_', '-')
     local opt = _.optprefix .. norm
-    if _._incidental[optname] then
-      return opt
-    end
-    return opt, _.ioptprefix .. norm
+    local iopt = not _._incidental[optname] and _.optprefix .. norm .. '-incidental'
+    local env = _.optenvprefix .. optname
+    return opt, iopt, env
   end,
 
   _vcond_lvl=function(_, lvl, optname)
-    local opt, iopt = _:tobjamoption(optname)
-    lvl = jamlvl(lvl)
-    return 
-      (iopt and '$(' .. opt .. '_isdefault) && <' .. iopt .. '>' .. lvl .. ' in $(properties) || ' or '') ..
-      '<' .. opt .. '>' .. lvl .. ' in $(properties)'
+    return '( $(x_' .. optname .. ') = "' .. jamlvl(lvl) .. '" )'
   end,
   _vcond_hasopt=function(_, optname)
-    local opt, iopt = _:tobjamoption(optname)
-    return iopt and
-      '! ( $(' .. opt .. '_isdefault) && <' .. iopt .. '>default in $(properties) )'
-     or '! $(' .. opt .. '_isdefault)'
+    return '( $(x_' .. optname .. ') != "default" )'
   end,
-  _vcond_verless=function(_, major, minor) return '$(version) < ' .. normnum(major) .. '.' .. normnum(minor) end,
-  _vcond_comp=function(_, compiler) return '$(toolset) = ' .. compiler end,
+  _vcond_verless=function(_, major, minor) return '$(version) < "' .. normnum(major) .. '.' .. normnum(minor) .. '"' end,
+  _vcond_comp=function(_, compiler) return '$(toolset) = "' .. compiler .. '"' end,
 
   cxx=function(_, x)
     return _.indent .. '  <cxxflags>"' .. x .. '"\n'
@@ -46,14 +38,9 @@ return {
 
   _vcond_toflags=function(_, cxx, links) return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;' end,
 
-  start=function(_, optprefix)
-    _.optprefix = optprefix or ''
-    if #_.optprefix == 0 then
-      _.ioptprefix = 'incidental-'
-    else
-      local optprefix_suffix = _.optprefix:sub(#_.optprefix)
-      _.ioptprefix = _.optprefix .. (optprefix_suffix ~= '_' and optprefix_suffix ~= '-' and '-' or '') .. 'incidental-'
-    end
+  start=function(_, optprefix, optenvprefix)
+    _.optprefix = (optprefix or ''):gsub('_', '-')
+    _.optenvprefix = (optenvprefix or _.optprefix):gsub('-', '_')
 
     _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
@@ -70,33 +57,68 @@ CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     --   _:print('feature <' .. opt .. '> : : free ;')
     -- end
 
-    local relevants, isdefaults = '', ''
+    local relevants = ''
+    local incidentals = ''
+    local toolsetflags = ''
+    local constants = ''
+    local locals = ''
+    local defaults = ''
 
     for optname,args,default_value,ordered_args in _:getoptions() do
-      local opt, iopt = _:tobjamoption(optname)
-      isdefaults = isdefaults .. '  local ' .. opt .. '_isdefault ; if <' .. opt .. '>default in $(properties) { ' .. opt .. '_isdefault = 1 ; }\n'
-      if not _._incidental[optname] then
-        relevants = relevants .. '\n      <relevant>' .. opt
-      end
-      local joined = table.concat(ordered_args, ' ')
-      _:print('feature <' .. opt .. '> : ' .. joined .. (_._incidental[optname] and ' : incidental ;' or ' : propagated ;'))
+      local opt, iopt, env = _:tobjamoption(optname)
+      local defaultjoined = jamlvl(table.concat(ordered_args, ' '))
+
+      _:print('feature <' .. opt .. '> : _ ' .. defaultjoined .. (iopt and ' : incidental ;' or ' : propagated ;'))
+
+      defaults = defaults .. 'feature <' .. opt .. '-default> : ' .. defaultjoined .. ' : incidental ;\n'
+      constants = constants .. 'constant jln_env_' .. optname .. ' : [ jln-get-env ' .. env .. ' : ' .. defaultjoined .. ' ] ;\n'
       if iopt then
-        _:print('feature <' .. iopt .. '> : ' .. joined .. ' : incidental ;')
-      end
-    end
-    relevants = relevants .. '\n'
-
-    _:print('\nif $(CXX_BJAM_YEAR_VERSION) < 2016.00 {')
-    _:print('  import toolset ;')
-    for optname in _:getoptions() do
-      if not _._incidental[optname] then
-        for i,opt in pairs({_:tobjamoption(optname)}) do
-          _:print('  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;')
+        relevants = relevants .. '\n      <relevant>' .. opt
+        incidentals = incidentals .. 'feature <' .. iopt .. '> : _ ' .. defaultjoined .. ' : incidental ;\n'
+        for i,opt in pairs({opt, iopt}) do
+          toolsetflags = toolsetflags .. '  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;\n'
         end
+        locals = locals .. '  local x_' .. optname .. ' = [ jln-get-value2 $(ps) : '
+                 .. opt .. ' : ' .. iopt .. ' : $(jln_env_' .. optname .. ') ] ;\n'
+      else
+        locals = locals .. '  local x_' .. optname .. ' = [ jln-get-value $(ps) : '
+                 .. opt .. ' : $(jln_env_' .. optname .. ') ] ;\n'
       end
     end
-    _:print([[}
 
+    _:print()
+    _:print(incidentals)
+    _:print(defaults)
+    _:print([[
+
+import os ;
+
+rule jln-get-env ( env : values * )
+{
+  local x = [ os.environ $(env) ] ;
+  if $(x)
+  {
+    if $(x) in $(values)
+    {
+      return $(x) ;
+    }
+    else
+    {
+      EXIT "Unknown '$(x)' for $(env)" : 7 ;
+    }
+  }
+  else
+  {
+    return "" ;
+  }
+}
+]])
+    _:print(constants)
+    _:print('if $(CXX_BJAM_YEAR_VERSION) < 2016.00\n{')
+    _:print('  import toolset ;')
+    _:print(toolsetflags)
+    _:print('}')
+    _:print([[
 import property-set ;
 import string ;
 
@@ -130,6 +152,38 @@ rule jln-get-normalized-compiler-version ( toolset : version )
   return $(COMP_VERSION) ;
 }
 
+rule jln-get-value ( ps : opt : env )
+{
+  local x = [ $(ps).get <$(opt)> ] ;
+  if $(x) = "_"
+  {
+    x = $(env) ;
+    if $(x) = ""
+    {
+      x = [ $(ps).get <$(opt)-default> ] ;
+    }
+  }
+  return $(x) ;
+}
+
+rule jln-get-value2 ( ps : opt : iopt : env )
+{
+  local x = [ $(ps).get <$(opt)> ] ;
+  if $(x) = "_"
+  {
+    x = [ $(ps).get <$(iopt)> ] ;
+    if $(x) = "_"
+    {
+      x = $(env) ;
+      if $(x) = ""
+      {
+        x = [ $(ps).get <$(opt)-default> ] ;
+      }
+    }
+  }
+  return $(x) ;
+}
+
 rule jln_flags ( properties * )
 {
   local ps = [ property-set.create $(properties) ] ;
@@ -141,10 +195,12 @@ rule jln_flags ( properties * )
   if $(CXX_BJAM_YEAR_VERSION) >= 2016.00
   {
     flags += ]] .. relevants .. [[
+
     ;
   }
+]])
+    _:print(locals)
 
-]] .. isdefaults)
     _.indent = '  '
   end,
 

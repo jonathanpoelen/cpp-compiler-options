@@ -12,7 +12,7 @@ $ `cmake -DJLN_FAST_MATH=on`
 
 $ `premake5 --jln-fast-math=on`
 
-$ `bjam jln-fast-math=on`
+$ `bjam -s jln_fast_math=on`
 
 $ `meson -Djln_fast_math=on`
 
@@ -167,10 +167,12 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 # rule jln_flags ( properties * )
 
 project name : requirements
-  <jln-lto>on # enable jln-lto
-  <jln-incidental-relro>on # incidental version of jln-relro
+  <jln-lto-default>on # enable jln-lto
+  <jln-relro-default>on
   <conditional>@jln_flags
 : default-build release ;
+
+exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-relro>off
 ```
 
 
