@@ -169,10 +169,8 @@ return {
     elseif v.lvl  then
       if _.d.opts then
         r = v.lvl == _.d.opts[_.d.opt]
-      else
-        r = v.lvl == 'GLIBCXX_ALLOW_BROKEN_ABI'
       end
-    elseif v.version  then
+    elseif v.version then
       -- _.d.condtype.version = v.version
       if v.version[1] < 0 then
         r = _.d.comp[2] < -v.version[1] or _.d.comp[3] < v.version[2]
