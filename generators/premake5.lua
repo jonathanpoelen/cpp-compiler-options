@@ -153,9 +153,8 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
   link=function(_, x) return ' ' .. x end,
 
   _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. '  jln_buildoptions = jln_buildoptions .. "' .. cxx .. '"' or '')
-        .. (#cxx ~= 0 and #links ~= 0 and '\n' or '')
-        .. (#links ~= 0                  and _.indent .. '  jln_linkoptions = jln_linkoptions .. "' .. links .. '"' or '')
+    return (#cxx ~= 0 and _.indent .. '  jln_buildoptions = jln_buildoptions .. "' .. cxx .. '"\n' or '')
+        .. (#links ~= 0                  and _.indent .. '  jln_linkoptions = jln_linkoptions .. "' .. links .. '"\n' or '')
   end,
 
   stop=function(_)

@@ -105,7 +105,7 @@ return {
 
   _vcond_toflags=function(_, cxx, links)
     return (#cxx ~= 0 and _.indent .. '  set(CXX_FLAGS ${CXX_FLAGS} ' .. cxx .. ')\n' or '')
-        .. (#links ~= 0 and _.indent .. '  set(LINK_FLAGS ${LINK_FLAGS} ' .. links .. ')' or '')
+        .. (#links ~= 0 and _.indent .. '  set(LINK_FLAGS ${LINK_FLAGS} ' .. links .. ')\n' or '')
   end,
 
   stop=function(_)

@@ -36,7 +36,7 @@ return {
   end,
   link=function(_, x) return _.indent .. '  <linkflags>"' .. x .. '"\n' end,
 
-  _vcond_toflags=function(_, cxx, links) return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;' end,
+  _vcond_toflags=function(_, cxx, links) return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;\n' end,
 
   start=function(_, optprefix, optenvprefix)
     _.optprefix = (optprefix or ''):gsub('_', '-')

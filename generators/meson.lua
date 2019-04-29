@@ -57,9 +57,8 @@ jln_link_flags = []
   link=function(_, x) return "'" .. x .. "', " end,
 
   _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. '  jln_cpp_flags += [' .. cxx .. ']' or '')
-        .. (#cxx ~= 0 and #links ~= 0 and '\n' or '')
-        .. (#links ~= 0 and _.indent .. '  jln_link_flags += [' .. links .. ']' or '')
+    return (#cxx ~= 0 and _.indent .. '  jln_cpp_flags += [' .. cxx .. ']\n' or '')
+        .. (#links ~= 0 and _.indent .. '  jln_link_flags += [' .. links .. ']\n' or '')
   end,
 
   stop=function(_, filebase)

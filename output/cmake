@@ -561,11 +561,9 @@ function(jln_flags)
       if (  JLN_FLAGS_NARROWING_ERROR STREQUAL "on" )
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7" ) ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Werror=narrowing")
-
         endif()
       elseif (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-error=c++11-narrowing")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_COVERAGE STREQUAL "default") )
@@ -580,28 +578,21 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_DEBUG STREQUAL "default") )
       if (  JLN_FLAGS_DEBUG STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-g0")
-
       elseif (  JLN_FLAGS_DEBUG STREQUAL "gdb" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-ggdb")
-
       elseif (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
         if (  JLN_FLAGS_DEBUG STREQUAL "line_tables_only" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-gline-tables-only")
-
         endif()
         if (  JLN_FLAGS_DEBUG STREQUAL "lldb" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-glldb")
-
         elseif (  JLN_FLAGS_DEBUG STREQUAL "sce" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-gsce")
-
         else()
           set(CXX_FLAGS ${CXX_FLAGS}  "-g")
-
         endif()
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "-g")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_LINKER STREQUAL "default") )
@@ -629,7 +620,6 @@ function(jln_flags)
           endif()
           if (  JLN_FLAGS_LTO STREQUAL "fat" )
             set(CXX_FLAGS ${CXX_FLAGS}  "-ffat-lto-objects")
-
           endif()
           if (  JLN_FLAGS_LTO STREQUAL "linker_plugin" )
             set(LINK_FLAGS ${LINK_FLAGS}  "-fuse-linker-plugin")
@@ -646,7 +636,6 @@ function(jln_flags)
         set(LINK_FLAGS ${LINK_FLAGS}  "-Og")
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "-DNDEBUG")
-
         if (  JLN_FLAGS_OPTIMIZE STREQUAL "minsize" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Os")
           set(LINK_FLAGS ${LINK_FLAGS}  "-Os")
@@ -671,7 +660,6 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_WHOLE_PROGRAM STREQUAL "default") )
       if (  JLN_FLAGS_WHOLE_PROGRAM STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-fno-whole-program")
-
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fno-whole-program-vtables")
           set(LINK_FLAGS ${LINK_FLAGS}  "-fno-whole-program-vtables")
@@ -703,10 +691,8 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "default") )
       if (  NOT JLN_FLAGS_PEDANTIC STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-pedantic")
-
         if (  JLN_FLAGS_PEDANTIC STREQUAL "as_error" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-pedantic-errors")
-
         endif()
       endif()
     endif()
@@ -716,7 +702,6 @@ function(jln_flags)
         set(LINK_FLAGS ${LINK_FLAGS}  "-Wno-stack-protector")
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "-D_FORTIFY_SOURCE=2" "-Wstack-protector")
-
         if (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "strong" )
           if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) ) )
             set(CXX_FLAGS ${CXX_FLAGS}  "-fstack-protector-strong")
@@ -754,20 +739,16 @@ function(jln_flags)
         set(LINK_FLAGS ${LINK_FLAGS}  "-pie")
       elseif (  JLN_FLAGS_PIE STREQUAL "pic" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-fPIC")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_SUGGESTS STREQUAL "default") )
       if (  NOT JLN_FLAGS_SUGGESTS STREQUAL "off" )
         if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wsuggest-attribute=pure" "-Wsuggest-attribute=const")
-
           if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0" ) )
             set(CXX_FLAGS ${CXX_FLAGS}  "-Wsuggest-final-types" "-Wsuggest-final-methods")
-
             if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1" ) )
               set(CXX_FLAGS ${CXX_FLAGS}  "-Wnoexcept")
-
             endif()
           endif()
         endif()
@@ -777,23 +758,18 @@ function(jln_flags)
       if (  NOT JLN_FLAGS_STL_DEBUG STREQUAL "off" )
         if (  JLN_FLAGS_STL_DEBUG STREQUAL "assert_as_exception" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-D_LIBCPP_DEBUG_USE_EXCEPTIONS")
-
         endif()
         if (  ( JLN_FLAGS_STL_DEBUG STREQUAL "allow_broken_abi" OR JLN_FLAGS_STL_DEBUG STREQUAL "allow_broken_abi_and_bugged" ) )
           if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) OR JLN_FLAGS_STL_DEBUG STREQUAL "allow_broken_abi_and_bugged" ) )
             set(CXX_FLAGS ${CXX_FLAGS}  "-D_LIBCPP_DEBUG=1")
-
           endif()
           set(CXX_FLAGS ${CXX_FLAGS}  "-D_GLIBCXX_DEBUG")
-
         else()
           set(CXX_FLAGS ${CXX_FLAGS}  "-D_GLIBCXX_ASSERTIONS")
-
         endif()
         if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "default") )
           if (  NOT JLN_FLAGS_PEDANTIC STREQUAL "off" )
             set(CXX_FLAGS ${CXX_FLAGS}  "-D_GLIBCXX_DEBUG_PEDANTIC")
-
           endif()
         endif()
       endif()
@@ -801,60 +777,44 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_SHADOW_WARNINGS STREQUAL "default") )
       if (  JLN_FLAGS_SHADOW_WARNINGS STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-shadow")
-
       elseif (  JLN_FLAGS_SHADOW_WARNINGS STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow")
-
       elseif (  JLN_FLAGS_SHADOW_WARNINGS STREQUAL "all" )
         if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow-all")
-
         else()
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow")
-
         endif()
       elseif (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) ) )
         if (  JLN_FLAGS_SHADOW_WARNINGS STREQUAL "local" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=local")
-
         elseif (  JLN_FLAGS_SHADOW_WARNINGS STREQUAL "compatible_local" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wshadow=compatible-local")
-
         endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS STREQUAL "default") )
       if (  JLN_FLAGS_WARNINGS STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-w")
-
       else()
         if (  CMAKE_CXX_COMPILER_ID MATCHES "GNU" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wall" "-Wextra" "-Wcast-align" "-Wcast-qual" "-Wdisabled-optimization" "-Wfloat-equal" "-Wformat-security" "-Wformat=2" "-Wmissing-declarations" "-Wmissing-include-dirs" "-Wnon-virtual-dtor" "-Wold-style-cast" "-Woverloaded-virtual" "-Wpacked" "-Wredundant-decls" "-Wundef" "-Wunused-macros")
-
           if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.7" ) )
             set(CXX_FLAGS ${CXX_FLAGS}  "-Wsuggest-attribute=noreturn" "-Wzero-as-null-pointer-constant" "-Wlogical-op" "-Wvector-operation-performance" "-Wdouble-promotion" "-Wtrampolines")
-
             if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8" ) )
               set(CXX_FLAGS ${CXX_FLAGS}  "-Wuseless-cast")
-
               if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) )
                 set(CXX_FLAGS ${CXX_FLAGS}  "-Wconditionally-supported" "-Wfloat-conversion")
-
                 if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.1" ) )
                   set(CXX_FLAGS ${CXX_FLAGS}  "-Wformat-signedness" "-Warray-bounds=2" "-Wconditionally-supported" "-Wstrict-null-sentinel" "-Wsuggest-override")
-
                   if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.1" ) )
                     set(CXX_FLAGS ${CXX_FLAGS}  "-Wduplicated-cond" "-Wnull-dereference")
-
                     if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) )
                       set(CXX_FLAGS ${CXX_FLAGS}  "-Waligned-new")
-
                       if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.1" ) )
                         set(CXX_FLAGS ${CXX_FLAGS}  "-Walloc-zero" "-Walloca" "-Wformat-overflow=2" "-Wduplicated-branches")
-
                         if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) )
                           set(CXX_FLAGS ${CXX_FLAGS}  "-Wclass-memaccess")
-
                         endif()
                       endif()
                     endif()
@@ -865,26 +825,20 @@ function(jln_flags)
           endif()
         elseif (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Weverything" "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-mismatched-tags" "-Wno-padded" "-Wno-global-constructors" "-Wno-weak-vtables" "-Wno-exit-time-destructors" "-Wno-covered-switch-default" "-Wno-switch-default" "-Wno-switch-enum")
-
           if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.9" ) )
             set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-undefined-var-template")
-
           endif()
           if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0" ) )
             set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-inconsistent-missing-destructor-override")
-
           endif()
         endif()
         if (  ( JLN_FLAGS_WARNINGS STREQUAL "strict" OR JLN_FLAGS_WARNINGS STREQUAL "very_strict" ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wconversion")
-
           if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
             set(CXX_FLAGS ${CXX_FLAGS}  "-Wcast-align=strict")
-
           endif()
         elseif (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-conversion" "-Wno-sign-conversion")
-
         endif()
       endif()
     endif()
@@ -915,7 +869,6 @@ function(jln_flags)
               set(LINK_FLAGS ${LINK_FLAGS}  "-fsanitize=undefined" "-fsanitize=leak")
               if (  NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0" ) )
                 set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=bounds" "-fsanitize=bounds-strict")
-
               endif()
             endif()
           endif()
@@ -926,7 +879,6 @@ function(jln_flags)
       if (  JLN_FLAGS_CONTROL_FLOW STREQUAL "off" )
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fcf-protection=none")
-
         endif()
         if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fno-sanitize=cfi")
@@ -935,7 +887,6 @@ function(jln_flags)
       else()
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fcf-protection=full")
-
         endif()
         if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=cfi" "-fvisibility=hidden" "-flto")
@@ -946,11 +897,9 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_SANITIZERS_EXTRA STREQUAL "default") )
       if (  JLN_FLAGS_SANITIZERS_EXTRA STREQUAL "thread" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=thread")
-
       elseif (  JLN_FLAGS_SANITIZERS_EXTRA STREQUAL "pointer" )
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fsanitize=pointer-compare" "-fsanitize=pointer-subtract")
-
         endif()
       endif()
     endif()
@@ -958,10 +907,8 @@ function(jln_flags)
       if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) ) )
         if (  JLN_FLAGS_REPRODUCIBLE_BUILD_WARNINGS STREQUAL "on" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wdate-time")
-
         else()
           set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-date-time")
-
         endif()
       endif()
     endif()
@@ -969,13 +916,10 @@ function(jln_flags)
       if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9" ) ) OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
         if (  JLN_FLAGS_COLOR STREQUAL "auto" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-color=auto")
-
         elseif (  JLN_FLAGS_COLOR STREQUAL "never" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-color=never")
-
         elseif (  JLN_FLAGS_COLOR STREQUAL "always" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-color=always")
-
         endif()
       endif()
     endif()
@@ -983,39 +927,31 @@ function(jln_flags)
       if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) OR ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.4" ) ) ) )
         if (  JLN_FLAGS_ELIDE_TYPE STREQUAL "on" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-felide-type")
-
         else()
           set(CXX_FLAGS ${CXX_FLAGS}  "-fno-elide-type")
-
         endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_EXCEPTIONS STREQUAL "default") )
       if (  JLN_FLAGS_EXCEPTIONS STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-fexceptions")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "-fno-exceptions")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_RTTI STREQUAL "default") )
       if (  JLN_FLAGS_RTTI STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-frtti")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "-fno-rtti")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE STREQUAL "default") )
       if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0" ) ) OR CMAKE_CXX_COMPILER_ID MATCHES "Clang" ) )
         if (  JLN_FLAGS_DIAGNOSTICS_SHOW_TEMPLATE_TREE STREQUAL "on" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-show-template-tree")
-
         else()
           set(CXX_FLAGS ${CXX_FLAGS}  "-fno-diagnostics-show-template-tree")
-
         endif()
       endif()
     endif()
@@ -1023,83 +959,65 @@ function(jln_flags)
       if (  JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "fixits" )
         if (  ( ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) OR ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0" ) ) ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-parseable-fixits")
-
         endif()
       elseif (  JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "patch" )
         if (  ( CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND NOT ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0" ) ) )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-generate-patch")
-
         endif()
       elseif (  JLN_FLAGS_DIAGNOSTICS_FORMAT STREQUAL "print_source_range_info" )
         if (  CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
           set(CXX_FLAGS ${CXX_FLAGS}  "-fdiagnostics-print-source-range-info")
-
         endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "default") )
       if (  JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "-Werror")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "-Wno-error")
-
       endif()
     endif()
   elseif (  CMAKE_CXX_COMPILER_ID MATCHES "MSVC" )
     if (  NOT ( JLN_FLAGS_STL_FIX STREQUAL "default") )
       if (  JLN_FLAGS_STL_FIX STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/DNOMINMAX")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_DEBUG STREQUAL "default") )
       if (  JLN_FLAGS_DEBUG STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/DEBUG:NONE")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/RTC1" "/Od")
-
         if (  JLN_FLAGS_DEBUG STREQUAL "on" )
           set(CXX_FLAGS ${CXX_FLAGS}  "/DEBUG")
-
         elseif (  JLN_FLAGS_DEBUG STREQUAL "line_tables_only" )
           set(CXX_FLAGS ${CXX_FLAGS}  "/DEBUG:FASTLINK")
-
         endif()
         if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
           if (  JLN_FLAGS_OPTIMIZE STREQUAL "debugoptimized" )
             set(CXX_FLAGS ${CXX_FLAGS}  "/Zi")
-
           else()
             set(CXX_FLAGS ${CXX_FLAGS}  "/ZI")
-
           endif()
         else()
           set(CXX_FLAGS ${CXX_FLAGS}  "/ZI")
-
         endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_EXCEPTIONS STREQUAL "default") )
       if (  JLN_FLAGS_EXCEPTIONS STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/EHc")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/EHc-")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_OPTIMIZE STREQUAL "default") )
       if (  JLN_FLAGS_OPTIMIZE STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/Ob0 /Od /Oi- /Oy-")
-
       elseif (  JLN_FLAGS_OPTIMIZE STREQUAL "debugoptimized" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/Ob1")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/DNDEBUG")
-
         if (  JLN_FLAGS_OPTIMIZE STREQUAL "release" )
           set(CXX_FLAGS ${CXX_FLAGS}  "/O2" "/OPT:REF")
           set(LINK_FLAGS ${LINK_FLAGS}  "/OPT:REF")
@@ -1115,7 +1033,6 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_LTO STREQUAL "default") )
       if (  JLN_FLAGS_LTO STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/LTCG:OFF")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/GL")
         set(LINK_FLAGS ${LINK_FLAGS}  "/LTCG")
@@ -1124,7 +1041,6 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_WHOLE_PROGRAM STREQUAL "default") )
       if (  JLN_FLAGS_WHOLE_PROGRAM STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/GL-")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/GL" "/Gw")
         set(LINK_FLAGS ${LINK_FLAGS}  "/LTCG")
@@ -1133,45 +1049,36 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_PEDANTIC STREQUAL "default") )
       if (  NOT JLN_FLAGS_PEDANTIC STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/permissive-" "/Zc:__cplusplus")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_RTTI STREQUAL "default") )
       if (  JLN_FLAGS_RTTI STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/GR")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/GR-")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_STL_DEBUG STREQUAL "default") )
       if (  JLN_FLAGS_STL_DEBUG STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/D_HAS_ITERATOR_DEBUGGING=0")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/D_DEBUG" "/D_HAS_ITERATOR_DEBUGGING=1")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_CONTROL_FLOW STREQUAL "default") )
       if (  JLN_FLAGS_CONTROL_FLOW STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/guard:cf-")
-
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/guard:cf")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_SANITIZERS STREQUAL "default") )
       if (  JLN_FLAGS_SANITIZERS STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/sdl")
-
       else()
         if (  NOT ( JLN_FLAGS_STACK_PROTECTOR STREQUAL "default") )
           if (  NOT JLN_FLAGS_STACK_PROTECTOR STREQUAL "off" )
             set(CXX_FLAGS ${CXX_FLAGS}  "/sdl-")
-
           endif()
         endif()
       endif()
@@ -1179,41 +1086,31 @@ function(jln_flags)
     if (  NOT ( JLN_FLAGS_STACK_PROTECTOR STREQUAL "default") )
       if (  NOT JLN_FLAGS_STACK_PROTECTOR STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/GS" "/sdl")
-
         if (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "strong" )
           set(CXX_FLAGS ${CXX_FLAGS}  "/RTC1")
-
         elseif (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "all" )
           set(CXX_FLAGS ${CXX_FLAGS}  "/RTC1" "/RTCc")
-
         endif()
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_SHADOW_WARNINGS STREQUAL "default") )
       if (  JLN_FLAGS_SHADOW_WARNINGS STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/wd4456" "/wd4459")
-
       elseif (  ( JLN_FLAGS_SHADOW_WARNINGS STREQUAL "on" OR JLN_FLAGS_SHADOW_WARNINGS STREQUAL "all" ) )
         set(CXX_FLAGS ${CXX_FLAGS}  "/w4456" "/w4459")
-
       elseif (  JLN_FLAGS_SHADOW_WARNINGS STREQUAL "local" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/w4456" "/wd4459")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS STREQUAL "default") )
       if (  JLN_FLAGS_WARNINGS STREQUAL "on" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/W4" "/wd4244" "/wd4245")
-
       elseif (  JLN_FLAGS_WARNINGS STREQUAL "strict" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/Wall" "/wd4820" "/wd4514" "/wd4710")
-
       elseif (  JLN_FLAGS_WARNINGS STREQUAL "very_strict" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/Wall")
-
       elseif (  JLN_FLAGS_WARNINGS STREQUAL "off" )
         set(CXX_FLAGS ${CXX_FLAGS}  "/W0")
-
       endif()
     endif()
     if (  NOT ( JLN_FLAGS_WARNINGS_AS_ERROR STREQUAL "default") )
@@ -1222,7 +1119,6 @@ function(jln_flags)
         set(LINK_FLAGS ${LINK_FLAGS}  "/WX")
       else()
         set(CXX_FLAGS ${CXX_FLAGS}  "/WX-")
-
       endif()
     endif()
   endif()
