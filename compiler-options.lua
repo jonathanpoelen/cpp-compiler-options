@@ -776,7 +776,7 @@ Vbase = {
     _._vcond_printflags=function(_)
       if #_._vcond_flags_cxx ~= 0 or #_._vcond_flags_link ~= 0 then
         local s = _:_vcond_toflags(_._vcond_flags_cxx, _._vcond_flags_link)
-        if s and #s ~= 0 then _:print(s) end
+        if s and #s ~= 0 then _:write(s) end
       end
       _._vcond_flags_cxx = ''
       _._vcond_flags_link = ''
