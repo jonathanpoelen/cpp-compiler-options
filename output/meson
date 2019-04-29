@@ -234,11 +234,13 @@ if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') ) )
   endif
   if (  not ( (___jln_flags.get('jln_stl_debug', 'default') == 'default')) )
     if (  not (___jln_flags.get('jln_stl_debug', 'default') == 'off') )
-      jln_cpp_flags += ['-D_LIBCPP_DEBUG=1', ]
       if (  (___jln_flags.get('jln_stl_debug', 'default') == 'assert_as_exception') )
         jln_cpp_flags += ['-D_LIBCPP_DEBUG_USE_EXCEPTIONS', ]
       endif
-      if (  (___jln_flags.get('jln_stl_debug', 'default') == 'allow_broken_abi') )
+      if (  ( (___jln_flags.get('jln_stl_debug', 'default') == 'allow_broken_abi') or (___jln_flags.get('jln_stl_debug', 'default') == 'allow_broken_abi_and_bugged') ) )
+        if (  ( ( (___jln_compiler_id == 'clang') ) or (___jln_flags.get('jln_stl_debug', 'default') == 'allow_broken_abi_and_bugged') ) )
+          jln_cpp_flags += ['-D_LIBCPP_DEBUG=1', ]
+        endif
         jln_cpp_flags += ['-D_GLIBCXX_DEBUG', ]
       else
         jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', ]

@@ -63,17 +63,21 @@ for g in bjam cmake premake5 meson ; do
 done
 
 sgen compiler | while read comp ; do
-  gencompopt $comp-release              $comp cpu=native lto optimize=release linker=gold
-  gencompopt $comp-warnings             $comp shadow_warnings=off stl_fix warnings pedantic
-  gencompopt $comp-warnings_strict      $comp shadow_warnings=off stl_fix warnings=strict pedantic
-  gencompopt $comp-stl_debug_broken_abi $comp stl_fix stl_debug=allow_broken_abi
-  gencompopt $comp-sanitizers-pointer   $comp sanitizers_extra=pointer
-  gencompopt $comp-template_tree        $comp elide_type=off diagnostics_show_template_tree=on
+  gencompopt $comp-release                         $comp cpu=native lto optimize=release linker=gold
+  gencompopt $comp-warnings                        $comp shadow_warnings=off stl_fix warnings pedantic
+  gencompopt $comp-warnings_strict                 $comp shadow_warnings=off stl_fix warnings=strict pedantic
+  gencompopt $comp-stl_debug_broken_abi            $comp stl_fix stl_debug=allow_broken_abi
+  gencompopt $comp-stl_debug_broken_abi_and_bugged $comp stl_fix stl_debug=allow_broken_abi_and_bugged
+  gencompopt $comp-sanitizers-pointer              $comp sanitizers_extra=pointer
+  gencompopt $comp-template_tree                   $comp elide_type=off diagnostics_show_template_tree=on
   for g in suggests stl_debug debug sanitizers ; do
     gencompopt $comp-$g $comp $g
   done
-  cat -- "$OUTPUT_DIR"/$comp-stl_debug            "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers | sort -u -- > "$OUTPUT_DIR"/$comp-debug_full
-  cat -- "$OUTPUT_DIR"/$comp-stl_debug_broken_abi "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers | sort -u -- > "$OUTPUT_DIR"/$comp-debug_full_broken_abi
+  sort -u -- "$OUTPUT_DIR"/$comp-stl_debug            "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full
+  sort -u -- "$OUTPUT_DIR"/$comp-stl_debug_broken_abi "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full_broken_abi
+  cmp "$OUTPUT_DIR"/$comp-stl_debug_broken_abi "$OUTPUT_DIR"/$comp-stl_debug_broken_abi_and_bugged 2>/dev/null \
+    && rm -- "$OUTPUT_DIR"/$comp-stl_debug_broken_abi_and_bugged \
+    || sort -u -- "$OUTPUT_DIR"/$comp-stl_debug_broken_abi_and_bugged "$OUTPUT_DIR"/$comp-debug_full_broken_abi > "$OUTPUT_DIR"/$comp-debug_full_broken_abi_and_bugged
 done
 
 echo -e "\n"Empty and removed:

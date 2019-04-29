@@ -27,7 +27,7 @@ feature <jln-sanitizers> : _ default off on : incidental ;
 feature <jln-sanitizers-extra> : _ default off thread pointer : incidental ;
 feature <jln-shadow-warnings> : _ off default on local compatible-local all : propagated ;
 feature <jln-stack-protector> : _ default off on strong all : incidental ;
-feature <jln-stl-debug> : _ default off on allow-broken-abi assert-as-exception : incidental ;
+feature <jln-stl-debug> : _ default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
 feature <jln-stl-fix> : _ on default off : incidental ;
 feature <jln-suggests> : _ default off on : propagated ;
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
@@ -48,7 +48,7 @@ feature <jln-rtti-incidental> : _ default off on : incidental ;
 feature <jln-sanitizers-incidental> : _ default off on : incidental ;
 feature <jln-sanitizers-extra-incidental> : _ default off thread pointer : incidental ;
 feature <jln-stack-protector-incidental> : _ default off on strong all : incidental ;
-feature <jln-stl-debug-incidental> : _ default off on allow-broken-abi assert-as-exception : incidental ;
+feature <jln-stl-debug-incidental> : _ default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
 feature <jln-stl-fix-incidental> : _ on default off : incidental ;
 feature <jln-whole-program-incidental> : _ default off on strip-all : incidental ;
 
@@ -74,7 +74,7 @@ feature <jln-sanitizers-default> : default off on : incidental ;
 feature <jln-sanitizers-extra-default> : default off thread pointer : incidental ;
 feature <jln-shadow-warnings-default> : off default on local compatible-local all : incidental ;
 feature <jln-stack-protector-default> : default off on strong all : incidental ;
-feature <jln-stl-debug-default> : default off on allow-broken-abi assert-as-exception : incidental ;
+feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggests-default> : default off on : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
@@ -125,7 +125,7 @@ constant jln_env_sanitizers : [ jln-get-env jln_sanitizers : default off on ] ;
 constant jln_env_sanitizers_extra : [ jln-get-env jln_sanitizers_extra : default off thread pointer ] ;
 constant jln_env_shadow_warnings : [ jln-get-env jln_shadow_warnings : off default on local compatible-local all ] ;
 constant jln_env_stack_protector : [ jln-get-env jln_stack_protector : default off on strong all ] ;
-constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-broken-abi assert-as-exception ] ;
+constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception ] ;
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
 constant jln_env_suggests : [ jln-get-env jln_suggests : default off on ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off strict very-strict ] ;
@@ -711,17 +711,20 @@ rule jln_flags ( properties * )
     {
       if ! ( $(x_stl_debug) = "off" )
       {
-        flags +=
-          <cxxflags>"-D_LIBCPP_DEBUG=1"
-        ;
         if ( $(x_stl_debug) = "assert-as-exception" )
         {
           flags +=
             <cxxflags>"-D_LIBCPP_DEBUG_USE_EXCEPTIONS"
           ;
         }
-        if ( $(x_stl_debug) = "allow-broken-abi" )
+        if (  ( $(x_stl_debug) = "allow-broken-abi" ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugged" )  )
         {
+          if (  (  $(toolset) = "clang" && ! (  $(version) < "08.00"  )  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugged" )  )
+          {
+            flags +=
+              <cxxflags>"-D_LIBCPP_DEBUG=1"
+            ;
+          }
           flags +=
             <cxxflags>"-D_GLIBCXX_DEBUG"
           ;

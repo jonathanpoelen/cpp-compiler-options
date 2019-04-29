@@ -220,11 +220,17 @@ G = Or(gcc, clang) {
 
   opt'stl_debug' {
     -lvl'off' {
-      cxx'-D_LIBCPP_DEBUG=1',
       lvl'assert_as_exception' {
         cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
       },
-      lvl'allow_broken_abi' { cxx'-D_GLIBCXX_DEBUG', } / cxx'-D_GLIBCXX_ASSERTIONS',
+      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugged') {
+        -- allocator is bogus: https://bugs.llvm.org/show_bug.cgi?id=39203
+        Or(clang(8), lvl'allow_broken_abi_and_bugged') {
+            cxx'-D_LIBCPP_DEBUG=1',
+        },
+        cxx'-D_GLIBCXX_DEBUG',
+      }
+      / cxx'-D_GLIBCXX_ASSERTIONS',
       opt'pedantic' {
         -lvl'off' {
           cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
@@ -634,7 +640,7 @@ Vbase = {
     relro=      {{'off', 'on', 'full'},},
     reproducible_build_warnings={{'off', 'on'},},
     rtti=       {{'off', 'on'},},
-    stl_debug=  {{'off', 'on', 'allow_broken_abi', 'assert_as_exception'},},
+    stl_debug=  {{'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugged', 'assert_as_exception'},},
     stl_fix=    {{'off', 'on'}, 'on'},
     sanitizers= {{'off', 'on'},},
     sanitizers_extra={{'off', 'thread', 'pointer'},},

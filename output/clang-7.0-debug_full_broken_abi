@@ -1,5 +1,4 @@
 -D_GLIBCXX_DEBUG
--D_LIBCPP_DEBUG=1
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
 -fsanitize=address
