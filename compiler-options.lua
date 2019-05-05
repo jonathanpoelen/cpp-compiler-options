@@ -457,8 +457,11 @@ G = Or(gcc, clang) {
   },
 
   opt'elide_type' {
+    lvl'on' {
+     gcc(8) { cxx'-felide-type' }
+    } /
     Or(gcc(8), clang(3,4)) {
-      lvl'on' { cxx'-felide-type' } / cxx'-fno-elide-type',
+      cxx'-fno-elide-type',
     },
   },
 

@@ -441,12 +441,12 @@ jln_link_flags = []
       endif
     endif
     if (  not ( (___jln_flags.get('jln_elide_type', 'default') == 'default')) )
-      if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<8.0') ) ) or ( (___jln_compiler_id == 'clang') and not ( ___jln_compiler_version.version_compare('<3.4') ) ) ) )
-        if (  (___jln_flags.get('jln_elide_type', 'default') == 'on') )
+      if (  (___jln_flags.get('jln_elide_type', 'default') == 'on') )
+        if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<8.0') ) ) )
           jln_cpp_flags += ['-felide-type', ]
-        else
-          jln_cpp_flags += ['-fno-elide-type', ]
         endif
+      elif (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<8.0') ) ) or ( (___jln_compiler_id == 'clang') and not ( ___jln_compiler_version.version_compare('<3.4') ) ) ) )
+        jln_cpp_flags += ['-fno-elide-type', ]
       endif
     endif
     if (  not ( (___jln_flags.get('jln_exceptions', 'default') == 'default')) )

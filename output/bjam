@@ -1105,20 +1105,20 @@ rule jln_flags ( properties * )
     }
     if ( $(x_elide_type) != "default" )
     {
-      if (  (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "03.04"  )  )  )
+      if ( $(x_elide_type) = "on" )
       {
-        if ( $(x_elide_type) = "on" )
+        if (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  )
         {
           flags +=
             <cxxflags>"-felide-type"
           ;
         }
-        else
-        {
-          flags +=
-            <cxxflags>"-fno-elide-type"
-          ;
-        }
+      }
+      else if (  (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "03.04"  )  )  )
+      {
+        flags +=
+          <cxxflags>"-fno-elide-type"
+        ;
       }
     }
     if ( $(x_exceptions) != "default" )
