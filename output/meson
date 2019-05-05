@@ -640,9 +640,6 @@ jln_link_flags = []
     endif
   endif
 
-
-  jln_cpp_flags = ___jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
-  jln_link_flags = ___jln_cpp_compiler.get_supported_arguments(jln_link_flags)
   jln_custom_cpp_flags += [jln_cpp_flags]
   jln_custom_link_flags += [jln_link_flags]
 endforeach

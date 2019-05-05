@@ -65,9 +65,6 @@ jln_link_flags = []
     local meson_options = table.concat(_._option_strs, '\n')
     local meson_build = _:get_output() .. [[
 
-
-  jln_cpp_flags = ___jln_cpp_compiler.get_supported_arguments(jln_cpp_flags)
-  jln_link_flags = ___jln_cpp_compiler.get_supported_arguments(jln_link_flags)
   jln_custom_cpp_flags += [jln_cpp_flags]
   jln_custom_link_flags += [jln_link_flags]
 endforeach
