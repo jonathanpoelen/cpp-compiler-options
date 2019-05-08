@@ -14,9 +14,9 @@ feature <jln-diagnostics-format> : _ default fixits patch print-source-range-inf
 feature <jln-diagnostics-show-template-tree> : _ default off on : propagated ;
 feature <jln-elide-type> : _ default off on : propagated ;
 feature <jln-exceptions> : _ default off on : incidental ;
+feature <jln-fix-compiler-error> : _ on default off : incidental ;
 feature <jln-linker> : _ default bfd gold lld : propagated ;
 feature <jln-lto> : _ default off on fat linker-plugin : incidental ;
-feature <jln-narrowing-error> : _ on default off : incidental ;
 feature <jln-optimize> : _ default off debugoptimized minsize release fast : incidental ;
 feature <jln-pedantic> : _ on default off as-error : incidental ;
 feature <jln-pie> : _ default off on pic : incidental ;
@@ -38,8 +38,8 @@ feature <jln-coverage-incidental> : _ default off on : incidental ;
 feature <jln-cpu-incidental> : _ default generic native : incidental ;
 feature <jln-debug-incidental> : _ default off on line-tables-only gdb lldb sce : incidental ;
 feature <jln-exceptions-incidental> : _ default off on : incidental ;
+feature <jln-fix-compiler-error-incidental> : _ on default off : incidental ;
 feature <jln-lto-incidental> : _ default off on fat linker-plugin : incidental ;
-feature <jln-narrowing-error-incidental> : _ on default off : incidental ;
 feature <jln-optimize-incidental> : _ default off debugoptimized minsize release fast : incidental ;
 feature <jln-pedantic-incidental> : _ on default off as-error : incidental ;
 feature <jln-pie-incidental> : _ default off on pic : incidental ;
@@ -61,9 +61,9 @@ feature <jln-diagnostics-format-default> : default fixits patch print-source-ran
 feature <jln-diagnostics-show-template-tree-default> : default off on : incidental ;
 feature <jln-elide-type-default> : default off on : incidental ;
 feature <jln-exceptions-default> : default off on : incidental ;
+feature <jln-fix-compiler-error-default> : on default off : incidental ;
 feature <jln-linker-default> : default bfd gold lld : incidental ;
 feature <jln-lto-default> : default off on fat linker-plugin : incidental ;
-feature <jln-narrowing-error-default> : on default off : incidental ;
 feature <jln-optimize-default> : default off debugoptimized minsize release fast : incidental ;
 feature <jln-pedantic-default> : on default off as-error : incidental ;
 feature <jln-pie-default> : default off on pic : incidental ;
@@ -112,9 +112,9 @@ constant jln_env_diagnostics_format : [ jln-get-env jln_diagnostics_format : def
 constant jln_env_diagnostics_show_template_tree : [ jln-get-env jln_diagnostics_show_template_tree : default off on ] ;
 constant jln_env_elide_type : [ jln-get-env jln_elide_type : default off on ] ;
 constant jln_env_exceptions : [ jln-get-env jln_exceptions : default off on ] ;
+constant jln_env_fix_compiler_error : [ jln-get-env jln_fix_compiler_error : on default off ] ;
 constant jln_env_linker : [ jln-get-env jln_linker : default bfd gold lld ] ;
 constant jln_env_lto : [ jln-get-env jln_lto : default off on fat linker-plugin ] ;
-constant jln_env_narrowing_error : [ jln-get-env jln_narrowing_error : on default off ] ;
 constant jln_env_optimize : [ jln-get-env jln_optimize : default off debugoptimized minsize release fast ] ;
 constant jln_env_pedantic : [ jln-get-env jln_pedantic : on default off as-error ] ;
 constant jln_env_pie : [ jln-get-env jln_pie : default off on pic ] ;
@@ -144,10 +144,10 @@ if $(CXX_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-debug-incidental JLN_DEBUG_INCIDENTAL : <jln-debug-incidental> ;
   toolset.flags jln-exceptions JLN_EXCEPTIONS : <jln-exceptions> ;
   toolset.flags jln-exceptions-incidental JLN_EXCEPTIONS_INCIDENTAL : <jln-exceptions-incidental> ;
+  toolset.flags jln-fix-compiler-error JLN_FIX_COMPILER_ERROR : <jln-fix-compiler-error> ;
+  toolset.flags jln-fix-compiler-error-incidental JLN_FIX_COMPILER_ERROR_INCIDENTAL : <jln-fix-compiler-error-incidental> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-lto-incidental JLN_LTO_INCIDENTAL : <jln-lto-incidental> ;
-  toolset.flags jln-narrowing-error JLN_NARROWING_ERROR : <jln-narrowing-error> ;
-  toolset.flags jln-narrowing-error-incidental JLN_NARROWING_ERROR_INCIDENTAL : <jln-narrowing-error-incidental> ;
   toolset.flags jln-optimize JLN_OPTIMIZE : <jln-optimize> ;
   toolset.flags jln-optimize-incidental JLN_OPTIMIZE_INCIDENTAL : <jln-optimize-incidental> ;
   toolset.flags jln-pedantic JLN_PEDANTIC : <jln-pedantic> ;
@@ -253,8 +253,8 @@ rule jln_flags ( properties * )
       <relevant>jln-cpu
       <relevant>jln-debug
       <relevant>jln-exceptions
+      <relevant>jln-fix-compiler-error
       <relevant>jln-lto
-      <relevant>jln-narrowing-error
       <relevant>jln-optimize
       <relevant>jln-pedantic
       <relevant>jln-pie
@@ -278,9 +278,9 @@ rule jln_flags ( properties * )
   local x_diagnostics_show_template_tree = [ jln-get-value $(ps) : jln-diagnostics-show-template-tree : $(jln_env_diagnostics_show_template_tree) ] ;
   local x_elide_type = [ jln-get-value $(ps) : jln-elide-type : $(jln_env_elide_type) ] ;
   local x_exceptions = [ jln-get-value2 $(ps) : jln-exceptions : jln-exceptions-incidental : $(jln_env_exceptions) ] ;
+  local x_fix_compiler_error = [ jln-get-value2 $(ps) : jln-fix-compiler-error : jln-fix-compiler-error-incidental : $(jln_env_fix_compiler_error) ] ;
   local x_linker = [ jln-get-value $(ps) : jln-linker : $(jln_env_linker) ] ;
   local x_lto = [ jln-get-value2 $(ps) : jln-lto : jln-lto-incidental : $(jln_env_lto) ] ;
-  local x_narrowing_error = [ jln-get-value2 $(ps) : jln-narrowing-error : jln-narrowing-error-incidental : $(jln_env_narrowing_error) ] ;
   local x_optimize = [ jln-get-value2 $(ps) : jln-optimize : jln-optimize-incidental : $(jln_env_optimize) ] ;
   local x_pedantic = [ jln-get-value2 $(ps) : jln-pedantic : jln-pedantic-incidental : $(jln_env_pedantic) ] ;
   local x_pie = [ jln-get-value2 $(ps) : jln-pie : jln-pie-incidental : $(jln_env_pie) ] ;
@@ -299,21 +299,31 @@ rule jln_flags ( properties * )
 
   if (  $(toolset) = "gcc" || $(toolset) = "clang"  )
   {
-    if ( $(x_narrowing_error) != "default" )
+    if ( $(x_fix_compiler_error) != "default" )
     {
-      if ( $(x_narrowing_error) = "on" )
+      if ( $(x_fix_compiler_error) = "on" )
       {
-        if (  $(toolset) = "gcc" && ! (  $(version) < "04.07"  )  )
+        if $(toolset) = "gcc"
         {
-          flags +=
-            <cxxflags>"-Werror=narrowing"
-          ;
+          if ! (  $(version) < "04.07"  )
+          {
+            flags +=
+              <cxxflags>"-Werror=narrowing"
+            ;
+            if ! (  $(version) < "07.01"  )
+            {
+              flags +=
+                <cxxflags>"-Werror=literal-suffix"
+              ;
+            }
+          }
         }
       }
       else if $(toolset) = "clang"
       {
         flags +=
           <cxxflags>"-Wno-error=c++11-narrowing"
+          <cxxflags>"-Wno-reserved-user-defined-literal"
         ;
       }
     }

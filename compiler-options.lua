@@ -59,9 +59,17 @@ function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 -- gcc and clang
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 G = Or(gcc, clang) {
-  opt'narrowing_error' {
-    lvl'on' { gcc(4,7) { cxx'-Werror=narrowing' } } /
-    clang { cxx'-Wno-error=c++11-narrowing' }
+  opt'fix_compiler_error' {
+    lvl'on' {
+      gcc {
+        vers(4,7) { cxx'-Werror=narrowing' } *
+        vers(7,1) { cxx'-Werror=literal-suffix' } -- no warning name before 7.1
+      }
+    } /
+    clang {
+      cxx'-Wno-error=c++11-narrowing',
+      cxx'-Wno-reserved-user-defined-literal',
+    }
   },
 
   opt'coverage' {
@@ -636,7 +644,7 @@ Vbase = {
     exceptions= {{'off', 'on'},},
     linker=     {{'bfd', 'gold', 'lld'},},
     lto=        {{'off', 'on', 'fat', 'linker_plugin'},},
-    narrowing_error={{'off', 'on'}, 'on'},
+    fix_compiler_error={{'off', 'on'}, 'on'},
     optimize=   {{'off', 'debugoptimized', 'minsize', 'release', 'fast'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     pie=        {{'off', 'on', 'pic'},},

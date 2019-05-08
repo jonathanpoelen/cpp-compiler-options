@@ -17,12 +17,12 @@ _jln_flag_names["jln-elide-type"] = true
 _jln_flag_names["elide_type"] = true
 _jln_flag_names["jln-exceptions"] = true
 _jln_flag_names["exceptions"] = true
+_jln_flag_names["jln-fix-compiler-error"] = true
+_jln_flag_names["fix_compiler_error"] = true
 _jln_flag_names["jln-linker"] = true
 _jln_flag_names["linker"] = true
 _jln_flag_names["jln-lto"] = true
 _jln_flag_names["lto"] = true
-_jln_flag_names["jln-narrowing-error"] = true
-_jln_flag_names["narrowing_error"] = true
 _jln_flag_names["jln-optimize"] = true
 _jln_flag_names["optimize"] = true
 _jln_flag_names["jln-pedantic"] = true
@@ -80,12 +80,12 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-elide-type"] then _OPTIONS["jln-elide-type"] = (defaults["elide_type"] or defaults["jln-elide-type"] or "default") end
   newoption{trigger="jln-exceptions", allowed={{"default"}, {"off"}, {"on"}}, description="exceptions"}
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
+  newoption{trigger="jln-fix-compiler-error", allowed={{"default"}, {"off"}, {"on"}}, description="fix_compiler_error"}
+  if not _OPTIONS["jln-fix-compiler-error"] then _OPTIONS["jln-fix-compiler-error"] = (defaults["fix_compiler_error"] or defaults["jln-fix-compiler-error"] or "default") end
   newoption{trigger="jln-linker", allowed={{"default"}, {"bfd"}, {"gold"}, {"lld"}}, description="linker"}
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"linker_plugin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
-  newoption{trigger="jln-narrowing-error", allowed={{"default"}, {"off"}, {"on"}}, description="narrowing_error"}
-  if not _OPTIONS["jln-narrowing-error"] then _OPTIONS["jln-narrowing-error"] = (defaults["narrowing_error"] or defaults["jln-narrowing-error"] or "default") end
   newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"debugoptimized"}, {"minsize"}, {"release"}, {"fast"}}, description="optimize"}
   if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or defaults["jln-optimize"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
@@ -227,15 +227,15 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-exceptions"] = true
     name_list["exceptions"] = true
     new_value["jln-exceptions"] = values["exceptions"] or values["jln-exceptions"] or (disable_others and "default" or _OPTIONS["jln-exceptions"])
+    name_list["jln-fix-compiler-error"] = true
+    name_list["fix_compiler_error"] = true
+    new_value["jln-fix-compiler-error"] = values["fix_compiler_error"] or values["jln-fix-compiler-error"] or (disable_others and "default" or _OPTIONS["jln-fix-compiler-error"])
     name_list["jln-linker"] = true
     name_list["linker"] = true
     new_value["jln-linker"] = values["linker"] or values["jln-linker"] or (disable_others and "default" or _OPTIONS["jln-linker"])
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"])
-    name_list["jln-narrowing-error"] = true
-    name_list["narrowing_error"] = true
-    new_value["jln-narrowing-error"] = values["narrowing_error"] or values["jln-narrowing-error"] or (disable_others and "default" or _OPTIONS["jln-narrowing-error"])
     name_list["jln-optimize"] = true
     name_list["optimize"] = true
     new_value["jln-optimize"] = values["optimize"] or values["jln-optimize"] or (disable_others and "default" or _OPTIONS["jln-optimize"])
@@ -292,13 +292,18 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
   local jln_buildoptions, jln_linkoptions = '', ''
 
   if ( compiler == "gcc" or compiler == "clang" ) then
-    if not ( values["jln-narrowing-error"] == "default") then
-      if values["jln-narrowing-error"] == "on" then
-        if ( compiler == "gcc" and not ( compversion < 407 ) ) then
-          jln_buildoptions = jln_buildoptions .. " -Werror=narrowing"
+    if not ( values["jln-fix-compiler-error"] == "default") then
+      if values["jln-fix-compiler-error"] == "on" then
+        if compiler == "gcc" then
+          if not ( compversion < 407 ) then
+            jln_buildoptions = jln_buildoptions .. " -Werror=narrowing"
+            if not ( compversion < 701 ) then
+              jln_buildoptions = jln_buildoptions .. " -Werror=literal-suffix"
+            end
+          end
         end
       elseif compiler == "clang" then
-        jln_buildoptions = jln_buildoptions .. " -Wno-error=c++11-narrowing"
+        jln_buildoptions = jln_buildoptions .. " -Wno-error=c++11-narrowing -Wno-reserved-user-defined-literal"
       end
     end
     if not ( values["jln-coverage"] == "default") then

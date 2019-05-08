@@ -51,9 +51,9 @@ diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
 exceptions = default off on
+fix_compiler_error = on default off
 linker = default bfd gold lld
 lto = default off on fat linker_plugin
-narrowing_error = on default off
 optimize = default off debugoptimized minsize release fast
 pedantic = on default off as_error
 pie = default off on pic
@@ -75,7 +75,7 @@ whole_program = default off on strip_all
 
 The value `default` does nothing.
 
-If not specified, `narrowing_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
+If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
 
 ## Recommended options
 
