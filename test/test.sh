@@ -75,8 +75,8 @@ if [ -z "$1" ] || [ "$1" = meson ]; then
   cp "$d"/../output/meson_options.txt "$TMPDIR"/compgenmeson
   sed 1i"project('test', 'cpp')" "$d"/../output/meson > "$TMPDIR"/compgenmeson/meson.build
   cd "$TMPDIR"/compgenmeson
-  rm -rf b; test_success 'meson b | grep -m1 "Wall.*YES"'
-  rm -rf b; test_success 'meson b -Djln_warnings=off | grep -- -w'
-  rm -rf b; test_failure 'meson b -Djln_warnings=off  | grep "Wall\|sanitizer"'
-  rm -rf b; test_success 'meson b -Djln_sanitizers=on | grep -m1 "sanitize.*YES"'
+  rm -rf b; test_success 'meson b >/dev/null ; meson configure b | grep -Em1 "^  jln_warnings +on"'
+  rm -rf b; test_success 'meson b -Djln_warnings=off >/dev/null ; meson configure b | grep -Em1 "^  jln_warnings +off"'
+  rm -rf b; test_success 'meson b >/dev/null ; meson configure b | grep -Em1 "^  jln_sanitizers +default"'
+  rm -rf b; test_success 'meson b -Djln_sanitizers=on >/dev/null ; meson configure b | grep -Em1 "^  jln_sanitizers +on"'
 fi
