@@ -100,23 +100,15 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 jln_init_flags(DEBUG on) # set DEBUG default value to "on"
 
 
-add_library(lib_project INTERFACE)
-# jln_target_interface(<libname> [<jln-option> <value>]... [DISABLE_OTHERS on|off])
-jln_target_interface(lib_project)
-
-add_executable(test test.cpp)
-target_link_libraries(test lib_project)
+# jln_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln-option> <value>]... [DISABLE_OTHERS on|off])
+jln_target_interface(mytarget1 INTERFACE SANITIZERS on)
 
 
 # jln_flags(CXX_VAR <out-variable> LINK_VAR <out-variable> [<jln-option> <value>]... [DISABLE_OTHERS on|off])
 jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS SANITIZERS on)
 
-add_library(lib_project2 INTERFACE)
-target_link_libraries(lib_project2 INTERFACE ${LINK_FLAGS})
-target_compile_options(lib_project2 INTERFACE ${CXX_FLAGS})
-
-add_definitions(lib_project2)
-link_libraries(lib_project2)
+add_link_options(${LINK_FLAGS})
+add_compile_options(${CXX_FLAGS})
 ```
 
 

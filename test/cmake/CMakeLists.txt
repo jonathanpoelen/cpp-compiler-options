@@ -8,10 +8,13 @@ jln_flags(CXX_VAR JLN_CXX_FLAGS LINK_VAR JLN_LINK_FLAGS SANITIZERS on)
 message(STATUS "cxx: ${JLN_CXX_FLAGS}")
 message(STATUS "link: ${JLN_LINK_FLAGS}")
 
-add_library(lib_test INTERFACE)
 # jln_target_interface(lib_test)
-add_definitions(lib_test)
-link_libraries(lib_test)
+add_compile_options(${JLN_CXX_FLAGS})
+link_libraries(${JLN_LINK_FLAGS})
+
+add_library(lib_test INTERFACE)
+jln_target_interface(lib_test INTERFACE DEBUG on DISABLE_OTHERS on)
 
 add_executable(test test.cpp)
-#target_link_libraries(test lib_test)
+target_link_libraries(test INTERFACE $<TARGET_PROPERTY:lib_test,LINK_OPTIONS>)
+target_link_libraries(test INTERFACE $<TARGET_PROPERTY:lib_test,COMPILE_OPTIONS>)

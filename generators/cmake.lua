@@ -34,18 +34,23 @@ return {
     _:print('    set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})')
     _:print('  endif()\n')
 
+    local print_check_value = function(prefix, localname, name, values)
+      _:print(prefix .. 'if(NOT(("' .. table.concat(values, '" STREQUAL ' .. localname .. ') OR ("') .. '" STREQUAL ' .. localname .. ')))')
+      _:print('    message(FATAL_ERROR "Unknow value \\\"${' .. localname .. '}\\\" for ' .. localname .. ', expected: ' .. table.concat(values, ', ') .. '")')
+      _:print('  endif()')
+    end
+
     for optname,args,default_value in _:getoptions() do
-      local cmake_opt = 'JLN_DEFAULT_FLAG_' .. optname:upper();
+      local localname = optname:upper()
+      local cmake_opt = 'JLN_DEFAULT_FLAG_' .. localname;
       local opt = _:tocmakeoption(optname)
       _:print('  if(DEFINED ' .. cmake_opt .. ')')
       _:print('    set(' .. opt .. ' ${' .. cmake_opt .. '} CACHE STING "")')
       _:print('  else()')
       _:print('    set(' .. opt .. ' "' .. default_value .. '" CACHE STRING "")')
       _:print('  endif()\n')
-
-      _:print('  if(NOT(("' .. table.concat(args, '" STREQUAL ' .. opt .. ') OR ("') .. '" STREQUAL ' .. opt .. ')))')
-      _:print('    message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for ' .. opt .. ', expected: ' .. table.concat(args, ', ') .. '")')
-      _:print('  endif()\n')
+      print_check_value('  ', opt, localname, args)
+      _:print()
     end
 
     _:print('  if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")')
@@ -56,11 +61,11 @@ return {
     _:print('  endif()\n')
     _:print('endfunction()\n')
 
-    _:print('# jln_target_interface(<libname> [<jln-option> <value>]... [DISABLE_OTHERS on|off])')
+    _:print('# jln_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln-option> <value>]... [DISABLE_OTHERS on|off])')
     _:print('function(jln_target_interface name type)')
     _:print('  jln_flags(CXX_VAR cxx LINK_VAR link ${ARGV})')
-    _:print('  target_link_libraries(${name} INTERFACE ${link})')
-    _:print('  target_compile_options(${name} INTERFACE ${cxx})')
+    _:print('  target_link_libraries(${name} ${type} ${link})')
+    _:print('  target_compile_options(${name} ${type} ${cxx})')
     _:print('endfunction()\n')
 
     _:print('# jln_flags(CXX_VAR <out-variable> LINK_VAR <out-variable> [<jln-option> <value>]... [DISABLE_OTHERS on|off])')
@@ -73,14 +78,15 @@ return {
     end
     _:print('" "" ${ARGN})\n')
     for optname,args,default_value in _:getoptions() do
-      local cmake_opt = 'JLN_FLAGS_' .. optname:upper();
+      local localname = optname:upper()
+      local cmake_opt = 'JLN_FLAGS_' .. localname;
       _:print('  if(NOT DEFINED ' .. cmake_opt .. ')')
       _:print('    if(${JLN_FLAGS_DISABLE_OTHERS})')
       _:print('      set(' .. cmake_opt .. ' "' .. default_value .. '")')
       _:print('    else()')
       _:print('      set(' .. cmake_opt .. ' "${' .. _:tocmakeoption(optname) .. '}")')
       _:print('    endif()')
-      _:print('  endif()\n')
+      print_check_value('  else', cmake_opt, localname, args)
     end
   end,
 
@@ -104,8 +110,8 @@ return {
   link=function(_, x) return ' "' .. x .. '"' end,
 
   _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. '  set(CXX_FLAGS ${CXX_FLAGS} ' .. cxx .. ')\n' or '')
-        .. (#links ~= 0 and _.indent .. '  set(LINK_FLAGS ${LINK_FLAGS} ' .. links .. ')\n' or '')
+    return (#cxx ~= 0 and _.indent .. '  list(APPEND CXX_FLAGS ' .. cxx .. ')\n' or '')
+        .. (#links ~= 0 and _.indent .. '  list(APPEND LINK_FLAGS ' .. links .. ')\n' or '')
   end,
 
   stop=function(_)

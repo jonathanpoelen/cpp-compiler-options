@@ -49,7 +49,9 @@ if [ -z "$1" ] || [ "$1" = cmake ]; then
   test_success "cmake '$d/cmake' | grep fsanitize"
   test_failure "cmake '$d/cmake' | grep GLIB"
   test_failure "cmake '$d/cmake' | grep Weverything"
+  rm CMakeCache.txt
   test_success "cmake '$d/cmake' -DCMAKE_CXX_COMPILER=gcc | grep Wlogical-op"
+  rm CMakeCache.txt
   test_success "cmake '$d/cmake' -DCMAKE_CXX_COMPILER=clang++ | grep Weverything"
   test_failure "cmake '$d/cmake' | grep lto"
   test_success "cmake '$d/cmake' -DJLN_LTO=on | grep lto"
