@@ -500,8 +500,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG_USE_EXCEPTIONS"
         end
         if ( values["jln-stl-debug"] == "allow-broken-abi" or values["jln-stl-debug"] == "allow-broken-abi-and-bugged" ) then
-          if ( ( compiler == "clang" and not ( compversion < 800 ) ) or values["jln-stl-debug"] == "allow-broken-abi-and-bugged" ) then
-            jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG=1"
+          if compiler == "clang" then
+            if ( not ( compversion < 800 ) or values["jln-stl-debug"] == "allow-broken-abi-and-bugged" ) then
+              jln_buildoptions = jln_buildoptions .. " -D_LIBCPP_DEBUG=1"
+            end
           end
           jln_buildoptions = jln_buildoptions .. " -D_GLIBCXX_DEBUG"
         else

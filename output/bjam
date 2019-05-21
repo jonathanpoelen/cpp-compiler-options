@@ -729,11 +729,14 @@ rule jln_flags ( properties * )
         }
         if (  ( $(x_stl_debug) = "allow-broken-abi" ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugged" )  )
         {
-          if (  (  $(toolset) = "clang" && ! (  $(version) < "08.00"  )  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugged" )  )
+          if $(toolset) = "clang"
           {
-            flags +=
-              <cxxflags>"-D_LIBCPP_DEBUG=1"
-            ;
+            if (  ! (  $(version) < "08.00"  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugged" )  )
+            {
+              flags +=
+                <cxxflags>"-D_LIBCPP_DEBUG=1"
+              ;
+            }
           }
           flags +=
             <cxxflags>"-D_GLIBCXX_DEBUG"

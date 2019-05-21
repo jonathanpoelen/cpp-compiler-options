@@ -232,9 +232,11 @@ G = Or(gcc, clang) {
         cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
       },
       Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugged') {
-        -- allocator is bogus: https://bugs.llvm.org/show_bug.cgi?id=39203
-        Or(clang(8), lvl'allow_broken_abi_and_bugged') {
+        clang {
+          -- denug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
+          Or(vers(8), lvl'allow_broken_abi_and_bugged') {
             cxx'-D_LIBCPP_DEBUG=1',
+          },
         },
         cxx'-D_GLIBCXX_DEBUG',
       }
