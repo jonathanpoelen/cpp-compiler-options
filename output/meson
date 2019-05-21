@@ -1,62 +1,33 @@
 ___jln_default_flags = get_variable('jln_default_flags', {})
 ___jln_flags = {
-
   'jln_color': ___jln_default_flags.get('jln_color', get_option('jln_color')),
-
   'jln_control_flow': ___jln_default_flags.get('jln_control_flow', get_option('jln_control_flow')),
-
   'jln_coverage': ___jln_default_flags.get('jln_coverage', get_option('jln_coverage')),
-
   'jln_cpu': ___jln_default_flags.get('jln_cpu', get_option('jln_cpu')),
-
   'jln_debug': ___jln_default_flags.get('jln_debug', get_option('jln_debug')),
-
   'jln_diagnostics_format': ___jln_default_flags.get('jln_diagnostics_format', get_option('jln_diagnostics_format')),
-
   'jln_diagnostics_show_template_tree': ___jln_default_flags.get('jln_diagnostics_show_template_tree', get_option('jln_diagnostics_show_template_tree')),
-
   'jln_elide_type': ___jln_default_flags.get('jln_elide_type', get_option('jln_elide_type')),
-
   'jln_exceptions': ___jln_default_flags.get('jln_exceptions', get_option('jln_exceptions')),
-
   'jln_fix_compiler_error': ___jln_default_flags.get('jln_fix_compiler_error', get_option('jln_fix_compiler_error')),
-
   'jln_linker': ___jln_default_flags.get('jln_linker', get_option('jln_linker')),
-
   'jln_lto': ___jln_default_flags.get('jln_lto', get_option('jln_lto')),
-
   'jln_optimize': ___jln_default_flags.get('jln_optimize', get_option('jln_optimize')),
-
   'jln_pedantic': ___jln_default_flags.get('jln_pedantic', get_option('jln_pedantic')),
-
   'jln_pie': ___jln_default_flags.get('jln_pie', get_option('jln_pie')),
-
   'jln_relro': ___jln_default_flags.get('jln_relro', get_option('jln_relro')),
-
   'jln_reproducible_build_warnings': ___jln_default_flags.get('jln_reproducible_build_warnings', get_option('jln_reproducible_build_warnings')),
-
   'jln_rtti': ___jln_default_flags.get('jln_rtti', get_option('jln_rtti')),
-
   'jln_sanitizers': ___jln_default_flags.get('jln_sanitizers', get_option('jln_sanitizers')),
-
   'jln_sanitizers_extra': ___jln_default_flags.get('jln_sanitizers_extra', get_option('jln_sanitizers_extra')),
-
   'jln_shadow_warnings': ___jln_default_flags.get('jln_shadow_warnings', get_option('jln_shadow_warnings')),
-
   'jln_stack_protector': ___jln_default_flags.get('jln_stack_protector', get_option('jln_stack_protector')),
-
   'jln_stl_debug': ___jln_default_flags.get('jln_stl_debug', get_option('jln_stl_debug')),
-
   'jln_stl_fix': ___jln_default_flags.get('jln_stl_fix', get_option('jln_stl_fix')),
-
   'jln_suggests': ___jln_default_flags.get('jln_suggests', get_option('jln_suggests')),
-
   'jln_warnings': ___jln_default_flags.get('jln_warnings', get_option('jln_warnings')),
-
   'jln_warnings_as_error': ___jln_default_flags.get('jln_warnings_as_error', get_option('jln_warnings_as_error')),
-
   'jln_whole_program': ___jln_default_flags.get('jln_whole_program', get_option('jln_whole_program')),
-
 }
 
 jln_custom_cpp_flags = []

@@ -24,11 +24,11 @@ return {
     })
 
     local option_strs = _._option_strs
-    _:print("___jln_default_flags = get_variable('jln_default_flags', {})\n___jln_flags = {\n")
+    _:write("___jln_default_flags = get_variable('jln_default_flags', {})\n___jln_flags = {\n")
     for optname,args,default_value,ordered_args in _:getoptions() do
       local name = _:tobuildoption(optname)
       option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
-      _:print("  '" .. name .. "': ___jln_default_flags.get('" .. name .. "', get_option('" .. name .. "')),\n")
+      _:write("  '" .. name .. "': ___jln_default_flags.get('" .. name .. "', get_option('" .. name .. "')),\n")
     end
 
     _:print[[}
