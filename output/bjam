@@ -1311,7 +1311,6 @@ rule jln_flags ( properties * )
         {
           flags +=
             <cxxflags>"/O2"
-            <cxxflags>"/OPT:REF"
             <linkflags>"/OPT:REF"
           ;
         }
@@ -1319,7 +1318,6 @@ rule jln_flags ( properties * )
         {
           flags +=
             <cxxflags>"/O1"
-            <cxxflags>"/OPT:REF"
             <cxxflags>"/Gw"
             <linkflags>"/OPT:REF"
           ;
@@ -1328,7 +1326,6 @@ rule jln_flags ( properties * )
         {
           flags +=
             <cxxflags>"/O2"
-            <cxxflags>"/OPT:REF"
             <cxxflags>"/fp:fast"
             <linkflags>"/OPT:REF"
           ;

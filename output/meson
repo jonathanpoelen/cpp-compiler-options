@@ -514,13 +514,13 @@ jln_link_flags = []
       else
         jln_cpp_flags += ['/DNDEBUG', ]
         if (  (___jln_flags.get('jln_optimize', 'default') == 'release') )
-          jln_cpp_flags += ['/O2', '/OPT:REF', ]
+          jln_cpp_flags += ['/O2', ]
           jln_link_flags += ['/OPT:REF', ]
         elif (  (___jln_flags.get('jln_optimize', 'default') == 'minsize') )
-          jln_cpp_flags += ['/O1', '/OPT:REF', '/Gw', ]
+          jln_cpp_flags += ['/O1', '/Gw', ]
           jln_link_flags += ['/OPT:REF', ]
         elif (  (___jln_flags.get('jln_optimize', 'default') == 'fast') )
-          jln_cpp_flags += ['/O2', '/OPT:REF', '/fp:fast', ]
+          jln_cpp_flags += ['/O2', '/fp:fast', ]
           jln_link_flags += ['/OPT:REF', ]
         endif
       endif

@@ -508,6 +508,8 @@ G = Or(gcc, clang) {
   }
 } /
 
+-- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options?view=vs-2019
+-- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically?view=vs-2019
 msvc {
   opt'stl_fix' {
     lvl'on' { cxx'/DNOMINMAX', },
@@ -533,9 +535,9 @@ msvc {
       cxx'/DNDEBUG',
       -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
       -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-      lvl'release' { cxx'/O2', fl'/OPT:REF', } /
-      lvl'minsize' { cxx'/O1', fl'/OPT:REF', cxx'/Gw' } /
-      lvl'fast' { cxx'/O2', fl'/OPT:REF', cxx'/fp:fast' }
+      lvl'release' { cxx'/O2', link'/OPT:REF', } /
+      lvl'minsize' { cxx'/O1', link'/OPT:REF', cxx'/Gw' } /
+      lvl'fast' { cxx'/O2', link'/OPT:REF', cxx'/fp:fast' }
     }
   },
 

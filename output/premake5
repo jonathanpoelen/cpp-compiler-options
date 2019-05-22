@@ -761,13 +761,13 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       else
         jln_buildoptions = jln_buildoptions .. " /DNDEBUG"
         if values["jln-optimize"] == "release" then
-          jln_buildoptions = jln_buildoptions .. " /O2 /OPT:REF"
+          jln_buildoptions = jln_buildoptions .. " /O2"
           jln_linkoptions = jln_linkoptions .. " /OPT:REF"
         elseif values["jln-optimize"] == "minsize" then
-          jln_buildoptions = jln_buildoptions .. " /O1 /OPT:REF /Gw"
+          jln_buildoptions = jln_buildoptions .. " /O1 /Gw"
           jln_linkoptions = jln_linkoptions .. " /OPT:REF"
         elseif values["jln-optimize"] == "fast" then
-          jln_buildoptions = jln_buildoptions .. " /O2 /OPT:REF /fp:fast"
+          jln_buildoptions = jln_buildoptions .. " /O2 /fp:fast"
           jln_linkoptions = jln_linkoptions .. " /OPT:REF"
         end
       end

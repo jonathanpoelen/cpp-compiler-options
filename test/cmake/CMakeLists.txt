@@ -10,7 +10,9 @@ message(STATUS "link: ${JLN_LINK_FLAGS}")
 
 # jln_target_interface(lib_test)
 add_compile_options(${JLN_CXX_FLAGS})
-link_libraries(${JLN_LINK_FLAGS})
+# cmake-3.13
+# add_link_options(${JLN_LINK_FLAGS})
+SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${JLN_LINK_FLAGS}")
 
 add_library(lib_test INTERFACE)
 jln_target_interface(lib_test INTERFACE DEBUG on DISABLE_OTHERS on)
