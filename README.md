@@ -66,7 +66,7 @@ shadow_warnings = off default on local compatible_local all
 stack_protector = default off on strong all
 stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugged assert_as_exception
 stl_fix = on default off
-suggests = default off on
+suggestions = default off on
 warnings = on default off strict very_strict
 warnings_as_error = default off on
 whole_program = default off on strip_all
@@ -84,7 +84,7 @@ category | options
 debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>
 release | `cpu=native`<br>`linker=gold`<br>`lto=linker_plugin` or `on`<br>`optimize=release`<br>`rtti=off`<br>`whole_program=strip_all`
 security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`
-really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggests=on`<br>`warnings=very_strict`
+really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
 
 
 # Use generated files
@@ -98,7 +98,7 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 # jln_init_flags([<jln-option> <value>]... [AUTO_PROFILE on] [VERBOSE on])
 # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" is empty)
 # (cmake -DJLN_VERBOSE=on -DJLN_DEBUG=on)
-jln_init_flags(SUGGESTS on) # set SUGGESTS default value to "on"
+jln_init_flags(SUGGESTIONS on) # set SUGGESTIONS default value to "on"
 
 
 # jln_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln-option> <value>]... [DISABLE_OTHERS on|off])

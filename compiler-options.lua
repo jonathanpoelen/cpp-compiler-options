@@ -211,7 +211,7 @@ G = Or(gcc, clang) {
     lvl'pic'{ cxx'-fPIC', },
   },
 
-  opt'suggests' {
+  opt'suggestions' {
     -lvl'off' {
       gcc {
         cxx'-Wsuggest-attribute=pure',
@@ -654,7 +654,7 @@ Vbase = {
     linker=true,
     reproducible_build_warnings=true,
     shadow_warnings=true,
-    suggests=true,
+    suggestions=true,
     warnings=true,
     warnings_as_error=true,
   },
@@ -684,7 +684,7 @@ Vbase = {
     sanitizers_extra={{'off', 'thread', 'pointer'},},
     shadow_warnings={{'off', 'on', 'local', 'compatible_local', 'all'}, 'off'},
     stack_protector={{'off', 'on', 'strong', 'all'},},
-    suggests=   {{'off', 'on'},},
+    suggestions={{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},
     whole_program={{'off', 'on', 'strip_all'},},

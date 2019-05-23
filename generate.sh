@@ -70,7 +70,7 @@ sgen compiler | while read comp ; do
   gencompopt $comp-stl_debug_broken_abi_and_bugged $comp stl_fix stl_debug=allow_broken_abi_and_bugged
   gencompopt $comp-sanitizers-pointer              $comp sanitizers_extra=pointer
   gencompopt $comp-template_tree                   $comp elide_type=off diagnostics_show_template_tree=on
-  for g in suggests stl_debug debug sanitizers ; do
+  for g in suggestions stl_debug debug sanitizers ; do
     gencompopt $comp-$g $comp $g
   done
   sort -u -- "$OUTPUT_DIR"/$comp-stl_debug            "$OUTPUT_DIR"/$comp-debug "$OUTPUT_DIR"/$comp-sanitizers > "$OUTPUT_DIR"/$comp-debug_full

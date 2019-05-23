@@ -47,8 +47,8 @@ _jln_flag_names["jln-stl-debug"] = true
 _jln_flag_names["stl_debug"] = true
 _jln_flag_names["jln-stl-fix"] = true
 _jln_flag_names["stl_fix"] = true
-_jln_flag_names["jln-suggests"] = true
-_jln_flag_names["suggests"] = true
+_jln_flag_names["jln-suggestions"] = true
+_jln_flag_names["suggestions"] = true
 _jln_flag_names["jln-warnings"] = true
 _jln_flag_names["warnings"] = true
 _jln_flag_names["jln-warnings-as-error"] = true
@@ -110,8 +110,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-stl-debug"] then _OPTIONS["jln-stl-debug"] = (defaults["stl_debug"] or defaults["jln-stl-debug"] or "default") end
   newoption{trigger="jln-stl-fix", allowed={{"default"}, {"off"}, {"on"}}, description="stl_fix"}
   if not _OPTIONS["jln-stl-fix"] then _OPTIONS["jln-stl-fix"] = (defaults["stl_fix"] or defaults["jln-stl-fix"] or "default") end
-  newoption{trigger="jln-suggests", allowed={{"default"}, {"off"}, {"on"}}, description="suggests"}
-  if not _OPTIONS["jln-suggests"] then _OPTIONS["jln-suggests"] = (defaults["suggests"] or defaults["jln-suggests"] or "default") end
+  newoption{trigger="jln-suggestions", allowed={{"default"}, {"off"}, {"on"}}, description="suggestions"}
+  if not _OPTIONS["jln-suggestions"] then _OPTIONS["jln-suggestions"] = (defaults["suggestions"] or defaults["jln-suggestions"] or "default") end
   newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}, {"very_strict"}}, description="warnings"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "default") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}}, description="warnings_as_error"}
@@ -272,9 +272,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-stl-fix"] = true
     name_list["stl_fix"] = true
     new_value["jln-stl-fix"] = values["stl_fix"] or values["jln-stl-fix"] or (disable_others and "default" or _OPTIONS["jln-stl-fix"])
-    name_list["jln-suggests"] = true
-    name_list["suggests"] = true
-    new_value["jln-suggests"] = values["suggests"] or values["jln-suggests"] or (disable_others and "default" or _OPTIONS["jln-suggests"])
+    name_list["jln-suggestions"] = true
+    name_list["suggestions"] = true
+    new_value["jln-suggestions"] = values["suggestions"] or values["jln-suggestions"] or (disable_others and "default" or _OPTIONS["jln-suggestions"])
     name_list["jln-warnings"] = true
     name_list["warnings"] = true
     new_value["jln-warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "default" or _OPTIONS["jln-warnings"])
@@ -487,8 +487,8 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " -fPIC"
       end
     end
-    if not ( values["jln-suggests"] == "default") then
-      if not values["jln-suggests"] == "off" then
+    if not ( values["jln-suggestions"] == "default") then
+      if not values["jln-suggestions"] == "off" then
         if compiler == "gcc" then
           jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=pure -Wsuggest-attribute=const"
           if not ( compversion < 500 ) then

@@ -24,7 +24,7 @@ ___jln_flags = {
   'jln_stack_protector': ___jln_default_flags.get('jln_stack_protector', get_option('jln_stack_protector')),
   'jln_stl_debug': ___jln_default_flags.get('jln_stl_debug', get_option('jln_stl_debug')),
   'jln_stl_fix': ___jln_default_flags.get('jln_stl_fix', get_option('jln_stl_fix')),
-  'jln_suggests': ___jln_default_flags.get('jln_suggests', get_option('jln_suggests')),
+  'jln_suggestions': ___jln_default_flags.get('jln_suggestions', get_option('jln_suggestions')),
   'jln_warnings': ___jln_default_flags.get('jln_warnings', get_option('jln_warnings')),
   'jln_warnings_as_error': ___jln_default_flags.get('jln_warnings_as_error', get_option('jln_warnings_as_error')),
   'jln_whole_program': ___jln_default_flags.get('jln_whole_program', get_option('jln_whole_program')),
@@ -240,8 +240,8 @@ jln_link_flags = []
         jln_cpp_flags += ['-fPIC', ]
       endif
     endif
-    if (  not ( (___jln_flags.get('jln_suggests', 'default') == 'default')) )
-      if (  not (___jln_flags.get('jln_suggests', 'default') == 'off') )
+    if (  not ( (___jln_flags.get('jln_suggestions', 'default') == 'default')) )
+      if (  not (___jln_flags.get('jln_suggestions', 'default') == 'off') )
         if (  (___jln_compiler_id == 'gcc') )
           jln_cpp_flags += ['-Wsuggest-attribute=pure', '-Wsuggest-attribute=const', ]
           if (  not ( ___jln_compiler_version.version_compare('<5.0') ) )

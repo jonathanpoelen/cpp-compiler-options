@@ -5,7 +5,7 @@ include(../../output/cmake)
 if ("${TEST_PROFILE}" STREQUAL "on")
   jln_init_flags(AUTO_PROFILE on)
 else()
-  jln_init_flags(SUGGESTS on) # SUGGESTS default value is on
+  jln_init_flags(SUGGESTIONS on) # SUGGESTIONS default value is on
 endif()
 
 jln_flags(CXX_VAR JLN_CXX_FLAGS LINK_VAR JLN_LINK_FLAGS SANITIZERS on)

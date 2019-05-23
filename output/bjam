@@ -29,7 +29,7 @@ feature <jln-shadow-warnings> : _ off default on local compatible-local all : pr
 feature <jln-stack-protector> : _ default off on strong all : incidental ;
 feature <jln-stl-debug> : _ default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
 feature <jln-stl-fix> : _ on default off : incidental ;
-feature <jln-suggests> : _ default off on : propagated ;
+feature <jln-suggestions> : _ default off on : propagated ;
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
 
@@ -76,7 +76,7 @@ feature <jln-shadow-warnings-default> : off default on local compatible-local al
 feature <jln-stack-protector-default> : default off on strong all : incidental ;
 feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
-feature <jln-suggests-default> : default off on : incidental ;
+feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
 
@@ -127,7 +127,7 @@ constant jln_env_shadow_warnings : [ jln-get-env jln_shadow_warnings : off defau
 constant jln_env_stack_protector : [ jln-get-env jln_stack_protector : default off on strong all ] ;
 constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception ] ;
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
-constant jln_env_suggests : [ jln-get-env jln_suggests : default off on ] ;
+constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_env_whole_program : [ jln-get-env jln_whole_program : default off on strip-all ] ;
 
@@ -293,7 +293,7 @@ rule jln_flags ( properties * )
   local x_stack_protector = [ jln-get-value2 $(ps) : jln-stack-protector : jln-stack-protector-incidental : $(jln_env_stack_protector) ] ;
   local x_stl_debug = [ jln-get-value2 $(ps) : jln-stl-debug : jln-stl-debug-incidental : $(jln_env_stl_debug) ] ;
   local x_stl_fix = [ jln-get-value2 $(ps) : jln-stl-fix : jln-stl-fix-incidental : $(jln_env_stl_fix) ] ;
-  local x_suggests = [ jln-get-value $(ps) : jln-suggests : $(jln_env_suggests) ] ;
+  local x_suggestions = [ jln-get-value $(ps) : jln-suggestions : $(jln_env_suggestions) ] ;
   local x_warnings = [ jln-get-value $(ps) : jln-warnings : $(jln_env_warnings) ] ;
   local x_whole_program = [ jln-get-value2 $(ps) : jln-whole-program : jln-whole-program-incidental : $(jln_env_whole_program) ] ;
 
@@ -705,9 +705,9 @@ rule jln_flags ( properties * )
         ;
       }
     }
-    if ( $(x_suggests) != "default" )
+    if ( $(x_suggestions) != "default" )
     {
-      if ! ( $(x_suggests) = "off" )
+      if ! ( $(x_suggestions) = "off" )
       {
         if $(toolset) = "gcc"
         {
