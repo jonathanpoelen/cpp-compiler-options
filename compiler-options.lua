@@ -641,7 +641,7 @@ function unpack_table_iterator(t)
   local i = 0
   return function()
     i = i + 1
-    return table.unpack(t[i])
+    return unpack(t[i])
   end
 end
 
