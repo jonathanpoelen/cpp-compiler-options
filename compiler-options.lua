@@ -691,9 +691,9 @@ Vbase = {
   },
 
   _opts_build_type={
-    debug={debug='on', stl_debug='on', sanitizers='on'},
+    debug={debug='on', stl_debug='on', control_flow='on', sanitizers='on'},
     release={cpu='native', linker='gold', lto='on', optimization='2',},
-    debug_optimized={cpu='native', linker='gold', lto='on', optimization='g', debug='on',},
+    debug_optimized={linker='gold', lto='on', optimization='g', debug='on',},
     minimum_size_release={cpu='native', linker='gold', lto='on', optimization='size',},
   },
 

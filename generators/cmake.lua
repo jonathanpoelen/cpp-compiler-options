@@ -22,16 +22,51 @@ return {
       endif='endif()',
     })
 
-    _:print('# jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])')
+    _:print('# jln_init_flags([<jln-option> <value>]... [AUTO_PROFILE on] [VERBOSE on])')
+    _:print('# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" is empty)')
     _:print('function(jln_init_flags)')
     _:write('  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE')
     for optname in _:getoptions() do
        _:write(';' .. optname:upper())
     end
+    if _._opts['auto_profile'] then
+      error('profile option is reserved')
+    end
+    _:write(';AUTO_PROFILE')
     _:print('" "" ${ARGN})\n')
 
     _:print('  if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)')
     _:print('    set(JLN_VERBOSE ${JLN_DEFAULT_FLAG_VERBOSE})')
+    _:print('  endif()\n')
+
+    _:print('  if(DEFINED JLN_DEFAULT_FLAG_AUTO_PROFILE)')
+    _:print('    set(JLN_AUTO_PROFILE ${JLN_DEFAULT_FLAG_AUTO_PROFILE})')
+    _:print('    if(${JLN_AUTO_PROFILE} STREQUAL "on")')
+    _:print('    if("${CMAKE_BUILD_TYPE}" STREQUAL "")')
+    _:print('      set(JLN_BUILD_TYPE "Debug")')
+    _:print('    else()')
+    _:print('      set(JLN_BUILD_TYPE ${CMAKE_BUILD_TYPE})')
+    _:print('    endif()')
+    local buildtypes = {
+      debug='Debug',
+      release='Release',
+      debug_optimized='RelWithDebInfo',
+      minimum_size_release='MinSizeRel',
+    }
+    for buildtypename, opts in _:getbuildtype() do
+      local cmake_buildtype = buildtypes[buildtypename]
+      if cmake_buildtype then
+        _:print('      if("' .. cmake_buildtype .. '" STREQUAL "${JLN_BUILD_TYPE}")')
+        for i,xs in pairs(opts) do
+          local cmake_opt = 'JLN_DEFAULT_FLAG_' .. xs[1]:upper()
+          _:print('        if(NOT(DEFINED ' .. cmake_opt .. '))')
+          _:print('          set(' .. cmake_opt .. ' "' .. xs[2] .. '")')
+          _:print('        endif()')
+        end
+        _:print('      endif()\n')
+      end
+    end
+    _:print('    endif()')
     _:print('  endif()\n')
 
     local print_check_value = function(prefix, localname, name, values)
@@ -45,7 +80,7 @@ return {
       local cmake_opt = 'JLN_DEFAULT_FLAG_' .. localname;
       local opt = _:tocmakeoption(optname)
       _:print('  if(DEFINED ' .. cmake_opt .. ')')
-      _:print('    set(' .. opt .. ' ${' .. cmake_opt .. '} CACHE STING "")')
+      _:print('    set(' .. opt .. ' ${' .. cmake_opt .. '} CACHE STRING "")')
       _:print('  else()')
       _:print('    set(' .. opt .. ' "' .. default_value .. '" CACHE STRING "")')
       _:print('  endif()\n')
@@ -56,7 +91,7 @@ return {
     _:print('  if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")')
     for optname,args in _:getoptions() do
       local opt = _:tocmakeoption(optname)
-      _:print('    message(STATUS "' .. opt .. '=${' .. opt .. '}\t[' .. table.concat(args, ', ') .. ']")')
+      _:print('    message(STATUS "' .. opt .. ' = ${' .. opt .. '}\t[' .. table.concat(args, ', ') .. ']")')
     end
     _:print('  endif()\n')
     _:print('endfunction()\n')
@@ -87,6 +122,7 @@ return {
       _:print('      set(' .. cmake_opt .. ' "${' .. _:tocmakeoption(optname) .. '}")')
       _:print('    endif()')
       print_check_value('  else', cmake_opt, localname, args)
+      _:print()
     end
   end,
 

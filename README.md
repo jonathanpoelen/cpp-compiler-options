@@ -95,9 +95,10 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 # include(output/cmake)
 
 # init cache and cli parser
-# jln_init_flags([<jln-option> <value>]... [VERBOSE on|1])
+# jln_init_flags([<jln-option> <value>]... [AUTO_PROFILE on] [VERBOSE on])
+# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" is empty)
 # (cmake -DJLN_VERBOSE=on -DJLN_DEBUG=on)
-jln_init_flags(DEBUG on) # set DEBUG default value to "on"
+jln_init_flags(SUGGESTS on) # set SUGGESTS default value to "on"
 
 
 # jln_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln-option> <value>]... [DISABLE_OTHERS on|off])

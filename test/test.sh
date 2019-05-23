@@ -44,7 +44,10 @@ if [ -z "$1" ] || [ "$1" = cmake ]; then
   mkdir -p "$TMPDIR"/compgencmake
   cd "$TMPDIR"/compgencmake
   rm -rf CMakeCache.txt CMakeFiles/ cmake_install.cmake Makefile test
+  test_success "cmake '$d/cmake' -DTEST_PROFILE=on | grep _GLIBCXX_ASSERTIONS"
+  rm CMakeCache.txt
   test_success "cmake '$d/cmake' | grep Wlogical-op"
+  test_success "cmake '$d/cmake' | grep suggest"
   test_success "cmake '$d/cmake' -DJLN_WARNINGS=off | grep -- -w"
   test_success "cmake '$d/cmake' | grep fsanitize"
   test_failure "cmake '$d/cmake' | grep GLIB"

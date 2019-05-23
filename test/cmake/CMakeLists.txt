@@ -2,7 +2,11 @@ project(test)
 cmake_minimum_required(VERSION 3.2)
 
 include(../../output/cmake)
-jln_init_flags(SUGGEST on) # SUGGEST default value is on
+if ("${TEST_PROFILE}" STREQUAL "on")
+  jln_init_flags(AUTO_PROFILE on)
+else()
+  jln_init_flags(SUGGESTS on) # SUGGESTS default value is on
+endif()
 
 jln_flags(CXX_VAR JLN_CXX_FLAGS LINK_VAR JLN_LINK_FLAGS SANITIZERS on)
 message(STATUS "cxx: ${JLN_CXX_FLAGS}")
