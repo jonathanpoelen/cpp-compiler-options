@@ -208,7 +208,7 @@ See `./compiler-options.lua generators/compiler.lua -h` for detailed usage infor
 
 ## generators/list_options.lua
 
-$ `./compiler-options.lua generators/list_options.lua [--noprofile] [--color]`
+$ `./compiler-options.lua generators/list_options.lua [--profile] [--color]`
 
 Checks and displays options and their values.
 

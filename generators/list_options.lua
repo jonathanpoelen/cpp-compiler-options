@@ -3,7 +3,7 @@ return {
   errors = {},
 
   start=function(_, show_profile, color)
-    show_profile, color = not (show_profile == '--noprofile' or color == '--noprofile'), (show_profile == '--color' or color == '--color')
+    show_profile, color = (show_profile == '--profile' or color == '--profile'), (show_profile == '--color' or color == '--color')
 
     local knwon_opts = _.knwon_opts
     local add_opt = function(optname, args)
