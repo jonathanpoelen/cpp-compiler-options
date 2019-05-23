@@ -622,6 +622,25 @@ msvc {
 
 function noop() end
 
+function create_ordered_keys(t)
+  local ordered_keys = {}
+
+  for k in pairs(t) do
+    ordered_keys[#ordered_keys + 1] = k
+  end
+
+  table.sort(ordered_keys)
+  return ordered_keys
+end
+
+function unpack_table_iterator(t)
+  local i = 0
+  return function()
+    i = i + 1
+    return table.unpack(t[i])
+  end
+end
+
 Vbase = {
   _incidental={
     color=true,
@@ -665,6 +684,13 @@ Vbase = {
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on'},},
     whole_program={{'off', 'on', 'strip_all'},},
+  },
+
+  _opts_build_type={
+    debug={debug='on', stl_debug='on', sanitizers='on'},
+    release={cpu='native', linker='gold', lto='on', optimize='release',},
+    debug_optimized={cpu='native', linker='gold', lto='on', optimize='release', debug='on',},
+    minimum_size_release={cpu='native', linker='gold', lto='on', optimize='minsize',},
   },
 
   indent = '',
@@ -813,19 +839,11 @@ Vbase = {
     local computed_options = _.__computed_options
 
     if not computed_options then
-      local ordered_keys = {}
-
-      for k in pairs(_._opts) do
-        table.insert(ordered_keys, k)
-      end
-
-      table.sort(ordered_keys)
-
       computed_options = {}
       _._computed_options = computed_options
       local ignore = _.ignore
 
-      for i,k in ipairs(ordered_keys) do
+      for i,k in ipairs(create_ordered_keys(_._opts)) do
         if not ignore[k] then
           local v = _._opts[k]
           local ordered_args = v[1]
@@ -845,12 +863,27 @@ Vbase = {
       computed_options[#computed_options + 1] = {nil,nil,nil,nil}
     end
 
-    local i = 0
-    return function()
-      i = i + 1
-      local xs = computed_options[i]
-      return xs[1], xs[2], xs[3], xs[4]
+    return unpack_table_iterator(computed_options)
+  end,
+
+  _computed_build_types = nil,
+  getbuildtype=function(_)
+    local computed_build_types = _._computed_build_types
+    if not computed_build_types then
+      computed_build_types = {}
+      _._computed_build_types = computed_build_types
+      for i,k in pairs(create_ordered_keys(_._opts_build_type)) do
+        local values = {}
+        local profile = _._opts_build_type[k]
+        for i,kv in pairs(create_ordered_keys(profile)) do
+          values[#values + 1] = {kv, profile[kv]}
+        end
+        computed_build_types[#computed_build_types + 1] = {k, values}
+      end
+      computed_build_types[#computed_build_types + 1] = {nil,nil}
     end
+
+    return unpack_table_iterator(computed_build_types)
   end,
 }
 
@@ -868,6 +901,19 @@ for k,args in pairs(Vbase._opts) do
   opts_krev[k]['default'] = true
 end
 Vbase._opts_krev = opts_krev
+
+-- check values of Vbase._opts_build_type
+for name,opts in pairs(Vbase._opts_build_type) do
+  for k,v in pairs(opts) do
+    local u = opts_krev[k]
+    if not u then
+      error('_opts_build_type['.. name .. '][' .. k .. ']: unknown option')
+    end
+    if not u[v] then
+      error('_opts_build_type['.. name .. '][' .. k .. '] = ' .. v .. ': unknown value')
+    end
+  end
+end
 
 
 function is_cond(t)

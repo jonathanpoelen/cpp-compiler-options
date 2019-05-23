@@ -207,7 +207,9 @@ See `./compiler-options.lua generators/compiler.lua -h` for detailed usage infor
 
 ## generators/list_options.lua
 
-Checks and displays options and their values. Put a parameter adds color.
+$ `./compiler-options.lua generators/list_options.lua [--noprofile] [--color]`
+
+Checks and displays options and their values.
 
 ## generators/{bjam,cmake,meson,premake5}.lua
 

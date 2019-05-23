@@ -2,7 +2,9 @@ return {
   knwon_opts = {},
   errors = {},
 
-  start=function(_, color)
+  start=function(_, show_profile, color)
+    show_profile, color = not (show_profile == '--noprofile' or color == '--noprofile'), (show_profile == '--color' or color == '--color')
+
     local knwon_opts = _.knwon_opts
     local add_opt = function(optname, args)
       local t = {}
@@ -40,6 +42,17 @@ return {
       for optname, args, default_value, ordered_args in _:getoptions() do
         print(optname .. ' = ' .. table.concat(ordered_args, ' '))
         add_opt(optname, args)
+      end
+    end
+
+    if show_profile then
+      print('\n\nProfiles:')
+      table.sort(_._opts_build_type)
+      for name, opts in _:getbuildtype() do
+        print('\n' .. name)
+        for i,xs in ipairs(opts) do
+          print(' - ' .. xs[1] .. ' = ' .. xs[2])
+        end
       end
     end
   end,
