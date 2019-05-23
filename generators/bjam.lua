@@ -10,7 +10,7 @@ end
 return {
   ignore={
     warnings_as_error=true,
-  -- optimize=true,
+  -- optimization=true,
   -- debug=true,
   },
 

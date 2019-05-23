@@ -12,7 +12,7 @@ ___jln_flags = {
   'jln_fix_compiler_error': ___jln_default_flags.get('jln_fix_compiler_error', get_option('jln_fix_compiler_error')),
   'jln_linker': ___jln_default_flags.get('jln_linker', get_option('jln_linker')),
   'jln_lto': ___jln_default_flags.get('jln_lto', get_option('jln_lto')),
-  'jln_optimize': ___jln_default_flags.get('jln_optimize', get_option('jln_optimize')),
+  'jln_optimization': ___jln_default_flags.get('jln_optimization', get_option('jln_optimization')),
   'jln_pedantic': ___jln_default_flags.get('jln_pedantic', get_option('jln_pedantic')),
   'jln_pie': ___jln_default_flags.get('jln_pie', get_option('jln_pie')),
   'jln_relro': ___jln_default_flags.get('jln_relro', get_option('jln_relro')),
@@ -120,22 +120,28 @@ jln_link_flags = []
         endif
       endif
     endif
-    if (  not ( (___jln_flags.get('jln_optimize', 'default') == 'default')) )
-      if (  (___jln_flags.get('jln_optimize', 'default') == 'off') )
+    if (  not ( (___jln_flags.get('jln_optimization', 'default') == 'default')) )
+      if (  (___jln_flags.get('jln_optimization', 'default') == '0') )
         jln_cpp_flags += ['-O0', ]
         jln_link_flags += ['-O0', ]
-      elif (  (___jln_flags.get('jln_optimize', 'default') == 'debugoptimized') )
+      elif (  (___jln_flags.get('jln_optimization', 'default') == 'g') )
         jln_cpp_flags += ['-Og', ]
         jln_link_flags += ['-Og', ]
       else
         jln_cpp_flags += ['-DNDEBUG', ]
-        if (  (___jln_flags.get('jln_optimize', 'default') == 'minsize') )
+        if (  (___jln_flags.get('jln_optimization', 'default') == 'size') )
           jln_cpp_flags += ['-Os', ]
           jln_link_flags += ['-Os', ]
-        elif (  (___jln_flags.get('jln_optimize', 'default') == 'fast') )
+        elif (  (___jln_flags.get('jln_optimization', 'default') == 'fast') )
           jln_cpp_flags += ['-Ofast', ]
           jln_link_flags += ['-Ofast', ]
-        elif (  (___jln_flags.get('jln_optimize', 'default') == 'release') )
+        elif (  (___jln_flags.get('jln_optimization', 'default') == '1') )
+          jln_cpp_flags += ['-O1', ]
+          jln_link_flags += ['-O1', ]
+        elif (  (___jln_flags.get('jln_optimization', 'default') == '2') )
+          jln_cpp_flags += ['-O2', ]
+          jln_link_flags += ['-O2', ]
+        elif (  (___jln_flags.get('jln_optimization', 'default') == '3') )
           jln_cpp_flags += ['-O3', ]
           jln_link_flags += ['-O3', ]
         endif
@@ -488,8 +494,8 @@ jln_link_flags = []
         elif (  (___jln_flags.get('jln_debug', 'default') == 'line_tables_only') )
           jln_cpp_flags += ['/DEBUG:FASTLINK', ]
         endif
-        if (  not ( (___jln_flags.get('jln_optimize', 'default') == 'default')) )
-          if (  (___jln_flags.get('jln_optimize', 'default') == 'debugoptimized') )
+        if (  not ( (___jln_flags.get('jln_optimization', 'default') == 'default')) )
+          if (  (___jln_flags.get('jln_optimization', 'default') == 'g') )
             jln_cpp_flags += ['/Zi', ]
           else
             jln_cpp_flags += ['/ZI', ]
@@ -506,20 +512,25 @@ jln_link_flags = []
         jln_cpp_flags += ['/EHc-', ]
       endif
     endif
-    if (  not ( (___jln_flags.get('jln_optimize', 'default') == 'default')) )
-      if (  (___jln_flags.get('jln_optimize', 'default') == 'off') )
+    if (  not ( (___jln_flags.get('jln_optimization', 'default') == 'default')) )
+      if (  (___jln_flags.get('jln_optimization', 'default') == '0') )
         jln_cpp_flags += ['/Ob0 /Od /Oi- /Oy-', ]
-      elif (  (___jln_flags.get('jln_optimize', 'default') == 'debugoptimized') )
+      elif (  (___jln_flags.get('jln_optimization', 'default') == 'g') )
         jln_cpp_flags += ['/Ob1', ]
       else
         jln_cpp_flags += ['/DNDEBUG', ]
-        if (  (___jln_flags.get('jln_optimize', 'default') == 'release') )
+        if (  (___jln_flags.get('jln_optimization', 'default') == '1') )
+          jln_cpp_flags += ['/01', ]
+        elif (  (___jln_flags.get('jln_optimization', 'default') == '2') )
           jln_cpp_flags += ['/O2', ]
           jln_link_flags += ['/OPT:REF', ]
-        elif (  (___jln_flags.get('jln_optimize', 'default') == 'minsize') )
+        elif (  (___jln_flags.get('jln_optimization', 'default') == '3') )
+          jln_cpp_flags += ['/O2', ]
+          jln_link_flags += ['/OPT:REF', ]
+        elif (  (___jln_flags.get('jln_optimization', 'default') == 'size') )
           jln_cpp_flags += ['/O1', '/Gw', ]
           jln_link_flags += ['/OPT:REF', ]
-        elif (  (___jln_flags.get('jln_optimize', 'default') == 'fast') )
+        elif (  (___jln_flags.get('jln_optimization', 'default') == 'fast') )
           jln_cpp_flags += ['/O2', '/fp:fast', ]
           jln_link_flags += ['/OPT:REF', ]
         endif

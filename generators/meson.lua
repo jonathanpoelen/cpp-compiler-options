@@ -1,6 +1,6 @@
 return {
   ignore={
-  --  optimize=true,
+  --  optimization=true,
   --  debug=true, -- reserved
   },
 

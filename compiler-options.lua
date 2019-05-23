@@ -118,13 +118,15 @@ G = Or(gcc, clang) {
     },
   },
 
-  opt'optimize' {
-    lvl'off'     { fl'-O0' } /
-    lvl'debugoptimized' { fl'-Og' } / {
+  opt'optimization' {
+    lvl'0'     { fl'-O0' } /
+    lvl'g' { fl'-Og' } / {
       cxx'-DNDEBUG',
-      lvl'minsize' { fl'-Os' } /
-      lvl'fast'    { fl'-Ofast' } /
-      lvl'release' { fl'-O3' }
+      lvl'size' { fl'-Os' } /
+      lvl'fast' { fl'-Ofast' } /
+      lvl'1' { fl'-O1' } /
+      lvl'2' { fl'-O2' } /
+      lvl'3' { fl'-O3' }
     }
   },
 
@@ -521,7 +523,7 @@ msvc {
       cxx'/Od',
       lvl'on' { cxx'/DEBUG' } / -- /DEBUG:FULL
       lvl'line_tables_only' { cxx'/DEBUG:FASTLINK' },
-      opt'optimize' { lvl'debugoptimized' { cxx'/Zi' } / cxx'/ZI' } / cxx'/ZI',
+      opt'optimization' { lvl'g' { cxx'/Zi' } / cxx'/ZI' } / cxx'/ZI',
     }
   },
 
@@ -529,14 +531,16 @@ msvc {
     lvl'on' { cxx'/EHc' } / { cxx'/EHc-' }
   },
 
-  opt'optimize' {
-    lvl'off' { cxx'/Ob0 /Od /Oi- /Oy-' } /
-    lvl'debugoptimized' { cxx'/Ob1' } / {
+  opt'optimization' {
+    lvl'0' { cxx'/Ob0 /Od /Oi- /Oy-' } /
+    lvl'g' { cxx'/Ob1' } / {
       cxx'/DNDEBUG',
       -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
       -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-      lvl'release' { cxx'/O2', link'/OPT:REF', } /
-      lvl'minsize' { cxx'/O1', link'/OPT:REF', cxx'/Gw' } /
+      lvl'1' { cxx'/01', } /
+      lvl'2' { cxx'/O2', link'/OPT:REF', } /
+      lvl'3' { cxx'/O2', link'/OPT:REF', } /
+      lvl'size' { cxx'/O1', link'/OPT:REF', cxx'/Gw' } /
       lvl'fast' { cxx'/O2', link'/OPT:REF', cxx'/fp:fast' }
     }
   },
@@ -668,7 +672,7 @@ Vbase = {
     linker=     {{'bfd', 'gold', 'lld'},},
     lto=        {{'off', 'on', 'fat', 'linker_plugin'},},
     fix_compiler_error={{'off', 'on'}, 'on'},
-    optimize=   {{'off', 'debugoptimized', 'minsize', 'release', 'fast'},},
+    optimization={{'0', 'g', '1', '2', '3', 'fast', 'size'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     pie=        {{'off', 'on', 'pic'},},
     relro=      {{'off', 'on', 'full'},},
@@ -688,9 +692,9 @@ Vbase = {
 
   _opts_build_type={
     debug={debug='on', stl_debug='on', sanitizers='on'},
-    release={cpu='native', linker='gold', lto='on', optimize='release',},
-    debug_optimized={cpu='native', linker='gold', lto='on', optimize='release', debug='on',},
-    minimum_size_release={cpu='native', linker='gold', lto='on', optimize='minsize',},
+    release={cpu='native', linker='gold', lto='on', optimization='2',},
+    debug_optimized={cpu='native', linker='gold', lto='on', optimization='g', debug='on',},
+    minimum_size_release={cpu='native', linker='gold', lto='on', optimization='size',},
   },
 
   indent = '',

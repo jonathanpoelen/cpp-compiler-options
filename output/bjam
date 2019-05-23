@@ -17,7 +17,7 @@ feature <jln-exceptions> : _ default off on : incidental ;
 feature <jln-fix-compiler-error> : _ on default off : incidental ;
 feature <jln-linker> : _ default bfd gold lld : propagated ;
 feature <jln-lto> : _ default off on fat linker-plugin : incidental ;
-feature <jln-optimize> : _ default off debugoptimized minsize release fast : incidental ;
+feature <jln-optimization> : _ default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic> : _ on default off as-error : incidental ;
 feature <jln-pie> : _ default off on pic : incidental ;
 feature <jln-relro> : _ default off on full : incidental ;
@@ -40,7 +40,7 @@ feature <jln-debug-incidental> : _ default off on line-tables-only gdb lldb sce 
 feature <jln-exceptions-incidental> : _ default off on : incidental ;
 feature <jln-fix-compiler-error-incidental> : _ on default off : incidental ;
 feature <jln-lto-incidental> : _ default off on fat linker-plugin : incidental ;
-feature <jln-optimize-incidental> : _ default off debugoptimized minsize release fast : incidental ;
+feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic-incidental> : _ on default off as-error : incidental ;
 feature <jln-pie-incidental> : _ default off on pic : incidental ;
 feature <jln-relro-incidental> : _ default off on full : incidental ;
@@ -64,7 +64,7 @@ feature <jln-exceptions-default> : default off on : incidental ;
 feature <jln-fix-compiler-error-default> : on default off : incidental ;
 feature <jln-linker-default> : default bfd gold lld : incidental ;
 feature <jln-lto-default> : default off on fat linker-plugin : incidental ;
-feature <jln-optimize-default> : default off debugoptimized minsize release fast : incidental ;
+feature <jln-optimization-default> : default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic-default> : on default off as-error : incidental ;
 feature <jln-pie-default> : default off on pic : incidental ;
 feature <jln-relro-default> : default off on full : incidental ;
@@ -115,7 +115,7 @@ constant jln_env_exceptions : [ jln-get-env jln_exceptions : default off on ] ;
 constant jln_env_fix_compiler_error : [ jln-get-env jln_fix_compiler_error : on default off ] ;
 constant jln_env_linker : [ jln-get-env jln_linker : default bfd gold lld ] ;
 constant jln_env_lto : [ jln-get-env jln_lto : default off on fat linker-plugin ] ;
-constant jln_env_optimize : [ jln-get-env jln_optimize : default off debugoptimized minsize release fast ] ;
+constant jln_env_optimization : [ jln-get-env jln_optimization : default 0 g 1 2 3 fast size ] ;
 constant jln_env_pedantic : [ jln-get-env jln_pedantic : on default off as-error ] ;
 constant jln_env_pie : [ jln-get-env jln_pie : default off on pic ] ;
 constant jln_env_relro : [ jln-get-env jln_relro : default off on full ] ;
@@ -148,8 +148,8 @@ if $(CXX_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-fix-compiler-error-incidental JLN_FIX_COMPILER_ERROR_INCIDENTAL : <jln-fix-compiler-error-incidental> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-lto-incidental JLN_LTO_INCIDENTAL : <jln-lto-incidental> ;
-  toolset.flags jln-optimize JLN_OPTIMIZE : <jln-optimize> ;
-  toolset.flags jln-optimize-incidental JLN_OPTIMIZE_INCIDENTAL : <jln-optimize-incidental> ;
+  toolset.flags jln-optimization JLN_OPTIMIZATION : <jln-optimization> ;
+  toolset.flags jln-optimization-incidental JLN_OPTIMIZATION_INCIDENTAL : <jln-optimization-incidental> ;
   toolset.flags jln-pedantic JLN_PEDANTIC : <jln-pedantic> ;
   toolset.flags jln-pedantic-incidental JLN_PEDANTIC_INCIDENTAL : <jln-pedantic-incidental> ;
   toolset.flags jln-pie JLN_PIE : <jln-pie> ;
@@ -255,7 +255,7 @@ rule jln_flags ( properties * )
       <relevant>jln-exceptions
       <relevant>jln-fix-compiler-error
       <relevant>jln-lto
-      <relevant>jln-optimize
+      <relevant>jln-optimization
       <relevant>jln-pedantic
       <relevant>jln-pie
       <relevant>jln-relro
@@ -281,7 +281,7 @@ rule jln_flags ( properties * )
   local x_fix_compiler_error = [ jln-get-value2 $(ps) : jln-fix-compiler-error : jln-fix-compiler-error-incidental : $(jln_env_fix_compiler_error) ] ;
   local x_linker = [ jln-get-value $(ps) : jln-linker : $(jln_env_linker) ] ;
   local x_lto = [ jln-get-value2 $(ps) : jln-lto : jln-lto-incidental : $(jln_env_lto) ] ;
-  local x_optimize = [ jln-get-value2 $(ps) : jln-optimize : jln-optimize-incidental : $(jln_env_optimize) ] ;
+  local x_optimization = [ jln-get-value2 $(ps) : jln-optimization : jln-optimization-incidental : $(jln_env_optimization) ] ;
   local x_pedantic = [ jln-get-value2 $(ps) : jln-pedantic : jln-pedantic-incidental : $(jln_env_pedantic) ] ;
   local x_pie = [ jln-get-value2 $(ps) : jln-pie : jln-pie-incidental : $(jln_env_pie) ] ;
   local x_relro = [ jln-get-value2 $(ps) : jln-relro : jln-relro-incidental : $(jln_env_relro) ] ;
@@ -454,16 +454,16 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if ( $(x_optimize) != "default" )
+    if ( $(x_optimization) != "default" )
     {
-      if ( $(x_optimize) = "off" )
+      if ( $(x_optimization) = "0" )
       {
         flags +=
           <cxxflags>"-O0"
           <linkflags>"-O0"
         ;
       }
-      else if ( $(x_optimize) = "debugoptimized" )
+      else if ( $(x_optimization) = "g" )
       {
         flags +=
           <cxxflags>"-Og"
@@ -475,21 +475,35 @@ rule jln_flags ( properties * )
         flags +=
           <cxxflags>"-DNDEBUG"
         ;
-        if ( $(x_optimize) = "minsize" )
+        if ( $(x_optimization) = "size" )
         {
           flags +=
             <cxxflags>"-Os"
             <linkflags>"-Os"
           ;
         }
-        else if ( $(x_optimize) = "fast" )
+        else if ( $(x_optimization) = "fast" )
         {
           flags +=
             <cxxflags>"-Ofast"
             <linkflags>"-Ofast"
           ;
         }
-        else if ( $(x_optimize) = "release" )
+        else if ( $(x_optimization) = "1" )
+        {
+          flags +=
+            <cxxflags>"-O1"
+            <linkflags>"-O1"
+          ;
+        }
+        else if ( $(x_optimization) = "2" )
+        {
+          flags +=
+            <cxxflags>"-O2"
+            <linkflags>"-O2"
+          ;
+        }
+        else if ( $(x_optimization) = "3" )
         {
           flags +=
             <cxxflags>"-O3"
@@ -1250,9 +1264,9 @@ rule jln_flags ( properties * )
             <cxxflags>"/DEBUG:FASTLINK"
           ;
         }
-        if ( $(x_optimize) != "default" )
+        if ( $(x_optimization) != "default" )
         {
-          if ( $(x_optimize) = "debugoptimized" )
+          if ( $(x_optimization) = "g" )
           {
             flags +=
               <cxxflags>"/Zi"
@@ -1288,15 +1302,15 @@ rule jln_flags ( properties * )
         ;
       }
     }
-    if ( $(x_optimize) != "default" )
+    if ( $(x_optimization) != "default" )
     {
-      if ( $(x_optimize) = "off" )
+      if ( $(x_optimization) = "0" )
       {
         flags +=
           <cxxflags>"/Ob0 /Od /Oi- /Oy-"
         ;
       }
-      else if ( $(x_optimize) = "debugoptimized" )
+      else if ( $(x_optimization) = "g" )
       {
         flags +=
           <cxxflags>"/Ob1"
@@ -1307,14 +1321,27 @@ rule jln_flags ( properties * )
         flags +=
           <cxxflags>"/DNDEBUG"
         ;
-        if ( $(x_optimize) = "release" )
+        if ( $(x_optimization) = "1" )
+        {
+          flags +=
+            <cxxflags>"/01"
+          ;
+        }
+        else if ( $(x_optimization) = "2" )
         {
           flags +=
             <cxxflags>"/O2"
             <linkflags>"/OPT:REF"
           ;
         }
-        else if ( $(x_optimize) = "minsize" )
+        else if ( $(x_optimization) = "3" )
+        {
+          flags +=
+            <cxxflags>"/O2"
+            <linkflags>"/OPT:REF"
+          ;
+        }
+        else if ( $(x_optimization) = "size" )
         {
           flags +=
             <cxxflags>"/O1"
@@ -1322,7 +1349,7 @@ rule jln_flags ( properties * )
             <linkflags>"/OPT:REF"
           ;
         }
-        else if ( $(x_optimize) = "fast" )
+        else if ( $(x_optimization) = "fast" )
         {
           flags +=
             <cxxflags>"/O2"

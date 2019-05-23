@@ -3,4 +3,4 @@
 -fuse-ld=gold
 -march=native
 -mtune=native
--O3
+-O2

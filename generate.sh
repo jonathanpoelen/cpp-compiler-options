@@ -63,7 +63,7 @@ for g in bjam cmake premake5 meson ; do
 done
 
 sgen compiler | while read comp ; do
-  gencompopt $comp-release                         $comp cpu=native lto optimize=release linker=gold
+  gencompopt $comp-release                         $comp cpu=native lto optimization=2 linker=gold
   gencompopt $comp-warnings                        $comp shadow_warnings=off stl_fix warnings pedantic
   gencompopt $comp-warnings_strict                 $comp shadow_warnings=off stl_fix warnings=strict pedantic
   gencompopt $comp-stl_debug_broken_abi            $comp stl_fix stl_debug=allow_broken_abi

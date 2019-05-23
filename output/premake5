@@ -23,8 +23,8 @@ _jln_flag_names["jln-linker"] = true
 _jln_flag_names["linker"] = true
 _jln_flag_names["jln-lto"] = true
 _jln_flag_names["lto"] = true
-_jln_flag_names["jln-optimize"] = true
-_jln_flag_names["optimize"] = true
+_jln_flag_names["jln-optimization"] = true
+_jln_flag_names["optimization"] = true
 _jln_flag_names["jln-pedantic"] = true
 _jln_flag_names["pedantic"] = true
 _jln_flag_names["jln-pie"] = true
@@ -86,8 +86,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"linker_plugin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
-  newoption{trigger="jln-optimize", allowed={{"default"}, {"off"}, {"debugoptimized"}, {"minsize"}, {"release"}, {"fast"}}, description="optimize"}
-  if not _OPTIONS["jln-optimize"] then _OPTIONS["jln-optimize"] = (defaults["optimize"] or defaults["jln-optimize"] or "default") end
+  newoption{trigger="jln-optimization", allowed={{"default"}, {"0"}, {"g"}, {"1"}, {"2"}, {"3"}, {"fast"}, {"size"}}, description="optimization"}
+  if not _OPTIONS["jln-optimization"] then _OPTIONS["jln-optimization"] = (defaults["optimization"] or defaults["jln-optimization"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "default") end
   newoption{trigger="jln-pie", allowed={{"default"}, {"off"}, {"on"}, {"pic"}}, description="pie"}
@@ -236,9 +236,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"])
-    name_list["jln-optimize"] = true
-    name_list["optimize"] = true
-    new_value["jln-optimize"] = values["optimize"] or values["jln-optimize"] or (disable_others and "default" or _OPTIONS["jln-optimize"])
+    name_list["jln-optimization"] = true
+    name_list["optimization"] = true
+    new_value["jln-optimization"] = values["optimization"] or values["jln-optimization"] or (disable_others and "default" or _OPTIONS["jln-optimization"])
     name_list["jln-pedantic"] = true
     name_list["pedantic"] = true
     new_value["jln-pedantic"] = values["pedantic"] or values["jln-pedantic"] or (disable_others and "default" or _OPTIONS["jln-pedantic"])
@@ -367,22 +367,28 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         end
       end
     end
-    if not ( values["jln-optimize"] == "default") then
-      if values["jln-optimize"] == "off" then
+    if not ( values["jln-optimization"] == "default") then
+      if values["jln-optimization"] == "0" then
         jln_buildoptions = jln_buildoptions .. " -O0"
         jln_linkoptions = jln_linkoptions .. " -O0"
-      elseif values["jln-optimize"] == "debugoptimized" then
+      elseif values["jln-optimization"] == "g" then
         jln_buildoptions = jln_buildoptions .. " -Og"
         jln_linkoptions = jln_linkoptions .. " -Og"
       else
         jln_buildoptions = jln_buildoptions .. " -DNDEBUG"
-        if values["jln-optimize"] == "minsize" then
+        if values["jln-optimization"] == "size" then
           jln_buildoptions = jln_buildoptions .. " -Os"
           jln_linkoptions = jln_linkoptions .. " -Os"
-        elseif values["jln-optimize"] == "fast" then
+        elseif values["jln-optimization"] == "fast" then
           jln_buildoptions = jln_buildoptions .. " -Ofast"
           jln_linkoptions = jln_linkoptions .. " -Ofast"
-        elseif values["jln-optimize"] == "release" then
+        elseif values["jln-optimization"] == "1" then
+          jln_buildoptions = jln_buildoptions .. " -O1"
+          jln_linkoptions = jln_linkoptions .. " -O1"
+        elseif values["jln-optimization"] == "2" then
+          jln_buildoptions = jln_buildoptions .. " -O2"
+          jln_linkoptions = jln_linkoptions .. " -O2"
+        elseif values["jln-optimization"] == "3" then
           jln_buildoptions = jln_buildoptions .. " -O3"
           jln_linkoptions = jln_linkoptions .. " -O3"
         end
@@ -735,8 +741,8 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         elseif values["jln-debug"] == "line-tables-only" then
           jln_buildoptions = jln_buildoptions .. " /DEBUG:FASTLINK"
         end
-        if not ( values["jln-optimize"] == "default") then
-          if values["jln-optimize"] == "debugoptimized" then
+        if not ( values["jln-optimization"] == "default") then
+          if values["jln-optimization"] == "g" then
             jln_buildoptions = jln_buildoptions .. " /Zi"
           else
             jln_buildoptions = jln_buildoptions .. " /ZI"
@@ -753,20 +759,25 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " /EHc-"
       end
     end
-    if not ( values["jln-optimize"] == "default") then
-      if values["jln-optimize"] == "off" then
+    if not ( values["jln-optimization"] == "default") then
+      if values["jln-optimization"] == "0" then
         jln_buildoptions = jln_buildoptions .. " /Ob0 /Od /Oi- /Oy-"
-      elseif values["jln-optimize"] == "debugoptimized" then
+      elseif values["jln-optimization"] == "g" then
         jln_buildoptions = jln_buildoptions .. " /Ob1"
       else
         jln_buildoptions = jln_buildoptions .. " /DNDEBUG"
-        if values["jln-optimize"] == "release" then
+        if values["jln-optimization"] == "1" then
+          jln_buildoptions = jln_buildoptions .. " /01"
+        elseif values["jln-optimization"] == "2" then
           jln_buildoptions = jln_buildoptions .. " /O2"
           jln_linkoptions = jln_linkoptions .. " /OPT:REF"
-        elseif values["jln-optimize"] == "minsize" then
+        elseif values["jln-optimization"] == "3" then
+          jln_buildoptions = jln_buildoptions .. " /O2"
+          jln_linkoptions = jln_linkoptions .. " /OPT:REF"
+        elseif values["jln-optimization"] == "size" then
           jln_buildoptions = jln_buildoptions .. " /O1 /Gw"
           jln_linkoptions = jln_linkoptions .. " /OPT:REF"
-        elseif values["jln-optimize"] == "fast" then
+        elseif values["jln-optimization"] == "fast" then
           jln_buildoptions = jln_buildoptions .. " /O2 /fp:fast"
           jln_linkoptions = jln_linkoptions .. " /OPT:REF"
         end

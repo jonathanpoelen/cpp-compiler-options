@@ -3,7 +3,7 @@ local tostrlvl=function(lvl)
 end
 
 return {
-  -- inogre = { optimize=true, }
+  -- ignore = { optimization=true, }
 
   tostroption=function(_, optname)
     return _.optprefix .. optname:gsub('_', '-')
