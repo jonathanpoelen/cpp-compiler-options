@@ -1,5 +1,8 @@
-# jln_init_flags([<jln-option> <value>]... [AUTO_PROFILE on] [VERBOSE on])
-# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" is empty)
+# init default values
+# jln_init_flags([<jln-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])
+# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
+# When jln_init_flags() is called without option, AUTO_PROFILE=on.
+#  Otherwise, AUTO_PROFILE=off and `on` value must be explicitly added.
 function(jln_init_flags)
   cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE;COLOR;CONTROL_FLOW;COVERAGE;CPU;DEBUG;DIAGNOSTICS_FORMAT;DIAGNOSTICS_SHOW_TEMPLATE_TREE;ELIDE_TYPE;EXCEPTIONS;FIX_COMPILER_ERROR;LINKER;LTO;OPTIMIZATION;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;RTTI;SANITIZERS;SANITIZERS_EXTRA;SHADOW_WARNINGS;STACK_PROTECTOR;STL_DEBUG;STL_FIX;SUGGESTIONS;WARNINGS;WARNINGS_AS_ERROR;WHOLE_PROGRAM;AUTO_PROFILE" "" ${ARGN})
 
@@ -9,72 +12,102 @@ function(jln_init_flags)
 
   if(DEFINED JLN_DEFAULT_FLAG_AUTO_PROFILE)
     set(JLN_AUTO_PROFILE ${JLN_DEFAULT_FLAG_AUTO_PROFILE})
-    if(${JLN_AUTO_PROFILE} STREQUAL "on")
+  elseif(NOT (DEFINED JLN_DEFAULT_FLAG_COLOR) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_CONTROL_FLOW) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_COVERAGE) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_CPU) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_DEBUG) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_DIAGNOSTICS_FORMAT) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_DIAGNOSTICS_SHOW_TEMPLATE_TREE) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_ELIDE_TYPE) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_EXCEPTIONS) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_FIX_COMPILER_ERROR) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_LINKER) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_LTO) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_OPTIMIZATION) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_PEDANTIC) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_PIE) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_RELRO) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_REPRODUCIBLE_BUILD_WARNINGS) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_RTTI) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_SANITIZERS) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_SANITIZERS_EXTRA) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_SHADOW_WARNINGS) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_STACK_PROTECTOR) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_STL_DEBUG) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_STL_FIX) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_SUGGESTIONS) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_WARNINGS) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_WARNINGS_AS_ERROR) AND
+         NOT (DEFINED JLN_DEFAULT_FLAG_WHOLE_PROGRAM))
+    set(JLN_AUTO_PROFILE "on")
+  endif()
+
+  if("${JLN_AUTO_PROFILE}" STREQUAL "on")
     if("${CMAKE_BUILD_TYPE}" STREQUAL "")
       set(JLN_BUILD_TYPE "Debug")
     else()
       set(JLN_BUILD_TYPE ${CMAKE_BUILD_TYPE})
     endif()
-      if("Debug" STREQUAL "${JLN_BUILD_TYPE}")
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_CONTROL_FLOW))
-          set(JLN_DEFAULT_FLAG_CONTROL_FLOW "on")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_DEBUG))
-          set(JLN_DEFAULT_FLAG_DEBUG "on")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_SANITIZERS))
-          set(JLN_DEFAULT_FLAG_SANITIZERS "on")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_STL_DEBUG))
-          set(JLN_DEFAULT_FLAG_STL_DEBUG "on")
-        endif()
-      endif()
 
-      if("RelWithDebInfo" STREQUAL "${JLN_BUILD_TYPE}")
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_DEBUG))
-          set(JLN_DEFAULT_FLAG_DEBUG "on")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_LINKER))
-          set(JLN_DEFAULT_FLAG_LINKER "gold")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_LTO))
-          set(JLN_DEFAULT_FLAG_LTO "on")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_OPTIMIZATION))
-          set(JLN_DEFAULT_FLAG_OPTIMIZATION "g")
-        endif()
+    if("Debug" STREQUAL "${JLN_BUILD_TYPE}")
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_CONTROL_FLOW))
+        set(JLN_DEFAULT_FLAG_CONTROL_FLOW "on")
       endif()
-
-      if("MinSizeRel" STREQUAL "${JLN_BUILD_TYPE}")
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_CPU))
-          set(JLN_DEFAULT_FLAG_CPU "native")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_LINKER))
-          set(JLN_DEFAULT_FLAG_LINKER "gold")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_LTO))
-          set(JLN_DEFAULT_FLAG_LTO "on")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_OPTIMIZATION))
-          set(JLN_DEFAULT_FLAG_OPTIMIZATION "size")
-        endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_DEBUG))
+        set(JLN_DEFAULT_FLAG_DEBUG "on")
       endif()
-
-      if("Release" STREQUAL "${JLN_BUILD_TYPE}")
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_CPU))
-          set(JLN_DEFAULT_FLAG_CPU "native")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_LINKER))
-          set(JLN_DEFAULT_FLAG_LINKER "gold")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_LTO))
-          set(JLN_DEFAULT_FLAG_LTO "on")
-        endif()
-        if(NOT(DEFINED JLN_DEFAULT_FLAG_OPTIMIZATION))
-          set(JLN_DEFAULT_FLAG_OPTIMIZATION "2")
-        endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_SANITIZERS))
+        set(JLN_DEFAULT_FLAG_SANITIZERS "on")
       endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_STL_DEBUG))
+        set(JLN_DEFAULT_FLAG_STL_DEBUG "on")
+      endif()
+    endif()
 
+    if("RelWithDebInfo" STREQUAL "${JLN_BUILD_TYPE}")
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_DEBUG))
+        set(JLN_DEFAULT_FLAG_DEBUG "on")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_LINKER))
+        set(JLN_DEFAULT_FLAG_LINKER "gold")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_LTO))
+        set(JLN_DEFAULT_FLAG_LTO "on")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_OPTIMIZATION))
+        set(JLN_DEFAULT_FLAG_OPTIMIZATION "g")
+      endif()
+    endif()
+
+    if("MinSizeRel" STREQUAL "${JLN_BUILD_TYPE}")
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_CPU))
+        set(JLN_DEFAULT_FLAG_CPU "native")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_LINKER))
+        set(JLN_DEFAULT_FLAG_LINKER "gold")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_LTO))
+        set(JLN_DEFAULT_FLAG_LTO "on")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_OPTIMIZATION))
+        set(JLN_DEFAULT_FLAG_OPTIMIZATION "size")
+      endif()
+    endif()
+
+    if("Release" STREQUAL "${JLN_BUILD_TYPE}")
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_CPU))
+        set(JLN_DEFAULT_FLAG_CPU "native")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_LINKER))
+        set(JLN_DEFAULT_FLAG_LINKER "gold")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_LTO))
+        set(JLN_DEFAULT_FLAG_LTO "on")
+      endif()
+      if(NOT(DEFINED JLN_DEFAULT_FLAG_OPTIMIZATION))
+        set(JLN_DEFAULT_FLAG_OPTIMIZATION "2")
+      endif()
     endif()
   endif()
 
@@ -359,6 +392,7 @@ function(jln_init_flags)
   endif()
 
   if("${JLN_VERBOSE}" STREQUAL "on" OR "${JLN_VERBOSE}" STREQUAL "1")
+    message(STATUS "JLN_AUTO_PROFILE = ${JLN_AUTO_PROFILE}	[off, on]")
     message(STATUS "JLN_COLOR = ${JLN_COLOR}	[default, auto, never, always]")
     message(STATUS "JLN_CONTROL_FLOW = ${JLN_CONTROL_FLOW}	[default, off, on]")
     message(STATUS "JLN_COVERAGE = ${JLN_COVERAGE}	[default, off, on]")
