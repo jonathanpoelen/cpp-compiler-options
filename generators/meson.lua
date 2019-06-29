@@ -28,7 +28,7 @@ return {
     for optname,args,default_value,ordered_args in _:getoptions() do
       local name = _:tobuildoption(optname)
       option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
-      _:write("  '" .. name .. "': ___jln_default_flags.get('" .. name .. "', get_option('" .. name .. "')),\n")
+      _:write("  '" .. name .. "': ___jln_default_flags.get('" .. optname .. "', get_option('" .. name .. "')),\n")
     end
 
     _:print[[}
@@ -43,13 +43,13 @@ ___jln_compiler_version = ___jln_cpp_compiler.version()
 ___jln_custom_flags = get_variable('jln_custom_flags', []) + [___jln_flags]
 
 foreach ___jln_flags : ___jln_custom_flags
-jln_cpp_flags = []
-jln_link_flags = []
+  jln_cpp_flags = []
+  jln_link_flags = []
 
 ]]
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return  "(___jln_flags.get('" .. _:tobuildoption(optname) .. "', 'default') == '" .. lvl .. "')" end,
+  _vcond_lvl=function(_, lvl, optname) return  "(___jln_flags.get('" .. optname .. "', 'default') == '" .. lvl .. "')" end,
   _vcond_verless=function(_, major, minor) return "___jln_compiler_version.version_compare('<" .. major .. '.' .. minor .. "')" end,
   _vcond_comp=function(_, compiler) return "(___jln_compiler_id == '" .. compiler .. "')" end,
 

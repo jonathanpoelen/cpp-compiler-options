@@ -92,7 +92,9 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 ## Cmake
 
 ```cmake
-# include(output/cmake)
+# cmake -DJLN_FAST_MATH=on
+
+include(output/cmake)
 
 # init default values
 # jln_init_flags([<jln-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])
@@ -118,7 +120,9 @@ add_compile_options(${CXX_FLAGS})
 ## Premake5
 
 ```lua
--- include "output/premake5"
+-- launch example: premake5 --jln-fast-math=on
+
+include "output/premake5"
 
 -- Registers new command-line options (ex jln_newoptions({debug='on'}))
 jln_newoptions([default_values])
@@ -144,17 +148,21 @@ jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]
 Copy `meson_options.txt` and rename `output/meson` to `meson_jln_flags/meson.build`.
 
 ```meson
+# launch example: meson -Djln_fast_math=on
+
 project('test', 'cpp')
 
-# default value for jln-... cli flags
-# jln_default_flags = {'jln_rtti': 'off'}
+# default value (without prefix)
+# optional
+# jln_default_flags = {'rtti': 'off'}
 
-# flags without jln-... cli
+# optional
 # jln_custom_flags = [
-#  {'jln_rtti': 'off', 'jln_optimize': 'on'},
-#  {'jln_debug': 'on'},
+#  {'rtti': 'off', 'optimize': 'on'},
+#  {'debug': 'on'},
 # ]
 
+# declare jln_link_flags, jln_cpp_flags, jln_custom_cpp_flags and jln_custom_link_flags
 subdir('meson_jln_flags')
 
 # my_opti_cpp_flags = jln_custom_cpp_flags[0]
@@ -167,7 +175,9 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 ## Bjam/B2 (Boost.Build)
 
 ```jam
-# include output/bjam ;
+# launch example: bjam -s jln_fast_math=on
+
+include output/bjam ;
 
 # rule jln_flags ( properties * )
 
