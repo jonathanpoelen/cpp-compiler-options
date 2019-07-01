@@ -474,6 +474,22 @@ foreach ___jln_flags : ___jln_custom_flags
     if (  not ( (___jln_flags.get('warnings_as_error', 'default') == 'default')) )
       if (  (___jln_flags.get('warnings_as_error', 'default') == 'on') )
         jln_cpp_flags += ['-Werror', ]
+      elif (  (___jln_flags.get('warnings_as_error', 'default') == 'basic') )
+        jln_cpp_flags += ['-Werror=non-virtual-dtor', '-Werror=return-type', '-Werror=init-self', ]
+        if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<5.1') ) ) )
+          jln_cpp_flags += ['-Werror=array-bounds', '-Werror=logical-op', '-Werror=logical-not-parentheses', ]
+        elif (  (___jln_compiler_id == 'clang') )
+          jln_cpp_flags += ['-Werror=array-bounds', '-Werror=division-by-zero', ]
+          if (  not ( ___jln_compiler_version.version_compare('<3.4') ) )
+            jln_cpp_flags += ['-Werror=logical-not-parentheses', ]
+            if (  not ( ___jln_compiler_version.version_compare('<3.6') ) )
+              jln_cpp_flags += ['-Werror=delete-incomplete', ]
+              if (  not ( ___jln_compiler_version.version_compare('<7.0') ) )
+                jln_cpp_flags += ['-Werror=dynamic-class-memaccess', ]
+              endif
+            endif
+          endif
+        endif
       else
         jln_cpp_flags += ['-Wno-error', ]
       endif
@@ -623,7 +639,7 @@ foreach ___jln_flags : ___jln_custom_flags
       if (  (___jln_flags.get('warnings_as_error', 'default') == 'on') )
         jln_cpp_flags += ['/WX', ]
         jln_link_flags += ['/WX', ]
-      else
+      elif (  (___jln_flags.get('warnings_as_error', 'default') == 'off') )
         jln_cpp_flags += ['/WX-', ]
       endif
     endif

@@ -68,7 +68,7 @@ stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugged assert_a
 stl_fix = on default off
 suggestions = default off on
 warnings = on default off strict very_strict
-warnings_as_error = default off on
+warnings_as_error = default off on basic
 whole_program = default off on strip_all
 ```
 <!-- ./compiler-options.lua -->

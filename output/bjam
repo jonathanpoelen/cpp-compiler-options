@@ -31,6 +31,7 @@ feature <jln-stl-debug> : _ default off on allow-broken-abi allow-broken-abi-and
 feature <jln-stl-fix> : _ on default off : incidental ;
 feature <jln-suggestions> : _ default off on : propagated ;
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
+feature <jln-warnings-as-error> : _ default off on basic : propagated ;
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
 
 feature <jln-control-flow-incidental> : _ default off on : incidental ;
@@ -78,6 +79,7 @@ feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-a
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
+feature <jln-warnings-as-error-default> : default off on basic : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
 
 
@@ -129,6 +131,7 @@ constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
 constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off strict very-strict ] ;
+constant jln_env_warnings_as_error : [ jln-get-env jln_warnings_as_error : default off on basic ] ;
 constant jln_env_whole_program : [ jln-get-env jln_whole_program : default off on strip-all ] ;
 
 if $(CXX_BJAM_YEAR_VERSION) < 2016.00
@@ -295,6 +298,7 @@ rule jln_flags ( properties * )
   local x_stl_fix = [ jln-get-value2 $(ps) : jln-stl-fix : jln-stl-fix-incidental : $(jln_env_stl_fix) ] ;
   local x_suggestions = [ jln-get-value $(ps) : jln-suggestions : $(jln_env_suggestions) ] ;
   local x_warnings = [ jln-get-value $(ps) : jln-warnings : $(jln_env_warnings) ] ;
+  local x_warnings_as_error = [ jln-get-value $(ps) : jln-warnings-as-error : $(jln_env_warnings_as_error) ] ;
   local x_whole_program = [ jln-get-value2 $(ps) : jln-whole-program : jln-whole-program-incidental : $(jln_env_whole_program) ] ;
 
   if (  $(toolset) = "gcc" || $(toolset) = "clang"  )
@@ -1226,6 +1230,62 @@ rule jln_flags ( properties * )
         }
       }
     }
+    if ( $(x_warnings_as_error) != "default" )
+    {
+      if ( $(x_warnings_as_error) = "on" )
+      {
+        flags +=
+          <cxxflags>"-Werror"
+        ;
+      }
+      else if ( $(x_warnings_as_error) = "basic" )
+      {
+        flags +=
+          <cxxflags>"-Werror=non-virtual-dtor"
+          <cxxflags>"-Werror=return-type"
+          <cxxflags>"-Werror=init-self"
+        ;
+        if (  $(toolset) = "gcc" && ! (  $(version) < "05.01"  )  )
+        {
+          flags +=
+            <cxxflags>"-Werror=array-bounds"
+            <cxxflags>"-Werror=logical-op"
+            <cxxflags>"-Werror=logical-not-parentheses"
+          ;
+        }
+        else if $(toolset) = "clang"
+        {
+          flags +=
+            <cxxflags>"-Werror=array-bounds"
+            <cxxflags>"-Werror=division-by-zero"
+          ;
+          if ! (  $(version) < "03.04"  )
+          {
+            flags +=
+              <cxxflags>"-Werror=logical-not-parentheses"
+            ;
+            if ! (  $(version) < "03.06"  )
+            {
+              flags +=
+                <cxxflags>"-Werror=delete-incomplete"
+              ;
+              if ! (  $(version) < "07.00"  )
+              {
+                flags +=
+                  <cxxflags>"-Werror=dynamic-class-memaccess"
+                ;
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"-Wno-error"
+        ;
+      }
+    }
   }
   else if $(toolset) = "msvc"
   {
@@ -1545,6 +1605,22 @@ rule jln_flags ( properties * )
       {
         flags +=
           <cxxflags>"/W0"
+        ;
+      }
+    }
+    if ( $(x_warnings_as_error) != "default" )
+    {
+      if ( $(x_warnings_as_error) = "on" )
+      {
+        flags +=
+          <cxxflags>"/WX"
+          <linkflags>"/WX"
+        ;
+      }
+      else if ( $(x_warnings_as_error) = "off" )
+      {
+        flags +=
+          <cxxflags>"/WX-"
         ;
       }
     }

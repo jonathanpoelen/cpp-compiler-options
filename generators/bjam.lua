@@ -9,7 +9,7 @@ end
 
 return {
   ignore={
-    warnings_as_error=true,
+  -- warnings_as_error=true,
   -- optimization=true,
   -- debug=true,
   },

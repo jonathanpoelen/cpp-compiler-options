@@ -114,7 +114,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-suggestions"] then _OPTIONS["jln-suggestions"] = (defaults["suggestions"] or defaults["jln-suggestions"] or "default") end
   newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}, {"very_strict"}}, description="warnings"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "default") end
-  newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}}, description="warnings_as_error"}
+  newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}, {"basic"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
   newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}, {"strip_all"}}, description="whole_program"}
   if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
@@ -721,6 +721,22 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     if not ( values["jln-warnings-as-error"] == "default") then
       if values["jln-warnings-as-error"] == "on" then
         jln_buildoptions = jln_buildoptions .. " -Werror"
+      elseif values["jln-warnings-as-error"] == "basic" then
+        jln_buildoptions = jln_buildoptions .. " -Werror=non-virtual-dtor -Werror=return-type -Werror=init-self"
+        if ( compiler == "gcc" and not ( compversion < 501 ) ) then
+          jln_buildoptions = jln_buildoptions .. " -Werror=array-bounds -Werror=logical-op -Werror=logical-not-parentheses"
+        elseif compiler == "clang" then
+          jln_buildoptions = jln_buildoptions .. " -Werror=array-bounds -Werror=division-by-zero"
+          if not ( compversion < 304 ) then
+            jln_buildoptions = jln_buildoptions .. " -Werror=logical-not-parentheses"
+            if not ( compversion < 306 ) then
+              jln_buildoptions = jln_buildoptions .. " -Werror=delete-incomplete"
+              if not ( compversion < 700 ) then
+                jln_buildoptions = jln_buildoptions .. " -Werror=dynamic-class-memaccess"
+              end
+            end
+          end
+        end
       else
         jln_buildoptions = jln_buildoptions .. " -Wno-error"
       end
@@ -870,7 +886,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       if values["jln-warnings-as-error"] == "on" then
         jln_buildoptions = jln_buildoptions .. " /WX"
         jln_linkoptions = jln_linkoptions .. " /WX"
-      else
+      elseif values["jln-warnings-as-error"] == "off" then
         jln_buildoptions = jln_buildoptions .. " /WX-"
       end
     end

@@ -58,6 +58,9 @@ function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 
 -- gcc and clang
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
+-- https://clang.llvm.org/docs/DiagnosticsReference.html
+-- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
+-- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
 G = Or(gcc, clang) {
   opt'fix_compiler_error' {
     lvl'on' {
@@ -506,7 +509,31 @@ G = Or(gcc, clang) {
   },
 
   opt'warnings_as_error' {
-    lvl'on' { cxx'-Werror', } / cxx'-Wno-error',
+    lvl'on' { cxx'-Werror', } /
+    lvl'basic' {
+      cxx'-Werror=non-virtual-dtor',
+      cxx'-Werror=return-type',
+      cxx'-Werror=init-self',
+      gcc(5,1) {
+        cxx'-Werror=array-bounds',
+        cxx'-Werror=logical-op',
+        cxx'-Werror=logical-not-parentheses',
+      } /
+      clang {
+        cxx'-Werror=array-bounds',
+        cxx'-Werror=division-by-zero',
+        vers(3,4) {
+          cxx'-Werror=logical-not-parentheses',
+        }*
+        vers(3,6) {
+          cxx'-Werror=delete-incomplete',
+        }*
+        vers(7) {
+          cxx'-Werror=dynamic-class-memaccess',
+        }
+      }
+    } /
+    cxx'-Wno-error',
   }
 } /
 
@@ -619,7 +646,8 @@ msvc {
   },
 
   opt'warnings_as_error' {
-    lvl'on' { fl'/WX' } / { cxx'/WX-' }
+    lvl'on' { fl'/WX' } /
+    lvl'off' { cxx'/WX-' }
   },
 }
 
@@ -686,7 +714,7 @@ Vbase = {
     stack_protector={{'off', 'on', 'strong', 'all'},},
     suggestions={{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
-    warnings_as_error={{'off', 'on'},},
+    warnings_as_error={{'off', 'on', 'basic'},},
     whole_program={{'off', 'on', 'strip_all'},},
   },
 
