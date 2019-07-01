@@ -425,19 +425,19 @@ G = Or(gcc, clang) {
 
   opt'control_flow' {
     lvl'off' {
-      gcc(8) { cxx'-fcf-protection=none' },
+      gcc(8) { cxx'-fcf-protection=none' } /
       clang { fl'-fno-sanitize=cfi' },
     } /
     {
       gcc(8) {
         -- cxx'-mcet',
         cxx'-fcf-protection=full' --  full|branch|return|none
-      },
+      } /
       clang {
         fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
         cxx'-fvisibility=hidden',
         fl'-flto',
-      }, 
+      },
     },
   },
 

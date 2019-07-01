@@ -1045,7 +1045,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-fcf-protection=none"
           ;
         }
-        if $(toolset) = "clang"
+        else if $(toolset) = "clang"
         {
           flags +=
             <cxxflags>"-fno-sanitize=cfi"
@@ -1061,7 +1061,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-fcf-protection=full"
           ;
         }
-        if $(toolset) = "clang"
+        else if $(toolset) = "clang"
         {
           flags +=
             <cxxflags>"-fsanitize=cfi"

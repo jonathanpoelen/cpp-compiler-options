@@ -627,16 +627,14 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       if values["jln-control-flow"] == "off" then
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
           jln_buildoptions = jln_buildoptions .. " -fcf-protection=none"
-        end
-        if compiler == "clang" then
+        elseif compiler == "clang" then
           jln_buildoptions = jln_buildoptions .. " -fno-sanitize=cfi"
           jln_linkoptions = jln_linkoptions .. " -fno-sanitize=cfi"
         end
       else
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
           jln_buildoptions = jln_buildoptions .. " -fcf-protection=full"
-        end
-        if compiler == "clang" then
+        elseif compiler == "clang" then
           jln_buildoptions = jln_buildoptions .. " -fsanitize=cfi -fvisibility=hidden -flto"
           jln_linkoptions = jln_linkoptions .. " -fsanitize=cfi -flto"
         end

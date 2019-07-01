@@ -380,16 +380,14 @@ foreach ___jln_flags : ___jln_custom_flags
       if (  (___jln_flags.get('control_flow', 'default') == 'off') )
         if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<8.0') ) ) )
           jln_cpp_flags += ['-fcf-protection=none', ]
-        endif
-        if (  (___jln_compiler_id == 'clang') )
+        elif (  (___jln_compiler_id == 'clang') )
           jln_cpp_flags += ['-fno-sanitize=cfi', ]
           jln_link_flags += ['-fno-sanitize=cfi', ]
         endif
       else
         if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<8.0') ) ) )
           jln_cpp_flags += ['-fcf-protection=full', ]
-        endif
-        if (  (___jln_compiler_id == 'clang') )
+        elif (  (___jln_compiler_id == 'clang') )
           jln_cpp_flags += ['-fsanitize=cfi', '-fvisibility=hidden', '-flto', ]
           jln_link_flags += ['-fsanitize=cfi', '-flto', ]
         endif
