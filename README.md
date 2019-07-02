@@ -2,7 +2,7 @@ Compilation options for different versions of Clang, GCC and MSVC. Provided a ge
 
 The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `g++`, `clang++` and `msvc`.
 
-$ `g++ @output/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
+$ `g++ @output/gcc/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 
 > <stdin>:1:10: warning: zero as null pointer constant \[-Wzero-as-null-pointer-constant]
 
