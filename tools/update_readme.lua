@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 
-local README = arg[0]:gsub('[^/]+$','') .. 'README.md'
+local README = arg[0]:gsub('[^/]+$','') .. '/../README.md'
 
 local f, err = io.open(README)
 if not f then
