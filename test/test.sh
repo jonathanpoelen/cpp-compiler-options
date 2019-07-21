@@ -44,9 +44,8 @@ if [ -z "$1" ] || [ "$1" = cmake ]; then
   mkdir -p "$TMPDIR"/compgencmake
   cd "$TMPDIR"/compgencmake
   rm -rf CMakeCache.txt CMakeFiles/ cmake_install.cmake Makefile test
-  test_success "cmake '$d/cmake' -DTEST_PROFILE=on | grep _GLIBCXX_ASSERTIONS"
-  rm CMakeCache.txt
-  test_success "cmake '$d/cmake' -DTEST_PROFILE=empty | grep _GLIBCXX_ASSERTIONS"
+  test_success "cmake '$d/cmake' -DJLN_AUTO_PROFILE=on | grep _GLIBCXX_ASSERTIONS"
+  test_success "cmake '$d/cmake' | grep _GLIBCXX_ASSERTIONS"
   rm CMakeCache.txt
   test_success "cmake '$d/cmake' -DTEST_PROFILE=on2 | grep _GLIBCXX_ASSERTIONS"
   test_success "cmake '$d/cmake' -DTEST_PROFILE=on2 | grep suggest"
