@@ -82,7 +82,7 @@ If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are
 category | options
 ---------|---------
 debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>
-release | `cpu=native`<br>`linker=gold`<br>`lto=linker_plugin` or `on`<br>`optimize=release`<br>`rtti=off`<br>`whole_program=strip_all`
+release | `cpu=native`<br>`linker=gold`<br>`lto=linker_plugin` or `on`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
 security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`
 really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
 
@@ -158,7 +158,7 @@ project('test', 'cpp')
 
 # optional
 # jln_custom_flags = [
-#  {'rtti': 'off', 'optimize': 'on'},
+#  {'rtti': 'off', 'optimization': '3'},
 #  {'debug': 'on'},
 # ]
 
