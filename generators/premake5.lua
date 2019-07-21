@@ -23,6 +23,8 @@ return {
       endif='end',
     })
 
+    _:print('-- Generated file with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+
     _:print('local _jln_flag_names = {}')
     for optname in _:getoptions() do
       local opt = _:tostroption(optname)

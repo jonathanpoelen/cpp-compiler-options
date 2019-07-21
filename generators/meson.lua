@@ -23,6 +23,8 @@ return {
       endif='endif',
     })
 
+    _:print('# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+
     local option_strs = _._option_strs
     _:write("___jln_default_flags = get_variable('jln_default_flags', {})\n___jln_flags = {\n")
     for optname,args,default_value,ordered_args in _:getoptions() do

@@ -1,3 +1,5 @@
+# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options
+
 ___jln_default_flags = get_variable('jln_default_flags', {})
 ___jln_flags = {
   'jln_color': ___jln_default_flags.get('color', get_option('jln_color')),

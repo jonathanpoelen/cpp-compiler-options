@@ -22,6 +22,8 @@ return {
       endif='endif()',
     })
 
+    _:print('# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+
     local print_check_value = function(prefix, localname, expositionname, values, firstprefix)
       _:print(prefix .. (firstprefix or '') .. 'if(NOT(("' .. table.concat(values, '" STREQUAL ' .. localname .. ') OR ("') .. '" STREQUAL ' .. localname .. ')))')
       _:print(prefix .. '  message(FATAL_ERROR "Unknow value \\\"${' .. localname .. '}\\\" for ' .. expositionname .. ', expected: ' .. table.concat(values, ', ') .. '")')

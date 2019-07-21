@@ -44,7 +44,9 @@ return {
 
     _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
-    _:print([[# https://boostorg.github.io/build/manual/develop/index.html
+    _:print([[# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options
+
+# jam reference: https://boostorg.github.io/build/manual/develop/index.html
 
 import feature : feature ;
 import modules ;
