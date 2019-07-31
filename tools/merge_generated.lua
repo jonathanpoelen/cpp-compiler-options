@@ -88,11 +88,11 @@ function create_debug_file(prefix, files_contents)
   local debug_full_broken_abi = tokeys(split_lines(files_contents['stl_debug_broken_abi']), lines)
   write_ktable(debug_full, prefix .. 'debug_full')
   write_ktable(debug_full_broken_abi, prefix .. 'debug_full_broken_abi')
-  if files_contents['stl_debug_broken_abi'] == files_contents['stl_debug_broken_abi_and_bugged'] then
-    remove_file(prefix .. 'stl_debug_broken_abi_and_bugged')
+  if files_contents['stl_debug_broken_abi'] == files_contents['stl_debug_broken_abi_and_bugs'] then
+    remove_file(prefix .. 'stl_debug_broken_abi_and_bugs')
   else
-    local kt = tokeys(split_lines(files_contents['stl_debug_broken_abi_and_bugged']), debug_full_broken_abi)
-    write_ktable(kt, prefix .. 'debug_full_broken_abi_and_bugged')
+    local kt = tokeys(split_lines(files_contents['stl_debug_broken_abi_and_bugs']), debug_full_broken_abi)
+    write_ktable(kt, prefix .. 'debug_full_broken_abi_and_bugs')
   end    
 end
 

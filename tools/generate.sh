@@ -67,13 +67,13 @@ done
 
 sgen compiler | while read comp ; do
   compname=${comp/-*}
-  gencompopt release                         $comp cpu=native lto optimization=2 linker=gold
-  gencompopt warnings                        $comp shadow_warnings=off stl_fix warnings pedantic
-  gencompopt warnings_strict                 $comp shadow_warnings=off stl_fix warnings=strict pedantic
-  gencompopt stl_debug_broken_abi            $comp stl_fix stl_debug=allow_broken_abi
-  gencompopt stl_debug_broken_abi_and_bugged $comp stl_fix stl_debug=allow_broken_abi_and_bugged
-  gencompopt sanitizers-pointer              $comp sanitizers_extra=pointer
-  gencompopt template_tree                   $comp elide_type=off diagnostics_show_template_tree=on
+  gencompopt release                       $comp cpu=native lto optimization=2 linker=gold
+  gencompopt warnings                      $comp shadow_warnings=off stl_fix warnings pedantic
+  gencompopt warnings_strict               $comp shadow_warnings=off stl_fix warnings=strict pedantic
+  gencompopt stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
+  gencompopt stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
+  gencompopt sanitizers-pointer            $comp sanitizers_extra=pointer
+  gencompopt template_tree                 $comp elide_type=off diagnostics_show_template_tree=on
   for g in suggestions stl_debug debug sanitizers ; do
     gencompopt $g $comp $g
   done

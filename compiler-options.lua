@@ -53,6 +53,7 @@ function fl(x) return { cxx=x, link=x } end
 function lvl(x) return setmetatable({ lvl=x }, cond_mt) end
 function opt(x) return setmetatable({ opt=x }, cond_mt) end
 function Or(...) return setmetatable({ _or={...} }, cond_mt) end
+function And(...) return setmetatable({ _and={...} }, cond_mt) end
 
 -- opt'build' ? -pipe Avoid temporary files, speeding up builds
 
@@ -236,10 +237,10 @@ G = Or(gcc, clang) {
       lvl'assert_as_exception' {
         cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
       },
-      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugged') {
+      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
         clang {
           -- denug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
-          Or(vers(8), lvl'allow_broken_abi_and_bugged') {
+          Or(vers(8), lvl'allow_broken_abi_and_bugs') {
             cxx'-D_LIBCPP_DEBUG=1',
           },
         },
@@ -433,7 +434,7 @@ G = Or(gcc, clang) {
         -- cxx'-mcet',
         cxx'-fcf-protection=full' --  full|branch|return|none
       } /
-      clang {
+      And(lvl'allow_bugs', clang) {
         fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
         cxx'-fvisibility=hidden',
         fl'-flto',
@@ -689,7 +690,7 @@ Vbase = {
 
   _opts={
     color=      {{'auto', 'never', 'always'},},
-    control_flow={{'off', 'on'},},
+    control_flow={{'off', 'on', 'allow_bugs'},},
     coverage=   {{'off', 'on'},},
     cpu=        {{'generic', 'native'},},
     debug=      {{'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},},
@@ -706,7 +707,7 @@ Vbase = {
     relro=      {{'off', 'on', 'full'},},
     reproducible_build_warnings={{'off', 'on'},},
     rtti=       {{'off', 'on'},},
-    stl_debug=  {{'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugged', 'assert_as_exception'},},
+    stl_debug=  {{'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception'},},
     stl_fix=    {{'off', 'on'}, 'on'},
     sanitizers= {{'off', 'on'},},
     sanitizers_extra={{'off', 'thread', 'pointer'},},

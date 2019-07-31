@@ -8,7 +8,7 @@ import modules ;
 CXX_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
 feature <jln-color> : _ default auto never always : propagated ;
-feature <jln-control-flow> : _ default off on : incidental ;
+feature <jln-control-flow> : _ default off on allow-bugs : incidental ;
 feature <jln-coverage> : _ default off on : incidental ;
 feature <jln-cpu> : _ default generic native : incidental ;
 feature <jln-debug> : _ default off on line-tables-only gdb lldb sce : incidental ;
@@ -29,14 +29,14 @@ feature <jln-sanitizers> : _ default off on : incidental ;
 feature <jln-sanitizers-extra> : _ default off thread pointer : incidental ;
 feature <jln-shadow-warnings> : _ off default on local compatible-local all : propagated ;
 feature <jln-stack-protector> : _ default off on strong all : incidental ;
-feature <jln-stl-debug> : _ default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
+feature <jln-stl-debug> : _ default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix> : _ on default off : incidental ;
 feature <jln-suggestions> : _ default off on : propagated ;
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
 feature <jln-warnings-as-error> : _ default off on basic : propagated ;
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
 
-feature <jln-control-flow-incidental> : _ default off on : incidental ;
+feature <jln-control-flow-incidental> : _ default off on allow-bugs : incidental ;
 feature <jln-coverage-incidental> : _ default off on : incidental ;
 feature <jln-cpu-incidental> : _ default generic native : incidental ;
 feature <jln-debug-incidental> : _ default off on line-tables-only gdb lldb sce : incidental ;
@@ -51,12 +51,12 @@ feature <jln-rtti-incidental> : _ default off on : incidental ;
 feature <jln-sanitizers-incidental> : _ default off on : incidental ;
 feature <jln-sanitizers-extra-incidental> : _ default off thread pointer : incidental ;
 feature <jln-stack-protector-incidental> : _ default off on strong all : incidental ;
-feature <jln-stl-debug-incidental> : _ default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
+feature <jln-stl-debug-incidental> : _ default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix-incidental> : _ on default off : incidental ;
 feature <jln-whole-program-incidental> : _ default off on strip-all : incidental ;
 
 feature <jln-color-default> : default auto never always : incidental ;
-feature <jln-control-flow-default> : default off on : incidental ;
+feature <jln-control-flow-default> : default off on allow-bugs : incidental ;
 feature <jln-coverage-default> : default off on : incidental ;
 feature <jln-cpu-default> : default generic native : incidental ;
 feature <jln-debug-default> : default off on line-tables-only gdb lldb sce : incidental ;
@@ -77,7 +77,7 @@ feature <jln-sanitizers-default> : default off on : incidental ;
 feature <jln-sanitizers-extra-default> : default off thread pointer : incidental ;
 feature <jln-shadow-warnings-default> : off default on local compatible-local all : incidental ;
 feature <jln-stack-protector-default> : default off on strong all : incidental ;
-feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception : incidental ;
+feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
@@ -108,7 +108,7 @@ rule jln-get-env ( env : values * )
 }
 
 constant jln_env_color : [ jln-get-env jln_color : default auto never always ] ;
-constant jln_env_control_flow : [ jln-get-env jln_control_flow : default off on ] ;
+constant jln_env_control_flow : [ jln-get-env jln_control_flow : default off on allow-bugs ] ;
 constant jln_env_coverage : [ jln-get-env jln_coverage : default off on ] ;
 constant jln_env_cpu : [ jln-get-env jln_cpu : default generic native ] ;
 constant jln_env_debug : [ jln-get-env jln_debug : default off on line-tables-only gdb lldb sce ] ;
@@ -129,7 +129,7 @@ constant jln_env_sanitizers : [ jln-get-env jln_sanitizers : default off on ] ;
 constant jln_env_sanitizers_extra : [ jln-get-env jln_sanitizers_extra : default off thread pointer ] ;
 constant jln_env_shadow_warnings : [ jln-get-env jln_shadow_warnings : off default on local compatible-local all ] ;
 constant jln_env_stack_protector : [ jln-get-env jln_stack_protector : default off on strong all ] ;
-constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-broken-abi allow-broken-abi-and-bugged assert-as-exception ] ;
+constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception ] ;
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
 constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off strict very-strict ] ;
@@ -747,11 +747,11 @@ rule jln_flags ( properties * )
             <cxxflags>"-D_LIBCPP_DEBUG_USE_EXCEPTIONS"
           ;
         }
-        if (  ( $(x_stl_debug) = "allow-broken-abi" ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugged" )  )
+        if (  ( $(x_stl_debug) = "allow-broken-abi" ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
         {
           if $(toolset) = "clang"
           {
-            if (  ! (  $(version) < "08.00"  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugged" )  )
+            if (  ! (  $(version) < "08.00"  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
             {
               flags +=
                 <cxxflags>"-D_LIBCPP_DEBUG=1"
@@ -1063,7 +1063,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-fcf-protection=full"
           ;
         }
-        else if $(toolset) = "clang"
+        else if (  ( $(x_control_flow) = "allow-bugs" ) && $(toolset) = "clang"  )
         {
           flags +=
             <cxxflags>"-fsanitize=cfi"
