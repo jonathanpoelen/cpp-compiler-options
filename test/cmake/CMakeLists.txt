@@ -14,7 +14,7 @@ else()
   jln_init_flags(SUGGESTIONS on) # SUGGESTIONS default value is on
 endif()
 
-jln_flags(CXX_VAR JLN_CXX_FLAGS LINK_VAR JLN_LINK_FLAGS SANITIZERS on)
+jln_flags(CXX_VAR JLN_CXX_FLAGS LINK_VAR JLN_LINK_FLAGS SANITIZERS On)
 message(STATUS "cxx: ${JLN_CXX_FLAGS}")
 message(STATUS "link: ${JLN_LINK_FLAGS}")
 
