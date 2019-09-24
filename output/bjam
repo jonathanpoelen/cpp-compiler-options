@@ -405,7 +405,7 @@ rule jln_flags ( properties * )
           <linkflags>"-fuse-ld=bfd"
         ;
       }
-      else if (  ( $(x_linker) = "gold" ) || $(toolset) = "gcc"  )
+      else if (  ( $(x_linker) = "gold" ) || ! (  $(toolset) = "gcc" && ! (  $(version) < "09.00"  )  )  )
       {
         flags +=
           <linkflags>"-fuse-ld=gold"
@@ -427,13 +427,13 @@ rule jln_flags ( properties * )
           <linkflags>"-fno-lto"
         ;
       }
-      else
+      else if $(toolset) = "gcc"
       {
         flags +=
           <cxxflags>"-flto"
           <linkflags>"-flto"
         ;
-        if (  $(toolset) = "gcc" && ! (  $(version) < "05.00"  )  )
+        if ! (  $(version) < "05.00"  )
         {
           if ( $(x_warnings) != "default" )
           {
@@ -458,6 +458,20 @@ rule jln_flags ( properties * )
             ;
           }
         }
+      }
+      else if (  ( $(x_lto) = "linker-plugin" ) && (  $(toolset) = "clang" && ! (  $(version) < "06.00"  )  )  )
+      {
+        flags +=
+          <cxxflags>"-flto=thin"
+          <linkflags>"-flto=thin"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"-flto"
+          <linkflags>"-flto"
+        ;
       }
     }
     if ( $(x_optimization) != "default" )

@@ -340,7 +340,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     if not ( values["jln-linker"] == "default") then
       if values["jln-linker"] == "bfd" then
         jln_linkoptions = jln_linkoptions .. " -fuse-ld=bfd"
-      elseif ( values["jln-linker"] == "gold" or compiler == "gcc" ) then
+      elseif ( values["jln-linker"] == "gold" or not ( compiler == "gcc" and not ( compversion < 900 ) ) ) then
         jln_linkoptions = jln_linkoptions .. " -fuse-ld=gold"
       else
         jln_linkoptions = jln_linkoptions .. " -fuse-ld=lld"
@@ -350,10 +350,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       if values["jln-lto"] == "off" then
         jln_buildoptions = jln_buildoptions .. " -fno-lto"
         jln_linkoptions = jln_linkoptions .. " -fno-lto"
-      else
+      elseif compiler == "gcc" then
         jln_buildoptions = jln_buildoptions .. " -flto"
         jln_linkoptions = jln_linkoptions .. " -flto"
-        if ( compiler == "gcc" and not ( compversion < 500 ) ) then
+        if not ( compversion < 500 ) then
           if not ( values["jln-warnings"] == "default") then
             if not values["jln-warnings"] == "off" then
               jln_buildoptions = jln_buildoptions .. " -flto-odr-type-merging"
@@ -367,6 +367,12 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
             jln_linkoptions = jln_linkoptions .. " -fuse-linker-plugin"
           end
         end
+      elseif ( values["jln-lto"] == "linker-plugin" and ( compiler == "clang" and not ( compversion < 600 ) ) ) then
+        jln_buildoptions = jln_buildoptions .. " -flto=thin"
+        jln_linkoptions = jln_linkoptions .. " -flto=thin"
+      else
+        jln_buildoptions = jln_buildoptions .. " -flto"
+        jln_linkoptions = jln_linkoptions .. " -flto"
       end
     end
     if not ( values["jln-optimization"] == "default") then

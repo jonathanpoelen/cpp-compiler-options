@@ -93,7 +93,7 @@ foreach ___jln_flags : ___jln_custom_flags
     if (  not ( (___jln_flags.get('linker', 'default') == 'default')) )
       if (  (___jln_flags.get('linker', 'default') == 'bfd') )
         jln_link_flags += ['-fuse-ld=bfd', ]
-      elif (  ( (___jln_flags.get('linker', 'default') == 'gold') or (___jln_compiler_id == 'gcc') ) )
+      elif (  ( (___jln_flags.get('linker', 'default') == 'gold') or not ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<9.0') ) ) ) )
         jln_link_flags += ['-fuse-ld=gold', ]
       else
         jln_link_flags += ['-fuse-ld=lld', ]
@@ -103,10 +103,10 @@ foreach ___jln_flags : ___jln_custom_flags
       if (  (___jln_flags.get('lto', 'default') == 'off') )
         jln_cpp_flags += ['-fno-lto', ]
         jln_link_flags += ['-fno-lto', ]
-      else
+      elif (  (___jln_compiler_id == 'gcc') )
         jln_cpp_flags += ['-flto', ]
         jln_link_flags += ['-flto', ]
-        if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<5.0') ) ) )
+        if (  not ( ___jln_compiler_version.version_compare('<5.0') ) )
           if (  not ( (___jln_flags.get('warnings', 'default') == 'default')) )
             if (  not (___jln_flags.get('warnings', 'default') == 'off') )
               jln_cpp_flags += ['-flto-odr-type-merging', ]
@@ -120,6 +120,12 @@ foreach ___jln_flags : ___jln_custom_flags
             jln_link_flags += ['-fuse-linker-plugin', ]
           endif
         endif
+      elif (  ( (___jln_flags.get('lto', 'default') == 'linker_plugin') and ( (___jln_compiler_id == 'clang') and not ( ___jln_compiler_version.version_compare('<6.0') ) ) ) )
+        jln_cpp_flags += ['-flto=thin', ]
+        jln_link_flags += ['-flto=thin', ]
+      else
+        jln_cpp_flags += ['-flto', ]
+        jln_link_flags += ['-flto', ]
       endif
     endif
     if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )

@@ -103,23 +103,26 @@ G = Or(gcc, clang) {
 
   opt'linker' {
     lvl'bfd' { link'-fuse-ld=bfd' } /
-    Or(lvl'gold', gcc) { link'-fuse-ld=gold' } /
+    Or(lvl'gold', -gcc(9)) { link'-fuse-ld=gold' } /
     link'-fuse-ld=lld',
   },
 
   opt'lto' {
     lvl'off' {
       fl'-fno-lto',
-    } / {
-      fl'-flto', -- clang -flto=thin
-      gcc(5) {
+    } / 
+    gcc {
+      fl'-flto',
+      vers(5) {
         opt'warnings' {
           -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
         },
         lvl'fat' { cxx'-ffat-lto-objects', },
         lvl'linker_plugin' { link'-fuse-linker-plugin' }
       }
-    },
+    } /
+    And(lvl'linker_plugin', clang(6)) { fl'-flto=thin' } /
+    fl'-flto',
   },
 
   opt'optimization' {
