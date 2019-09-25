@@ -1,12 +1,12 @@
 Compilation options for different versions of Clang, GCC and MSVC. Provided a generator and different file formats (build system and compiler).
 
-The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `g++`, `clang++` and `msvc`.
+The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `g++`, `clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
 $ `g++ @output/gcc/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 
 > <stdin>:1:10: warning: zero as null pointer constant \[-Wzero-as-null-pointer-constant]
 
-(`@file` is a special option of gcc/clang)
+(`@file` is a special option of gcc and clang)
 
 $ `cmake -DJLN_FAST_MATH=on`
 
@@ -130,22 +130,25 @@ add_compile_options(${CXX_FLAGS})
 
 include "output/premake5"
 
--- Registers new command-line options (ex jln_newoptions({debug='on'}))
-jln_newoptions([default_values])
+-- Registers new command-line options and set default values
+jln_newoptions({warnings='very_strict'})
 
+-- jln_getoptions(values, disable_others = nil, print_compiler = nil)
+-- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil,
+print_compiler = nil)
+-- `= nil` indicates that the value is optional and can be nil
+-- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
+-- `version`: string. ex: '7', '7.2'
 -- `values`: table. ex: {warnings='on'}
 -- `disable_others`: boolean
 -- `print_compiler`: boolean
--- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
--- `version`: string. ex: '7', '7.2'
-
 -- return {buildoptions=string, linkoptions=string}
-jln_getoptions(values[, disable_others[, print_compiler]])
-jln_getoptions([compiler[, version[, values[, disable_others[, print_compiler]]]]])
+local mylib_options = jln_getoptions({elide_type='on'})
+buildoptions(mylib_options.buildoptions)
+linkoptions(mylib_options.linkoptions)
 
--- use buildoptions and linkoptions then return {buildoptions=string, linkoptions=string}
-jln_setoptions(values[, disable_others[, print_compiler]])
-jln_setoptions([compiler[, version[, values[, disable_others[, print_compiler]]]]])
+-- or equivalent
+jln_setoptions({elide_type='on'})
 ```
 
 
@@ -160,19 +163,21 @@ project('test', 'cpp')
 
 # default value (without prefix)
 # optional
-# jln_default_flags = {'rtti': 'off'}
+jln_default_flags = {'rtti': 'off'}
 
 # optional
-# jln_custom_flags = [
-#  {'rtti': 'off', 'optimization': '3'},
-#  {'debug': 'on'},
-# ]
+jln_custom_flags = [
+  {'rtti': 'off', 'optimization': '3'}, # (0) opti flags
+  {'debug': 'on'}, # (1) debug flags
+]
 
 # declare jln_link_flags, jln_cpp_flags, jln_custom_cpp_flags and jln_custom_link_flags
 subdir('meson_jln_flags')
 
-# my_opti_cpp_flags = jln_custom_cpp_flags[0]
-# my_opti_link_flags = jln_custom_link_flags[0]
+my_opti_cpp_flags = jln_custom_cpp_flags[0]
+my_opti_link_flags = jln_custom_link_flags[0]
+my_debug_cpp_flags = jln_custom_cpp_flags[1]
+my_debug_link_flags = jln_custom_link_flags[1]
 
 executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flags)
 ```

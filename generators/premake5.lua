@@ -58,6 +58,7 @@ function jln_check_flag_names(t)
   end
 end
 
+-- same as jln_getoptions
 function jln_setoptions(compiler, version, values, disable_others, print_compiler)
   local options = jln_getoptions(compiler, version, values, disable_others, print_compiler)
   buildoptions(options.buildoptions)
@@ -65,6 +66,15 @@ function jln_setoptions(compiler, version, values, disable_others, print_compile
   return options
 end
 
+-- jln_getoptions(values, disable_others = nil, print_compiler = nil)
+-- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
+-- `= nil` indicates that the value is optional and can be nil
+-- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
+-- `version`: string. ex: '7', '7.2'
+-- `values`: table. ex: {warnings='on'}
+-- `disable_others`: boolean
+-- `print_compiler`: boolean
+-- return {buildoptions=string, linkoptions=string}
 function jln_getoptions(compiler, version, values, disable_others, print_compiler)
   if compiler and type(compiler) ~= 'string' then
     values, disable_others, print_compiler, compiler, version = compiler, version, values, nil, nil
