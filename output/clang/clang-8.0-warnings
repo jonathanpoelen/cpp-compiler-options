@@ -10,6 +10,7 @@
 -Wno-mismatched-tags
 -Wno-padded
 -Wno-shadow
+-Wno-shadow-field
 -Wno-sign-conversion
 -Wno-switch-default
 -Wno-switch-enum

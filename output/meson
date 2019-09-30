@@ -286,6 +286,9 @@ foreach ___jln_flags : ___jln_custom_flags
     if (  not ( (___jln_flags.get('shadow_warnings', 'default') == 'default')) )
       if (  (___jln_flags.get('shadow_warnings', 'default') == 'off') )
         jln_cpp_flags += ['-Wno-shadow', ]
+        if (  ( (___jln_compiler_id == 'clang') and not ( ___jln_compiler_version.version_compare('<8.0') ) ) )
+          jln_cpp_flags += ['-Wno-shadow-field', ]
+        endif
       elif (  (___jln_flags.get('shadow_warnings', 'default') == 'on') )
         jln_cpp_flags += ['-Wshadow', ]
       elif (  (___jln_flags.get('shadow_warnings', 'default') == 'all') )

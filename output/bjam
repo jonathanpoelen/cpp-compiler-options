@@ -800,6 +800,12 @@ rule jln_flags ( properties * )
         flags +=
           <cxxflags>"-Wno-shadow"
         ;
+        if (  $(toolset) = "clang" && ! (  $(version) < "08.00"  )  )
+        {
+          flags +=
+            <cxxflags>"-Wno-shadow-field"
+          ;
+        }
       }
       else if ( $(x_shadow_warnings) = "on" )
       {

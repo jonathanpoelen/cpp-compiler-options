@@ -259,7 +259,7 @@ G = Or(gcc, clang) {
   },
 
   opt'shadow_warnings' {
-    lvl'off' { cxx'-Wno-shadow' } /
+    lvl'off' { cxx'-Wno-shadow', clang(8) { cxx'-Wno-shadow-field' } } /
     lvl'on' { cxx'-Wshadow' } /
     lvl'all' {
       clang { cxx'-Wshadow-all', } /

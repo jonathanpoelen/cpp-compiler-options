@@ -543,6 +543,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     if not ( values["jln-shadow-warnings"] == "default") then
       if values["jln-shadow-warnings"] == "off" then
         jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
+        if ( compiler == "clang" and not ( compversion < 800 ) ) then
+          jln_buildoptions = jln_buildoptions .. " -Wno-shadow-field"
+        end
       elseif values["jln-shadow-warnings"] == "on" then
         jln_buildoptions = jln_buildoptions .. " -Wshadow"
       elseif values["jln-shadow-warnings"] == "all" then
