@@ -242,7 +242,7 @@ G = Or(gcc, clang) {
       },
       Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
         clang {
-          -- denug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
+          -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
           Or(vers(8), lvl'allow_broken_abi_and_bugs') {
             cxx'-D_LIBCPP_DEBUG=1',
           },
