@@ -211,7 +211,8 @@ The script below adds 2 aliases with `warnings=on`, `pedantic=on` and `color=alw
 
 ```sh
 for comp in g++ clang++ ; do
-  echo "alias ${comp:0:1}w++='$comp "$(./compiler-options.lua generators/compiler.lua $comp warnings pedantic color=always)\'
+  version=$($comp --version | sed -E '1!d;s/.*([0-9]\.[0-9]\.[0-9]).*/\1/g')
+  echo "alias ${comp:0:1}w++='$comp "$(./compiler-options.lua generators/compiler.lua "$comp-$version" warnings pedantic color=always)\'
 done >> ~/.bashrc
 ```
 
