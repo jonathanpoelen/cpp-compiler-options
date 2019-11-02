@@ -38,9 +38,9 @@ ___jln_flags = {
       local name = _:tobuildoption(optname)
       option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
       if optname == 'warnings' then
-        _:write("  '" .. name .. "': ___jln_warnings,\n")
+        _:write("  '" .. optname .. "': ___jln_warnings,\n")
       else
-        _:write("  '" .. name .. "': ___jln_default_flags.get('" .. optname .. "', get_option('" .. name .. "')),\n")
+        _:write("  '" .. optname .. "': ___jln_default_flags.get('" .. optname .. "', get_option('" .. name .. "')),\n")
       end
     end
 
