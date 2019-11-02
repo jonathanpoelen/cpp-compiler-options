@@ -84,7 +84,7 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
   newoption{trigger="jln-fix-compiler-error", allowed={{"default"}, {"off"}, {"on"}}, description="fix_compiler_error"}
   if not _OPTIONS["jln-fix-compiler-error"] then _OPTIONS["jln-fix-compiler-error"] = (defaults["fix_compiler_error"] or defaults["jln-fix-compiler-error"] or "default") end
-  newoption{trigger="jln-linker", allowed={{"default"}, {"bfd"}, {"gold"}, {"lld"}}, description="linker"}
+  newoption{trigger="jln-linker", allowed={{"default"}, {"bfd"}, {"gold"}, {"lld"}, {"native"}}, description="linker"}
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"linker_plugin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
@@ -348,7 +348,13 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       end
     end
     if not ( values["jln-linker"] == "default") then
-      if values["jln-linker"] == "bfd" then
+      if values["jln-linker"] == "native" then
+        if compiler == "gcc" then
+          jln_linkoptions = jln_linkoptions .. " -fuse-ld=gold"
+        else
+          jln_linkoptions = jln_linkoptions .. " -fuse-ld=lld"
+        end
+      elseif values["jln-linker"] == "bfd" then
         jln_linkoptions = jln_linkoptions .. " -fuse-ld=bfd"
       elseif ( values["jln-linker"] == "gold" or not ( compiler == "gcc" and not ( compversion < 900 ) ) ) then
         jln_linkoptions = jln_linkoptions .. " -fuse-ld=gold"

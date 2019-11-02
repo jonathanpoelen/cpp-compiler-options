@@ -8,7 +8,7 @@ option('jln_diagnostics_show_template_tree', type : 'combo', choices : ['default
 option('jln_elide_type', type : 'combo', choices : ['default', 'off', 'on'], value : 'default')
 option('jln_exceptions', type : 'combo', choices : ['default', 'off', 'on'], value : 'default')
 option('jln_fix_compiler_error', type : 'combo', choices : ['default', 'off', 'on'], value : 'on')
-option('jln_linker', type : 'combo', choices : ['default', 'bfd', 'gold', 'lld'], value : 'default')
+option('jln_linker', type : 'combo', choices : ['default', 'bfd', 'gold', 'lld', 'native'], value : 'default')
 option('jln_lto', type : 'combo', choices : ['default', 'off', 'on', 'fat', 'linker_plugin'], value : 'default')
 option('jln_optimization', type : 'combo', choices : ['default', '0', 'g', '1', '2', '3', 'fast', 'size'], value : 'default')
 option('jln_pedantic', type : 'combo', choices : ['default', 'off', 'on', 'as_error'], value : 'on')

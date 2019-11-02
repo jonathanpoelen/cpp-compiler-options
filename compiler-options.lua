@@ -102,6 +102,10 @@ G = Or(gcc, clang) {
   },
 
   opt'linker' {
+    lvl'native' {
+      gcc { link'-fuse-ld=gold' } /
+      link'-fuse-ld=lld'
+    } /
     lvl'bfd' { link'-fuse-ld=bfd' } /
     Or(lvl'gold', -gcc(9)) { link'-fuse-ld=gold' } /
     link'-fuse-ld=lld',
@@ -701,7 +705,7 @@ Vbase = {
     diagnostics_show_template_tree={{'off', 'on'},},
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
-    linker=     {{'bfd', 'gold', 'lld'},},
+    linker=     {{'bfd', 'gold', 'lld', 'native'},},
     lto=        {{'off', 'on', 'fat', 'linker_plugin'},},
     fix_compiler_error={{'off', 'on'}, 'on'},
     optimization={{'0', 'g', '1', '2', '3', 'fast', 'size'},},
@@ -724,9 +728,9 @@ Vbase = {
 
   _opts_build_type={
     debug={debug='on', stl_debug='on', control_flow='on', sanitizers='on'},
-    release={cpu='native', linker='gold', lto='on', optimization='2',},
-    debug_optimized={linker='gold', lto='on', optimization='g', debug='on',},
-    minimum_size_release={cpu='native', linker='gold', lto='on', optimization='size',},
+    release={cpu='native', linker='native', lto='on', optimization='2',},
+    debug_optimized={linker='native', lto='on', optimization='g', debug='on',},
+    minimum_size_release={cpu='native', linker='native', lto='on', optimization='size',},
   },
 
   indent = '',

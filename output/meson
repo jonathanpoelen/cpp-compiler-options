@@ -96,7 +96,13 @@ foreach ___jln_flags : ___jln_custom_flags
       endif
     endif
     if (  not ( (___jln_flags.get('linker', 'default') == 'default')) )
-      if (  (___jln_flags.get('linker', 'default') == 'bfd') )
+      if (  (___jln_flags.get('linker', 'default') == 'native') )
+        if (  (___jln_compiler_id == 'gcc') )
+          jln_link_flags += ['-fuse-ld=gold', ]
+        else
+          jln_link_flags += ['-fuse-ld=lld', ]
+        endif
+      elif (  (___jln_flags.get('linker', 'default') == 'bfd') )
         jln_link_flags += ['-fuse-ld=bfd', ]
       elif (  ( (___jln_flags.get('linker', 'default') == 'gold') or not ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<9.0') ) ) ) )
         jln_link_flags += ['-fuse-ld=gold', ]

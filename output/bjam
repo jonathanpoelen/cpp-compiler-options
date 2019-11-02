@@ -17,7 +17,7 @@ feature <jln-diagnostics-show-template-tree> : _ default off on : propagated ;
 feature <jln-elide-type> : _ default off on : propagated ;
 feature <jln-exceptions> : _ default off on : incidental ;
 feature <jln-fix-compiler-error> : _ on default off : incidental ;
-feature <jln-linker> : _ default bfd gold lld : propagated ;
+feature <jln-linker> : _ default bfd gold lld native : propagated ;
 feature <jln-lto> : _ default off on fat linker-plugin : incidental ;
 feature <jln-optimization> : _ default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic> : _ on default off as-error : incidental ;
@@ -65,7 +65,7 @@ feature <jln-diagnostics-show-template-tree-default> : default off on : incident
 feature <jln-elide-type-default> : default off on : incidental ;
 feature <jln-exceptions-default> : default off on : incidental ;
 feature <jln-fix-compiler-error-default> : on default off : incidental ;
-feature <jln-linker-default> : default bfd gold lld : incidental ;
+feature <jln-linker-default> : default bfd gold lld native : incidental ;
 feature <jln-lto-default> : default off on fat linker-plugin : incidental ;
 feature <jln-optimization-default> : default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic-default> : on default off as-error : incidental ;
@@ -117,7 +117,7 @@ constant jln_env_diagnostics_show_template_tree : [ jln-get-env jln_diagnostics_
 constant jln_env_elide_type : [ jln-get-env jln_elide_type : default off on ] ;
 constant jln_env_exceptions : [ jln-get-env jln_exceptions : default off on ] ;
 constant jln_env_fix_compiler_error : [ jln-get-env jln_fix_compiler_error : on default off ] ;
-constant jln_env_linker : [ jln-get-env jln_linker : default bfd gold lld ] ;
+constant jln_env_linker : [ jln-get-env jln_linker : default bfd gold lld native ] ;
 constant jln_env_lto : [ jln-get-env jln_lto : default off on fat linker-plugin ] ;
 constant jln_env_optimization : [ jln-get-env jln_optimization : default 0 g 1 2 3 fast size ] ;
 constant jln_env_pedantic : [ jln-get-env jln_pedantic : on default off as-error ] ;
@@ -399,7 +399,22 @@ rule jln_flags ( properties * )
     }
     if ( $(x_linker) != "default" )
     {
-      if ( $(x_linker) = "bfd" )
+      if ( $(x_linker) = "native" )
+      {
+        if $(toolset) = "gcc"
+        {
+          flags +=
+            <linkflags>"-fuse-ld=gold"
+          ;
+        }
+        else
+        {
+          flags +=
+            <linkflags>"-fuse-ld=lld"
+          ;
+        }
+      }
+      else if ( $(x_linker) = "bfd" )
       {
         flags +=
           <linkflags>"-fuse-ld=bfd"
