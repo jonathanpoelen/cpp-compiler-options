@@ -158,6 +158,7 @@ Copy `meson_options.txt` and rename `output/meson` to `meson_jln_flags/meson.bui
 
 ```meson
 # launch example: meson -Djln_fast_math=on
+# meson --warnlevel=0 forces --Djln_warnings=off
 
 project('test', 'cpp')
 

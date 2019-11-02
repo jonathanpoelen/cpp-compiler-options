@@ -1,6 +1,11 @@
 # Generated file with https://github.com/jonathanpoelen/cpp-compiler-options
 
 ___jln_default_flags = get_variable('jln_default_flags', {})
+if get_option('warning_level') == '0'
+  ___jln_warnings = 'off'
+else
+  ___jln_warnings = ___jln_default_flags.get('warnings', get_option('jln_warnings'))
+endif
 ___jln_flags = {
   'jln_color': ___jln_default_flags.get('color', get_option('jln_color')),
   'jln_control_flow': ___jln_default_flags.get('control_flow', get_option('jln_control_flow')),
@@ -27,7 +32,7 @@ ___jln_flags = {
   'jln_stl_debug': ___jln_default_flags.get('stl_debug', get_option('jln_stl_debug')),
   'jln_stl_fix': ___jln_default_flags.get('stl_fix', get_option('jln_stl_fix')),
   'jln_suggestions': ___jln_default_flags.get('suggestions', get_option('jln_suggestions')),
-  'jln_warnings': ___jln_default_flags.get('warnings', get_option('jln_warnings')),
+  'jln_warnings': ___jln_warnings,
   'jln_warnings_as_error': ___jln_default_flags.get('warnings_as_error', get_option('jln_warnings_as_error')),
   'jln_whole_program': ___jln_default_flags.get('whole_program', get_option('jln_whole_program')),
 }

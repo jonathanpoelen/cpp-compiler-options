@@ -26,11 +26,22 @@ return {
     _:print('# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
     local option_strs = _._option_strs
-    _:write("___jln_default_flags = get_variable('jln_default_flags', {})\n___jln_flags = {\n")
+    _:write([[___jln_default_flags = get_variable('jln_default_flags', {})
+if get_option('warning_level') == '0'
+  ___jln_warnings = 'off'
+else
+  ___jln_warnings = ___jln_default_flags.get('warnings', get_option(']] .. _:tobuildoption('warnings') .. [['))
+endif
+___jln_flags = {
+]])
     for optname,args,default_value,ordered_args in _:getoptions() do
       local name = _:tobuildoption(optname)
       option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
-      _:write("  '" .. name .. "': ___jln_default_flags.get('" .. optname .. "', get_option('" .. name .. "')),\n")
+      if optname == 'warnings' then
+        _:write("  '" .. name .. "': ___jln_warnings,\n")
+      else
+        _:write("  '" .. name .. "': ___jln_default_flags.get('" .. optname .. "', get_option('" .. name .. "')),\n")
+      end
     end
 
     _:print[[}
