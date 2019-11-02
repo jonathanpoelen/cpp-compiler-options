@@ -220,7 +220,7 @@ done >> ~/.bashrc
 
 # Generators
 
-$ `./compiler-options.lua [-o filebase] [-f [-]option_list[,...]] {generator} [options...]`
+$ `./compiler-options.lua [-h] [-c] [-o filebase] [-f [-]option_list[,...]] {generator} [options...]`
 
 ```bash
 ./compiler-options.lua -f debug,warning generators/cmake.lua # only with debug and warning

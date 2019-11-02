@@ -47,13 +47,24 @@ local gcc = compiler('gcc')
 local clang = compiler('clang')
 local msvc = compiler('msvc')
 function vers(major, minor) return setmetatable({ version={major, minor or 0} }, cond_mt) end
-function cxx(x) return { cxx=x } end
-function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
-function fl(x) return { cxx=x, link=x } end
 function lvl(x) return setmetatable({ lvl=x }, cond_mt) end
 function opt(x) return setmetatable({ opt=x }, cond_mt) end
 function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 function And(...) return setmetatable({ _and={...} }, cond_mt) end
+
+function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
+
+function MakeAST(is_C)
+
+if is_C then
+  function c(x) return { c=x } end
+  function cxx(x) return {} end
+  function fl(x) return { c=x, link=x } end
+else
+  function c(x) return {} end
+  function cxx(x) return { cxx=x } end
+  function fl(x) return { cxx=x, link=x } end
+end
 
 -- opt'build' ? -pipe Avoid temporary files, speeding up builds
 
@@ -62,7 +73,7 @@ function And(...) return setmetatable({ _and={...} }, cond_mt) end
 -- https://clang.llvm.org/docs/DiagnosticsReference.html
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
-G = Or(gcc, clang) {
+return Or(gcc, clang) {
   opt'fix_compiler_error' {
     lvl'on' {
       gcc {
@@ -658,7 +669,7 @@ msvc {
     lvl'off' { cxx'/WX-' }
   },
 }
-
+end -- MakeAST
 
 function noop() end
 
@@ -1039,7 +1050,7 @@ function insert_missing_function(V)
   end
 end
 
-function run(filebase, ignore_options, generator_name, ...)
+function run(is_C, filebase, ignore_options, generator_name, ...)
   local V = require(generator_name:gsub('.lua$', ''))
   insert_missing_function(V)
 
@@ -1063,7 +1074,7 @@ function run(filebase, ignore_options, generator_name, ...)
     insert_missing_function(V)
   end
 
-  evalflags(G, V)
+  evalflags(MakeAST(is_C), V)
 
   local out = V:stop(filebase)
   if not out then
@@ -1097,43 +1108,25 @@ function run(filebase, ignore_options, generator_name, ...)
 end
 
 function help(out)
-  out:write(arg[0] .. ' [-o filebase] [-f [-]option_list[,...]] {generator.lua} [-h|{options}...]\n')
+  out:write(arg[0] .. ' [-c] [-o filebase] [-f [-]option_list[,...]] {generator.lua} [-h|{options}...]\n\n  -c  Generator for C, not for C++\n')
 end
 
 local filebase
 local ignore_options = {}
+local os_C = false
 
-i=1
-while i <= #arg do
-  local s = arg[i]
-  if s:sub(1,1) ~= '-' then
-    break
-  end
+cli={
+  c={function() is_C=true end},
+  h={function() help(io.stdout) os.exit(0) end},
 
-  local opt = s:sub(2,2)
-  if opt == 'h' then
-    help(io.stdout)
-    os.exit(0)
-  end
-
-  local value
-  if #arg[i] ~= 2 then
-    value = s:sub(3)
-  else
-    i = i+1
-    value = arg[i]
-    if not value then
-      help(io.stderr)
-      os.exit(2)
-    end
-  end
-
-  if opt == 'o' then
+  o={arg=true, function(value)
     filebase = (value ~= '-') and value or nil
-  elseif opt == 'f' then
+  end},
+
+  f={arg=true, function(value)
     for name in value:gmatch('([_%w]+)') do
       if not Vbase._opts[name] then
-        io.strerr:write(arg[0] .. ": Unknown option: " .. name)
+        io.stderr:write(arg[0] .. ": Unknown option: " .. name)
         os.exit(2)
       end
       ignore_options[name] = true
@@ -1147,6 +1140,49 @@ while i <= #arg do
         end
       end
     end
+  end},
+}
+
+function getoption(flag)
+  local opt = cli[flag]
+  if not opt then
+    io.stderr:write('Unknown option: -' .. opt .. ' in ' .. s .. '\n')
+    os.exit(2)
+  end
+  return opt
+end
+
+i=1
+while i <= #arg do
+  local s = arg[i]
+  if s:sub(1,1) ~= '-' then
+    break
+  end
+
+  local opt = getoption(s:sub(2,2))
+  local ipos = 2
+  while not opt.arg do
+    opt[1]()
+    if #s == ipos then
+      break
+    end
+    ipos = ipos + 1
+    opt = getoption(s:sub(ipos, ipos))
+  end
+
+  if opt.arg then
+    local value
+    if #arg[i] ~= ipos then
+      value = s:sub(ipos+1)
+    else
+      i = i+1
+      value = arg[i]
+      if not value then
+        help(io.stderr)
+        os.exit(2)
+      end
+    end
+    opt[1](value)
   end
 
   i = i+1
@@ -1158,4 +1194,4 @@ if i > #arg then
   os.exit(1)
 end
 
-run(filebase, ignore_options, select(i, ...))
+run(is_C, filebase, ignore_options, select(i, ...))
