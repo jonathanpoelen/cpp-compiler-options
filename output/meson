@@ -62,6 +62,7 @@ foreach ___jln_flags : ___jln_custom_flags
             endif
           endif
         endif
+        jln_cpp_flags += ['-Werror=write-strings', ]
       elif (  (___jln_compiler_id == 'clang') )
         jln_cpp_flags += ['-Wno-error=c++11-narrowing', '-Wno-reserved-user-defined-literal', ]
       endif
@@ -321,7 +322,7 @@ foreach ___jln_flags : ___jln_custom_flags
         jln_cpp_flags += ['-w', ]
       else
         if (  (___jln_compiler_id == 'gcc') )
-          jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-declarations', '-Wmissing-include-dirs', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', ]
+          jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align=strict', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-declarations', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
           if (  not ( ___jln_compiler_version.version_compare('<4.7') ) )
             jln_cpp_flags += ['-Wsuggest-attribute=noreturn', '-Wzero-as-null-pointer-constant', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', ]
             if (  not ( ___jln_compiler_version.version_compare('<4.8') ) )

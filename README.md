@@ -1,6 +1,6 @@
 Compilation options for different versions of Clang, GCC and MSVC. Provided a generator and different file formats (build system and compiler).
 
-The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `g++`, `clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
+The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
 $ `g++ @output/gcc/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 

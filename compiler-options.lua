@@ -53,17 +53,19 @@ function Or(...) return setmetatable({ _or={...} }, cond_mt) end
 function And(...) return setmetatable({ _and={...} }, cond_mt) end
 
 function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
+function flag(x) return { cxx=x } end
+function fl(x) return { cxx=x, link=x } end
+function noop() end
 
 function MakeAST(is_C)
 
+local c, cxx
 if is_C then
-  function c(x) return { c=x } end
-  function cxx(x) return {} end
-  function fl(x) return { c=x, link=x } end
+  c = flag
+  cxx = noop
 else
-  function c(x) return {} end
-  function cxx(x) return { cxx=x } end
-  function fl(x) return { cxx=x, link=x } end
+  c = noop
+  cxx = flag
 end
 
 -- opt'build' ? -pipe Avoid temporary files, speeding up builds
@@ -79,17 +81,18 @@ return Or(gcc, clang) {
       gcc {
         vers(4,7) { cxx'-Werror=narrowing' } *
         vers(7,1) { cxx'-Werror=literal-suffix' } -- no warning name before 7.1
-      }
+      },
+      flag'-Werror=write-strings'
     } /
     clang {
-      cxx'-Wno-error=c++11-narrowing',
-      cxx'-Wno-reserved-user-defined-literal',
+      flag'-Wno-error=c++11-narrowing',
+      flag'-Wno-reserved-user-defined-literal',
     }
   },
 
   opt'coverage' {
     lvl'on' {
-      cxx'--coverage', -- -fprofile-arcs -ftest-coverage
+      flag'--coverage', -- -fprofile-arcs -ftest-coverage
       link'--coverage', -- -lgcov
       clang {
         link'-lprofile_rt',
@@ -100,16 +103,16 @@ return Or(gcc, clang) {
   },
 
   opt'debug' {
-    lvl'off' { cxx '-g0' } /
-    lvl'gdb' { cxx '-ggdb' } /
+    lvl'off' { flag '-g0' } /
+    lvl'gdb' { flag '-ggdb' } /
     clang {
-      lvl'line_tables_only' { cxx'-gline-tables-only' },
-      lvl'lldb' { cxx '-glldb' } /
-      lvl'sce' { cxx '-gsce' } /
-      cxx'-g'
+      lvl'line_tables_only' { flag'-gline-tables-only' },
+      lvl'lldb' { flag '-glldb' } /
+      lvl'sce' { flag '-gsce' } /
+      flag'-g'
     } /
-    cxx'-g',
-    -- cxx'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
+    flag'-g',
+    -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
   },
 
   opt'linker' {
@@ -132,7 +135,7 @@ return Or(gcc, clang) {
         opt'warnings' {
           -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
         },
-        lvl'fat' { cxx'-ffat-lto-objects', },
+        lvl'fat' { flag'-ffat-lto-objects', },
         lvl'linker_plugin' { link'-fuse-linker-plugin' }
       }
     } /
@@ -143,7 +146,7 @@ return Or(gcc, clang) {
   opt'optimization' {
     lvl'0'     { fl'-O0' } /
     lvl'g' { fl'-Og' } / {
-      cxx'-DNDEBUG',
+      flag'-DNDEBUG',
       lvl'size' { fl'-Os' } /
       lvl'fast' { fl'-Ofast' } /
       lvl'1' { fl'-O1' } /
@@ -159,7 +162,7 @@ return Or(gcc, clang) {
 
   opt'whole_program' {
     lvl'off' {
-      cxx'-fno-whole-program',
+      flag'-fno-whole-program',
       clang(3,9) { fl'-fno-whole-program-vtables' }
     } /
     {
@@ -187,9 +190,9 @@ return Or(gcc, clang) {
 
   opt'pedantic' {
     -lvl'off' {
-      cxx'-pedantic',
+      flag'-pedantic',
       lvl'as_error' {
-        cxx'-pedantic-errors',
+        flag'-pedantic-errors',
       },
     },
   },
@@ -197,11 +200,11 @@ return Or(gcc, clang) {
   opt'stack_protector' {
     lvl'off' {
       fl'-Wno-stack-protector',
-      cxx'-U_FORTIFY_SOURCE'
+      flag'-U_FORTIFY_SOURCE'
     } /
     {
-      cxx'-D_FORTIFY_SOURCE=2',
-      cxx'-Wstack-protector',
+      flag'-D_FORTIFY_SOURCE=2',
+      flag'-Wstack-protector',
       lvl'strong' {
         gcc(4,9) {
           fl'-fstack-protector-strong',
@@ -230,22 +233,22 @@ return Or(gcc, clang) {
   opt'pie' {
     lvl'off'{ link'-no-pic', } /
     lvl'on' { link'-pie', } /
-    lvl'pic'{ cxx'-fPIC', },
+    lvl'pic'{ flag'-fPIC', },
   },
 
   opt'suggestions' {
     -lvl'off' {
       gcc {
-        cxx'-Wsuggest-attribute=pure',
-        cxx'-Wsuggest-attribute=const',
+        flag'-Wsuggest-attribute=pure',
+        flag'-Wsuggest-attribute=const',
       }*
       vers(5) {
-        cxx'-Wsuggest-final-types',
-        cxx'-Wsuggest-final-methods',
-     -- cxx'-Wsuggest-attribute=format',
+        flag'-Wsuggest-final-types',
+        flag'-Wsuggest-final-methods',
+     -- flag'-Wsuggest-attribute=format',
       }*
       vers(5,1) {
-        cxx'-Wnoexcept',
+        flag'-Wnoexcept',
       },
     },
   },
@@ -274,59 +277,69 @@ return Or(gcc, clang) {
   },
 
   opt'shadow_warnings' {
-    lvl'off' { cxx'-Wno-shadow', clang(8) { cxx'-Wno-shadow-field' } } /
-    lvl'on' { cxx'-Wshadow' } /
+    lvl'off' { flag'-Wno-shadow', clang(8) { flag'-Wno-shadow-field' } } /
+    lvl'on' { flag'-Wshadow' } /
     lvl'all' {
-      clang { cxx'-Wshadow-all', } /
-      cxx'-Wshadow'
+      clang { flag'-Wshadow-all', } /
+      flag'-Wshadow'
     } /
     gcc(7,1) {
       lvl'local' {
-        cxx'-Wshadow=local'
+        flag'-Wshadow=local'
       } /
       lvl'compatible_local' {
-        cxx'-Wshadow=compatible-local'
+        flag'-Wshadow=compatible-local'
       }
     }
   },
 
   opt'warnings' {
     lvl'off' {
-      cxx'-w'
+      flag'-w'
     } / {
       gcc {
-        cxx'-Wall',
-        cxx'-Wextra',
-        cxx'-Wcast-align',
-        cxx'-Wcast-qual',
-        cxx'-Wdisabled-optimization',
-        cxx'-Wfloat-equal',
-        cxx'-Wformat-security',
-        cxx'-Wformat=2',
-        cxx'-Wmissing-declarations',
-        cxx'-Wmissing-include-dirs',
+        flag'-Wall',
+        flag'-Wextra',
+        flag'-Wcast-align=strict',
+        flag'-Wcast-qual',
+        flag'-Wdisabled-optimization',
+        flag'-Wfloat-equal',
+        flag'-Wformat-security',
+        flag'-Wformat=2',
+        flag'-Wmissing-declarations',
+        flag'-Wmissing-include-dirs',
+     -- flag'-Weffc++',
+        flag'-Wpacked',
+        flag'-Wredundant-decls',
+        flag'-Wundef',
+        flag'-Wunused-macros',
+     -- flag'-Winline',
+     -- flag'-Wswitch-default',
+     -- flag'-Wswitch-enum',
+        flag'-Winvalid-pch',
+        flag'-Wpointer-arith',
         cxx'-Wnon-virtual-dtor',
         cxx'-Wold-style-cast',
         cxx'-Woverloaded-virtual',
-     -- cxx'-Weffc++',
-        cxx'-Wpacked',
-        cxx'-Wredundant-decls',
-        cxx'-Wundef',
-        cxx'-Wunused-macros',
-     -- cxx'-Winline',
-     -- cxx'-Wswitch-default',
-     -- cxx'-Wswitch-enum',
+        c'-Wbad-function-cast',
+        c'-Winit-self', -- enabled by -Wall in C++
+        c'-Wjump-misses-init',
+        c'-Wmissing-prototypes',
+        c'-Wnested-externs',
+        c'-Wold-style-definition',
+        c'-Wstrict-prototypes',
+        c'-Wwrite-strings',
       }*
 
       vers(4,7) {
-        cxx'-Wsuggest-attribute=noreturn',
+        flag'-Wsuggest-attribute=noreturn',
         cxx'-Wzero-as-null-pointer-constant',
-        cxx'-Wlogical-op',
-     -- cxx'-Wno-aggressive-loop-optimizations',
-     -- cxx'-Wnormalized=nfc',
-        cxx'-Wvector-operation-performance',
-        cxx'-Wdouble-promotion',
-        cxx'-Wtrampolines', -- C only with a nested function ?
+        flag'-Wlogical-op',
+     -- flag'-Wno-aggressive-loop-optimizations',
+     -- flag'-Wnormalized=nfc',
+        flag'-Wvector-operation-performance',
+        flag'-Wdouble-promotion',
+        flag'-Wtrampolines', -- C only with a nested function ?
       }*
 
       vers(4,8) {
@@ -335,21 +348,21 @@ return Or(gcc, clang) {
 
       vers(4,9) {
         cxx'-Wconditionally-supported',
-        cxx'-Wfloat-conversion',
+        flag'-Wfloat-conversion',
       }*
 
       vers(5,1) {
-        cxx'-Wformat-signedness',
-        cxx'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
-        cxx'-Wconditionally-supported',
-     -- cxx'-Wctor-dtor-privacy',
+        flag'-Wformat-signedness',
+        flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
+        flag'-Wconditionally-supported',
+     -- flag'-Wctor-dtor-privacy',
         cxx'-Wstrict-null-sentinel',
         cxx'-Wsuggest-override',
       }*
 
       vers(6,1) {
-        cxx'-Wduplicated-cond',
-        cxx'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
+        flag'-Wduplicated-cond',
+        flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
       }*
 
       vers(7) {
@@ -357,12 +370,12 @@ return Or(gcc, clang) {
       }*
 
       vers(7,1) {
-        cxx'-Walloc-zero',
-        cxx'-Walloca',
-        cxx'-Wformat-overflow=2',
-     -- cxx'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
-     -- cxx'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
-        cxx'-Wduplicated-branches',
+        flag'-Walloc-zero',
+        flag'-Walloca',
+        flag'-Wformat-overflow=2',
+     -- flag'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
+     -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
+        flag'-Wduplicated-branches',
       }*
 
       vers(8) {
@@ -370,21 +383,21 @@ return Or(gcc, clang) {
       }
 
       / clang {
-        cxx'-Weverything',
-     -- cxx'-Wno-documentation-unknown-command',
-     -- cxx'-Wno-range-loop-analysis',
-     -- cxx'-Wno-disabled-macro-expansion',
+        flag'-Weverything',
+     -- flag'-Wno-documentation-unknown-command',
+     -- flag'-Wno-range-loop-analysis',
+     -- flag'-Wno-disabled-macro-expansion',
         cxx'-Wno-c++98-compat',
         cxx'-Wno-c++98-compat-pedantic',
-        cxx'-Wno-mismatched-tags',
-        cxx'-Wno-padded',
-        cxx'-Wno-global-constructors',
+        flag'-Wno-mismatched-tags',
+        flag'-Wno-padded',
+        flag'-Wno-global-constructors',
         cxx'-Wno-weak-vtables',
         cxx'-Wno-exit-time-destructors',
-        cxx'-Wno-covered-switch-default',
+        flag'-Wno-covered-switch-default',
      -- cxx'-Qunused-arguments',
-        cxx'-Wno-switch-default',
-        cxx'-Wno-switch-enum',
+        flag'-Wno-switch-default',
+        flag'-Wno-switch-enum',
         vers(3,9) {
           cxx'-Wno-undefined-var-template',
         },
@@ -394,12 +407,12 @@ return Or(gcc, clang) {
       },
 
       Or(lvl'strict', lvl'very_strict') {
-        cxx'-Wconversion',
-        gcc(8) { cxx'-Wcast-align=strict', }
+        flag'-Wconversion',
+        gcc(8) { flag'-Wcast-align=strict', }
       } /
       clang {
-        cxx'-Wno-conversion',
-        cxx'-Wno-sign-conversion',
+        flag'-Wno-conversion',
+        flag'-Wno-sign-conversion',
       },
     },
   },
@@ -412,9 +425,9 @@ return Or(gcc, clang) {
         vers(3,1) {
           fl'-fsanitize=undefined',
           fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          cxx'-fsanitize-address-use-after-scope',
-          cxx'-fno-omit-frame-pointer',
-          cxx'-fno-optimize-sibling-calls',
+          flag'-fsanitize-address-use-after-scope',
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
         }*
         vers(3,4) {
           fl'-fsanitize=leak', -- requires the address sanitizer
@@ -427,16 +440,16 @@ return Or(gcc, clang) {
       {
         vers(4,8) {
           fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          cxx'-fno-omit-frame-pointer',
-          cxx'-fno-optimize-sibling-calls',
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
         }*
         vers(4,9) {
           fl'-fsanitize=undefined',
           fl'-fsanitize=leak', -- requires the address sanitizer
         }*
         vers(6) {
-          cxx'-fsanitize=bounds',
-          cxx'-fsanitize=bounds-strict',
+          flag'-fsanitize=bounds',
+          flag'-fsanitize=bounds-strict',
         }
       },
     },
@@ -444,24 +457,24 @@ return Or(gcc, clang) {
 
   opt'control_flow' {
     lvl'off' {
-      gcc(8) { cxx'-fcf-protection=none' } /
+      gcc(8) { flag'-fcf-protection=none' } /
       clang { fl'-fno-sanitize=cfi' },
     } /
     {
       gcc(8) {
-        -- cxx'-mcet',
-        cxx'-fcf-protection=full' --  full|branch|return|none
+        -- flag'-mcet',
+        flag'-fcf-protection=full' --  full|branch|return|none
       } /
       And(lvl'allow_bugs', clang) {
         fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
-        cxx'-fvisibility=hidden',
+        flag'-fvisibility=hidden',
         fl'-flto',
       },
     },
   },
 
   opt'sanitizers_extra' {
-    lvl'thread' { cxx'-fsanitize=thread', } /
+    lvl'thread' { flag'-fsanitize=thread', } /
     lvl'pointer' {
       gcc(8) {
         -- By default the check is disabled at run time.
@@ -470,23 +483,23 @@ return Or(gcc, clang) {
         -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
         -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
         -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
-        cxx'-fsanitize=pointer-compare',
-        cxx'-fsanitize=pointer-subtract',
+        flag'-fsanitize=pointer-compare',
+        flag'-fsanitize=pointer-subtract',
       }
     }
   },
 
   opt'reproducible_build_warnings' {
     gcc(4,9) {
-      lvl'on' { cxx'-Wdate-time' } / cxx'-Wno-date-time'
+      lvl'on' { flag'-Wdate-time' } / flag'-Wno-date-time'
     }
   },
 
   opt'color' {    
     Or(gcc(4,9), clang) {
-      lvl'auto' { cxx'-fdiagnostics-color=auto' } /
-      lvl'never' { cxx'-fdiagnostics-color=never' } /
-      lvl'always' { cxx'-fdiagnostics-color=always' },
+      lvl'auto' { flag'-fdiagnostics-color=auto' } /
+      lvl'never' { flag'-fdiagnostics-color=never' } /
+      lvl'always' { flag'-fdiagnostics-color=always' },
     },
   },
 
@@ -500,7 +513,7 @@ return Or(gcc, clang) {
   },
 
   opt'exceptions' {
-    lvl'on' { cxx'-fexceptions', } / cxx'-fno-exceptions',
+    lvl'on' { flag'-fexceptions', } / flag'-fno-exceptions',
   },
 
   opt'rtti' {
@@ -516,43 +529,43 @@ return Or(gcc, clang) {
   opt'diagnostics_format' {
     lvl'fixits' {
       Or(gcc(7), clang(5)) {
-        cxx'-fdiagnostics-parseable-fixits'
+        flag'-fdiagnostics-parseable-fixits'
       }
     } /
     lvl'patch' {
-      gcc(7) { cxx'-fdiagnostics-generate-patch' }
+      gcc(7) { flag'-fdiagnostics-generate-patch' }
     } /
     lvl'print_source_range_info' {
-      clang { cxx'-fdiagnostics-print-source-range-info' }
+      clang { flag'-fdiagnostics-print-source-range-info' }
     }
   },
 
   opt'warnings_as_error' {
-    lvl'on' { cxx'-Werror', } /
+    lvl'on' { flag'-Werror', } /
     lvl'basic' {
-      cxx'-Werror=non-virtual-dtor',
-      cxx'-Werror=return-type',
-      cxx'-Werror=init-self',
+      flag'-Werror=non-virtual-dtor',
+      flag'-Werror=return-type',
+      flag'-Werror=init-self',
       gcc(5,1) {
-        cxx'-Werror=array-bounds',
-        cxx'-Werror=logical-op',
-        cxx'-Werror=logical-not-parentheses',
+        flag'-Werror=array-bounds',
+        flag'-Werror=logical-op',
+        flag'-Werror=logical-not-parentheses',
       } /
       clang {
-        cxx'-Werror=array-bounds',
-        cxx'-Werror=division-by-zero',
+        flag'-Werror=array-bounds',
+        flag'-Werror=division-by-zero',
         vers(3,4) {
-          cxx'-Werror=logical-not-parentheses',
+          flag'-Werror=logical-not-parentheses',
         }*
         vers(3,6) {
-          cxx'-Werror=delete-incomplete',
+          flag'-Werror=delete-incomplete',
         }*
         vers(7) {
-          cxx'-Werror=dynamic-class-memaccess',
+          flag'-Werror=dynamic-class-memaccess',
         }
       }
     } /
-    cxx'-Wno-error',
+    flag'-Wno-error',
   }
 } /
 
@@ -560,118 +573,116 @@ return Or(gcc, clang) {
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically?view=vs-2019
 msvc {
   opt'stl_fix' {
-    lvl'on' { cxx'/DNOMINMAX', },
+    lvl'on' { flag'/DNOMINMAX', },
   },
 
   opt'debug' {
-    lvl'off' { cxx'/DEBUG:NONE' } / {
-      cxx'/RTC1',
-      cxx'/Od',
-      lvl'on' { cxx'/DEBUG' } / -- /DEBUG:FULL
-      lvl'line_tables_only' { cxx'/DEBUG:FASTLINK' },
-      opt'optimization' { lvl'g' { cxx'/Zi' } / cxx'/ZI' } / cxx'/ZI',
+    lvl'off' { flag'/DEBUG:NONE' } / {
+      flag'/RTC1',
+      flag'/Od',
+      lvl'on' { flag'/DEBUG' } / -- /DEBUG:FULL
+      lvl'line_tables_only' { flag'/DEBUG:FASTLINK' },
+      opt'optimization' { lvl'g' { flag'/Zi' } / flag'/ZI' } / flag'/ZI',
     }
   },
 
   opt'exceptions'{
-    lvl'on' { cxx'/EHc' } / { cxx'/EHc-' }
+    lvl'on' { flag'/EHc' } / { flag'/EHc-' }
   },
 
   opt'optimization' {
-    lvl'0' { cxx'/Ob0 /Od /Oi- /Oy-' } /
-    lvl'g' { cxx'/Ob1' } / {
-      cxx'/DNDEBUG',
+    lvl'0' { flag'/Ob0 /Od /Oi- /Oy-' } /
+    lvl'g' { flag'/Ob1' } / {
+      flag'/DNDEBUG',
       -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
       -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-      lvl'1' { cxx'/01', } /
-      lvl'2' { cxx'/O2', link'/OPT:REF', } /
-      lvl'3' { cxx'/O2', link'/OPT:REF', } /
-      lvl'size' { cxx'/O1', link'/OPT:REF', cxx'/Gw' } /
-      lvl'fast' { cxx'/O2', link'/OPT:REF', cxx'/fp:fast' }
+      lvl'1' { flag'/01', } /
+      lvl'2' { flag'/O2', link'/OPT:REF', } /
+      lvl'3' { flag'/O2', link'/OPT:REF', } /
+      lvl'size' { flag'/O1', link'/OPT:REF', flag'/Gw' } /
+      lvl'fast' { flag'/O2', link'/OPT:REF', flag'/fp:fast' }
     }
   },
 
   opt'lto' {
-    lvl'off' { cxx'/LTCG:OFF' } /
-    { cxx'/GL', link'/LTCG' }
+    lvl'off' { flag'/LTCG:OFF' } /
+    { flag'/GL', link'/LTCG' }
   },
 
   opt'whole_program' {
-    lvl'off' { cxx'/GL-' } /
-    { cxx'/GL', cxx'/Gw', link'/LTCG' }
+    lvl'off' { flag'/GL-' } /
+    { flag'/GL', flag'/Gw', link'/LTCG' }
   },
 
   opt'pedantic' {
     -lvl'off' {
-      cxx'/permissive-', -- implies /Zc:rvaluecast, /Zc:strictstrings, /Zc:ternary, /Zc:twoPhase
+      flag'/permissive-', -- implies /Zc:rvaluecast, /Zc:strictstrings, /Zc:ternary, /Zc:twoPhase
       cxx'/Zc:__cplusplus',
       -- cxx'/Zc:throwingNew',
     }
   },
 
   opt'rtti' {
-    lvl'on' { cxx'/GR' } / { cxx'/GR-' }
+    lvl'on' { flag'/GR' } / { flag'/GR-' }
   },
 
   opt'stl_debug' {
     lvl'off' { 
-      cxx'/D_HAS_ITERATOR_DEBUGGING=0'
+      flag'/D_HAS_ITERATOR_DEBUGGING=0'
     } / {
-      cxx'/D_DEBUG', -- set by /MDd /MTd or /LDd
-      cxx'/D_HAS_ITERATOR_DEBUGGING=1',
+      flag'/D_DEBUG', -- set by /MDd /MTd or /LDd
+      flag'/D_HAS_ITERATOR_DEBUGGING=1',
     }
   },
 
   opt'control_flow' {
-    lvl'off' { cxx'/guard:cf-', } /
-    cxx'/guard:cf',
+    lvl'off' { flag'/guard:cf-', } /
+    flag'/guard:cf',
   },
 
   opt'sanitizers' {
     lvl'on' {
-      cxx'/sdl',
+      flag'/sdl',
     } /
     opt'stack_protector' {
-      -lvl'off' { cxx'/sdl-' },
+      -lvl'off' { flag'/sdl-' },
     },
   },
 
   opt'stack_protector' {
     -lvl'off' {
-      cxx'/GS',
-      cxx'/sdl',
-      lvl'strong' { cxx'/RTC1', } / -- /RTCsu
-      lvl'all' { cxx'/RTC1', cxx'/RTCc', },
+      flag'/GS',
+      flag'/sdl',
+      lvl'strong' { flag'/RTC1', } / -- /RTCsu
+      lvl'all' { flag'/RTC1', flag'/RTCc', },
     },
   },
 
   opt'shadow_warnings' {
     lvl'off' {
-      cxx'/wd4456', cxx'/wd4459'
+      flag'/wd4456', flag'/wd4459'
     } /
     Or(lvl'on', lvl'all') {
-      cxx'/w4456', cxx'/w4459'
+      flag'/w4456', flag'/w4459'
     } /
     lvl 'local' {
-      cxx'/w4456', cxx'/wd4459'
+      flag'/w4456', flag'/wd4459'
     }
   },
 
   opt'warnings' {
-    lvl'on' { cxx'/W4', cxx'/wd4244', cxx'/wd4245' } /
-    lvl'strict' { cxx'/Wall', cxx'/wd4820', cxx'/wd4514', cxx'/wd4710' } /
-    lvl'very_strict' { cxx'/Wall' } /
-    lvl'off' { cxx'/W0' },
+    lvl'on' { flag'/W4', flag'/wd4244', flag'/wd4245' } /
+    lvl'strict' { flag'/Wall', flag'/wd4820', flag'/wd4514', flag'/wd4710' } /
+    lvl'very_strict' { flag'/Wall' } /
+    lvl'off' { flag'/W0' },
   },
 
   opt'warnings_as_error' {
     lvl'on' { fl'/WX' } /
-    lvl'off' { cxx'/WX-' }
+    lvl'off' { flag'/WX-' }
   },
 }
 end -- MakeAST
-
-function noop() end
 
 function create_ordered_keys(t)
   local ordered_keys = {}
@@ -1074,6 +1085,7 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
     insert_missing_function(V)
   end
 
+  V.is_C = is_C
   evalflags(MakeAST(is_C), V)
 
   local out = V:stop(filebase)

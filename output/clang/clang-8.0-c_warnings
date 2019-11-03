@@ -1,0 +1,6 @@
+-pedantic
+-Weverything
+-Wno-conversion
+-Wno-shadow
+-Wno-shadow-field
+-Wno-sign-conversion

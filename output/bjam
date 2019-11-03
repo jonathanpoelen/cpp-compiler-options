@@ -324,6 +324,9 @@ rule jln_flags ( properties * )
             }
           }
         }
+        flags +=
+          <cxxflags>"-Werror=write-strings"
+        ;
       }
       else if $(toolset) = "clang"
       {
@@ -874,7 +877,7 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>"-Wall"
             <cxxflags>"-Wextra"
-            <cxxflags>"-Wcast-align"
+            <cxxflags>"-Wcast-align=strict"
             <cxxflags>"-Wcast-qual"
             <cxxflags>"-Wdisabled-optimization"
             <cxxflags>"-Wfloat-equal"
@@ -882,13 +885,15 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wformat=2"
             <cxxflags>"-Wmissing-declarations"
             <cxxflags>"-Wmissing-include-dirs"
-            <cxxflags>"-Wnon-virtual-dtor"
-            <cxxflags>"-Wold-style-cast"
-            <cxxflags>"-Woverloaded-virtual"
             <cxxflags>"-Wpacked"
             <cxxflags>"-Wredundant-decls"
             <cxxflags>"-Wundef"
             <cxxflags>"-Wunused-macros"
+            <cxxflags>"-Winvalid-pch"
+            <cxxflags>"-Wpointer-arith"
+            <cxxflags>"-Wnon-virtual-dtor"
+            <cxxflags>"-Wold-style-cast"
+            <cxxflags>"-Woverloaded-virtual"
           ;
           if ! (  $(version) < "04.07"  )
           {

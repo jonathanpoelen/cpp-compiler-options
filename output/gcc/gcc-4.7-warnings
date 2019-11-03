@@ -1,6 +1,6 @@
 -pedantic
 -Wall
--Wcast-align
+-Wcast-align=strict
 -Wcast-qual
 -Wdisabled-optimization
 -Wdouble-promotion
@@ -8,6 +8,7 @@
 -Wfloat-equal
 -Wformat=2
 -Wformat-security
+-Winvalid-pch
 -Wlogical-op
 -Wmissing-declarations
 -Wmissing-include-dirs
@@ -16,6 +17,7 @@
 -Wold-style-cast
 -Woverloaded-virtual
 -Wpacked
+-Wpointer-arith
 -Wredundant-decls
 -Wsuggest-attribute=noreturn
 -Wtrampolines

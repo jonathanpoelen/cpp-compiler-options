@@ -1,7 +1,7 @@
 -pedantic
 -Wall
 -Warray-bounds=2
--Wcast-align
+-Wcast-align=strict
 -Wcast-qual
 -Wconditionally-supported
 -Wconversion
@@ -14,6 +14,7 @@
 -Wformat=2
 -Wformat-security
 -Wformat-signedness
+-Winvalid-pch
 -Wlogical-op
 -Wmissing-declarations
 -Wmissing-include-dirs
@@ -23,6 +24,7 @@
 -Wold-style-cast
 -Woverloaded-virtual
 -Wpacked
+-Wpointer-arith
 -Wredundant-decls
 -Wstrict-null-sentinel
 -Wsuggest-attribute=noreturn

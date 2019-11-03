@@ -45,17 +45,18 @@ sgen ()
 
 gen ()
 {
-  out="-o$OUTPUT_DIR/$1"
-  f=generators/$2.lua
+  local out="-o$OUTPUT_DIR/$1"
+  local f=generators/$2.lua
   shift 2
   $LUA_BIN ./compiler-options.lua "$out" $f "$@"
 }
 
 gencompopt ()
 {
-  out="$OUTPUT_DIR/$compname/$2-$1"
-  shift 1
-  $LUA_BIN ./compiler-options.lua generators/compiler.lua "$@" | sort -u > "$out"
+  local extra_arg=$1
+  local out="$OUTPUT_DIR/$compname/$3-$2"
+  shift 2
+  $LUA_BIN ./compiler-options.lua $extra_arg generators/compiler.lua "$@" | sort -u > "$out"
 }
 
 # check options
@@ -67,15 +68,17 @@ done
 
 sgen compiler | while read comp ; do
   compname=${comp/-*}
-  gencompopt release                       $comp cpu=native lto optimization=2 linker=gold
-  gencompopt warnings                      $comp shadow_warnings=off stl_fix warnings pedantic
-  gencompopt warnings_strict               $comp shadow_warnings=off stl_fix warnings=strict pedantic
-  gencompopt stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
-  gencompopt stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
-  gencompopt sanitizers-pointer            $comp sanitizers_extra=pointer
-  gencompopt template_tree                 $comp elide_type=off diagnostics_show_template_tree=on
+  gencompopt ''   release                       $comp cpu=native lto optimization=2 linker=gold
+  gencompopt ''   warnings                      $comp shadow_warnings=off stl_fix warnings pedantic
+  gencompopt ''   warnings_strict               $comp shadow_warnings=off stl_fix warnings=strict pedantic
+  gencompopt '-c' c_warnings                    $comp shadow_warnings=off warnings pedantic
+  gencompopt '-c' c_warnings_strict             $comp shadow_warnings=off warnings=strict pedantic
+  gencompopt ''   stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
+  gencompopt ''   stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
+  gencompopt ''   sanitizers-pointer            $comp sanitizers_extra=pointer
+  gencompopt ''   template_tree                 $comp elide_type=off diagnostics_show_template_tree=on
   for g in suggestions stl_debug debug sanitizers ; do
-    gencompopt $g $comp $g
+    gencompopt '' $g $comp $g
   done
 done
 
