@@ -2,8 +2,27 @@ return {
   knwon_opts = {},
   errors = {},
 
-  start=function(_, show_profile, color)
-    show_profile, color = (show_profile == '--profile' or color == '--profile'), (show_profile == '--color' or color == '--color')
+  start=function(_, ...)
+    local show_profile, color
+    local help = function()
+      print(_.generator_name .. ' [-h] [--profile] [--color]')
+      return false
+    end
+    local cli = {
+      ['--profile']=function() show_profile=true end,
+      ['--color']=function() color=true end,
+      ['-h']=help,
+      ['--help']=help,
+    }
+    for _,v in ipairs({...}) do
+      local opt = cli[v]
+      if not opt then
+        return help()
+      end
+      if opt() == false then
+        return false
+      end
+    end
 
     local knwon_opts = _.knwon_opts
     local add_opt = function(optname, args)
@@ -16,15 +35,15 @@ return {
 
     if color then
       local color_map = {
-        on='\x1b[32m',
-        off='\x1b[31m',
-        default='\x1b[37m',
+        on='\027[32m',
+        off='\027[31m',
+        default='\027[37m',
       }
-      color_map[0] = '\x1b[34m'
-      color_map[1] = '\x1b[35m'
+      color_map[0] = '\027[34m'
+      color_map[1] = '\027[35m'
       local color_size = 2
       for optname, args, default_value, ordered_args in _:getoptions() do
-        local str, ic = optname .. ' \x1b[37m=', 0
+        local str, ic = optname .. ' \027[37m=', 0
         for i,x in ipairs(ordered_args) do
           local c = color_map[x]
           if not c then
@@ -32,10 +51,10 @@ return {
             ic = ic + 1
           end
           str = str .. ' ' .. (i == 1
-            and (c:sub(0,-2) .. ';7m' .. x .. '\x1b[0m')
+            and (c:sub(0,-2) .. ';7m' .. x .. '\027[0m')
             or (c .. x))
         end
-        print(str .. '\x1b[0m')
+        print(str .. '\027[0m')
         add_opt(optname, args)
       end
     else

@@ -1076,6 +1076,7 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
   end
 
   V.is_C = is_C
+  V.generator_name = generator_name
   local r = V:start(...)
   if r == false then
     os.exit(1)

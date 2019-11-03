@@ -61,7 +61,7 @@ return {
     end
     local has_help = is_help(compiler)
     if not has_help then
-      for k,v in pairs(arg) do
+      for k,v in pairs({...}) do
         has_help = is_help(v)
         if has_help then
           break
@@ -69,8 +69,8 @@ return {
       end
     end
     if has_help then
-      print(arg[0] .. ' [-h] | [ {compiler|compiler-version} [[{+|-}]{option}[={level}] ...]] ]')
-      print('\nsample:\n  ' .. arg[0] .. ' ' .. arg[1] .. ' gcc warnings=strict')
+      print(_.generator_name .. ' [-h] | [ {compiler|compiler-version} [[{+|-}]{option}[={level}] ...]] ]')
+      print('\nsample:\n  ' .. _.generator_name .. ' gcc warnings=strict')
       print('\nBy default:')
       local lines={}
       for k,v in pairs(_.d.opts) do
