@@ -926,13 +926,6 @@ rule jln_c_flags ( properties * )
                 <cflags>"-fsanitize=leak"
                 <linkflags>"-fsanitize=leak"
               ;
-              if ! (  $(version) < "06.00"  )
-              {
-                flags +=
-                  <cflags>"-fsanitize=bounds"
-                  <linkflags>"-fsanitize=bounds"
-                ;
-              }
             }
           }
         }
@@ -954,13 +947,6 @@ rule jln_c_flags ( properties * )
                 <linkflags>"-fsanitize=undefined"
                 <linkflags>"-fsanitize=leak"
               ;
-              if ! (  $(version) < "06.00"  )
-              {
-                flags +=
-                  <cflags>"-fsanitize=bounds"
-                  <cflags>"-fsanitize=bounds-strict"
-                ;
-              }
             }
           }
         }

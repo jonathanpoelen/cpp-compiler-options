@@ -340,10 +340,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
             if (  not ( ___jln_c_compiler_version.version_compare('<3.4') ) )
               jln_c_c_flags += ['-fsanitize=leak', ]
               jln_c_link_flags += ['-fsanitize=leak', ]
-              if (  not ( ___jln_c_compiler_version.version_compare('<6.0') ) )
-                jln_c_c_flags += ['-fsanitize=bounds', ]
-                jln_c_link_flags += ['-fsanitize=bounds', ]
-              endif
             endif
           endif
         else
@@ -353,9 +349,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
             if (  not ( ___jln_c_compiler_version.version_compare('<4.9') ) )
               jln_c_c_flags += ['-fsanitize=undefined', '-fsanitize=leak', ]
               jln_c_link_flags += ['-fsanitize=undefined', '-fsanitize=leak', ]
-              if (  not ( ___jln_c_compiler_version.version_compare('<6.0') ) )
-                jln_c_c_flags += ['-fsanitize=bounds', '-fsanitize=bounds-strict', ]
-              endif
             endif
           endif
         endif

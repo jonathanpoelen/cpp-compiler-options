@@ -431,9 +431,6 @@ return Or(gcc, clang) {
         }*
         vers(3,4) {
           fl'-fsanitize=leak', -- requires the address sanitizer
-        }*
-        vers(6) {
-          fl'-fsanitize=bounds',
         },
       } /
       -- gcc
@@ -446,10 +443,6 @@ return Or(gcc, clang) {
         vers(4,9) {
           fl'-fsanitize=undefined',
           fl'-fsanitize=leak', -- requires the address sanitizer
-        }*
-        vers(6) {
-          flag'-fsanitize=bounds',
-          flag'-fsanitize=bounds-strict',
         }
       },
     },

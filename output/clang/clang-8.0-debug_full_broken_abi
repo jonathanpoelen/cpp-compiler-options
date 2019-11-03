@@ -4,7 +4,6 @@
 -fno-optimize-sibling-calls
 -fsanitize-address-use-after-scope
 -fsanitize=address
--fsanitize=bounds
 -fsanitize=leak
 -fsanitize=undefined
 -g

@@ -630,10 +630,6 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
             if not ( compversion < 304 ) then
               jln_buildoptions = jln_buildoptions .. " -fsanitize=leak"
               jln_linkoptions = jln_linkoptions .. " -fsanitize=leak"
-              if not ( compversion < 600 ) then
-                jln_buildoptions = jln_buildoptions .. " -fsanitize=bounds"
-                jln_linkoptions = jln_linkoptions .. " -fsanitize=bounds"
-              end
             end
           end
         else
@@ -643,9 +639,6 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
             if not ( compversion < 409 ) then
               jln_buildoptions = jln_buildoptions .. " -fsanitize=undefined -fsanitize=leak"
               jln_linkoptions = jln_linkoptions .. " -fsanitize=undefined -fsanitize=leak"
-              if not ( compversion < 600 ) then
-                jln_buildoptions = jln_buildoptions .. " -fsanitize=bounds -fsanitize=bounds-strict"
-              end
             end
           end
         end
