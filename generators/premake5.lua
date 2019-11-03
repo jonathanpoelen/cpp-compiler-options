@@ -34,7 +34,9 @@ return {
       end
     end
 
-    _:print('\nfunction jln_newoptions(defaults)')
+    local prefixfunc = _.is_C and 'jln_c' or 'jln'
+
+    _:print('\nfunction ' .. prefixfunc .. '_newoptions(defaults)')
     _:print('  if defaults then')
     _:print('    jln_check_flag_names(defaults)')
     _:print('  else')
@@ -50,7 +52,7 @@ return {
     _:print('end\n')
 
     _:print([[
-function jln_check_flag_names(t)
+function ]] .. prefixfunc .. [[_check_flag_names(t)
   for k in pairs(t) do
     if not _jln_flag_names[k] then
       error("unknown '" .. k .. "' jln flag name")
@@ -59,7 +61,7 @@ function jln_check_flag_names(t)
 end
 
 -- same as jln_getoptions
-function jln_setoptions(compiler, version, values, disable_others, print_compiler)
+function ]] .. prefixfunc .. [[_setoptions(compiler, version, values, disable_others, print_compiler)
   local options = jln_getoptions(compiler, version, values, disable_others, print_compiler)
   buildoptions(options.buildoptions)
   linkoptions(options.linkoptions)
@@ -75,7 +77,7 @@ end
 -- `disable_others`: boolean
 -- `print_compiler`: boolean
 -- return {buildoptions=string, linkoptions=string}
-function jln_getoptions(compiler, version, values, disable_others, print_compiler)
+function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_others, print_compiler)
   if compiler and type(compiler) ~= 'string' then
     values, disable_others, print_compiler, compiler, version = compiler, version, values, nil, nil
   end
@@ -170,6 +172,6 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
   end,
 
   stop=function(_)
-    return _:get_output() .. '  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\nreturn m\n'
+    return _:get_output() .. '  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\n'
   end,
 }

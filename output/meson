@@ -40,9 +40,9 @@ ___jln_flags = {
 jln_custom_cpp_flags = []
 jln_custom_link_flags = []
 
-___jln_cpp_compiler = meson.get_compiler('cpp')
-___jln_compiler_id = ___jln_cpp_compiler.get_id()
-___jln_compiler_version = ___jln_cpp_compiler.version()
+___jln_compiler = meson.get_compiler('cpp')
+___jln_compiler_id = ___jln_compiler.get_id()
+___jln_compiler_version = ___jln_compiler.version()
 
 ___jln_custom_flags = get_variable('jln_custom_flags', []) + [___jln_flags]
 

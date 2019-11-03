@@ -1075,6 +1075,7 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
     V.ignore[name] = true
   end
 
+  V.is_C = is_C
   local r = V:start(...)
   if r == false then
     os.exit(1)
@@ -1085,7 +1086,6 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
     insert_missing_function(V)
   end
 
-  V.is_C = is_C
   evalflags(MakeAST(is_C), V)
 
   local out = V:stop(filebase)

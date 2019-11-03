@@ -46,12 +46,16 @@ return {
       _:print('set(' .. opt .. ' ${' .. opt .. '} CACHE STRING "")')
     end
 
+    local prefixfunc = _.is_C and 'jln_c' or 'jln'
+    local cvar = _.is_C and 'C_VAR' or 'CXX_VAR'
+    _.cvar = cvar
+
     _:print('\n# init default values')
-    _:print('# jln_init_flags([<jln-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])')
+    _:print('# '.. prefixfunc .. '_init_flags([<'.. prefixfunc .. '-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])')
     _:print('# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)')
-    _:print('# When jln_init_flags() is called without option, AUTO_PROFILE=on.')
+    _:print('# When '.. prefixfunc .. '_init_flags() is called without option, AUTO_PROFILE=on.')
     _:print('#  Otherwise, AUTO_PROFILE=off and `on` value must be explicitly added.')
-    _:print('function(jln_init_flags)')
+    _:print('function('.. prefixfunc .. '_init_flags)')
     _:write('  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE')
     local names = {}
     for optname in _:getoptions() do
@@ -130,18 +134,18 @@ return {
     _:print('  endif()\n')
     _:print('endfunction()\n')
 
-    _:print('# jln_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln-option> <value>]... [DISABLE_OTHERS on|off])')
-    _:print('function(jln_target_interface name type)')
-    _:print('  jln_flags(CXX_VAR cxx LINK_VAR link ${ARGV})')
+    _:print('# '.. prefixfunc .. '_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off])')
+    _:print('function('.. prefixfunc .. '_target_interface name type)')
+    _:print('  '.. prefixfunc .. '_flags(' .. cvar .. ' cxx LINK_VAR link ${ARGV})')
     _:print('  target_link_libraries(${name} ${type} ${link})')
     _:print('  target_compile_options(${name} ${type} ${cxx})')
     _:print('endfunction()\n')
 
-    _:print('# jln_flags(CXX_VAR <out-variable> LINK_VAR <out-variable> [<jln-option> <value>]... [DISABLE_OTHERS on|off])')
-    _:print('function(jln_flags)')
+    _:print('# '.. prefixfunc .. '_flags(' .. cvar .. ' <out-variable> LINK_VAR <out-variable> [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off])')
+    _:print('function('.. prefixfunc .. '_flags)')
     _:print('  set(CXX_FLAGS "")')
     _:print('  set(LINK_LINK "")')
-    _:write('  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "CXX_VAR;LINK_VAR')
+    _:write('  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "' .. cvar .. ';LINK_VAR')
     for optname in _:getoptions() do
        _:write(';' .. optname:upper())
     end
@@ -190,7 +194,7 @@ return {
 
   stop=function(_)
     return _:get_output() .. [[
-set(${JLN_FLAGS_CXX_VAR} ${CXX_FLAGS} PARENT_SCOPE)
+set(${JLN_FLAGS_]] .. _.cvar .. [[} ${CXX_FLAGS} PARENT_SCOPE)
 set(${JLN_FLAGS_LINK_VAR} ${LINK_FLAGS} PARENT_SCOPE)
 endfunction()
 ]]

@@ -5,6 +5,8 @@ return {
 
   indent = '',
 
+  -- is_C = true | false -- set by caller
+
   startopt=function(_, name)
   end,
 

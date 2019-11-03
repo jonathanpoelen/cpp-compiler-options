@@ -99,7 +99,6 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 
 ```cmake
 # cmake -DJLN_FAST_MATH=on
-
 include(output/cmake)
 
 # init default values
@@ -120,6 +119,8 @@ jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS SANITIZERS on)
 
 add_link_options(${LINK_FLAGS})
 add_compile_options(${CXX_FLAGS})
+
+# NOTE: for C, jln_ prefix function becomes jln_c_ and CXX_VAR becomes C_VAR
 ```
 
 
@@ -149,6 +150,8 @@ linkoptions(mylib_options.linkoptions)
 
 -- or equivalent
 jln_setoptions({elide_type='on'})
+
+-- NOTE: for C, jln_ prefix function becomes jln_c_
 ```
 
 
@@ -181,6 +184,8 @@ my_debug_cpp_flags = jln_custom_cpp_flags[1]
 my_debug_link_flags = jln_custom_link_flags[1]
 
 executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flags)
+
+# NOTE: for C, jln_ prefix becomes jln_c_
 ```
 
 
@@ -200,6 +205,8 @@ project name : requirements
 : default-build release ;
 
 exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-relro>off
+
+-- NOTE: for C, jln_flags becomes jln_c_flags
 ```
 
 
@@ -207,14 +214,22 @@ exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-rel
 
 The script below adds 2 aliases with `warnings=on`, `pedantic=on` and `color=always`.
 
-- `gw++` for gcc
-- `cw++` for clang
+- `gw++` for g++
+- `cw++` for clang++
+- `gwcc` for gcc
+- `cwcc` for clang
 
 ```sh
+{
 for comp in g++ clang++ ; do
   version=$($comp --version | sed -E '1!d;s/.*([0-9]\.[0-9]\.[0-9]).*/\1/g')
   echo "alias ${comp:0:1}w++='$comp "$(./compiler-options.lua generators/compiler.lua "$comp-$version" warnings pedantic color=always)\'
-done >> ~/.bashrc
+done
+for comp in gcc clang ; do
+  version=$($comp --version | sed -E '1!d;s/.*([0-9]\.[0-9]\.[0-9]).*/\1/g')
+  echo "alias ${comp:0:1}wcc='$comp "$(./compiler-options.lua -c generators/compiler.lua "$comp-$version" warnings pedantic color=always)\'
+done
+} >> ~/.bashrc
 ```
 
 
@@ -256,12 +271,14 @@ The variable `G` contains the options tree.
 
 ## Update the options tree
 
-- `cxx`, `link`, `fl`
+- `c`, `cxx`, `flag`, `link`, `fl`
 ```lua
-cxx'-Wall'
+c'-Wall' -- C only
+cxx'-Wall' -- C++ only
+flag'-Wall' -- C and C++
 link'-option'
 link'libname' -- alias of link'-llibname'
-fl'xxx' -- is a alias of {cxx'xxx',link'xxx'}
+fl'xxx' -- is a alias of {flag'xxx',link'xxx'}
 ```
 
 The following functions implement the metatable `cond_mt`.

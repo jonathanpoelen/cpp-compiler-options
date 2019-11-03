@@ -45,10 +45,11 @@ sgen ()
 
 gen ()
 {
-  local out="-o$OUTPUT_DIR/$1"
-  local f=generators/$2.lua
-  shift 2
-  $LUA_BIN ./compiler-options.lua "$out" $f "$@"
+  local extra_arg=$1
+  local out="-o$OUTPUT_DIR/$2"
+  local f=generators/$3.lua
+  shift 3
+  $LUA_BIN ./compiler-options.lua $extra_arg "$out" $f "$@"
 }
 
 gencompopt ()
@@ -62,8 +63,12 @@ gencompopt ()
 # check options
 sgen list_options
 
-for g in bjam cmake premake5 meson ; do
-  gen $g $g jln-
+for c_opt in '' '-c' ; do
+  suffix=
+  [ ! -z "$c_opt" ] && suffix=c_
+  for g in bjam cmake premake5 meson ; do
+    gen "$c_opt" $suffix$g $g jln-
+  done
 done
 
 sgen compiler | while read comp ; do
