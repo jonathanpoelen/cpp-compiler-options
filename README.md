@@ -99,7 +99,7 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 
 ```cmake
 # cmake -DJLN_FAST_MATH=on
-include(output/cmake)
+include(output/cmake) # output/c_cmake for C
 
 # init default values
 # jln_init_flags([<jln-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])
@@ -129,7 +129,7 @@ add_compile_options(${CXX_FLAGS})
 ```lua
 -- launch example: premake5 --jln-fast-math=on
 
-include "output/premake5"
+include "output/premake5" -- output/c_premake5 for C
 
 -- Registers new command-line options and set default values
 jln_newoptions({warnings='very_strict'})
@@ -157,7 +157,7 @@ jln_setoptions({elide_type='on'})
 
 ## Meson
 
-Copy `meson_options.txt` and rename `output/meson` to `meson_jln_flags/meson.build`.
+Copy `meson_options.txt` and rename `output/meson` (`output/c_meson` for C) to `meson_jln_flags/meson.build`.
 
 ```meson
 # launch example: meson -Djln_fast_math=on
@@ -194,7 +194,7 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 ```jam
 # launch example: bjam -s jln_fast_math=on
 
-include output/bjam ;
+include output/bjam ; # output/c_bjam for C
 
 # rule jln_flags ( properties * )
 
@@ -212,24 +212,26 @@ exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-rel
 
 ## Bash alias for gcc/clang
 
-The script below adds 2 aliases with `warnings=on`, `pedantic=on` and `color=always`.
+The scripts below add 4 aliases with `warnings=on`, `pedantic=on` and `color=always`.
 
 - `gw++` for g++
 - `cw++` for clang++
-- `gwcc` for gcc
-- `cwcc` for clang
 
 ```sh
-{
 for comp in g++ clang++ ; do
   version=$($comp --version | sed -E '1!d;s/.*([0-9]\.[0-9]\.[0-9]).*/\1/g')
   echo "alias ${comp:0:1}w++='$comp "$(./compiler-options.lua generators/compiler.lua "$comp-$version" warnings pedantic color=always)\'
-done
+done >> ~/.bashrc
+```sh
+
+- `gwcc` for gcc
+- `cwcc` for clang
+
+```
 for comp in gcc clang ; do
   version=$($comp --version | sed -E '1!d;s/.*([0-9]\.[0-9]\.[0-9]).*/\1/g')
   echo "alias ${comp:0:1}wcc='$comp "$(./compiler-options.lua -c generators/compiler.lua "$comp-$version" warnings pedantic color=always)\'
-done
-} >> ~/.bashrc
+done >> ~/.bashrc
 ```
 
 
