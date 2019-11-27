@@ -2,7 +2,7 @@ Compilation options for different versions of Clang, GCC and MSVC. Provided a ge
 
 The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
-$ `g++ @output/gcc/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
+$ `g++ @output/cpp/gcc/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 
 > <stdin>:1:10: warning: zero as null pointer constant \[-Wzero-as-null-pointer-constant]
 
@@ -99,7 +99,7 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 
 ```cmake
 # cmake -DJLN_FAST_MATH=on
-include(output/cmake) # output/c_cmake for C
+include(output/cpp/cmake)
 
 # init default values
 # jln_init_flags([<jln-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])
@@ -129,7 +129,7 @@ add_compile_options(${CXX_FLAGS})
 ```lua
 -- launch example: premake5 --jln-fast-math=on
 
-include "output/premake5" -- output/c_premake5 for C
+include "output/cpp/premake5"
 
 -- Registers new command-line options and set default values
 jln_newoptions({warnings='very_strict'})
@@ -157,7 +157,7 @@ jln_setoptions({elide_type='on'})
 
 ## Meson
 
-Copy `meson_options.txt` and rename `output/meson` (`output/c_meson` for C) to `meson_jln_flags/meson.build`.
+Copy `meson_options.txt` and rename `output/cpp/meson` to `meson_jln_flags/meson.build`.
 
 ```meson
 # launch example: meson -Djln_fast_math=on
@@ -194,7 +194,7 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 ```jam
 # launch example: bjam -s jln_fast_math=on
 
-include output/bjam ; # output/c_bjam for C
+include output/cpp/bjam ;
 
 # rule jln_flags ( properties * )
 

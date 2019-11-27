@@ -53,7 +53,11 @@ function append_table(t, ...)
 end
 
 function split_lines(s, t)
-  return append_table(t or {}, s:gmatch('[^\n]+'))
+  t = t or {}
+  if s then
+    return append_table(t, s:gmatch('[^\n]+'))
+  end
+  return t
 end
 
 function tokeys(t, tk)
@@ -87,7 +91,9 @@ function create_debug_file(prefix, files_contents)
   local debug_full = tokeys(split_lines(files_contents['stl_debug']), tokeys(lines))
   local debug_full_broken_abi = tokeys(split_lines(files_contents['stl_debug_broken_abi']), lines)
   write_ktable(debug_full, prefix .. 'debug_full')
-  write_ktable(debug_full_broken_abi, prefix .. 'debug_full_broken_abi')
+  if files_contents['stl_debug_broken_abi'] then
+    write_ktable(debug_full_broken_abi, prefix .. 'debug_full_broken_abi')
+  end
   if files_contents['stl_debug_broken_abi'] == files_contents['stl_debug_broken_abi_and_bugs'] then
     remove_file(prefix .. 'stl_debug_broken_abi_and_bugs')
   else

@@ -16,7 +16,7 @@ PROJECT_PATH=$(realpath $(dirname "$0"))/..
 if [ -d "$TMPDIR/$OUTPUT_DIR_NAME" ] ; then
   rm -r -- "$TMPDIR/$OUTPUT_DIR_NAME"/../output
 fi
-mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"/{,clang,gcc,msvc}
+mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"/{c,cpp}/{clang,gcc,msvc}
 
 cd -- "$PROJECT_PATH"
 
@@ -52,43 +52,50 @@ gen ()
   $LUA_BIN ./compiler-options.lua $extra_arg "$out" $f "$@"
 }
 
+OPT_COMP_GEN=('' -c)
+DIR_COMP_GEN=(cpp c)
+
 gencompopt ()
 {
-  local extra_arg=$1
-  local out="$OUTPUT_DIR/$compname/$3-$2"
+  local lang=$1
+  local cat=$2
+  local compiler=$3
+
   shift 2
-  $LUA_BIN ./compiler-options.lua $extra_arg generators/compiler.lua "$@" | sort -u > "$out"
+  for ((i=0; $i<$lang; ++i)) ; do
+    local out="$OUTPUT_DIR/${DIR_COMP_GEN[$i]}/$compname/$compiler-$cat"
+    $LUA_BIN ./compiler-options.lua ${OPT_COMP_GEN[$i]} generators/compiler.lua "$@" | sort -u > "$out"
+  done
 }
 
 # check options
 sgen list_options
 
-for c_opt in '' '-c' ; do
-  suffix=
-  [ ! -z "$c_opt" ] && suffix=c_
+for ((i=0; $i<2; ++i)) ; do
+  suffix=${DIR_COMP_GEN[$i]}
   for g in bjam cmake premake5 meson ; do
-    gen "$c_opt" $suffix$g $g jln-
+    gen "${OPT_COMP_GEN[$i]}" $suffix/$g $g jln-
   done
 done
 
 sgen compiler | while read comp ; do
   compname=${comp/-*}
-  gencompopt ''   release                       $comp cpu=native lto optimization=2 linker=gold
-  gencompopt ''   warnings                      $comp shadow_warnings=off stl_fix warnings pedantic
-  gencompopt ''   warnings_strict               $comp shadow_warnings=off stl_fix warnings=strict pedantic
-  gencompopt '-c' c_warnings                    $comp shadow_warnings=off warnings pedantic
-  gencompopt '-c' c_warnings_strict             $comp shadow_warnings=off warnings=strict pedantic
-  gencompopt ''   stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
-  gencompopt ''   stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
-  gencompopt ''   sanitizers-pointer            $comp sanitizers_extra=pointer
-  gencompopt ''   template_tree                 $comp elide_type=off diagnostics_show_template_tree=on
+  gencompopt 1 release                       $comp cpu=native lto optimization=2 linker=gold
+  gencompopt 2 warnings                      $comp shadow_warnings=off warnings pedantic
+  gencompopt 2 warnings_strict               $comp shadow_warnings=off warnings=strict pedantic
+  gencompopt 1 stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
+  gencompopt 1 stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
+  gencompopt 1 sanitizers-pointer            $comp sanitizers_extra=pointer
+  gencompopt 1 template_tree                 $comp elide_type=off diagnostics_show_template_tree=on
   for g in suggestions stl_debug debug sanitizers ; do
-    gencompopt '' $g $comp $g
+    gencompopt 2 $g $comp $g
   done
 done
 
 echo -e "\n"Duplicated and removed:
-$LUA_BIN "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/" "$OUTPUT_DIR"/{gcc,clang,msvc}/*
+for d in $DIR_COMP_GEN ; do
+  $LUA_BIN "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/$d/" "$OUTPUT_DIR"/$d/{gcc,clang,msvc}/*
+done
 
 echo -e "\n"Empty and removed:
 find "$OUTPUT_DIR" -size 0 -delete -print
