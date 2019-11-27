@@ -243,8 +243,8 @@ return Or(gcc, clang) {
         flag'-Wsuggest-attribute=const',
       }*
       vers(5) {
-        flag'-Wsuggest-final-types',
-        flag'-Wsuggest-final-methods',
+        cxx'-Wsuggest-final-types',
+        cxx'-Wsuggest-final-methods',
      -- flag'-Wsuggest-attribute=format',
       }*
       vers(5,1) {
