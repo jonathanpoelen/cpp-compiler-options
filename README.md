@@ -222,12 +222,12 @@ for comp in g++ clang++ ; do
   version=$($comp --version | sed -E '1!d;s/.*([0-9]\.[0-9]\.[0-9]).*/\1/g')
   echo "alias ${comp:0:1}w++='$comp "$(./compiler-options.lua generators/compiler.lua "$comp-$version" warnings pedantic color=always)\'
 done >> ~/.bashrc
-```sh
+```
 
 - `gwcc` for gcc
 - `cwcc` for clang
 
-```
+```sh
 for comp in gcc clang ; do
   version=$($comp --version | sed -E '1!d;s/.*([0-9]\.[0-9]\.[0-9]).*/\1/g')
   echo "alias ${comp:0:1}wcc='$comp "$(./compiler-options.lua -c generators/compiler.lua "$comp-$version" warnings pedantic color=always)\'
