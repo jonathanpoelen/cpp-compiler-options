@@ -8,13 +8,13 @@ $ `g++ @output/cpp/gcc/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
 
 (`@file` is a special option of gcc and clang)
 
-$ `cmake -DJLN_FAST_MATH=on`
+$ `cmake -DJLN_SANITIZERS=on`
 
-$ `premake5 --jln-fast-math=on`
+$ `premake5 --jln-sanitizers=on`
 
-$ `bjam -s jln_fast_math=on`
+$ `bjam -s jln_sanitizers=on`
 
-$ `meson -Djln_fast_math=on`
+$ `meson -Djln_sanitizers=on`
 
 (`jln` is a parameterizable prefix: `./compiler-options.lua generators/cmake.lua [prefix]`)
 
@@ -98,7 +98,7 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 ## Cmake
 
 ```cmake
-# cmake -DJLN_FAST_MATH=on
+# cmake -DSANITIZERS=on
 include(output/cpp/cmake)
 
 # init default values
@@ -127,7 +127,7 @@ add_compile_options(${CXX_FLAGS})
 ## Premake5
 
 ```lua
--- launch example: premake5 --jln-fast-math=on
+-- launch example: premake5 --jln-sanitizers=on
 
 include "output/cpp/premake5"
 
@@ -160,7 +160,7 @@ jln_setoptions({elide_type='on'})
 Copy `meson_options.txt` and rename `output/cpp/meson` to `meson_jln_flags/meson.build`.
 
 ```meson
-# launch example: meson -Djln_fast_math=on
+# launch example: meson -Djln_sanitizers=on
 # meson --warnlevel=0 forces --Djln_warnings=off
 
 project('test', 'cpp')
@@ -192,7 +192,7 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 ## Bjam/B2 (Boost.Build)
 
 ```jam
-# launch example: bjam -s jln_fast_math=on
+# launch example: bjam -s jln_sanitizers=on
 
 include output/cpp/bjam ;
 
