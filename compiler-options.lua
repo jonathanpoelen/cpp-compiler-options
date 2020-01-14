@@ -398,11 +398,17 @@ return Or(gcc, clang) {
      -- cxx'-Qunused-arguments',
         flag'-Wno-switch-default',
         flag'-Wno-switch-enum',
+
         vers(3,9) {
           cxx'-Wno-undefined-var-template',
-        },
+        }*
+
         vers(5) {
           cxx'-Wno-inconsistent-missing-destructor-override',
+        }*
+
+        vers(9) {
+          cxx'-Wno-ctad-maybe-unsupported',
         },
       },
 

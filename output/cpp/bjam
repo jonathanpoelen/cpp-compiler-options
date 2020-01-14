@@ -978,12 +978,18 @@ rule jln_flags ( properties * )
             flags +=
               <cxxflags>"-Wno-undefined-var-template"
             ;
-          }
-          if ! (  $(version) < "05.00"  )
-          {
-            flags +=
-              <cxxflags>"-Wno-inconsistent-missing-destructor-override"
-            ;
+            if ! (  $(version) < "05.00"  )
+            {
+              flags +=
+                <cxxflags>"-Wno-inconsistent-missing-destructor-override"
+              ;
+              if ! (  $(version) < "09.00"  )
+              {
+                flags +=
+                  <cxxflags>"-Wno-ctad-maybe-unsupported"
+                ;
+              }
+            }
           }
         }
         if (  ( $(x_warnings) = "strict" ) || ( $(x_warnings) = "very-strict" )  )

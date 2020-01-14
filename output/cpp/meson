@@ -351,9 +351,12 @@ foreach ___jln_flags : ___jln_custom_flags
           jln_cpp_flags += ['-Weverything', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', ]
           if (  not ( ___jln_compiler_version.version_compare('<3.9') ) )
             jln_cpp_flags += ['-Wno-undefined-var-template', ]
-          endif
-          if (  not ( ___jln_compiler_version.version_compare('<5.0') ) )
-            jln_cpp_flags += ['-Wno-inconsistent-missing-destructor-override', ]
+            if (  not ( ___jln_compiler_version.version_compare('<5.0') ) )
+              jln_cpp_flags += ['-Wno-inconsistent-missing-destructor-override', ]
+              if (  not ( ___jln_compiler_version.version_compare('<9.0') ) )
+                jln_cpp_flags += ['-Wno-ctad-maybe-unsupported', ]
+              endif
+            endif
           endif
         endif
         if (  ( (___jln_flags.get('warnings', 'default') == 'strict') or (___jln_flags.get('warnings', 'default') == 'very_strict') ) )
