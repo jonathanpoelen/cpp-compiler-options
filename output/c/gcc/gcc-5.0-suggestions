@@ -1,4 +1,2 @@
 -Wsuggest-attribute=const
 -Wsuggest-attribute=pure
--Wsuggest-final-methods
--Wsuggest-final-types

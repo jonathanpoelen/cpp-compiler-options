@@ -515,7 +515,6 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         if compiler == "gcc" then
           jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=pure -Wsuggest-attribute=const"
           if not ( compversion < 500 ) then
-            jln_buildoptions = jln_buildoptions .. " -Wsuggest-final-types -Wsuggest-final-methods"
             if not ( compversion < 501 ) then
               jln_buildoptions = jln_buildoptions .. " -Wnoexcept"
             end

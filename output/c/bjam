@@ -749,10 +749,6 @@ rule jln_c_flags ( properties * )
           ;
           if ! (  $(version) < "05.00"  )
           {
-            flags +=
-              <cflags>"-Wsuggest-final-types"
-              <cflags>"-Wsuggest-final-methods"
-            ;
             if ! (  $(version) < "05.01"  )
             {
               flags +=
