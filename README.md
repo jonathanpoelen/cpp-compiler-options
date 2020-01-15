@@ -111,11 +111,11 @@ jln_init_flags(SUGGESTIONS on) # set SUGGESTIONS default value to "on"
 
 
 # jln_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln-option> <value>]... [DISABLE_OTHERS on|off])
-jln_target_interface(mytarget1 INTERFACE SANITIZERS on)
+jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to "very_strict"
 
 
 # jln_flags(CXX_VAR <out-variable> LINK_VAR <out-variable> [<jln-option> <value>]... [DISABLE_OTHERS on|off])
-jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS SANITIZERS on)
+jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS WARNINGS very_strict)
 
 add_link_options(${LINK_FLAGS})
 add_compile_options(${CXX_FLAGS})
@@ -135,8 +135,7 @@ include "output/cpp/premake5"
 jln_newoptions({warnings='very_strict'})
 
 -- jln_getoptions(values, disable_others = nil, print_compiler = nil)
--- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil,
-print_compiler = nil)
+-- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
 -- `= nil` indicates that the value is optional and can be nil
 -- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
 -- `version`: string. ex: '7', '7.2'
@@ -243,6 +242,8 @@ $ `./compiler-options.lua [-h] [-c] [-o filebase] [-f [-]option_list[,...]] {gen
 ./compiler-options.lua -f debug,warning generators/cmake.lua # only with debug and warning
 ./compiler-options.lua -f -debug,warning generators/cmake.lua # without debug nor warning
 ```
+
+- `-c` for C, default is C++
 
 ## generators/compiler.lua
 
