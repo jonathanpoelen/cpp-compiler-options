@@ -222,7 +222,7 @@ project name : requirements
 
 exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-relro>off
 
--- NOTE: for C, jln_flags becomes jln_c_flags
+# NOTE: for C, jln_flags becomes jln_c_flags
 ```
 
 
