@@ -2,11 +2,28 @@ Compilation options for different versions of Clang, GCC and MSVC. Provided a ge
 
 The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
-$ `g++ @output/cpp/gcc/gcc-6.1-warnings -fsyntax-only -x c++ - <<<'int* p = 0;'`
+```cpp
+int main()
+{
+  int x;
+  return x; // used but uninitialized
+}
+```
 
-> <stdin>:1:10: warning: zero as null pointer constant \[-Wzero-as-null-pointer-constant]
+$ `g++ main.cpp`
 
-(`@file` is a special option of gcc and clang)
+> No output
+
+$ `g++ main.cpp @output/cpp/gcc/gcc-6.1-warnings`
+
+```
+main.cpp: In function ‘int main()’:
+main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninitialized]
+    4 |   return x; // used but not initialized
+      |          ^
+```
+
+(`@file` is a special option of gcc and clang for read command-line options from file.)
 
 $ `cmake -DJLN_SANITIZERS=on`
 
