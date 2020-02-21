@@ -81,7 +81,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
   end,
 
   stop=function(_, filebase)
-    local meson_options = table.concat(_._option_strs, '\n')
+    local meson_options = table.concat(_._option_strs, '\n') .. '\n'
     local meson_build = _:get_output() .. [[
 
   ]] .. _.prefixfunc .. [[_custom_]] .. _.clang .. [[_flags += []] .. _.prefixfunc .. [[_]] .. _.clang .. [[_flags]
