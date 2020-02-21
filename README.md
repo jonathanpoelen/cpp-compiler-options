@@ -189,15 +189,20 @@ jln_default_flags = {'rtti': 'off'}
 jln_custom_flags = [
   {'rtti': 'off', 'optimization': '3'}, # (0) opti flags
   {'debug': 'on'}, # (1) debug flags
+  # { ... } # (2)
+  # etc
 ]
 
 # declare jln_link_flags, jln_cpp_flags, jln_custom_cpp_flags and jln_custom_link_flags
 subdir('meson_jln_flags')
 
-my_opti_cpp_flags = jln_custom_cpp_flags[0]
+my_opti_cpp_flags = jln_custom_cpp_flags[0] # (0) opti flags (see above)
 my_opti_link_flags = jln_custom_link_flags[0]
-my_debug_cpp_flags = jln_custom_cpp_flags[1]
+my_debug_cpp_flags = jln_custom_cpp_flags[1] # (1) debug flags (see above)
 my_debug_link_flags = jln_custom_link_flags[1]
+# my_... = jln_custom_cpp_flags[2] # (2)
+# my_... = jln_custom_link_flags[2]
+# etc
 
 executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flags)
 
