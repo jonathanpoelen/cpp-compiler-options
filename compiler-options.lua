@@ -144,7 +144,7 @@ return Or(gcc, clang) {
   },
 
   opt'optimization' {
-    lvl'0'     { fl'-O0' } /
+    lvl'0' { fl'-O0' } /
     lvl'g' { fl'-Og' } / {
       flag'-DNDEBUG',
       lvl'size' { fl'-Os' } /
@@ -1125,7 +1125,7 @@ end
 
 local filebase
 local ignore_options = {}
-local os_C = false
+local is_C = false
 
 cli={
   c={function() is_C=true end},
