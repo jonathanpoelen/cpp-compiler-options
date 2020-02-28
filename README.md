@@ -115,7 +115,7 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 ## Cmake
 
 ```cmake
-# cmake -DSANITIZERS=on
+# launch example: cmake -DJLN_SANITIZERS=on
 include(output/cpp/cmake)
 
 # init default values
@@ -123,7 +123,6 @@ include(output/cpp/cmake)
 # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
 # When jln_init_flags() is called without option, AUTO_PROFILE=on.
 #  Otherwise, AUTO_PROFILE=off and `on` value must be explicitly added.
-# (cmake -DJLN_VERBOSE=on -DJLN_DEBUG=on)
 jln_init_flags(SUGGESTIONS on) # set SUGGESTIONS default value to "on"
 
 
@@ -134,8 +133,8 @@ jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to
 # jln_flags(CXX_VAR <out-variable> LINK_VAR <out-variable> [<jln-option> <value>]... [DISABLE_OTHERS on|off])
 jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS WARNINGS very_strict)
 
-add_link_options(${LINK_FLAGS})
-add_compile_options(${CXX_FLAGS})
+target_link_libraries(mytarget2 INTERFACE ${LINK_FLAGS})
+target_compile_options(mytarget2 INTERFACE ${CXX_FLAGS})
 
 # NOTE: for C, jln_ prefix function becomes jln_c_ and CXX_VAR becomes C_VAR
 ```
@@ -177,7 +176,7 @@ Copy `meson_options.txt` and rename `output/cpp/meson` to `meson_jln_flags/meson
 
 ```meson
 # launch example: meson -Djln_sanitizers=on
-# meson --warnlevel=0 forces --Djln_warnings=off
+# note: `meson --warnlevel=0` implies `--Djln_warnings=off`
 
 project('test', 'cpp')
 
