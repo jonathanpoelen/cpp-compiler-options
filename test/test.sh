@@ -90,3 +90,15 @@ if [ -z "$1" ] || [ "$1" = meson ]; then
   rm -rf b; test_success 'meson b >/dev/null ; meson configure b | grep -Em1 "^  jln_sanitizers +default"'
   rm -rf b; test_success 'meson b -Djln_sanitizers=on >/dev/null ; meson configure b | grep -Em1 "^  jln_sanitizers +on"'
 fi
+
+if [ -z "$1" ] || [ "$1" = scons ]; then
+  mkdir -p "$TMPDIR"/compgenscons
+  cp "$d"/scons/SConstruct "$TMPDIR"/compgenscons/
+  cp "$d"/../output/scons "$TMPDIR"/compgenscons/jln_options.py
+  cd "$TMPDIR"/compgenscons
+  test_success "scons -Q | grep Wall"
+  test_failure "scons -Q jln_warnings=default | grep Wall"
+  test_success "scons -Q | grep sanitize"
+  test_failure "scons -Q | grep -- -g"
+  test_success "scons -Q jln_debug=on | grep -- -g"
+fi

@@ -1,0 +1,5 @@
+from jln_options import *
+
+vars = Variables(None, ARGUMENTS)
+jln_add_variables(vars, {'sanitizers':'on'})
+print(jln_flags(vars))

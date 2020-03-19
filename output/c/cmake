@@ -1,4 +1,4 @@
-# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options
+# File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
 set(JLN_COLOR "${JLN_COLOR}" CACHE STRING "")
 if(NOT("${JLN_COLOR}" STREQUAL ""))

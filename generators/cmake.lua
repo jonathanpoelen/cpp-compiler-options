@@ -22,7 +22,7 @@ return {
       endif='endif()',
     })
 
-    _:print('# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+    _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
     local print_check_value = function(prefix, localname, expositionname, values)
       _:print(prefix .. 'if(NOT(("' .. table.concat(values, '" STREQUAL ' .. localname .. ') OR ("') .. '" STREQUAL ' .. localname .. ')))')

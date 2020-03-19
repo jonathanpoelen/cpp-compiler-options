@@ -1,4 +1,4 @@
-# Generated file with https://github.com/jonathanpoelen/cpp-compiler-options
+# File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
 ___jln_c_default_flags = get_variable('jln_c_default_flags', {})
 if get_option('warning_level') == '0'

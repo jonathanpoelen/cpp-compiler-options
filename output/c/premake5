@@ -1,4 +1,4 @@
--- Generated file with https://github.com/jonathanpoelen/cpp-compiler-options
+-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
 local _jln_flag_names = {}
 _jln_flag_names["jln-color"] = true

@@ -42,8 +42,9 @@ $ `meson -Djln_sanitizers=on`
     1. [Cmake](#cmake)
     2. [Premake5](#premake5)
     3. [Meson](#meson)
-    4. [Bjam/B2 (Boost.Build)](#bjamb2-boostbuild)
-    5. [Bash alias for gcc/clang](#bash-alias-for-gccclang)
+    4. [SCons](#scons)
+    5. [Bjam/B2 (Boost.Build)](#bjamb2-boostbuild)
+    6. [Bash alias for gcc/clang](#bash-alias-for-gccclang)
 3. [Generators](#generators)
     1. [generators/compiler.lua](#generatorscompilerlua)
     2. [generators/list_options.lua](#generatorslist_optionslua)
@@ -208,6 +209,23 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 # NOTE: for C, jln_ prefix becomes jln_c_
 ```
 
+
+## SCons
+
+```py
+# launch example: scons jln_sanitizers=on
+
+from jln_options import *
+
+jln_set_global_flags({'rtti': 'off'})
+
+vars = Variables(None, ARGUMENTS)
+jln_add_variables(vars, {'debug':'on'}) # default value of debug to on
+
+# {flags=[...], linkflags=[...]}
+flags1 = jln_flags(vars)
+flags2 = jln_flags({'debug':'on'})
+```
 
 ## Bjam/B2 (Boost.Build)
 
