@@ -4,14 +4,9 @@ return {
   --  debug=true, -- reserved
   },
 
-  tobuildoption=function(_, optname)
-    return _.optprefix .. optname
-  end,
-
   _option_strs = {},
 
   start=function(_, optprefix)
-    _.optprefix = optprefix and optprefix:gsub('-', '_') or ''
     _:_vcond_init({
       _not='not',
       _and='and',
@@ -27,13 +22,14 @@ return {
 
     _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
+    local optprefix = optprefix and optprefix:gsub('-', '_') or ''
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
     local prefixenv = _.is_C and 'CC' or 'CXX'
     _.prefixfunc = prefixfunc
 
     local enums, flags, var2opts, opt2vars = {}, {}, {}, {}
     for optname,args,default_value in _:getoptions() do
-      local name = _:tobuildoption(optname)
+      local name = optprefix .. optname
       flags[#flags+1] = "  '" .. optname .. "': '" .. default_value .. "',\n"
       var2opts[#var2opts+1] = "  '" .. name .. "': '" .. optname .. "',\n"
       opt2vars[#opt2vars+1] = "  '" .. optname .. "': '" .. name .. "',\n"
