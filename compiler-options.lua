@@ -694,6 +694,7 @@ function create_ordered_keys(t)
   return ordered_keys
 end
 
+unpack = unpack or table.unpack
 function unpack_table_iterator(t)
   local i = 0
   return function()
