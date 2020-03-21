@@ -1,6 +1,6 @@
 Compilation options for different versions of Clang, GCC and MSVC. Provided a generator and different file formats (build system and compiler).
 
-The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
+The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson`, `scons` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
 ```cpp
 int main()
@@ -33,6 +33,8 @@ $ `bjam -s jln_sanitizers=on`
 
 $ `meson -Djln_sanitizers=on`
 
+$ `scons jln_sanitizers=on`
+
 (`jln` is a parameterizable prefix: `./compiler-options.lua generators/cmake.lua [prefix]`)
 
 <!-- summary -->
@@ -48,7 +50,7 @@ $ `meson -Djln_sanitizers=on`
 3. [Generators](#generators)
     1. [generators/compiler.lua](#generatorscompilerlua)
     2. [generators/list_options.lua](#generatorslist_optionslua)
-    3. [generators/{bjam,cmake,meson,premake5}.lua](#generatorsbjamcmakemesonpremake5lua)
+    3. [generators/{bjam,cmake,meson,premake5,scons}.lua](#generatorsbjamcmakemesonpremake5sconslua)
 4. [How to add options?](#how-to-add-options)
     1. [Update the options tree](#update-the-options-tree)
         1. [cond_mt](#cond_mt)
@@ -294,7 +296,7 @@ $ `./compiler-options.lua generators/list_options.lua [--profile] [--color]`
 
 Checks and displays options and their values.
 
-## generators/{bjam,cmake,meson,premake5}.lua
+## generators/{bjam,cmake,meson,premake5,scons}.lua
 
 Generators for different build system.
 
