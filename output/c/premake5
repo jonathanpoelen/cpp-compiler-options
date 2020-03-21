@@ -1,62 +1,62 @@
 -- File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
-local _jln_flag_names = {}
-_jln_flag_names["jln-color"] = true
-_jln_flag_names["color"] = true
-_jln_flag_names["jln-control-flow"] = true
-_jln_flag_names["control_flow"] = true
-_jln_flag_names["jln-coverage"] = true
-_jln_flag_names["coverage"] = true
-_jln_flag_names["jln-cpu"] = true
-_jln_flag_names["cpu"] = true
-_jln_flag_names["jln-debug"] = true
-_jln_flag_names["debug"] = true
-_jln_flag_names["jln-diagnostics-format"] = true
-_jln_flag_names["diagnostics_format"] = true
-_jln_flag_names["jln-diagnostics-show-template-tree"] = true
-_jln_flag_names["diagnostics_show_template_tree"] = true
-_jln_flag_names["jln-elide-type"] = true
-_jln_flag_names["elide_type"] = true
-_jln_flag_names["jln-exceptions"] = true
-_jln_flag_names["exceptions"] = true
-_jln_flag_names["jln-fix-compiler-error"] = true
-_jln_flag_names["fix_compiler_error"] = true
-_jln_flag_names["jln-linker"] = true
-_jln_flag_names["linker"] = true
-_jln_flag_names["jln-lto"] = true
-_jln_flag_names["lto"] = true
-_jln_flag_names["jln-optimization"] = true
-_jln_flag_names["optimization"] = true
-_jln_flag_names["jln-pedantic"] = true
-_jln_flag_names["pedantic"] = true
-_jln_flag_names["jln-pie"] = true
-_jln_flag_names["pie"] = true
-_jln_flag_names["jln-relro"] = true
-_jln_flag_names["relro"] = true
-_jln_flag_names["jln-reproducible-build-warnings"] = true
-_jln_flag_names["reproducible_build_warnings"] = true
-_jln_flag_names["jln-rtti"] = true
-_jln_flag_names["rtti"] = true
-_jln_flag_names["jln-sanitizers"] = true
-_jln_flag_names["sanitizers"] = true
-_jln_flag_names["jln-sanitizers-extra"] = true
-_jln_flag_names["sanitizers_extra"] = true
-_jln_flag_names["jln-shadow-warnings"] = true
-_jln_flag_names["shadow_warnings"] = true
-_jln_flag_names["jln-stack-protector"] = true
-_jln_flag_names["stack_protector"] = true
-_jln_flag_names["jln-stl-debug"] = true
-_jln_flag_names["stl_debug"] = true
-_jln_flag_names["jln-stl-fix"] = true
-_jln_flag_names["stl_fix"] = true
-_jln_flag_names["jln-suggestions"] = true
-_jln_flag_names["suggestions"] = true
-_jln_flag_names["jln-warnings"] = true
-_jln_flag_names["warnings"] = true
-_jln_flag_names["jln-warnings-as-error"] = true
-_jln_flag_names["warnings_as_error"] = true
-_jln_flag_names["jln-whole-program"] = true
-_jln_flag_names["whole_program"] = true
+local _jln_c_flag_names = {}
+_jln_c_flag_names["jln-color"] = true
+_jln_c_flag_names["color"] = true
+_jln_c_flag_names["jln-control-flow"] = true
+_jln_c_flag_names["control_flow"] = true
+_jln_c_flag_names["jln-coverage"] = true
+_jln_c_flag_names["coverage"] = true
+_jln_c_flag_names["jln-cpu"] = true
+_jln_c_flag_names["cpu"] = true
+_jln_c_flag_names["jln-debug"] = true
+_jln_c_flag_names["debug"] = true
+_jln_c_flag_names["jln-diagnostics-format"] = true
+_jln_c_flag_names["diagnostics_format"] = true
+_jln_c_flag_names["jln-diagnostics-show-template-tree"] = true
+_jln_c_flag_names["diagnostics_show_template_tree"] = true
+_jln_c_flag_names["jln-elide-type"] = true
+_jln_c_flag_names["elide_type"] = true
+_jln_c_flag_names["jln-exceptions"] = true
+_jln_c_flag_names["exceptions"] = true
+_jln_c_flag_names["jln-fix-compiler-error"] = true
+_jln_c_flag_names["fix_compiler_error"] = true
+_jln_c_flag_names["jln-linker"] = true
+_jln_c_flag_names["linker"] = true
+_jln_c_flag_names["jln-lto"] = true
+_jln_c_flag_names["lto"] = true
+_jln_c_flag_names["jln-optimization"] = true
+_jln_c_flag_names["optimization"] = true
+_jln_c_flag_names["jln-pedantic"] = true
+_jln_c_flag_names["pedantic"] = true
+_jln_c_flag_names["jln-pie"] = true
+_jln_c_flag_names["pie"] = true
+_jln_c_flag_names["jln-relro"] = true
+_jln_c_flag_names["relro"] = true
+_jln_c_flag_names["jln-reproducible-build-warnings"] = true
+_jln_c_flag_names["reproducible_build_warnings"] = true
+_jln_c_flag_names["jln-rtti"] = true
+_jln_c_flag_names["rtti"] = true
+_jln_c_flag_names["jln-sanitizers"] = true
+_jln_c_flag_names["sanitizers"] = true
+_jln_c_flag_names["jln-sanitizers-extra"] = true
+_jln_c_flag_names["sanitizers_extra"] = true
+_jln_c_flag_names["jln-shadow-warnings"] = true
+_jln_c_flag_names["shadow_warnings"] = true
+_jln_c_flag_names["jln-stack-protector"] = true
+_jln_c_flag_names["stack_protector"] = true
+_jln_c_flag_names["jln-stl-debug"] = true
+_jln_c_flag_names["stl_debug"] = true
+_jln_c_flag_names["jln-stl-fix"] = true
+_jln_c_flag_names["stl_fix"] = true
+_jln_c_flag_names["jln-suggestions"] = true
+_jln_c_flag_names["suggestions"] = true
+_jln_c_flag_names["jln-warnings"] = true
+_jln_c_flag_names["warnings"] = true
+_jln_c_flag_names["jln-warnings-as-error"] = true
+_jln_c_flag_names["warnings_as_error"] = true
+_jln_c_flag_names["jln-whole-program"] = true
+_jln_c_flag_names["whole_program"] = true
 
 function jln_c_newoptions(defaults)
   if defaults then
@@ -126,13 +126,13 @@ end
 
 function jln_c_check_flag_names(t)
   for k in pairs(t) do
-    if not _jln_flag_names[k] then
+    if not _jln_c_flag_names[k] then
       error("unknown '" .. k .. "' jln flag name")
     end
   end
 end
 
--- same as jln_getoptions
+-- same as jln_c_getoptions
 function jln_c_setoptions(compiler, version, values, disable_others, print_compiler)
   local options = jln_getoptions(compiler, version, values, disable_others, print_compiler)
   buildoptions(options.buildoptions)
@@ -140,8 +140,8 @@ function jln_c_setoptions(compiler, version, values, disable_others, print_compi
   return options
 end
 
--- jln_getoptions(values, disable_others = nil, print_compiler = nil)
--- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
+-- jln_c_getoptions(values, disable_others = nil, print_compiler = nil)
+-- jln_c_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
 -- `= nil` indicates that the value is optional and can be nil
 -- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
 -- `version`: string. ex: '7', '7.2'

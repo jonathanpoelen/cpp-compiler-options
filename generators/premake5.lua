@@ -25,16 +25,16 @@ return {
 
     _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
-    _:print('local _jln_flag_names = {}')
+    local prefixfunc = _.is_C and 'jln_c' or 'jln'
+
+    _:print('local _' .. prefixfunc .. '_flag_names = {}')
     for optname in _:getoptions() do
       local opt = _:tostroption(optname)
-      _:print('_jln_flag_names["' .. opt .. '"] = true')
+      _:print('_' .. prefixfunc .. '_flag_names["' .. opt .. '"] = true')
       if opt ~= optname then
-        _:print('_jln_flag_names["' .. optname .. '"] = true')
+        _:print('_' .. prefixfunc .. '_flag_names["' .. optname .. '"] = true')
       end
     end
-
-    local prefixfunc = _.is_C and 'jln_c' or 'jln'
 
     _:print('\nfunction ' .. prefixfunc .. '_newoptions(defaults)')
     _:print('  if defaults then')
@@ -54,13 +54,13 @@ return {
     _:print([[
 function ]] .. prefixfunc .. [[_check_flag_names(t)
   for k in pairs(t) do
-    if not _jln_flag_names[k] then
+    if not _]] .. prefixfunc .. [[_flag_names[k] then
       error("unknown '" .. k .. "' jln flag name")
     end
   end
 end
 
--- same as jln_getoptions
+-- same as ]] .. prefixfunc .. [[_getoptions
 function ]] .. prefixfunc .. [[_setoptions(compiler, version, values, disable_others, print_compiler)
   local options = jln_getoptions(compiler, version, values, disable_others, print_compiler)
   buildoptions(options.buildoptions)
@@ -68,8 +68,8 @@ function ]] .. prefixfunc .. [[_setoptions(compiler, version, values, disable_ot
   return options
 end
 
--- jln_getoptions(values, disable_others = nil, print_compiler = nil)
--- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
+-- ]] .. prefixfunc .. [[_getoptions(values, disable_others = nil, print_compiler = nil)
+-- ]] .. prefixfunc .. [[_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
 -- `= nil` indicates that the value is optional and can be nil
 -- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
 -- `version`: string. ex: '7', '7.2'
