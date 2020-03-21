@@ -1,4 +1,4 @@
-include ../../output/bjam ;
+include ../../output/cpp/bjam ;
 
 project test : requirements
   <jln-sanitizers-incidental>on

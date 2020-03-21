@@ -1,4 +1,4 @@
-include'../../output/premake5'
+include'../../output/cpp/premake5'
 
 workspace "HelloWorld"
    configurations { "Debug", "Release" }
