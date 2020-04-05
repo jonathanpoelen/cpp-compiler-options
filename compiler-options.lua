@@ -219,8 +219,17 @@ return Or(gcc, clang) {
         clang {
           fl'-fsanitize=safe-stack',
         }
+        * vers(11) {
+          fl'-fstack-clash-protection'
+        }
       } /
       fl'-fstack-protector',
+      -- ShadowCallStack is an instrumentation pass, currently only implemented for aarch64
+      -- ShadowCallStack is intended to be a stronger alternative to -fstack-protector
+      -- On aarch64, you also need to pass -ffixed-x18 unless your target already reserves x18.
+      clang {
+        fl'-fsanitize=shadow-call-stack',
+      }
     },
   },
 

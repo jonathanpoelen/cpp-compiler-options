@@ -690,6 +690,13 @@ rule jln_flags ( properties * )
               <cxxflags>"-fsanitize=safe-stack"
               <linkflags>"-fsanitize=safe-stack"
             ;
+            if ! (  $(version) < "11.00"  )
+            {
+              flags +=
+                <cxxflags>"-fstack-clash-protection"
+                <linkflags>"-fstack-clash-protection"
+              ;
+            }
           }
         }
         else
@@ -697,6 +704,13 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>"-fstack-protector"
             <linkflags>"-fstack-protector"
+          ;
+        }
+        if $(toolset) = "clang"
+        {
+          flags +=
+            <cxxflags>"-fsanitize=shadow-call-stack"
+            <linkflags>"-fsanitize=shadow-call-stack"
           ;
         }
       }

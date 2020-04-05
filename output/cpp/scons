@@ -337,9 +337,15 @@ def jln_flags(options, compiler=None, version=None):
           if compiler == 'clang' :
             flags += ('-fsanitize=safe-stack', )
             linkflags += ('-fsanitize=safe-stack', )
+            if not ( verless(11, 0) ) :
+              flags += ('-fstack-clash-protection', )
+              linkflags += ('-fstack-clash-protection', )
         else:
           flags += ('-fstack-protector', )
           linkflags += ('-fstack-protector', )
+        if compiler == 'clang' :
+          flags += ('-fsanitize=shadow-call-stack', )
+          linkflags += ('-fsanitize=shadow-call-stack', )
     if not ( options.get('relro', _jln_default_flags['relro']) == 'default') :
       if options.get('relro', _jln_default_flags['relro']) == 'off' :
         linkflags += ('-Wl,-z,norelro', )

@@ -485,10 +485,18 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
           if compiler == "clang" then
             jln_buildoptions = jln_buildoptions .. " -fsanitize=safe-stack"
             jln_linkoptions = jln_linkoptions .. " -fsanitize=safe-stack"
+            if not ( compversion < 1100 ) then
+              jln_buildoptions = jln_buildoptions .. " -fstack-clash-protection"
+              jln_linkoptions = jln_linkoptions .. " -fstack-clash-protection"
+            end
           end
         else
           jln_buildoptions = jln_buildoptions .. " -fstack-protector"
           jln_linkoptions = jln_linkoptions .. " -fstack-protector"
+        end
+        if compiler == "clang" then
+          jln_buildoptions = jln_buildoptions .. " -fsanitize=shadow-call-stack"
+          jln_linkoptions = jln_linkoptions .. " -fsanitize=shadow-call-stack"
         end
       end
     end

@@ -235,10 +235,18 @@ foreach ___jln_flags : ___jln_custom_flags
           if (  (___jln_compiler_id == 'clang') )
             jln_cpp_flags += ['-fsanitize=safe-stack', ]
             jln_link_flags += ['-fsanitize=safe-stack', ]
+            if (  not ( ___jln_compiler_version.version_compare('<11.0') ) )
+              jln_cpp_flags += ['-fstack-clash-protection', ]
+              jln_link_flags += ['-fstack-clash-protection', ]
+            endif
           endif
         else
           jln_cpp_flags += ['-fstack-protector', ]
           jln_link_flags += ['-fstack-protector', ]
+        endif
+        if (  (___jln_compiler_id == 'clang') )
+          jln_cpp_flags += ['-fsanitize=shadow-call-stack', ]
+          jln_link_flags += ['-fsanitize=shadow-call-stack', ]
         endif
       endif
     endif
