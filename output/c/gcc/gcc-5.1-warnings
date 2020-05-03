@@ -19,7 +19,6 @@
 -Wlogical-op
 -Wmissing-declarations
 -Wmissing-include-dirs
--Wmissing-prototypes
 -Wnested-externs
 -Wno-shadow
 -Wold-style-definition

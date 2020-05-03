@@ -333,7 +333,6 @@ return Or(gcc, clang) {
         c'-Wbad-function-cast',
         c'-Winit-self', -- enabled by -Wall in C++
         c'-Wjump-misses-init',
-        c'-Wmissing-prototypes',
         c'-Wnested-externs',
         c'-Wold-style-definition',
         c'-Wstrict-prototypes',

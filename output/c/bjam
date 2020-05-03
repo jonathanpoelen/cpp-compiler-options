@@ -880,7 +880,6 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wbad-function-cast"
             <cflags>"-Winit-self"
             <cflags>"-Wjump-misses-init"
-            <cflags>"-Wmissing-prototypes"
             <cflags>"-Wnested-externs"
             <cflags>"-Wold-style-definition"
             <cflags>"-Wstrict-prototypes"
