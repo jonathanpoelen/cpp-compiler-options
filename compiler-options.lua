@@ -921,7 +921,7 @@ Vbase = {
           local default_value = v[2] or 'default'
           if default_value ~= v[1][1] then
             ordered_args = {default_value}
-            for i,arg in ipairs(v[1]) do
+            for i,arg in pairs(v[1]) do
               if arg ~= default_value then
                 ordered_args[#ordered_args + 1] = arg
               end
@@ -961,7 +961,7 @@ Vbase = {
 local opts_krev = {}
 for k,args in pairs(Vbase._opts) do
   local u = {}
-  for _, v in ipairs(args[1]) do
+  for _, v in pairs(args[1]) do
     u[v] = true
   end
   if u['default'] then
@@ -993,7 +993,7 @@ end
 
 function evalflagselse(t, v, curropt)
   local n = #t._else
-  for k,x in ipairs(t._else) do
+  for k,x in pairs(t._else) do
     mark_elseif = (k ~= n or is_cond(x))
     if mark_elseif then
       v:markelseif()
@@ -1056,7 +1056,7 @@ function evalflags(t, v, curropt, no_stopcond)
     if t.cxx  then v:cxx(t.cxx, curropt) end
     if t.link then v:link(t.link, curropt) end
   else
-    for k,x in ipairs(t) do
+    for k,x in pairs(t) do
       evalflags(x, v, curropt)
     end
   end
