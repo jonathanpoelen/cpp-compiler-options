@@ -877,13 +877,85 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wunused-macros"
             <cflags>"-Winvalid-pch"
             <cflags>"-Wpointer-arith"
+            <cflags>"-Wbad-function-cast"
+            <cflags>"-Winit-self"
+            <cflags>"-Wjump-misses-init"
+            <cflags>"-Wmissing-prototypes"
+            <cflags>"-Wnested-externs"
+            <cflags>"-Wold-style-definition"
+            <cflags>"-Wstrict-prototypes"
+            <cflags>"-Wwrite-strings"
           ;
+          if ! (  $(version) < "04.07"  )
+          {
+            flags +=
+              <cflags>"-Wsuggest-attribute=noreturn"
+              <cflags>"-Wlogical-op"
+              <cflags>"-Wvector-operation-performance"
+              <cflags>"-Wdouble-promotion"
+              <cflags>"-Wtrampolines"
+            ;
+            if ! (  $(version) < "04.08"  )
+            {
+              if ! (  $(version) < "04.09"  )
+              {
+                flags +=
+                  <cflags>"-Wfloat-conversion"
+                ;
+                if ! (  $(version) < "05.01"  )
+                {
+                  flags +=
+                    <cflags>"-Wformat-signedness"
+                    <cflags>"-Warray-bounds=2"
+                    <cflags>"-Wconditionally-supported"
+                  ;
+                  if ! (  $(version) < "06.01"  )
+                  {
+                    flags +=
+                      <cflags>"-Wduplicated-cond"
+                      <cflags>"-Wnull-dereference"
+                    ;
+                    if ! (  $(version) < "07.00"  )
+                    {
+                      if ! (  $(version) < "07.01"  )
+                      {
+                        flags +=
+                          <cflags>"-Walloc-zero"
+                          <cflags>"-Walloca"
+                          <cflags>"-Wformat-overflow=2"
+                          <cflags>"-Wduplicated-branches"
+                        ;
+                        if ! (  $(version) < "08.00"  )
+                        {
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
         else if $(toolset) = "clang"
         {
           flags +=
             <cflags>"-Weverything"
+            <cflags>"-Wno-mismatched-tags"
+            <cflags>"-Wno-padded"
+            <cflags>"-Wno-global-constructors"
+            <cflags>"-Wno-covered-switch-default"
+            <cflags>"-Wno-switch-default"
+            <cflags>"-Wno-switch-enum"
           ;
+          if ! (  $(version) < "03.09"  )
+          {
+            if ! (  $(version) < "05.00"  )
+            {
+              if ! (  $(version) < "09.00"  )
+              {
+              }
+            }
+          }
         }
         if (  ( $(x_warnings) = "strict" ) || ( $(x_warnings) = "very-strict" )  )
         {

@@ -573,9 +573,36 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         jln_buildoptions = jln_buildoptions .. " -w"
       else
         if compiler == "gcc" then
-          jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align=strict -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wpacked -Wredundant-decls -Wundef -Wunused-macros -Winvalid-pch -Wpointer-arith"
+          jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align=strict -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wpacked -Wredundant-decls -Wundef -Wunused-macros -Winvalid-pch -Wpointer-arith -Wbad-function-cast -Winit-self -Wjump-misses-init -Wmissing-prototypes -Wnested-externs -Wold-style-definition -Wstrict-prototypes -Wwrite-strings"
+          if not ( compversion < 407 ) then
+            jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=noreturn -Wlogical-op -Wvector-operation-performance -Wdouble-promotion -Wtrampolines"
+            if not ( compversion < 408 ) then
+              if not ( compversion < 409 ) then
+                jln_buildoptions = jln_buildoptions .. " -Wfloat-conversion"
+                if not ( compversion < 501 ) then
+                  jln_buildoptions = jln_buildoptions .. " -Wformat-signedness -Warray-bounds=2 -Wconditionally-supported"
+                  if not ( compversion < 601 ) then
+                    jln_buildoptions = jln_buildoptions .. " -Wduplicated-cond -Wnull-dereference"
+                    if not ( compversion < 700 ) then
+                      if not ( compversion < 701 ) then
+                        jln_buildoptions = jln_buildoptions .. " -Walloc-zero -Walloca -Wformat-overflow=2 -Wduplicated-branches"
+                        if not ( compversion < 800 ) then
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
         elseif compiler == "clang" then
-          jln_buildoptions = jln_buildoptions .. " -Weverything"
+          jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum"
+          if not ( compversion < 309 ) then
+            if not ( compversion < 500 ) then
+              if not ( compversion < 900 ) then
+              end
+            end
+          end
         end
         if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
           jln_buildoptions = jln_buildoptions .. " -Wconversion"

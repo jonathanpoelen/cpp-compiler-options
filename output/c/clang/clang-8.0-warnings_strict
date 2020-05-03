@@ -1,5 +1,11 @@
 -pedantic
 -Wconversion
 -Weverything
+-Wno-covered-switch-default
+-Wno-global-constructors
+-Wno-mismatched-tags
+-Wno-padded
 -Wno-shadow
 -Wno-shadow-field
+-Wno-switch-default
+-Wno-switch-enum
