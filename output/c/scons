@@ -395,14 +395,14 @@ def jln_c_flags(options, compiler=None, version=None):
         flags += ('-w', )
       else:
         if compiler == 'gcc' :
-          flags += ('-Wall', '-Wextra', '-Wcast-align=strict', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-declarations', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
+          flags += ('-Wall', '-Wextra', '-Wcast-align=strict', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
           if not ( verless(4, 7) ) :
             flags += ('-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', )
             if not ( verless(4, 8) ) :
               if not ( verless(4, 9) ) :
                 flags += ('-Wfloat-conversion', )
                 if not ( verless(5, 1) ) :
-                  flags += ('-Wformat-signedness', '-Warray-bounds=2', '-Wconditionally-supported', )
+                  flags += ('-Wformat-signedness', '-Warray-bounds=2', )
                   if not ( verless(6, 1) ) :
                     flags += ('-Wduplicated-cond', '-Wnull-dereference', )
                     if not ( verless(7, 0) ) :

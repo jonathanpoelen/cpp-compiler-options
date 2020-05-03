@@ -897,7 +897,6 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wfloat-equal"
             <cxxflags>"-Wformat-security"
             <cxxflags>"-Wformat=2"
-            <cxxflags>"-Wmissing-declarations"
             <cxxflags>"-Wmissing-include-dirs"
             <cxxflags>"-Wpacked"
             <cxxflags>"-Wredundant-decls"
@@ -905,6 +904,7 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wunused-macros"
             <cxxflags>"-Winvalid-pch"
             <cxxflags>"-Wpointer-arith"
+            <cxxflags>"-Wmissing-declarations"
             <cxxflags>"-Wnon-virtual-dtor"
             <cxxflags>"-Wold-style-cast"
             <cxxflags>"-Woverloaded-virtual"
@@ -935,7 +935,6 @@ rule jln_flags ( properties * )
                   flags +=
                     <cxxflags>"-Wformat-signedness"
                     <cxxflags>"-Warray-bounds=2"
-                    <cxxflags>"-Wconditionally-supported"
                     <cxxflags>"-Wstrict-null-sentinel"
                     <cxxflags>"-Wsuggest-override"
                   ;

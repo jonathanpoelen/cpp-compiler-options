@@ -315,7 +315,6 @@ return Or(gcc, clang) {
         flag'-Wfloat-equal',
         flag'-Wformat-security',
         flag'-Wformat=2',
-        flag'-Wmissing-declarations',
         flag'-Wmissing-include-dirs',
      -- flag'-Weffc++',
         flag'-Wpacked',
@@ -327,6 +326,7 @@ return Or(gcc, clang) {
      -- flag'-Wswitch-enum',
         flag'-Winvalid-pch',
         flag'-Wpointer-arith',
+        cxx'-Wmissing-declarations',
         cxx'-Wnon-virtual-dtor',
         cxx'-Wold-style-cast',
         cxx'-Woverloaded-virtual',
@@ -362,7 +362,6 @@ return Or(gcc, clang) {
       vers(5,1) {
         flag'-Wformat-signedness',
         flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
-        flag'-Wconditionally-supported',
      -- flag'-Wctor-dtor-privacy',
         cxx'-Wstrict-null-sentinel',
         cxx'-Wsuggest-override',

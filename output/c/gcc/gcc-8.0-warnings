@@ -6,7 +6,6 @@
 -Wbad-function-cast
 -Wcast-align=strict
 -Wcast-qual
--Wconditionally-supported
 -Wdisabled-optimization
 -Wdouble-promotion
 -Wduplicated-branches
@@ -22,7 +21,6 @@
 -Winvalid-pch
 -Wjump-misses-init
 -Wlogical-op
--Wmissing-declarations
 -Wmissing-include-dirs
 -Wnested-externs
 -Wno-shadow

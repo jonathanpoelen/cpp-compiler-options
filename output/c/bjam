@@ -869,7 +869,6 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wfloat-equal"
             <cflags>"-Wformat-security"
             <cflags>"-Wformat=2"
-            <cflags>"-Wmissing-declarations"
             <cflags>"-Wmissing-include-dirs"
             <cflags>"-Wpacked"
             <cflags>"-Wredundant-decls"
@@ -906,7 +905,6 @@ rule jln_c_flags ( properties * )
                   flags +=
                     <cflags>"-Wformat-signedness"
                     <cflags>"-Warray-bounds=2"
-                    <cflags>"-Wconditionally-supported"
                   ;
                   if ! (  $(version) < "06.01"  )
                   {

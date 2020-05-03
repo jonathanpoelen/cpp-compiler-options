@@ -582,7 +582,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " -w"
       else
         if compiler == "gcc" then
-          jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align=strict -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat=2 -Wmissing-declarations -Wmissing-include-dirs -Wpacked -Wredundant-decls -Wundef -Wunused-macros -Winvalid-pch -Wpointer-arith -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual"
+          jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align=strict -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat=2 -Wmissing-include-dirs -Wpacked -Wredundant-decls -Wundef -Wunused-macros -Winvalid-pch -Wpointer-arith -Wmissing-declarations -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual"
           if not ( compversion < 407 ) then
             jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=noreturn -Wzero-as-null-pointer-constant -Wlogical-op -Wvector-operation-performance -Wdouble-promotion -Wtrampolines"
             if not ( compversion < 408 ) then
@@ -590,7 +590,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
               if not ( compversion < 409 ) then
                 jln_buildoptions = jln_buildoptions .. " -Wconditionally-supported -Wfloat-conversion"
                 if not ( compversion < 501 ) then
-                  jln_buildoptions = jln_buildoptions .. " -Wformat-signedness -Warray-bounds=2 -Wconditionally-supported -Wstrict-null-sentinel -Wsuggest-override"
+                  jln_buildoptions = jln_buildoptions .. " -Wformat-signedness -Warray-bounds=2 -Wstrict-null-sentinel -Wsuggest-override"
                   if not ( compversion < 601 ) then
                     jln_buildoptions = jln_buildoptions .. " -Wduplicated-cond -Wnull-dereference"
                     if not ( compversion < 700 ) then

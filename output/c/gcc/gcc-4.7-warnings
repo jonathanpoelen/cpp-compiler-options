@@ -13,7 +13,6 @@
 -Winvalid-pch
 -Wjump-misses-init
 -Wlogical-op
--Wmissing-declarations
 -Wmissing-include-dirs
 -Wnested-externs
 -Wno-shadow
