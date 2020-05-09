@@ -1,22 +1,32 @@
 #!/bin/bash
 
+set +o pipefail
+
 test_success()
 {
   echo -n "test_success: $@  "
-  eval "$@ >/dev/null" || {
+  eval "$@ >/dev/null ; local status=(\${PIPESTATUS[@]})"
+  if [ ${status[0]} -ne 0 ]; then
+    echo -e "\e[31mbuild command error\e[0m"
+    exit 1
+  elif [ ${status[1]} -ne 0 ]; then
     echo -e "\e[31mfailure\e[0m"
     exit 1
-  }
+  fi
   echo -e "\e[32mok\e[0m"
 }
 
 test_failure()
 {
   echo -n "test_failure: $@  "
-  eval "$@ >/dev/null" && {
+  eval "$@ >/dev/null ; local status=(\${PIPESTATUS[@]})"
+  if [ ${status[0]} -ne 0 ]; then
+    echo -e "\e[31mbuild command error\e[0m"
+    exit 1
+  elif [ ${status[1]} -eq 0 ]; then
     echo -e "\e[31mfailure\e[0m"
     exit 1
-  }
+  fi
   echo -e "\e[32mok\e[0m"
 }
 
@@ -26,18 +36,18 @@ TMPDIR=${TMPDIR:-/tmp}
 
 if [ -z "$1" ] || [ "$1" = premake5 ]; then
   cd premake5
-  test_success 'premake5 | grep Wlogical-op'
-  test_success 'premake5 --jln-warnings=off | grep -- -w'
-  test_success 'premake5 | grep fsanitize'
-  test_failure 'premake5 | grep GLIB'
-  test_failure 'premake5 | grep Weverything'
-  test_success 'premake5 --cc=gcc | grep Wlogical-op'
-  test_success 'premake5 --cc=clang | grep Weverything'
-  test_success 'premake5 --cc=gcc --jln-compiler=clang | grep Weverything'
-  test_failure 'premake5 --jln-compiler-version=4 | grep Wclass-memaccess'
-  test_success 'premake5 --jln-compiler-version=8 | grep Wclass-memaccess'
-  test_failure 'premake5 | grep lto'
-  test_success 'premake5 --jln-lto=on | grep lto'
+  test_success 'premake5 --version | grep Wlogical-op'
+  test_success 'premake5 --version --jln-warnings=off | grep -- -w'
+  test_success 'premake5 --version | grep fsanitize'
+  test_failure 'premake5 --version | grep GLIB'
+  test_failure 'premake5 --version | grep Weverything'
+  test_success 'premake5 --version --cc=gcc | grep Wlogical-op'
+  test_success 'premake5 --version --cc=clang | grep Weverything'
+  test_success 'premake5 --version --cc=gcc --jln-compiler=clang | grep Weverything'
+  test_failure 'premake5 --version --jln-compiler-version=4 | grep Wclass-memaccess'
+  test_success 'premake5 --version --jln-compiler-version=8 | grep Wclass-memaccess'
+  test_failure 'premake5 --version | grep lto'
+  test_success 'premake5 --version --jln-lto=on | grep lto'
 fi
 
 if [ -z "$1" ] || [ "$1" = cmake ]; then
@@ -94,7 +104,7 @@ fi
 if [ -z "$1" ] || [ "$1" = scons ]; then
   mkdir -p "$TMPDIR"/compgenscons
   cp "$d"/scons/SConstruct "$TMPDIR"/compgenscons/
-  cp "$d"/../output/scons "$TMPDIR"/compgenscons/jln_options.py
+  cp "$d"/../output/cpp/scons "$TMPDIR"/compgenscons/jln_options.py
   cd "$TMPDIR"/compgenscons
   test_success 'scons -Q | grep Wall'
   test_failure 'scons -Q jln_warnings=default | grep Wall'
