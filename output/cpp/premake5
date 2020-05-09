@@ -800,9 +800,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     end
     if not ( values["jln-exceptions"] == "default") then
       if values["jln-exceptions"] == "on" then
-        jln_buildoptions = jln_buildoptions .. " /EHc"
+        jln_buildoptions = jln_buildoptions .. " /EHsc"
       else
-        jln_buildoptions = jln_buildoptions .. " /EHc-"
+        jln_buildoptions = jln_buildoptions .. " /EHs- /D_HAS_EXCEPTIONS=0"
       end
     end
     if not ( values["jln-optimization"] == "default") then

@@ -558,9 +558,9 @@ def jln_flags(options, compiler=None, version=None):
           flags += ('/ZI', )
     if not ( options.get('exceptions', _jln_default_flags['exceptions']) == 'default') :
       if options.get('exceptions', _jln_default_flags['exceptions']) == 'on' :
-        flags += ('/EHc', )
+        flags += ('/EHsc', )
       else:
-        flags += ('/EHc-', )
+        flags += ('/EHs-', '/D_HAS_EXCEPTIONS=0', )
     if not ( options.get('optimization', _jln_default_flags['optimization']) == 'default') :
       if options.get('optimization', _jln_default_flags['optimization']) == '0' :
         flags += ('/Ob0 /Od /Oi- /Oy-', )

@@ -525,9 +525,9 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     endif
     if (  not ( (___jln_c_flags.get('exceptions', 'default') == 'default')) )
       if (  (___jln_c_flags.get('exceptions', 'default') == 'on') )
-        jln_c_c_flags += ['/EHc', ]
+        jln_c_c_flags += ['/EHsc', ]
       else
-        jln_c_c_flags += ['/EHc-', ]
+        jln_c_c_flags += ['/EHs-', '/D_HAS_EXCEPTIONS=0', ]
       endif
     endif
     if (  not ( (___jln_c_flags.get('optimization', 'default') == 'default')) )

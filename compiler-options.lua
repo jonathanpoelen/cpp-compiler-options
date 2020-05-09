@@ -676,7 +676,7 @@ msvc {
     Or(lvl'on', lvl'all') {
       flag'/w4456', flag'/w4459'
     } /
-    lvl 'local' {
+    lvl'local' {
       flag'/w4456', flag'/wd4459'
     }
   },

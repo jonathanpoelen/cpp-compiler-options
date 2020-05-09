@@ -1324,13 +1324,14 @@ rule jln_c_flags ( properties * )
       if ( $(x_exceptions) = "on" )
       {
         flags +=
-          <cflags>"/EHc"
+          <cflags>"/EHsc"
         ;
       }
       else
       {
         flags +=
-          <cflags>"/EHc-"
+          <cflags>"/EHs-"
+          <cflags>"/D_HAS_EXCEPTIONS=0"
         ;
       }
     }
