@@ -593,7 +593,12 @@ msvc {
   },
 
   opt'exceptions'{
-    lvl'on' { flag'/EHc' } / { flag'/EHc-' }
+    lvl'on' {
+      flag'/EHsc'
+    } / {
+      flag'/EHs-',
+      flag'/D_HAS_EXCEPTIONS=0'
+    }
   },
 
   opt'optimization' {
