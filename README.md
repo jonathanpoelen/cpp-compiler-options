@@ -124,8 +124,6 @@ include(output/cpp/cmake)
 # init default values
 # jln_init_flags([<jln-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])
 # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
-# When jln_init_flags() is called without option, AUTO_PROFILE=on.
-#  Otherwise, AUTO_PROFILE=off and `on` value must be explicitly added.
 jln_init_flags(SUGGESTIONS on) # set SUGGESTIONS default value to "on"
 
 

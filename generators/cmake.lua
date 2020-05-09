@@ -53,8 +53,6 @@ return {
     _:print('\n# init default values')
     _:print('# '.. prefixfunc .. '_init_flags([<'.. prefixfunc .. '-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])')
     _:print('# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)')
-    _:print('# When '.. prefixfunc .. '_init_flags() is called without option, AUTO_PROFILE=on.')
-    _:print('#  Otherwise, AUTO_PROFILE=off and `on` value must be explicitly added.')
     _:print('function('.. prefixfunc .. '_init_flags)')
     _:write('  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE')
     local names = {}
