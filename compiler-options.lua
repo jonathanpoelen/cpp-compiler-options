@@ -128,7 +128,7 @@ return Or(gcc, clang) {
   opt'lto' {
     lvl'off' {
       fl'-fno-lto',
-    } / 
+    } /
     gcc {
       fl'-flto',
       vers(5) {
@@ -180,7 +180,7 @@ return Or(gcc, clang) {
               fl'-fwhole-program-vtables'
             }
           }
-        }*    
+        }*
         vers(7) {
           fl'-fforce-emit-vtables',
         }
@@ -501,7 +501,7 @@ return Or(gcc, clang) {
     }
   },
 
-  opt'color' {    
+  opt'color' {
     Or(gcc(4,9), clang) {
       lvl'auto' { flag'-fdiagnostics-color=auto' } /
       lvl'never' { flag'-fdiagnostics-color=never' } /
@@ -633,7 +633,7 @@ msvc {
   },
 
   opt'stl_debug' {
-    lvl'off' { 
+    lvl'off' {
       flag'/D_HAS_ITERATOR_DEBUGGING=0'
     } / {
       flag'/D_DEBUG', -- set by /MDd /MTd or /LDd
@@ -1115,7 +1115,7 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
   if type(out) == 'table' then
     for _,data in pairs(out) do
       if type(data) == 'table' then
-        write_file(data[1], data[2])        
+        write_file(data[1], data[2])
       else
         io.write(data)
       end
@@ -1210,7 +1210,7 @@ end
 
 if i > #arg then
   help(io.stderr)
-  io.stderr:write('Missing generator file\n')  
+  io.stderr:write('Missing generator file\n')
   os.exit(1)
 end
 
