@@ -15,7 +15,6 @@ return {
       _not='not',
       _and='and',
       _or='or',
-      else_of_else_if='else',
       openblock='',
       closeblock='',
       ifopen='',

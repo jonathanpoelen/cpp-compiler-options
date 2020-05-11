@@ -100,8 +100,9 @@ return {
     else
       local sub = x._and or x._or
       if sub then
-        _:startcond(sub[1], optname)
-        _:startcond(sub[2], optname)
+        for k,y in pairs(sub) do
+          _:startcond(y, optname)
+        end
       end
     end
   end,

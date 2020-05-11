@@ -1,56 +1,96 @@
 #!/usr/bin/env lua
-local cond_mt = {
+
+function printAST(ast, prefix)
+  if type(ast) == 'table' then
+    io.stdout:write('{\n')
+    local newprefix = prefix..'  '
+    for k,x in pairs(ast) do
+      if k ~= '_subelse' then
+        io.stdout:write(newprefix..k..': ')
+        printAST(x, newprefix)
+      end
+    end
+    io.stdout:write(prefix..'}\n')
+  elseif ast then
+    io.stdout:write(ast..'\n')
+  else
+    io.stdout:write('nil\n')
+  end
+end
+
+local if_mt = {
   __call = function(_, x)
-    if _._t then error('`t` is not nil') end
+    assert(not _._t, '`_t` is not nil')
+    if #x == 1 then
+      x = x[1]
+    end
     _._t = x
     return _
   end,
   __div = function(_, x)
-    local t = _._else
-    if t then t[#t+1] = x
-    else _._else = {x} end
-    return _
-  end,
-  __mul = function(_, x)
-    local t = _._c or _._t
-    t[#t+1] = x
-    _._c = x._t
+    local subelse = _._subelse or _
+    assert(subelse._if and not subelse._else)
+    _._subelse = x
+    subelse._else = x
     return _
   end,
   __unm = function(_)
-    return setmetatable({ _not=_, _t=_._t }, cond_mt)
+    assert(_._if, 'not a conditional expression')
+    return setmetatable({ _if={_not=_._if}, _t=_._t, _subelse=_._subelse }, if_mt)
   end,
 }
 
-local comp_mt = {
-  __call = function(_, x_or_major, minor)
-    if type(x_or_major) == 'number' then
-      return setmetatable({ _and = { { compiler=_.compiler }, { version={x_or_major, minor or 0} } } }, cond_mt)
+local opt_mt = {
+  __call = if_mt.__call,
+  __div = if_mt.__div,
+}
+
+function If(condition)
+  return setmetatable({ _if=condition }, if_mt)
+end
+
+function Logical(op, ...)
+  local conds={}
+  for k,x in ipairs({...}) do
+    assert(x._if and not x._t)
+    assert(not x._if.opt)
+    if x._if[op] then
+      for _,cond in ipairs(x._if[op]) do
+        conds[#conds+1] = cond
+      end
     else
-      return setmetatable({ compiler=_.compiler, _t=x_or_major }, cond_mt)
+      conds[#conds+1] = x._if
     end
-  end,
-  __div = function(_, x)
-    return _({}) / x
-  end,
-  __mul = function(_, x)
-    return _({}) * x
-  end,
-  __unm = function(_)
-    return -_({})
-  end,
-}
+  end
+  return If({[op]=conds})
+end
 
-function compiler(name) return setmetatable({ compiler=name }, comp_mt) end
+function Compiler(name)
+  return function(x_or_major, minor)
+    if type(x_or_major) == 'number' then
+      return If({_and={ {compiler=name}, {version={x_or_major, minor or 0}} }})
+    else
+      local r = If({compiler=name})
+      if x_or_major then
+        return r(x_or_major)
+      end
+      return r
+    end
+  end
+end
 
-local gcc = compiler('gcc')
-local clang = compiler('clang')
-local msvc = compiler('msvc')
-function vers(major, minor) return setmetatable({ version={major, minor or 0} }, cond_mt) end
-function lvl(x) return setmetatable({ lvl=x }, cond_mt) end
-function opt(x) return setmetatable({ opt=x }, cond_mt) end
-function Or(...) return setmetatable({ _or={...} }, cond_mt) end
-function And(...) return setmetatable({ _and={...} }, cond_mt) end
+function Or(...) return Logical('_or', ...) end
+function And(...) return Logical('_and', ...) end
+
+function vers(major, minor) return If({version={major, minor or 0}}) end
+function lvl(x) return If({lvl=x}) end
+function opt(x) return If({opt=x}) end
+
+local gcc = Compiler('gcc')
+local clang = Compiler('clang')
+local clang_cl = Compiler('clang-cl')
+local clang_like = function() return Or(clang_cl(), clang()) end
+local msvc = Compiler('msvc')
 
 function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
 function flag(x) return { cxx=x } end
@@ -75,12 +115,263 @@ end
 -- https://clang.llvm.org/docs/DiagnosticsReference.html
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
-return Or(gcc, clang) {
+return {
+
+-- https://clang.llvm.org/docs/UsersManual.html#id9
+Or(gcc(), clang(), clang_cl()) {
+  opt'warnings' {
+    lvl'off' {
+      flag'-w'
+    } / {
+      gcc {
+        flag'-Wall',
+        flag'-Wextra',
+        flag'-Wcast-align=strict',
+        flag'-Wcast-qual',
+        flag'-Wdisabled-optimization',
+        flag'-Wfloat-equal',
+        flag'-Wformat-security',
+        flag'-Wformat=2',
+        flag'-Wmissing-include-dirs',
+     -- flag'-Weffc++',
+        flag'-Wpacked',
+        flag'-Wredundant-decls',
+        flag'-Wundef',
+        flag'-Wunused-macros',
+     -- flag'-Winline',
+     -- flag'-Wswitch-default',
+     -- flag'-Wswitch-enum',
+        flag'-Winvalid-pch',
+        flag'-Wpointer-arith',
+        cxx'-Wmissing-declarations',
+        cxx'-Wnon-virtual-dtor',
+        cxx'-Wold-style-cast',
+        cxx'-Woverloaded-virtual',
+        c'-Wbad-function-cast',
+        c'-Winit-self', -- enabled by -Wall in C++
+        c'-Wjump-misses-init',
+        c'-Wnested-externs',
+        c'-Wold-style-definition',
+        c'-Wstrict-prototypes',
+        c'-Wwrite-strings',
+
+        vers(4,7) {
+          flag'-Wsuggest-attribute=noreturn',
+          cxx'-Wzero-as-null-pointer-constant',
+          flag'-Wlogical-op',
+       -- flag'-Wno-aggressive-loop-optimizations',
+       -- flag'-Wnormalized=nfc',
+          flag'-Wvector-operation-performance',
+          flag'-Wdouble-promotion',
+          flag'-Wtrampolines', -- C only with a nested function ?
+
+          vers(4,8) {
+            cxx'-Wuseless-cast',
+
+            vers(4,9) {
+              cxx'-Wconditionally-supported',
+              flag'-Wfloat-conversion',
+
+              vers(5,1) {
+                flag'-Wformat-signedness',
+                flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
+             -- flag'-Wctor-dtor-privacy',
+                cxx'-Wstrict-null-sentinel',
+                cxx'-Wsuggest-override',
+
+                vers(6,1) {
+                  flag'-Wduplicated-cond',
+                  flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
+
+                  vers(7) {
+                    cxx'-Waligned-new',
+
+                    vers(7,1) {
+                      flag'-Walloc-zero',
+                      flag'-Walloca',
+                      flag'-Wformat-overflow=2',
+                   -- flag'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
+                   -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
+                      flag'-Wduplicated-branches',
+
+                      vers(8) {
+                        cxx'-Wclass-memaccess',
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      / clang_like() {
+        flag'-Weverything',
+        flag'-Wno-documentation',
+        flag'-Wno-documentation-unknown-command',
+        flag'-Wno-newline-eof',
+     -- flag'-Wno-range-loop-analysis',
+     -- flag'-Wno-disabled-macro-expansion',
+        cxx'-Wno-c++98-compat',
+        cxx'-Wno-c++98-compat-pedantic',
+        flag'-Wno-mismatched-tags',
+        flag'-Wno-padded',
+        flag'-Wno-global-constructors',
+        cxx'-Wno-weak-vtables',
+        cxx'-Wno-exit-time-destructors',
+        flag'-Wno-covered-switch-default',
+     -- cxx'-Qunused-arguments',
+        flag'-Wno-switch-default',
+        flag'-Wno-switch-enum',
+
+        vers(3,9) {
+          cxx'-Wno-undefined-var-template',
+
+          vers(5) {
+            cxx'-Wno-inconsistent-missing-destructor-override',
+
+            vers(9) {
+              cxx'-Wno-ctad-maybe-unsupported',
+            },
+          }
+        }
+      },
+
+      Or(lvl'strict', lvl'very_strict') {
+        flag'-Wconversion',
+        gcc(8) { flag'-Wcast-align=strict', }
+      } /
+      clang_like() {
+        flag'-Wno-conversion',
+        flag'-Wno-sign-conversion',
+      },
+    },
+  },
+
+  opt'warnings_as_error' {
+    lvl'on' { flag'-Werror', } /
+    lvl'basic' {
+      flag'-Werror=non-virtual-dtor',
+      flag'-Werror=return-type',
+      flag'-Werror=init-self',
+      gcc(5,1) {
+        flag'-Werror=array-bounds',
+        flag'-Werror=logical-op',
+        flag'-Werror=logical-not-parentheses',
+      } /
+      clang_like() {
+        flag'-Werror=array-bounds',
+        flag'-Werror=division-by-zero',
+
+        vers(3,4) {
+          flag'-Werror=logical-not-parentheses',
+
+          vers(3,6) {
+            flag'-Werror=delete-incomplete',
+
+            vers(7) {
+              flag'-Werror=dynamic-class-memaccess',
+            }
+          }
+        }
+      }
+    } /
+    flag'-Wno-error',
+  },
+
+  opt'sanitizers' {
+    lvl'off' {
+      fl'-fno-sanitize=all'
+    } / {
+      clang_like() {
+        vers(3,1) {
+          fl'-fsanitize=undefined',
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          flag'-fsanitize-address-use-after-scope',
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
+          vers(3,4) {
+            fl'-fsanitize=leak', -- requires the address sanitizer
+          },
+        }
+      } /
+      gcc {
+        vers(4,8) {
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
+
+          vers(4,9) {
+            fl'-fsanitize=undefined',
+            fl'-fsanitize=leak', -- requires the address sanitizer
+          }
+        }
+      },
+    },
+  },
+
+  opt'control_flow' {
+    lvl'off' {
+      gcc(8) { flag'-fcf-protection=none' } /
+      clang_cl { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
+      clang { fl'-fno-sanitize=cfi' },
+    } /
+    {
+      gcc(8) {
+        -- flag'-mcet',
+        flag'-fcf-protection=full' --  full|branch|return|none
+      } /
+      And(lvl'allow_bugs', clang()) {
+        fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
+        flag'-fvisibility=hidden',
+        fl'-flto',
+      } /
+      clang_cl { flag'-fsanitize-cfi-cross-dso' }
+    },
+  },
+
+  opt'color' {
+    Or(gcc(4,9), clang(), clang_cl()) {
+      lvl'auto' { flag'-fdiagnostics-color=auto' } /
+      lvl'never' { flag'-fdiagnostics-color=never' } /
+      lvl'always' { flag'-fdiagnostics-color=always' },
+    },
+  },
+
+  opt'reproducible_build_warnings' {
+    gcc(4,9) {
+      lvl'on' { flag'-Wdate-time' } / flag'-Wno-date-time'
+    }
+  },
+
+  opt'diagnostics_format' {
+    lvl'fixits' {
+      Or(gcc(7), clang_like(5)) {
+        flag'-fdiagnostics-parseable-fixits'
+      }
+    } /
+    lvl'patch' {
+      gcc(7) { flag'-fdiagnostics-generate-patch' }
+    } /
+    lvl'print_source_range_info' {
+      clang { flag'-fdiagnostics-print-source-range-info' }
+    }
+  },
+
+},
+
+Or(gcc(), clang()) {
   opt'fix_compiler_error' {
     lvl'on' {
       gcc {
-        vers(4,7) { cxx'-Werror=narrowing' } *
-        vers(7,1) { cxx'-Werror=literal-suffix' } -- no warning name before 7.1
+        vers(4,7) {
+          cxx'-Werror=narrowing',
+
+          vers(7,1) {
+            cxx'-Werror=literal-suffix', -- no warning name before 7.1
+          }
+        }
       },
       flag'-Werror=write-strings'
     } /
@@ -174,15 +465,17 @@ return Or(gcc, clang) {
       gcc {
         fl'-fwhole-program'
       } / {
-        clang(3,9) {
-          opt'lto'{
-            -lvl'off' {
-              fl'-fwhole-program-vtables'
+        clang {
+          vers(3,9) {
+            opt'lto'{
+              -lvl'off' {
+                fl'-fwhole-program-vtables'
+              }
+            },
+            vers(7) {
+              fl'-fforce-emit-vtables',
             }
           }
-        }*
-        vers(7) {
-          fl'-fforce-emit-vtables',
         }
       }
     }
@@ -218,9 +511,9 @@ return Or(gcc, clang) {
         fl'-fstack-protector-all',
         clang {
           fl'-fsanitize=safe-stack',
-        }
-        * vers(11) {
-          fl'-fstack-clash-protection'
+          vers(11) {
+            fl'-fstack-clash-protection'
+          }
         }
       } /
       fl'-fstack-protector',
@@ -250,15 +543,15 @@ return Or(gcc, clang) {
       gcc {
         flag'-Wsuggest-attribute=pure',
         flag'-Wsuggest-attribute=const',
-      }*
-      vers(5) {
-        cxx'-Wsuggest-final-types',
-        cxx'-Wsuggest-final-methods',
-     -- flag'-Wsuggest-attribute=format',
-      }*
-      vers(5,1) {
-        flag'-Wnoexcept',
-      },
+        vers(5) {
+          cxx'-Wsuggest-final-types',
+          cxx'-Wsuggest-final-methods',
+       -- flag'-Wsuggest-attribute=format',
+          vers(5,1) {
+            flag'-Wnoexcept',
+          },
+        }
+      }
     },
   },
 
@@ -302,213 +595,6 @@ return Or(gcc, clang) {
     }
   },
 
-  opt'warnings' {
-    lvl'off' {
-      flag'-w'
-    } / {
-      gcc {
-        flag'-Wall',
-        flag'-Wextra',
-        flag'-Wcast-align=strict',
-        flag'-Wcast-qual',
-        flag'-Wdisabled-optimization',
-        flag'-Wfloat-equal',
-        flag'-Wformat-security',
-        flag'-Wformat=2',
-        flag'-Wmissing-include-dirs',
-     -- flag'-Weffc++',
-        flag'-Wpacked',
-        flag'-Wredundant-decls',
-        flag'-Wundef',
-        flag'-Wunused-macros',
-     -- flag'-Winline',
-     -- flag'-Wswitch-default',
-     -- flag'-Wswitch-enum',
-        flag'-Winvalid-pch',
-        flag'-Wpointer-arith',
-        cxx'-Wmissing-declarations',
-        cxx'-Wnon-virtual-dtor',
-        cxx'-Wold-style-cast',
-        cxx'-Woverloaded-virtual',
-        c'-Wbad-function-cast',
-        c'-Winit-self', -- enabled by -Wall in C++
-        c'-Wjump-misses-init',
-        c'-Wnested-externs',
-        c'-Wold-style-definition',
-        c'-Wstrict-prototypes',
-        c'-Wwrite-strings',
-      }*
-
-      vers(4,7) {
-        flag'-Wsuggest-attribute=noreturn',
-        cxx'-Wzero-as-null-pointer-constant',
-        flag'-Wlogical-op',
-     -- flag'-Wno-aggressive-loop-optimizations',
-     -- flag'-Wnormalized=nfc',
-        flag'-Wvector-operation-performance',
-        flag'-Wdouble-promotion',
-        flag'-Wtrampolines', -- C only with a nested function ?
-      }*
-
-      vers(4,8) {
-        cxx'-Wuseless-cast',
-      }*
-
-      vers(4,9) {
-        cxx'-Wconditionally-supported',
-        flag'-Wfloat-conversion',
-      }*
-
-      vers(5,1) {
-        flag'-Wformat-signedness',
-        flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
-     -- flag'-Wctor-dtor-privacy',
-        cxx'-Wstrict-null-sentinel',
-        cxx'-Wsuggest-override',
-      }*
-
-      vers(6,1) {
-        flag'-Wduplicated-cond',
-        flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
-      }*
-
-      vers(7) {
-        cxx'-Waligned-new',
-      }*
-
-      vers(7,1) {
-        flag'-Walloc-zero',
-        flag'-Walloca',
-        flag'-Wformat-overflow=2',
-     -- flag'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
-     -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
-        flag'-Wduplicated-branches',
-      }*
-
-      vers(8) {
-        cxx'-Wclass-memaccess',
-      }
-
-      / clang {
-        flag'-Weverything',
-     -- flag'-Wno-documentation-unknown-command',
-     -- flag'-Wno-range-loop-analysis',
-     -- flag'-Wno-disabled-macro-expansion',
-        cxx'-Wno-c++98-compat',
-        cxx'-Wno-c++98-compat-pedantic',
-        flag'-Wno-mismatched-tags',
-        flag'-Wno-padded',
-        flag'-Wno-global-constructors',
-        cxx'-Wno-weak-vtables',
-        cxx'-Wno-exit-time-destructors',
-        flag'-Wno-covered-switch-default',
-     -- cxx'-Qunused-arguments',
-        flag'-Wno-switch-default',
-        flag'-Wno-switch-enum',
-
-        vers(3,9) {
-          cxx'-Wno-undefined-var-template',
-        }*
-
-        vers(5) {
-          cxx'-Wno-inconsistent-missing-destructor-override',
-        }*
-
-        vers(9) {
-          cxx'-Wno-ctad-maybe-unsupported',
-        },
-      },
-
-      Or(lvl'strict', lvl'very_strict') {
-        flag'-Wconversion',
-        gcc(8) { flag'-Wcast-align=strict', }
-      } /
-      clang {
-        flag'-Wno-conversion',
-        flag'-Wno-sign-conversion',
-      },
-    },
-  },
-
-  opt'sanitizers' {
-    lvl'off' {
-      fl'-fno-sanitize=all'
-    } / {
-      clang {
-        vers(3,1) {
-          fl'-fsanitize=undefined',
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fsanitize-address-use-after-scope',
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
-        }*
-        vers(3,4) {
-          fl'-fsanitize=leak', -- requires the address sanitizer
-        },
-      } /
-      -- gcc
-      {
-        vers(4,8) {
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
-        }*
-        vers(4,9) {
-          fl'-fsanitize=undefined',
-          fl'-fsanitize=leak', -- requires the address sanitizer
-        }
-      },
-    },
-  },
-
-  opt'control_flow' {
-    lvl'off' {
-      gcc(8) { flag'-fcf-protection=none' } /
-      clang { fl'-fno-sanitize=cfi' },
-    } /
-    {
-      gcc(8) {
-        -- flag'-mcet',
-        flag'-fcf-protection=full' --  full|branch|return|none
-      } /
-      And(lvl'allow_bugs', clang) {
-        fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
-        flag'-fvisibility=hidden',
-        fl'-flto',
-      },
-    },
-  },
-
-  opt'sanitizers_extra' {
-    lvl'thread' { flag'-fsanitize=thread', } /
-    lvl'pointer' {
-      gcc(8) {
-        -- By default the check is disabled at run time.
-        -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
-        -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
-        -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
-        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
-        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
-        flag'-fsanitize=pointer-compare',
-        flag'-fsanitize=pointer-subtract',
-      }
-    }
-  },
-
-  opt'reproducible_build_warnings' {
-    gcc(4,9) {
-      lvl'on' { flag'-Wdate-time' } / flag'-Wno-date-time'
-    }
-  },
-
-  opt'color' {
-    Or(gcc(4,9), clang) {
-      lvl'auto' { flag'-fdiagnostics-color=auto' } /
-      lvl'never' { flag'-fdiagnostics-color=never' } /
-      lvl'always' { flag'-fdiagnostics-color=always' },
-    },
-  },
-
   opt'elide_type' {
     lvl'on' {
      gcc(8) { cxx'-felide-type' }
@@ -527,57 +613,31 @@ return Or(gcc, clang) {
   },
 
   opt'diagnostics_show_template_tree' {
-    Or(gcc(8), clang) {
+    Or(gcc(8), clang()) {
       lvl'on' { cxx'-fdiagnostics-show-template-tree' } / cxx'-fno-diagnostics-show-template-tree',
     },
   },
 
-  opt'diagnostics_format' {
-    lvl'fixits' {
-      Or(gcc(7), clang(5)) {
-        flag'-fdiagnostics-parseable-fixits'
+  opt'sanitizers_extra' {
+    lvl'thread' { flag'-fsanitize=thread', } /
+    lvl'pointer' {
+      gcc(8) {
+        -- By default the check is disabled at run time.
+        -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
+        -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
+        -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
+        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
+        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
+        flag'-fsanitize=pointer-compare',
+        flag'-fsanitize=pointer-subtract',
       }
-    } /
-    lvl'patch' {
-      gcc(7) { flag'-fdiagnostics-generate-patch' }
-    } /
-    lvl'print_source_range_info' {
-      clang { flag'-fdiagnostics-print-source-range-info' }
     }
   },
-
-  opt'warnings_as_error' {
-    lvl'on' { flag'-Werror', } /
-    lvl'basic' {
-      flag'-Werror=non-virtual-dtor',
-      flag'-Werror=return-type',
-      flag'-Werror=init-self',
-      gcc(5,1) {
-        flag'-Werror=array-bounds',
-        flag'-Werror=logical-op',
-        flag'-Werror=logical-not-parentheses',
-      } /
-      clang {
-        flag'-Werror=array-bounds',
-        flag'-Werror=division-by-zero',
-        vers(3,4) {
-          flag'-Werror=logical-not-parentheses',
-        }*
-        vers(3,6) {
-          flag'-Werror=delete-incomplete',
-        }*
-        vers(7) {
-          flag'-Werror=dynamic-class-memaccess',
-        }
-      }
-    } /
-    flag'-Wno-error',
-  }
-} /
+},
 
 -- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options?view=vs-2019
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically?view=vs-2019
-msvc {
+Or(msvc(), clang_cl()) {
   opt'stl_fix' {
     lvl'on' { flag'/DNOMINMAX', },
   },
@@ -594,10 +654,11 @@ msvc {
 
   opt'exceptions'{
     lvl'on' {
-      flag'/EHsc'
+      flag'/EHsc',
+      flag'/D_HAS_EXCEPTIONS=1',
     } / {
       flag'/EHs-',
-      flag'/D_HAS_EXCEPTIONS=0'
+      flag'/D_HAS_EXCEPTIONS=0',
     }
   },
 
@@ -613,11 +674,6 @@ msvc {
       lvl'size' { flag'/O1', link'/OPT:REF', flag'/Gw' } /
       lvl'fast' { flag'/O2', link'/OPT:REF', flag'/fp:fast' }
     }
-  },
-
-  opt'lto' {
-    lvl'off' { flag'/LTCG:OFF' } /
-    { flag'/GL', link'/LTCG' }
   },
 
   opt'whole_program' {
@@ -651,22 +707,25 @@ msvc {
     flag'/guard:cf',
   },
 
-  opt'sanitizers' {
-    lvl'on' {
-      flag'/sdl',
-    } /
-    opt'stack_protector' {
-      -lvl'off' { flag'/sdl-' },
-    },
-  },
-
   opt'stack_protector' {
-    -lvl'off' {
+    lvl'off' {
+      flag'/GS-',
+    } /
+    {
       flag'/GS',
       flag'/sdl',
       lvl'strong' { flag'/RTC1', } / -- /RTCsu
       lvl'all' { flag'/RTC1', flag'/RTCc', },
     },
+  },
+},
+
+Or(msvc()) {
+  opt'warnings' {
+    lvl'on' { flag'/W4', flag'/wd4244', flag'/wd4245' } /
+    lvl'strict' { flag'/Wall', flag'/wd4820', flag'/wd4514', flag'/wd4710' } /
+    lvl'very_strict' { flag'/Wall' } /
+    lvl'off' { flag'/W0' },
   },
 
   opt'shadow_warnings' {
@@ -681,17 +740,26 @@ msvc {
     }
   },
 
-  opt'warnings' {
-    lvl'on' { flag'/W4', flag'/wd4244', flag'/wd4245' } /
-    lvl'strict' { flag'/Wall', flag'/wd4820', flag'/wd4514', flag'/wd4710' } /
-    lvl'very_strict' { flag'/Wall' } /
-    lvl'off' { flag'/W0' },
-  },
-
   opt'warnings_as_error' {
     lvl'on' { fl'/WX' } /
     lvl'off' { flag'/WX-' }
   },
+
+  opt'lto' {
+    lvl'off' { flag'/LTCG:OFF' } /
+    { flag'/GL', link'/LTCG' }
+  },
+
+  opt'sanitizers' {
+    lvl'on' {
+      flag'/sdl',
+    } /
+    opt'stack_protector' {
+      -lvl'off' { flag'/sdl-' },
+    },
+  },
+},
+
 }
 end -- MakeAST
 
@@ -784,7 +852,6 @@ Vbase = {
 
   startcond=noop, -- function(_, x, optname) end,
   elsecond=noop, -- function(_, optname) end,
-  markelseif=noop, -- function() end,
   stopcond=noop, -- function(_, optname) end,
 
   cxx=noop,
@@ -809,7 +876,6 @@ Vbase = {
     end
     _._vcondkeyword.ifopen = _._vcondkeyword.ifopen or _._vcondkeyword.open
     _._vcondkeyword.ifclose = _._vcondkeyword.ifclose or _._vcondkeyword.close
-    _._vcondkeyword.else_of_else_if = _._vcondkeyword.else_of_else_if or (_._vcondkeyword._else .. ' ')
     _._vcondkeyword.endif = _._vcondkeyword.endif or _._vcondkeyword.closeblock
     if #_._vcondkeyword.ifopen ~= 0 then _._vcondkeyword.ifopen = ' ' .. _._vcondkeyword.ifopen .. ' ' end
     if #_._vcondkeyword.ifclose ~= 0 then _._vcondkeyword.ifclose = ' ' .. _._vcondkeyword.ifclose end
@@ -869,14 +935,6 @@ Vbase = {
       if #_._vcondkeyword.openblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.openblock)
       end
-    end
-
-    _.markelseif=function(_)
-      _:_vcond_printflags()
-      if #_._vcondkeyword.closeblock ~= 0 then
-        _:print(_.indent .. _._vcondkeyword.closeblock)
-      end
-      _.if_prefix = _._vcondkeyword.else_of_else_if
     end
 
     _.stopcond=function(_)
@@ -990,70 +1048,48 @@ for name,opts in pairs(Vbase._opts_build_type) do
 end
 
 
-function is_cond(t)
-  return t.lvl or t._or or t._and or t._not or t.compiler or t.version
-end
-
 function evalflagselse(t, v, curropt)
-  local n = #t._else
-  for k,x in pairs(t._else) do
-    mark_elseif = (k ~= n or is_cond(x))
-    if mark_elseif then
-      v:markelseif()
-      evalflags(x, v, curropt, mark_elseif)
-    else
-      v:elsecond(curropt)
-      v.indent = v.indent .. '  '
-      evalflags(x, v, curropt, mark_elseif)
-      v.indent = v.indent:sub(1, #v.indent-2)
-    end
+  if t._else then
+    v:elsecond(curropt)
+    v.indent = v.indent .. '  '
+    evalflags(t._else, v, curropt)
+    v.indent = v.indent:sub(1, #v.indent-2)
   end
 end
 
-function evalflags(t, v, curropt, no_stopcond)
-  if is_cond(t) then
-    if t.lvl and not opts_krev[curropt][t.lvl] then
-       error('Unknown lvl "' .. t.lvl .. '" in ' .. curropt)
-    end
-    local r = v:startcond(t, curropt)
-    if r ~= false and t._t then
-      v.indent = v.indent .. '  '
-      evalflags(t._t, v, curropt)
-      v.indent = v.indent:sub(1, #v.indent-2)
-    end
-    if r ~= true and t._else then
-      evalflagselse(t, v, curropt)
-    end
-    if not no_stopcond then
-      v:stopcond(curropt)
-    end
-  elseif t.opt then
-    if not v._opts[t.opt] then
-      error('Unknown "' .. t.opt .. '" option')
-    end
-    if not v.ignore[t.opt] then
-      local r = v:startopt(t.opt)
-      if r ~= false then
-        v.indent = v.indent .. '  '
-        evalflags(t._t, v, t.opt)
-        v.indent = v.indent:sub(1, #v.indent-2)
-        v:stopopt(t.opt)
+function evalflags(t, v, curropt)
+  if t._if then
+    local opt = t._if.opt
+    if opt then
+      if not v._opts[opt] then
+        error('Unknown "' .. opt .. '" option')
       end
-      if r ~= true and t._else then
+      if not v.ignore[opt] then
+        local r = v:startopt(opt)
+        if r ~= false then
+          v.indent = v.indent .. '  '
+          evalflags(t._t, v, opt)
+          v.indent = v.indent:sub(1, #v.indent-2)
+          v:stopopt(opt)
+        end
+        if r ~= true then
+          evalflagselse(t, v, curropt)
+        end
+        v:stopcond(opt)
+      elseif t._else then
+        evalflags(t._else, v, curropt)
+      end
+    else
+      local r = v:startcond(t._if, curropt)
+      if r ~= false and t._t then
+        v.indent = v.indent .. '  '
+        evalflags(t._t, v, curropt)
+        v.indent = v.indent:sub(1, #v.indent-2)
+      end
+      if r ~= true then
         evalflagselse(t, v, curropt)
       end
-      v:stopcond(t.opt)
-    elseif t._else then
-      local newt = table.remove(t._else, 1)
-      if newt._else then
-        error('unimplemented')
-      end
-      if #t._else == 0 then
-        t._else = nil
-      else
-        newt._else = t._else
-      end
-      evalflags(newt, v, curropt, no_stopcond)
+      v:stopcond(curropt)
     end
   elseif t.cxx or t.link then
     if t.cxx  then v:cxx(t.cxx, curropt) end
@@ -1098,6 +1134,10 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
     V = r
     insert_missing_function(V)
   end
+
+  -- printAST(MakeAST(is_C),'')
+  -- io.stdout:flush()
+  -- os.exit(1)
 
   evalflags(MakeAST(is_C), V)
 

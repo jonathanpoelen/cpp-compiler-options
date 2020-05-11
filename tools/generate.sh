@@ -6,7 +6,7 @@ if [ $# -ge 1 ] ; then
 fi
 
 set -o pipefail
-set -e
+set -ex
 
 OUTPUT_DIR_NAME=output
 
@@ -16,7 +16,7 @@ PROJECT_PATH=$(realpath $(dirname "$0"))/..
 if [ -d "$TMPDIR/$OUTPUT_DIR_NAME" ] ; then
   rm -r -- "$TMPDIR/$OUTPUT_DIR_NAME"/../output
 fi
-mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"/{c,cpp}/{clang,gcc,msvc}
+mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"/{c,cpp}/{clang,gcc,msvc,clang-cl}
 
 cd -- "$PROJECT_PATH"
 
@@ -79,7 +79,7 @@ for ((i=0; $i<2; ++i)) ; do
 done
 
 sgen compiler | while read comp ; do
-  compname=${comp/-*}
+  compname=${comp%-*}
   gencompopt 1 release                       $comp cpu=native lto optimization=2 linker=gold
   gencompopt 2 warnings                      $comp shadow_warnings=off warnings pedantic
   gencompopt 2 warnings_strict               $comp shadow_warnings=off warnings=strict pedantic
@@ -94,7 +94,7 @@ done
 
 echo -e "\n"Duplicated and removed:
 for d in $DIR_COMP_GEN ; do
-  $LUA_BIN "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/$d/" "$OUTPUT_DIR"/$d/{gcc,clang,msvc}/*
+  $LUA_BIN "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/$d/" "$OUTPUT_DIR"/$d/*/*
 done
 
 echo -e "\n"Empty and removed:

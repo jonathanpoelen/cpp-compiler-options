@@ -18,7 +18,7 @@ local tree = {} -- [compiler][version] = path
 local categories = {} -- [cat] = true
 for i=2,#arg do
   local filename = arg[i]:sub(subat)
-  local comp, vers, cat = filename:match('^([^/]+)/[^-]+-(%d[^-]+)-(.*)')
+  local comp, vers, cat = filename:match('^([^/]+)/%1-(%d[^-]+)-(.*)')
   if not comp then
     comp, cat = filename:match('^([^/]+)/[^-]+-(.*)')
     vers = ''
@@ -31,7 +31,10 @@ for i=2,#arg do
 end
 
 function get_file_contents(path)
-  local f = io.open(path)
+  local f, err = io.open(path)
+  if err then
+    error(path .. ': ' .. err)
+  end
   local s = f:read('*a')
   f:close()
   return s
@@ -99,18 +102,18 @@ function create_debug_file(prefix, files_contents)
   else
     local kt = tokeys(split_lines(files_contents['stl_debug_broken_abi_and_bugs']), debug_full_broken_abi)
     write_ktable(kt, prefix .. 'debug_full_broken_abi_and_bugs')
-  end    
+  end
 end
 
 for comp,versions in pairs(tree) do
   -- extract sorted version
   local t = {} -- {number, vers:string}
   for vers in pairs(versions) do
-    t[#t+1] = {tonumber(vers), vers}
+    t[#t+1] = {tonumber(vers) or 0, vers}
   end
   table.sort(t, function(a,b) return a[1] < b[1] end)
   local prefixcompbase = prefix .. comp .. '/' .. comp .. '-'
-  local prefixcomp = (t[1][1] and prefixcompbase .. t[1][2] .. '-' or prefixcompbase)
+  local prefixcomp = (t[1][1] ~= 0 and prefixcompbase .. t[1][2] .. '-' or prefixcompbase)
   local files_contents = load_files(prefixcomp)
   create_debug_file(prefixcomp, files_contents)
   for i=2,#t do

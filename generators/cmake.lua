@@ -17,7 +17,6 @@ return {
       _or='OR',
       openblock='',
       closeblock='',
-      else_of_else_if='else',
       _else='else()',
       endif='endif()',
     })
@@ -173,6 +172,7 @@ return {
   _comp_id = {
     gcc='"GNU"',
     clang='"Clang"',
+    ['clang-cl']='"Clang" AND DEFINED MSVC',
     msvc='"MSVC"',
   },
   _vcond_comp=function(_, compiler)

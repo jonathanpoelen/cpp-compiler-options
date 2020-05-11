@@ -53,7 +53,7 @@ $ `scons jln_sanitizers=on`
     3. [generators/{bjam,cmake,meson,premake5,scons}.lua](#generatorsbjamcmakemesonpremake5sconslua)
 4. [How to add options?](#how-to-add-options)
     1. [Update the options tree](#update-the-options-tree)
-        1. [cond_mt](#cond_mt)
+        1. [if_mt](#if_mt)
 <!-- /summary -->
 
 # Options
@@ -323,22 +323,16 @@ link'libname' -- alias of link'-llibname'
 fl'xxx' -- is a alias of {flag'xxx',link'xxx'}
 ```
 
-The following functions implement the metatable `cond_mt`.
+The following functions return the metatable `if_mt`.
 
-- `gcc`, `clang`, `msvc` and `vers`
+- `gcc`, `clang`, `clang_cl`, `clang_like`, `msvc` and `vers`
 
 ```lua
 gcc { ... } -- for gcc only.
 gcc(5) { ... } -- for >= gcc-5
 gcc(5, 3) { ... } -- for >= gcc-5.3
 
-gcc(xxx) { ... } -- is a alias of `gcc { vers(xxx) { ... } }`
-```
-
-- `Or`
-
-```lua
-Or(gcc, clang) { ... } -- gcc or clang
+gcc(major, minor) { ... } -- is a alias of `gcc { vers(major, minor) { ... } }`
 ```
 
 - `opt`, `lvl`
@@ -349,15 +343,23 @@ opt'warnings' { -- if warnings is enabled (not `warnings=default`)
 }
 ```
 
-### cond_mt
+- `Or`, `And`
+
+```lua
+Or(gcc(), clang(), msvc()) { ... }
+And(gcc(), lvl'off') { ... }
+```
+
+
+### if_mt
 
 - `-xxx {...}` for `not xxx`
 - `xxx {...} / yyy {...}` for `xxx else yyy`
-- `xxx {...} * yyy {...}` for `xxx then yyy`
 
 ```lua
 -gcc(5,3) { ... } -- < gcc-5.3
 opt'warnings' { -lvl'on' { ... } } -- neither warnings=on nor warnings=default
-gcc { xxx } * vers(5) { yyy } -- equivalent to `{ gcc { xxx }, gcc(5) { yyy } }`
 lvl'on' { xxx } / { yyy } -- equivalent to `{ lvl'on' { xxx }, -lvl'on' { yyy } }`
 ```
+
+Note: `-opt'name'` isn't allowed

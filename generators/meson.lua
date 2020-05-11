@@ -18,7 +18,6 @@ return {
       _or='or',
       openblock='',
       closeblock='',
-      else_of_else_if='el',
       _else='else',
       endif='endif',
     })

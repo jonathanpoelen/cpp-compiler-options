@@ -15,7 +15,6 @@ return {
       closeblock='',
       ifopen='',
       ifclose=':',
-      else_of_else_if='el',
       _else='else:',
       endif='',
     })

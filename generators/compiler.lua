@@ -9,38 +9,71 @@ return {
   start=function(_, compiler, ...)
     -- list compilers
     if not compiler then
-      return {
-        comps = {},
-        comp_versions = nil,
+      local currcomps = {}
+      local stackcomp = {}
+      local versions_by_compiler = {}
 
-        startcond=function(_, x)
+      return {
+        _startcond=function(_, x, compilers, versions)
           if x.compiler then
-            _.comp_versions = _.comps[x.compiler] or {}
-            _.comps[x.compiler] = _.comp_versions
+            compilers[#compilers+1] = x.compiler
           elseif x.version then
-            _.comp_versions[(x.version[1] < 0 and -x.version[1] or x.version[1]) .. '.' .. x.version[2]] = true
+            versions[#versions+1] = (x.version[1] < 0 and -x.version[1] or x.version[1])
+                                 .. '.' .. x.version[2]
           elseif x._not then
-            _:startcond(x._not)
+            _:_startcond(x._not, compilers, versions)
           else
             local sub = x._and or x._or
             if sub then
-              _:startcond(sub[1])
-              _:startcond(sub[2])
+              for k,y in pairs(sub) do
+                _:_startcond(y, compilers, versions)
+              end
+            end
+          end
+        end,
+
+        stopcond=function(_)
+          currcomps = stackcomp[#stackcomp]
+        end,
+
+        startcond=function(_, x)
+          local compilers, versions = {}, {}
+          _:_startcond(x, compilers, versions)
+
+          if #compilers == 0 then
+            compilers = currcomps
+          end
+
+          currcomps = compilers
+          stackcomp[#stackcomp+1] = compilers
+          for k,comp in ipairs(compilers) do
+            local kversions = versions_by_compiler[comp]
+            if not kversions then
+              kversions = {}
+              versions_by_compiler[comp] = kversions
+            end
+
+            for k,vers in ipairs(versions) do
+              kversions[#kversions+1] = vers
             end
           end
         end,
 
         stop=function(_)
+          local kcomps = {}
+          for comp,versions in pairs(versions_by_compiler) do
+            if #versions == 0 then
+              kcomps[comp] = true
+            else
+              for k,version in ipairs(versions) do
+                kcomps[comp .. '-' .. version] = true
+              end
+            end
+          end
+
           local comps = {}
-          for comp,versions in pairs(_.comps) do
-            local has_elem = false
-            for k,v in pairs(versions) do
-              comps[#comps+1] = comp .. '-' .. k
-              has_elem = true
-            end
-            if not has_elem then
-              comps[#comps+1] = comp
-            end
+          for k in pairs(kcomps) do
+            comps[#comps+1] = k
           end
 
           table.sort(comps)
@@ -87,12 +120,14 @@ return {
       return 0
     end
 
-    -- list options 
+    -- list options
     local t = _.d.comp
-    compiler:gsub('^g++','gcc'):gsub('^clang++', 'clang'):gsub('%w+', function(x) t[#t+1]=x end)
+    local version
+    compiler, version = compiler:match('([^%d]+)(.*)')
+    t[1] = compiler:gsub('^g%+%+','gcc'):gsub('^clang%+%+', 'clang'):gsub('-$','')
+    version:gsub('[%w_]+', function(x) t[#t+1]=x end)
     t[2] = t[2] and tonumber(t[2]) or 999
     t[3] = t[3] and tonumber(t[3]) or 999
-    t[4] = t[4] and tonumber(t[4]) or 999
     local opts = {...}
     if #opts ~= 0 then
       t = {}
@@ -149,7 +184,7 @@ return {
       local l = {}
       for k,v in pairs(t) do
         l[#l+1] = k
-      end      
+      end
       table.sort(l)
       return table.concat(l, '\n') .. '\n'
     end
@@ -161,22 +196,35 @@ return {
     return _.d.opts[name] and true or false
   end,
 
+  _cond=function(_, v, r)
+    for k,x in ipairs(v) do
+      if _:cond(x) == r then
+        return r
+      end
+    end
+    return not r
+  end,
+
   cond=function(_, v)
+    -- for k,x in pairs(v) do
+    --   if k == 'version' then
+    --     print(k, x[1],x[2])
+    --   else
+    --     print(k, x)
+    --   end
+    -- end
+
     local r = true
-        if v._or  then r = _:cond(v._or[1]) or _:cond(v._or[2])
-    elseif v._and then r = _:cond(v._and[1]) and _:cond(v._and[2])
+        if v._or  then r = _:_cond(v._or, true)
+    elseif v._and then r = _:_cond(v._and, false)
     elseif v._not then r = not _:cond(v._not)
     elseif v.lvl  then
       if _.d.opts then
         r = v.lvl == _.d.opts[_.d.opt]
       end
     elseif v.version then
-      -- _.d.condtype.version = v.version
-      if v.version[1] < 0 then
-        r = _.d.comp[2] < -v.version[1] or _.d.comp[3] < v.version[2]
-      else
-        r = _.d.comp[2] > v.version[1] or (_.d.comp[2] == v.version[1] and _.d.comp[3] >= v.version[2])
-      end
+      -- print(table.concat(_.d.comp,'.'), table.concat(v.version,'.'))
+      r = _.d.comp[2] > v.version[1] or (_.d.comp[2] == v.version[1] and _.d.comp[3] >= v.version[2])
     elseif v.compiler then r = _.d.comp[1] == v.compiler
     else
       local ks = ''
@@ -190,10 +238,9 @@ return {
 
   startcond=function(_, x)
     _.d.condtype = {}
+    -- print('>')
     local r = _:cond(x)
-    -- if r and _.d.condtype.version then
-    --   _:print('#  ' .. _.d.comp[1] .. '-' .. _.d.condtype.version[1] .. '.' .. _.d.condtype.version[2] .. '.' .. _.d.condtype.version[3])
-    -- end
+    -- print('---',r)
     _.d.test[#_.d.test+1] = r
     return r
   end,
@@ -209,6 +256,7 @@ return {
   cxx=function(_, x)
     if _.d.test[#_.d.test] then
       _:write(x)
+      -- print(x)
     end
   end,
   link=function(_, x) _:cxx(x) end,
