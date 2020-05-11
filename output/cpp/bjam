@@ -303,579 +303,8 @@ rule jln_flags ( properties * )
   local x_warnings_as_error = [ jln-get-value $(ps) : jln-warnings-as-error : $(jln_env_warnings_as_error) ] ;
   local x_whole_program = [ jln-get-value2 $(ps) : jln-whole-program : jln-whole-program-incidental : $(jln_env_whole_program) ] ;
 
-  if (  $(toolset) = "gcc" || $(toolset) = "clang"  )
+  if (  $(toolset) = "gcc" || $(toolset) = "clang" || $(toolset) = "clang-cl"  )
   {
-    if ( $(x_fix_compiler_error) != "default" )
-    {
-      if ( $(x_fix_compiler_error) = "on" )
-      {
-        if $(toolset) = "gcc"
-        {
-          if ! (  $(version) < "04.07"  )
-          {
-            flags +=
-              <cxxflags>"-Werror=narrowing"
-            ;
-            if ! (  $(version) < "07.01"  )
-            {
-              flags +=
-                <cxxflags>"-Werror=literal-suffix"
-              ;
-            }
-          }
-        }
-        flags +=
-          <cxxflags>"-Werror=write-strings"
-        ;
-      }
-      else if $(toolset) = "clang"
-      {
-        flags +=
-          <cxxflags>"-Wno-error=c++11-narrowing"
-          <cxxflags>"-Wno-reserved-user-defined-literal"
-        ;
-      }
-    }
-    if ( $(x_coverage) != "default" )
-    {
-      if ( $(x_coverage) = "on" )
-      {
-        flags +=
-          <cxxflags>"--coverage"
-          <linkflags>"--coverage"
-        ;
-        if $(toolset) = "clang"
-        {
-          flags +=
-            <linkflags>"-lprofile_rt"
-          ;
-        }
-      }
-    }
-    if ( $(x_debug) != "default" )
-    {
-      if ( $(x_debug) = "off" )
-      {
-        flags +=
-          <cxxflags>"-g0"
-        ;
-      }
-      else if ( $(x_debug) = "gdb" )
-      {
-        flags +=
-          <cxxflags>"-ggdb"
-        ;
-      }
-      else if $(toolset) = "clang"
-      {
-        if ( $(x_debug) = "line-tables-only" )
-        {
-          flags +=
-            <cxxflags>"-gline-tables-only"
-          ;
-        }
-        if ( $(x_debug) = "lldb" )
-        {
-          flags +=
-            <cxxflags>"-glldb"
-          ;
-        }
-        else if ( $(x_debug) = "sce" )
-        {
-          flags +=
-            <cxxflags>"-gsce"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"-g"
-          ;
-        }
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"-g"
-        ;
-      }
-    }
-    if ( $(x_linker) != "default" )
-    {
-      if ( $(x_linker) = "native" )
-      {
-        if $(toolset) = "gcc"
-        {
-          flags +=
-            <linkflags>"-fuse-ld=gold"
-          ;
-        }
-        else
-        {
-          flags +=
-            <linkflags>"-fuse-ld=lld"
-          ;
-        }
-      }
-      else if ( $(x_linker) = "bfd" )
-      {
-        flags +=
-          <linkflags>"-fuse-ld=bfd"
-        ;
-      }
-      else if (  ( $(x_linker) = "gold" ) || ! (  $(toolset) = "gcc" && ! (  $(version) < "09.00"  )  )  )
-      {
-        flags +=
-          <linkflags>"-fuse-ld=gold"
-        ;
-      }
-      else
-      {
-        flags +=
-          <linkflags>"-fuse-ld=lld"
-        ;
-      }
-    }
-    if ( $(x_lto) != "default" )
-    {
-      if ( $(x_lto) = "off" )
-      {
-        flags +=
-          <cxxflags>"-fno-lto"
-          <linkflags>"-fno-lto"
-        ;
-      }
-      else if $(toolset) = "gcc"
-      {
-        flags +=
-          <cxxflags>"-flto"
-          <linkflags>"-flto"
-        ;
-        if ! (  $(version) < "05.00"  )
-        {
-          if ( $(x_warnings) != "default" )
-          {
-            if ! ( $(x_warnings) = "off" )
-            {
-              flags +=
-                <cxxflags>"-flto-odr-type-merging"
-                <linkflags>"-flto-odr-type-merging"
-              ;
-            }
-          }
-          if ( $(x_lto) = "fat" )
-          {
-            flags +=
-              <cxxflags>"-ffat-lto-objects"
-            ;
-          }
-          if ( $(x_lto) = "linker-plugin" )
-          {
-            flags +=
-              <linkflags>"-fuse-linker-plugin"
-            ;
-          }
-        }
-      }
-      else if (  ( $(x_lto) = "linker-plugin" ) && (  $(toolset) = "clang" && ! (  $(version) < "06.00"  )  )  )
-      {
-        flags +=
-          <cxxflags>"-flto=thin"
-          <linkflags>"-flto=thin"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"-flto"
-          <linkflags>"-flto"
-        ;
-      }
-    }
-    if ( $(x_optimization) != "default" )
-    {
-      if ( $(x_optimization) = "0" )
-      {
-        flags +=
-          <cxxflags>"-O0"
-          <linkflags>"-O0"
-        ;
-      }
-      else if ( $(x_optimization) = "g" )
-      {
-        flags +=
-          <cxxflags>"-Og"
-          <linkflags>"-Og"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"-DNDEBUG"
-        ;
-        if ( $(x_optimization) = "size" )
-        {
-          flags +=
-            <cxxflags>"-Os"
-            <linkflags>"-Os"
-          ;
-        }
-        else if ( $(x_optimization) = "fast" )
-        {
-          flags +=
-            <cxxflags>"-Ofast"
-            <linkflags>"-Ofast"
-          ;
-        }
-        else if ( $(x_optimization) = "1" )
-        {
-          flags +=
-            <cxxflags>"-O1"
-            <linkflags>"-O1"
-          ;
-        }
-        else if ( $(x_optimization) = "2" )
-        {
-          flags +=
-            <cxxflags>"-O2"
-            <linkflags>"-O2"
-          ;
-        }
-        else if ( $(x_optimization) = "3" )
-        {
-          flags +=
-            <cxxflags>"-O3"
-            <linkflags>"-O3"
-          ;
-        }
-      }
-    }
-    if ( $(x_cpu) != "default" )
-    {
-      if ( $(x_cpu) = "generic" )
-      {
-        flags +=
-          <cxxflags>"-mtune=generic"
-          <linkflags>"-mtune=generic"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"-march=native"
-          <cxxflags>"-mtune=native"
-          <linkflags>"-march=native"
-          <linkflags>"-mtune=native"
-        ;
-      }
-    }
-    if ( $(x_whole_program) != "default" )
-    {
-      if ( $(x_whole_program) = "off" )
-      {
-        flags +=
-          <cxxflags>"-fno-whole-program"
-        ;
-        if (  $(toolset) = "clang" && ! (  $(version) < "03.09"  )  )
-        {
-          flags +=
-            <cxxflags>"-fno-whole-program-vtables"
-            <linkflags>"-fno-whole-program-vtables"
-          ;
-        }
-      }
-      else
-      {
-        flags +=
-          <linkflags>"-s"
-        ;
-        if ( $(x_whole_program) = "strip-all" )
-        {
-          flags +=
-            <linkflags>"-Wl,--gc-sections"
-            <linkflags>"-Wl,--strip-all"
-          ;
-        }
-        if $(toolset) = "gcc"
-        {
-          flags +=
-            <cxxflags>"-fwhole-program"
-            <linkflags>"-fwhole-program"
-          ;
-        }
-        else
-        {
-          if (  $(toolset) = "clang" && ! (  $(version) < "03.09"  )  )
-          {
-            if ( $(x_lto) != "default" )
-            {
-              if ! ( $(x_lto) = "off" )
-              {
-                flags +=
-                  <cxxflags>"-fwhole-program-vtables"
-                  <linkflags>"-fwhole-program-vtables"
-                ;
-              }
-            }
-            if ! (  $(version) < "07.00"  )
-            {
-              flags +=
-                <cxxflags>"-fforce-emit-vtables"
-                <linkflags>"-fforce-emit-vtables"
-              ;
-            }
-          }
-        }
-      }
-    }
-    if ( $(x_pedantic) != "default" )
-    {
-      if ! ( $(x_pedantic) = "off" )
-      {
-        flags +=
-          <cxxflags>"-pedantic"
-        ;
-        if ( $(x_pedantic) = "as-error" )
-        {
-          flags +=
-            <cxxflags>"-pedantic-errors"
-          ;
-        }
-      }
-    }
-    if ( $(x_stack_protector) != "default" )
-    {
-      if ( $(x_stack_protector) = "off" )
-      {
-        flags +=
-          <cxxflags>"-Wno-stack-protector"
-          <cxxflags>"-U_FORTIFY_SOURCE"
-          <linkflags>"-Wno-stack-protector"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"-D_FORTIFY_SOURCE=2"
-          <cxxflags>"-Wstack-protector"
-        ;
-        if ( $(x_stack_protector) = "strong" )
-        {
-          if (  $(toolset) = "gcc" && ! (  $(version) < "04.09"  )  )
-          {
-            flags +=
-              <cxxflags>"-fstack-protector-strong"
-              <linkflags>"-fstack-protector-strong"
-            ;
-          }
-          else if $(toolset) = "clang"
-          {
-            flags +=
-              <cxxflags>"-fstack-protector-strong"
-              <cxxflags>"-fsanitize=safe-stack"
-              <linkflags>"-fstack-protector-strong"
-              <linkflags>"-fsanitize=safe-stack"
-            ;
-          }
-        }
-        else if ( $(x_stack_protector) = "all" )
-        {
-          flags +=
-            <cxxflags>"-fstack-protector-all"
-            <linkflags>"-fstack-protector-all"
-          ;
-          if $(toolset) = "clang"
-          {
-            flags +=
-              <cxxflags>"-fsanitize=safe-stack"
-              <linkflags>"-fsanitize=safe-stack"
-            ;
-            if ! (  $(version) < "11.00"  )
-            {
-              flags +=
-                <cxxflags>"-fstack-clash-protection"
-                <linkflags>"-fstack-clash-protection"
-              ;
-            }
-          }
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"-fstack-protector"
-            <linkflags>"-fstack-protector"
-          ;
-        }
-        if $(toolset) = "clang"
-        {
-          flags +=
-            <cxxflags>"-fsanitize=shadow-call-stack"
-            <linkflags>"-fsanitize=shadow-call-stack"
-          ;
-        }
-      }
-    }
-    if ( $(x_relro) != "default" )
-    {
-      if ( $(x_relro) = "off" )
-      {
-        flags +=
-          <linkflags>"-Wl,-z,norelro"
-        ;
-      }
-      else if ( $(x_relro) = "on" )
-      {
-        flags +=
-          <linkflags>"-Wl,-z,relro"
-        ;
-      }
-      else if ( $(x_relro) = "full" )
-      {
-        flags +=
-          <linkflags>"-Wl,-z,relro,-z,now"
-        ;
-      }
-    }
-    if ( $(x_pie) != "default" )
-    {
-      if ( $(x_pie) = "off" )
-      {
-        flags +=
-          <linkflags>"-no-pic"
-        ;
-      }
-      else if ( $(x_pie) = "on" )
-      {
-        flags +=
-          <linkflags>"-pie"
-        ;
-      }
-      else if ( $(x_pie) = "pic" )
-      {
-        flags +=
-          <cxxflags>"-fPIC"
-        ;
-      }
-    }
-    if ( $(x_suggestions) != "default" )
-    {
-      if ! ( $(x_suggestions) = "off" )
-      {
-        if $(toolset) = "gcc"
-        {
-          flags +=
-            <cxxflags>"-Wsuggest-attribute=pure"
-            <cxxflags>"-Wsuggest-attribute=const"
-          ;
-          if ! (  $(version) < "05.00"  )
-          {
-            flags +=
-              <cxxflags>"-Wsuggest-final-types"
-              <cxxflags>"-Wsuggest-final-methods"
-            ;
-            if ! (  $(version) < "05.01"  )
-            {
-              flags +=
-                <cxxflags>"-Wnoexcept"
-              ;
-            }
-          }
-        }
-      }
-    }
-    if ( $(x_stl_debug) != "default" )
-    {
-      if ! ( $(x_stl_debug) = "off" )
-      {
-        if ( $(x_stl_debug) = "assert-as-exception" )
-        {
-          flags +=
-            <cxxflags>"-D_LIBCPP_DEBUG_USE_EXCEPTIONS"
-          ;
-        }
-        if (  ( $(x_stl_debug) = "allow-broken-abi" ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
-        {
-          if $(toolset) = "clang"
-          {
-            if (  ! (  $(version) < "08.00"  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
-            {
-              flags +=
-                <cxxflags>"-D_LIBCPP_DEBUG=1"
-              ;
-            }
-          }
-          flags +=
-            <cxxflags>"-D_GLIBCXX_DEBUG"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-          ;
-        }
-        if ( $(x_pedantic) != "default" )
-        {
-          if ! ( $(x_pedantic) = "off" )
-          {
-            flags +=
-              <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
-            ;
-          }
-        }
-      }
-    }
-    if ( $(x_shadow_warnings) != "default" )
-    {
-      if ( $(x_shadow_warnings) = "off" )
-      {
-        flags +=
-          <cxxflags>"-Wno-shadow"
-        ;
-        if (  $(toolset) = "clang" && ! (  $(version) < "08.00"  )  )
-        {
-          flags +=
-            <cxxflags>"-Wno-shadow-field"
-          ;
-        }
-      }
-      else if ( $(x_shadow_warnings) = "on" )
-      {
-        flags +=
-          <cxxflags>"-Wshadow"
-        ;
-      }
-      else if ( $(x_shadow_warnings) = "all" )
-      {
-        if $(toolset) = "clang"
-        {
-          flags +=
-            <cxxflags>"-Wshadow-all"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"-Wshadow"
-          ;
-        }
-      }
-      else if (  $(toolset) = "gcc" && ! (  $(version) < "07.01"  )  )
-      {
-        if ( $(x_shadow_warnings) = "local" )
-        {
-          flags +=
-            <cxxflags>"-Wshadow=local"
-          ;
-        }
-        else if ( $(x_shadow_warnings) = "compatible-local" )
-        {
-          flags +=
-            <cxxflags>"-Wshadow=compatible-local"
-          ;
-        }
-      }
-    }
     if ( $(x_warnings) != "default" )
     {
       if ( $(x_warnings) = "off" )
@@ -971,36 +400,42 @@ rule jln_flags ( properties * )
             }
           }
         }
-        else if $(toolset) = "clang"
+        else
         {
-          flags +=
-            <cxxflags>"-Weverything"
-            <cxxflags>"-Wno-c++98-compat"
-            <cxxflags>"-Wno-c++98-compat-pedantic"
-            <cxxflags>"-Wno-mismatched-tags"
-            <cxxflags>"-Wno-padded"
-            <cxxflags>"-Wno-global-constructors"
-            <cxxflags>"-Wno-weak-vtables"
-            <cxxflags>"-Wno-exit-time-destructors"
-            <cxxflags>"-Wno-covered-switch-default"
-            <cxxflags>"-Wno-switch-default"
-            <cxxflags>"-Wno-switch-enum"
-          ;
-          if ! (  $(version) < "03.09"  )
+          if (  $(toolset) = "clang-cl" || $(toolset) = "clang"  )
           {
             flags +=
-              <cxxflags>"-Wno-undefined-var-template"
+              <cxxflags>"-Weverything"
+              <cxxflags>"-Wno-documentation"
+              <cxxflags>"-Wno-documentation-unknown-command"
+              <cxxflags>"-Wno-newline-eof"
+              <cxxflags>"-Wno-c++98-compat"
+              <cxxflags>"-Wno-c++98-compat-pedantic"
+              <cxxflags>"-Wno-mismatched-tags"
+              <cxxflags>"-Wno-padded"
+              <cxxflags>"-Wno-global-constructors"
+              <cxxflags>"-Wno-weak-vtables"
+              <cxxflags>"-Wno-exit-time-destructors"
+              <cxxflags>"-Wno-covered-switch-default"
+              <cxxflags>"-Wno-switch-default"
+              <cxxflags>"-Wno-switch-enum"
             ;
-            if ! (  $(version) < "05.00"  )
+            if ! (  $(version) < "03.09"  )
             {
               flags +=
-                <cxxflags>"-Wno-inconsistent-missing-destructor-override"
+                <cxxflags>"-Wno-undefined-var-template"
               ;
-              if ! (  $(version) < "09.00"  )
+              if ! (  $(version) < "05.00"  )
               {
                 flags +=
-                  <cxxflags>"-Wno-ctad-maybe-unsupported"
+                  <cxxflags>"-Wno-inconsistent-missing-destructor-override"
                 ;
+                if ! (  $(version) < "09.00"  )
+                {
+                  flags +=
+                    <cxxflags>"-Wno-ctad-maybe-unsupported"
+                  ;
+                }
               }
             }
           }
@@ -1017,11 +452,76 @@ rule jln_flags ( properties * )
             ;
           }
         }
-        else if $(toolset) = "clang"
+        else
+        {
+          if (  $(toolset) = "clang-cl" || $(toolset) = "clang"  )
+          {
+            flags +=
+              <cxxflags>"-Wno-conversion"
+              <cxxflags>"-Wno-sign-conversion"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_warnings_as_error) != "default" )
+    {
+      if ( $(x_warnings_as_error) = "on" )
+      {
+        flags +=
+          <cxxflags>"-Werror"
+        ;
+      }
+      else
+      {
+        if ( $(x_warnings_as_error) = "basic" )
         {
           flags +=
-            <cxxflags>"-Wno-conversion"
-            <cxxflags>"-Wno-sign-conversion"
+            <cxxflags>"-Werror=non-virtual-dtor"
+            <cxxflags>"-Werror=return-type"
+            <cxxflags>"-Werror=init-self"
+          ;
+          if (  $(toolset) = "gcc" && ! (  $(version) < "05.01"  )  )
+          {
+            flags +=
+              <cxxflags>"-Werror=array-bounds"
+              <cxxflags>"-Werror=logical-op"
+              <cxxflags>"-Werror=logical-not-parentheses"
+            ;
+          }
+          else
+          {
+            if (  $(toolset) = "clang-cl" || $(toolset) = "clang"  )
+            {
+              flags +=
+                <cxxflags>"-Werror=array-bounds"
+                <cxxflags>"-Werror=division-by-zero"
+              ;
+              if ! (  $(version) < "03.04"  )
+              {
+                flags +=
+                  <cxxflags>"-Werror=logical-not-parentheses"
+                ;
+                if ! (  $(version) < "03.06"  )
+                {
+                  flags +=
+                    <cxxflags>"-Werror=delete-incomplete"
+                  ;
+                  if ! (  $(version) < "07.00"  )
+                  {
+                    flags +=
+                      <cxxflags>"-Werror=dynamic-class-memaccess"
+                    ;
+                  }
+                }
+              }
+            }
+          }
+        }
+        else
+        {
+          flags +=
+            <cxxflags>"-Wno-error"
           ;
         }
       }
@@ -1037,7 +537,7 @@ rule jln_flags ( properties * )
       }
       else
       {
-        if $(toolset) = "clang"
+        if (  $(toolset) = "clang-cl" || $(toolset) = "clang"  )
         {
           if ! (  $(version) < "03.01"  )
           {
@@ -1061,22 +561,25 @@ rule jln_flags ( properties * )
         }
         else
         {
-          if ! (  $(version) < "04.08"  )
+          if $(toolset) = "gcc"
           {
-            flags +=
-              <cxxflags>"-fsanitize=address"
-              <cxxflags>"-fno-omit-frame-pointer"
-              <cxxflags>"-fno-optimize-sibling-calls"
-              <linkflags>"-fsanitize=address"
-            ;
-            if ! (  $(version) < "04.09"  )
+            if ! (  $(version) < "04.08"  )
             {
               flags +=
-                <cxxflags>"-fsanitize=undefined"
-                <cxxflags>"-fsanitize=leak"
-                <linkflags>"-fsanitize=undefined"
-                <linkflags>"-fsanitize=leak"
+                <cxxflags>"-fsanitize=address"
+                <cxxflags>"-fno-omit-frame-pointer"
+                <cxxflags>"-fno-optimize-sibling-calls"
+                <linkflags>"-fsanitize=address"
               ;
+              if ! (  $(version) < "04.09"  )
+              {
+                flags +=
+                  <cxxflags>"-fsanitize=undefined"
+                  <cxxflags>"-fsanitize=leak"
+                  <linkflags>"-fsanitize=undefined"
+                  <linkflags>"-fsanitize=leak"
+                ;
+              }
             }
           }
         }
@@ -1092,7 +595,17 @@ rule jln_flags ( properties * )
             <cxxflags>"-fcf-protection=none"
           ;
         }
-        else if $(toolset) = "clang"
+        else
+        {
+          if $(toolset) = "clang-cl"
+          {
+            flags +=
+              <cxxflags>"-fcf-protection=none"
+              <cxxflags>"-fno-sanitize-cfi-cross-dso"
+            ;
+          }
+        }
+        if $(toolset) = "clang"
         {
           flags +=
             <cxxflags>"-fno-sanitize=cfi"
@@ -1108,34 +621,57 @@ rule jln_flags ( properties * )
             <cxxflags>"-fcf-protection=full"
           ;
         }
-        else if (  ( $(x_control_flow) = "allow-bugs" ) && $(toolset) = "clang"  )
+        else
         {
-          flags +=
-            <cxxflags>"-fsanitize=cfi"
-            <cxxflags>"-fvisibility=hidden"
-            <cxxflags>"-flto"
-            <linkflags>"-fsanitize=cfi"
-            <linkflags>"-flto"
-          ;
+          if (  ( $(x_control_flow) = "allow-bugs" ) && $(toolset) = "clang"  )
+          {
+            flags +=
+              <cxxflags>"-fsanitize=cfi"
+              <cxxflags>"-fvisibility=hidden"
+              <cxxflags>"-flto"
+              <linkflags>"-fsanitize=cfi"
+              <linkflags>"-flto"
+            ;
+          }
+          else
+          {
+            if $(toolset) = "clang-cl"
+            {
+              flags +=
+                <cxxflags>"-fsanitize-cfi-cross-dso"
+              ;
+            }
+          }
         }
       }
     }
-    if ( $(x_sanitizers_extra) != "default" )
+    if ( $(x_color) != "default" )
     {
-      if ( $(x_sanitizers_extra) = "thread" )
+      if (  (  $(toolset) = "gcc" && ! (  $(version) < "04.09"  )  ) || $(toolset) = "clang" || $(toolset) = "clang-cl"  )
       {
-        flags +=
-          <cxxflags>"-fsanitize=thread"
-        ;
-      }
-      else if ( $(x_sanitizers_extra) = "pointer" )
-      {
-        if (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  )
+        if ( $(x_color) = "auto" )
         {
           flags +=
-            <cxxflags>"-fsanitize=pointer-compare"
-            <cxxflags>"-fsanitize=pointer-subtract"
+            <cxxflags>"-fdiagnostics-color=auto"
           ;
+        }
+        else
+        {
+          if ( $(x_color) = "never" )
+          {
+            flags +=
+              <cxxflags>"-fdiagnostics-color=never"
+            ;
+          }
+          else
+          {
+            if ( $(x_color) = "always" )
+            {
+              flags +=
+                <cxxflags>"-fdiagnostics-color=always"
+              ;
+            }
+          }
         }
       }
     }
@@ -1157,27 +693,685 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if ( $(x_color) != "default" )
+    if ( $(x_diagnostics_format) != "default" )
     {
-      if (  (  $(toolset) = "gcc" && ! (  $(version) < "04.09"  )  ) || $(toolset) = "clang"  )
+      if ( $(x_diagnostics_format) = "fixits" )
       {
-        if ( $(x_color) = "auto" )
+        if (  (  $(toolset) = "gcc" && ! (  $(version) < "07.00"  )  ) || $(toolset) = "clang-cl" || $(toolset) = "clang"  )
         {
           flags +=
-            <cxxflags>"-fdiagnostics-color=auto"
+            <cxxflags>"-fdiagnostics-parseable-fixits"
           ;
         }
-        else if ( $(x_color) = "never" )
+      }
+      else
+      {
+        if ( $(x_diagnostics_format) = "patch" )
+        {
+          if (  $(toolset) = "gcc" && ! (  $(version) < "07.00"  )  )
+          {
+            flags +=
+              <cxxflags>"-fdiagnostics-generate-patch"
+            ;
+          }
+        }
+        else
+        {
+          if ( $(x_diagnostics_format) = "print-source-range-info" )
+          {
+            if $(toolset) = "clang"
+            {
+              flags +=
+                <cxxflags>"-fdiagnostics-print-source-range-info"
+              ;
+            }
+          }
+        }
+      }
+    }
+  }
+  if (  $(toolset) = "gcc" || $(toolset) = "clang"  )
+  {
+    if ( $(x_fix_compiler_error) != "default" )
+    {
+      if ( $(x_fix_compiler_error) = "on" )
+      {
+        if $(toolset) = "gcc"
+        {
+          if ! (  $(version) < "04.07"  )
+          {
+            flags +=
+              <cxxflags>"-Werror=narrowing"
+            ;
+            if ! (  $(version) < "07.01"  )
+            {
+              flags +=
+                <cxxflags>"-Werror=literal-suffix"
+              ;
+            }
+          }
+        }
+        flags +=
+          <cxxflags>"-Werror=write-strings"
+        ;
+      }
+      else
+      {
+        if $(toolset) = "clang"
         {
           flags +=
-            <cxxflags>"-fdiagnostics-color=never"
+            <cxxflags>"-Wno-error=c++11-narrowing"
+            <cxxflags>"-Wno-reserved-user-defined-literal"
           ;
         }
-        else if ( $(x_color) = "always" )
+      }
+    }
+    if ( $(x_coverage) != "default" )
+    {
+      if ( $(x_coverage) = "on" )
+      {
+        flags +=
+          <cxxflags>"--coverage"
+          <linkflags>"--coverage"
+        ;
+        if $(toolset) = "clang"
         {
           flags +=
-            <cxxflags>"-fdiagnostics-color=always"
+            <linkflags>"-lprofile_rt"
           ;
+        }
+      }
+    }
+    if ( $(x_debug) != "default" )
+    {
+      if ( $(x_debug) = "off" )
+      {
+        flags +=
+          <cxxflags>"-g0"
+        ;
+      }
+      else
+      {
+        if ( $(x_debug) = "gdb" )
+        {
+          flags +=
+            <cxxflags>"-ggdb"
+          ;
+        }
+        else
+        {
+          if $(toolset) = "clang"
+          {
+            if ( $(x_debug) = "line-tables-only" )
+            {
+              flags +=
+                <cxxflags>"-gline-tables-only"
+              ;
+            }
+            if ( $(x_debug) = "lldb" )
+            {
+              flags +=
+                <cxxflags>"-glldb"
+              ;
+            }
+            else
+            {
+              if ( $(x_debug) = "sce" )
+              {
+                flags +=
+                  <cxxflags>"-gsce"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cxxflags>"-g"
+                ;
+              }
+            }
+          }
+          else
+          {
+            flags +=
+              <cxxflags>"-g"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_linker) != "default" )
+    {
+      if ( $(x_linker) = "native" )
+      {
+        if $(toolset) = "gcc"
+        {
+          flags +=
+            <linkflags>"-fuse-ld=gold"
+          ;
+        }
+        else
+        {
+          flags +=
+            <linkflags>"-fuse-ld=lld"
+          ;
+        }
+      }
+      else
+      {
+        if ( $(x_linker) = "bfd" )
+        {
+          flags +=
+            <linkflags>"-fuse-ld=bfd"
+          ;
+        }
+        else
+        {
+          if (  ( $(x_linker) = "gold" ) || ! (  $(toolset) = "gcc" && ! (  $(version) < "09.00"  )  )  )
+          {
+            flags +=
+              <linkflags>"-fuse-ld=gold"
+            ;
+          }
+          else
+          {
+            flags +=
+              <linkflags>"-fuse-ld=lld"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_lto) != "default" )
+    {
+      if ( $(x_lto) = "off" )
+      {
+        flags +=
+          <cxxflags>"-fno-lto"
+          <linkflags>"-fno-lto"
+        ;
+      }
+      else
+      {
+        if $(toolset) = "gcc"
+        {
+          flags +=
+            <cxxflags>"-flto"
+            <linkflags>"-flto"
+          ;
+          if ! (  $(version) < "05.00"  )
+          {
+            if ( $(x_warnings) != "default" )
+            {
+              if ! ( $(x_warnings) = "off" )
+              {
+                flags +=
+                  <cxxflags>"-flto-odr-type-merging"
+                  <linkflags>"-flto-odr-type-merging"
+                ;
+              }
+            }
+            if ( $(x_lto) = "fat" )
+            {
+              flags +=
+                <cxxflags>"-ffat-lto-objects"
+              ;
+            }
+            if ( $(x_lto) = "linker-plugin" )
+            {
+              flags +=
+                <linkflags>"-fuse-linker-plugin"
+              ;
+            }
+          }
+        }
+        else
+        {
+          if (  ( $(x_lto) = "linker-plugin" ) && $(toolset) = "clang" && ! (  $(version) < "06.00"  )  )
+          {
+            flags +=
+              <cxxflags>"-flto=thin"
+              <linkflags>"-flto=thin"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cxxflags>"-flto"
+              <linkflags>"-flto"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_optimization) != "default" )
+    {
+      if ( $(x_optimization) = "0" )
+      {
+        flags +=
+          <cxxflags>"-O0"
+          <linkflags>"-O0"
+        ;
+      }
+      else
+      {
+        if ( $(x_optimization) = "g" )
+        {
+          flags +=
+            <cxxflags>"-Og"
+            <linkflags>"-Og"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cxxflags>"-DNDEBUG"
+          ;
+          if ( $(x_optimization) = "size" )
+          {
+            flags +=
+              <cxxflags>"-Os"
+              <linkflags>"-Os"
+            ;
+          }
+          else
+          {
+            if ( $(x_optimization) = "fast" )
+            {
+              flags +=
+                <cxxflags>"-Ofast"
+                <linkflags>"-Ofast"
+              ;
+            }
+            else
+            {
+              if ( $(x_optimization) = "1" )
+              {
+                flags +=
+                  <cxxflags>"-O1"
+                  <linkflags>"-O1"
+                ;
+              }
+              else
+              {
+                if ( $(x_optimization) = "2" )
+                {
+                  flags +=
+                    <cxxflags>"-O2"
+                    <linkflags>"-O2"
+                  ;
+                }
+                else
+                {
+                  if ( $(x_optimization) = "3" )
+                  {
+                    flags +=
+                      <cxxflags>"-O3"
+                      <linkflags>"-O3"
+                    ;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if ( $(x_cpu) != "default" )
+    {
+      if ( $(x_cpu) = "generic" )
+      {
+        flags +=
+          <cxxflags>"-mtune=generic"
+          <linkflags>"-mtune=generic"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"-march=native"
+          <cxxflags>"-mtune=native"
+          <linkflags>"-march=native"
+          <linkflags>"-mtune=native"
+        ;
+      }
+    }
+    if ( $(x_whole_program) != "default" )
+    {
+      if ( $(x_whole_program) = "off" )
+      {
+        flags +=
+          <cxxflags>"-fno-whole-program"
+        ;
+        if (  $(toolset) = "clang" && ! (  $(version) < "03.09"  )  )
+        {
+          flags +=
+            <cxxflags>"-fno-whole-program-vtables"
+            <linkflags>"-fno-whole-program-vtables"
+          ;
+        }
+      }
+      else
+      {
+        flags +=
+          <linkflags>"-s"
+        ;
+        if ( $(x_whole_program) = "strip-all" )
+        {
+          flags +=
+            <linkflags>"-Wl,--gc-sections"
+            <linkflags>"-Wl,--strip-all"
+          ;
+        }
+        if $(toolset) = "gcc"
+        {
+          flags +=
+            <cxxflags>"-fwhole-program"
+            <linkflags>"-fwhole-program"
+          ;
+        }
+        else
+        {
+          if $(toolset) = "clang"
+          {
+            if ! (  $(version) < "03.09"  )
+            {
+              if ( $(x_lto) != "default" )
+              {
+                if ! ( $(x_lto) = "off" )
+                {
+                  flags +=
+                    <cxxflags>"-fwhole-program-vtables"
+                    <linkflags>"-fwhole-program-vtables"
+                  ;
+                }
+              }
+              if ! (  $(version) < "07.00"  )
+              {
+                flags +=
+                  <cxxflags>"-fforce-emit-vtables"
+                  <linkflags>"-fforce-emit-vtables"
+                ;
+              }
+            }
+          }
+        }
+      }
+    }
+    if ( $(x_pedantic) != "default" )
+    {
+      if ! ( $(x_pedantic) = "off" )
+      {
+        flags +=
+          <cxxflags>"-pedantic"
+        ;
+        if ( $(x_pedantic) = "as-error" )
+        {
+          flags +=
+            <cxxflags>"-pedantic-errors"
+          ;
+        }
+      }
+    }
+    if ( $(x_stack_protector) != "default" )
+    {
+      if ( $(x_stack_protector) = "off" )
+      {
+        flags +=
+          <cxxflags>"-Wno-stack-protector"
+          <cxxflags>"-U_FORTIFY_SOURCE"
+          <linkflags>"-Wno-stack-protector"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"-D_FORTIFY_SOURCE=2"
+          <cxxflags>"-Wstack-protector"
+        ;
+        if ( $(x_stack_protector) = "strong" )
+        {
+          if (  $(toolset) = "gcc" && ! (  $(version) < "04.09"  )  )
+          {
+            flags +=
+              <cxxflags>"-fstack-protector-strong"
+              <linkflags>"-fstack-protector-strong"
+            ;
+          }
+          else
+          {
+            if $(toolset) = "clang"
+            {
+              flags +=
+                <cxxflags>"-fstack-protector-strong"
+                <cxxflags>"-fsanitize=safe-stack"
+                <linkflags>"-fstack-protector-strong"
+                <linkflags>"-fsanitize=safe-stack"
+              ;
+            }
+          }
+        }
+        else
+        {
+          if ( $(x_stack_protector) = "all" )
+          {
+            flags +=
+              <cxxflags>"-fstack-protector-all"
+              <linkflags>"-fstack-protector-all"
+            ;
+            if $(toolset) = "clang"
+            {
+              flags +=
+                <cxxflags>"-fsanitize=safe-stack"
+                <linkflags>"-fsanitize=safe-stack"
+              ;
+              if ! (  $(version) < "11.00"  )
+              {
+                flags +=
+                  <cxxflags>"-fstack-clash-protection"
+                  <linkflags>"-fstack-clash-protection"
+                ;
+              }
+            }
+          }
+          else
+          {
+            flags +=
+              <cxxflags>"-fstack-protector"
+              <linkflags>"-fstack-protector"
+            ;
+          }
+        }
+        if $(toolset) = "clang"
+        {
+          flags +=
+            <cxxflags>"-fsanitize=shadow-call-stack"
+            <linkflags>"-fsanitize=shadow-call-stack"
+          ;
+        }
+      }
+    }
+    if ( $(x_relro) != "default" )
+    {
+      if ( $(x_relro) = "off" )
+      {
+        flags +=
+          <linkflags>"-Wl,-z,norelro"
+        ;
+      }
+      else
+      {
+        if ( $(x_relro) = "on" )
+        {
+          flags +=
+            <linkflags>"-Wl,-z,relro"
+          ;
+        }
+        else
+        {
+          if ( $(x_relro) = "full" )
+          {
+            flags +=
+              <linkflags>"-Wl,-z,relro,-z,now"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_pie) != "default" )
+    {
+      if ( $(x_pie) = "off" )
+      {
+        flags +=
+          <linkflags>"-no-pic"
+        ;
+      }
+      else
+      {
+        if ( $(x_pie) = "on" )
+        {
+          flags +=
+            <linkflags>"-pie"
+          ;
+        }
+        else
+        {
+          if ( $(x_pie) = "pic" )
+          {
+            flags +=
+              <cxxflags>"-fPIC"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_suggestions) != "default" )
+    {
+      if ! ( $(x_suggestions) = "off" )
+      {
+        if $(toolset) = "gcc"
+        {
+          flags +=
+            <cxxflags>"-Wsuggest-attribute=pure"
+            <cxxflags>"-Wsuggest-attribute=const"
+          ;
+          if ! (  $(version) < "05.00"  )
+          {
+            flags +=
+              <cxxflags>"-Wsuggest-final-types"
+              <cxxflags>"-Wsuggest-final-methods"
+            ;
+            if ! (  $(version) < "05.01"  )
+            {
+              flags +=
+                <cxxflags>"-Wnoexcept"
+              ;
+            }
+          }
+        }
+      }
+    }
+    if ( $(x_stl_debug) != "default" )
+    {
+      if ! ( $(x_stl_debug) = "off" )
+      {
+        if ( $(x_stl_debug) = "assert-as-exception" )
+        {
+          flags +=
+            <cxxflags>"-D_LIBCPP_DEBUG_USE_EXCEPTIONS"
+          ;
+        }
+        if (  ( $(x_stl_debug) = "allow-broken-abi" ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
+        {
+          if $(toolset) = "clang"
+          {
+            if (  ! (  $(version) < "08.00"  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
+            {
+              flags +=
+                <cxxflags>"-D_LIBCPP_DEBUG=1"
+              ;
+            }
+          }
+          flags +=
+            <cxxflags>"-D_GLIBCXX_DEBUG"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cxxflags>"-D_GLIBCXX_ASSERTIONS"
+          ;
+        }
+        if ( $(x_pedantic) != "default" )
+        {
+          if ! ( $(x_pedantic) = "off" )
+          {
+            flags +=
+              <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_shadow_warnings) != "default" )
+    {
+      if ( $(x_shadow_warnings) = "off" )
+      {
+        flags +=
+          <cxxflags>"-Wno-shadow"
+        ;
+        if (  $(toolset) = "clang" && ! (  $(version) < "08.00"  )  )
+        {
+          flags +=
+            <cxxflags>"-Wno-shadow-field"
+          ;
+        }
+      }
+      else
+      {
+        if ( $(x_shadow_warnings) = "on" )
+        {
+          flags +=
+            <cxxflags>"-Wshadow"
+          ;
+        }
+        else
+        {
+          if ( $(x_shadow_warnings) = "all" )
+          {
+            if $(toolset) = "clang"
+            {
+              flags +=
+                <cxxflags>"-Wshadow-all"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-Wshadow"
+              ;
+            }
+          }
+          else
+          {
+            if (  $(toolset) = "gcc" && ! (  $(version) < "07.01"  )  )
+            {
+              if ( $(x_shadow_warnings) = "local" )
+              {
+                flags +=
+                  <cxxflags>"-Wshadow=local"
+                ;
+              }
+              else
+              {
+                if ( $(x_shadow_warnings) = "compatible-local" )
+                {
+                  flags +=
+                    <cxxflags>"-Wshadow=compatible-local"
+                  ;
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -1192,11 +1386,14 @@ rule jln_flags ( properties * )
           ;
         }
       }
-      else if (  (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "03.04"  )  )  )
+      else
       {
-        flags +=
-          <cxxflags>"-fno-elide-type"
-        ;
+        if (  (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "03.04"  )  )  )
+        {
+          flags +=
+            <cxxflags>"-fno-elide-type"
+          ;
+        }
       }
     }
     if ( $(x_exceptions) != "default" )
@@ -1247,94 +1444,30 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if ( $(x_diagnostics_format) != "default" )
+    if ( $(x_sanitizers_extra) != "default" )
     {
-      if ( $(x_diagnostics_format) = "fixits" )
-      {
-        if (  (  $(toolset) = "gcc" && ! (  $(version) < "07.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "05.00"  )  )  )
-        {
-          flags +=
-            <cxxflags>"-fdiagnostics-parseable-fixits"
-          ;
-        }
-      }
-      else if ( $(x_diagnostics_format) = "patch" )
-      {
-        if (  $(toolset) = "gcc" && ! (  $(version) < "07.00"  )  )
-        {
-          flags +=
-            <cxxflags>"-fdiagnostics-generate-patch"
-          ;
-        }
-      }
-      else if ( $(x_diagnostics_format) = "print-source-range-info" )
-      {
-        if $(toolset) = "clang"
-        {
-          flags +=
-            <cxxflags>"-fdiagnostics-print-source-range-info"
-          ;
-        }
-      }
-    }
-    if ( $(x_warnings_as_error) != "default" )
-    {
-      if ( $(x_warnings_as_error) = "on" )
+      if ( $(x_sanitizers_extra) = "thread" )
       {
         flags +=
-          <cxxflags>"-Werror"
+          <cxxflags>"-fsanitize=thread"
         ;
-      }
-      else if ( $(x_warnings_as_error) = "basic" )
-      {
-        flags +=
-          <cxxflags>"-Werror=non-virtual-dtor"
-          <cxxflags>"-Werror=return-type"
-          <cxxflags>"-Werror=init-self"
-        ;
-        if (  $(toolset) = "gcc" && ! (  $(version) < "05.01"  )  )
-        {
-          flags +=
-            <cxxflags>"-Werror=array-bounds"
-            <cxxflags>"-Werror=logical-op"
-            <cxxflags>"-Werror=logical-not-parentheses"
-          ;
-        }
-        else if $(toolset) = "clang"
-        {
-          flags +=
-            <cxxflags>"-Werror=array-bounds"
-            <cxxflags>"-Werror=division-by-zero"
-          ;
-          if ! (  $(version) < "03.04"  )
-          {
-            flags +=
-              <cxxflags>"-Werror=logical-not-parentheses"
-            ;
-            if ! (  $(version) < "03.06"  )
-            {
-              flags +=
-                <cxxflags>"-Werror=delete-incomplete"
-              ;
-              if ! (  $(version) < "07.00"  )
-              {
-                flags +=
-                  <cxxflags>"-Werror=dynamic-class-memaccess"
-                ;
-              }
-            }
-          }
-        }
       }
       else
       {
-        flags +=
-          <cxxflags>"-Wno-error"
-        ;
+        if ( $(x_sanitizers_extra) = "pointer" )
+        {
+          if (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  )
+          {
+            flags +=
+              <cxxflags>"-fsanitize=pointer-compare"
+              <cxxflags>"-fsanitize=pointer-subtract"
+            ;
+          }
+        }
       }
     }
   }
-  else if $(toolset) = "msvc"
+  if (  $(toolset) = "msvc" || $(toolset) = "clang-cl"  )
   {
     if ( $(x_stl_fix) != "default" )
     {
@@ -1365,11 +1498,14 @@ rule jln_flags ( properties * )
             <cxxflags>"/DEBUG"
           ;
         }
-        else if ( $(x_debug) = "line-tables-only" )
+        else
         {
-          flags +=
-            <cxxflags>"/DEBUG:FASTLINK"
-          ;
+          if ( $(x_debug) = "line-tables-only" )
+          {
+            flags +=
+              <cxxflags>"/DEBUG:FASTLINK"
+            ;
+          }
         }
         if ( $(x_optimization) != "default" )
         {
@@ -1400,6 +1536,7 @@ rule jln_flags ( properties * )
       {
         flags +=
           <cxxflags>"/EHsc"
+          <cxxflags>"/D_HAS_EXCEPTIONS=1"
         ;
       }
       else
@@ -1418,69 +1555,68 @@ rule jln_flags ( properties * )
           <cxxflags>"/Ob0 /Od /Oi- /Oy-"
         ;
       }
-      else if ( $(x_optimization) = "g" )
-      {
-        flags +=
-          <cxxflags>"/Ob1"
-        ;
-      }
       else
       {
-        flags +=
-          <cxxflags>"/DNDEBUG"
-        ;
-        if ( $(x_optimization) = "1" )
+        if ( $(x_optimization) = "g" )
         {
           flags +=
-            <cxxflags>"/01"
+            <cxxflags>"/Ob1"
           ;
         }
-        else if ( $(x_optimization) = "2" )
+        else
         {
           flags +=
-            <cxxflags>"/O2"
-            <linkflags>"/OPT:REF"
+            <cxxflags>"/DNDEBUG"
           ;
+          if ( $(x_optimization) = "1" )
+          {
+            flags +=
+              <cxxflags>"/01"
+            ;
+          }
+          else
+          {
+            if ( $(x_optimization) = "2" )
+            {
+              flags +=
+                <cxxflags>"/O2"
+                <linkflags>"/OPT:REF"
+              ;
+            }
+            else
+            {
+              if ( $(x_optimization) = "3" )
+              {
+                flags +=
+                  <cxxflags>"/O2"
+                  <linkflags>"/OPT:REF"
+                ;
+              }
+              else
+              {
+                if ( $(x_optimization) = "size" )
+                {
+                  flags +=
+                    <cxxflags>"/O1"
+                    <cxxflags>"/Gw"
+                    <linkflags>"/OPT:REF"
+                  ;
+                }
+                else
+                {
+                  if ( $(x_optimization) = "fast" )
+                  {
+                    flags +=
+                      <cxxflags>"/O2"
+                      <cxxflags>"/fp:fast"
+                      <linkflags>"/OPT:REF"
+                    ;
+                  }
+                }
+              }
+            }
+          }
         }
-        else if ( $(x_optimization) = "3" )
-        {
-          flags +=
-            <cxxflags>"/O2"
-            <linkflags>"/OPT:REF"
-          ;
-        }
-        else if ( $(x_optimization) = "size" )
-        {
-          flags +=
-            <cxxflags>"/O1"
-            <cxxflags>"/Gw"
-            <linkflags>"/OPT:REF"
-          ;
-        }
-        else if ( $(x_optimization) = "fast" )
-        {
-          flags +=
-            <cxxflags>"/O2"
-            <cxxflags>"/fp:fast"
-            <linkflags>"/OPT:REF"
-          ;
-        }
-      }
-    }
-    if ( $(x_lto) != "default" )
-    {
-      if ( $(x_lto) = "off" )
-      {
-        flags +=
-          <cxxflags>"/LTCG:OFF"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"/GL"
-          <linkflags>"/LTCG"
-        ;
       }
     }
     if ( $(x_whole_program) != "default" )
@@ -1556,6 +1692,147 @@ rule jln_flags ( properties * )
         ;
       }
     }
+    if ( $(x_stack_protector) != "default" )
+    {
+      if ( $(x_stack_protector) = "off" )
+      {
+        flags +=
+          <cxxflags>"/GS-"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"/GS"
+          <cxxflags>"/sdl"
+        ;
+        if ( $(x_stack_protector) = "strong" )
+        {
+          flags +=
+            <cxxflags>"/RTC1"
+          ;
+        }
+        else
+        {
+          if ( $(x_stack_protector) = "all" )
+          {
+            flags +=
+              <cxxflags>"/RTC1"
+              <cxxflags>"/RTCc"
+            ;
+          }
+        }
+      }
+    }
+  }
+  if (  $(toolset) = "msvc"  )
+  {
+    if ( $(x_warnings) != "default" )
+    {
+      if ( $(x_warnings) = "on" )
+      {
+        flags +=
+          <cxxflags>"/W4"
+          <cxxflags>"/wd4244"
+          <cxxflags>"/wd4245"
+        ;
+      }
+      else
+      {
+        if ( $(x_warnings) = "strict" )
+        {
+          flags +=
+            <cxxflags>"/Wall"
+            <cxxflags>"/wd4820"
+            <cxxflags>"/wd4514"
+            <cxxflags>"/wd4710"
+          ;
+        }
+        else
+        {
+          if ( $(x_warnings) = "very-strict" )
+          {
+            flags +=
+              <cxxflags>"/Wall"
+            ;
+          }
+          else
+          {
+            if ( $(x_warnings) = "off" )
+            {
+              flags +=
+                <cxxflags>"/W0"
+              ;
+            }
+          }
+        }
+      }
+    }
+    if ( $(x_shadow_warnings) != "default" )
+    {
+      if ( $(x_shadow_warnings) = "off" )
+      {
+        flags +=
+          <cxxflags>"/wd4456"
+          <cxxflags>"/wd4459"
+        ;
+      }
+      else
+      {
+        if (  ( $(x_shadow_warnings) = "on" ) || ( $(x_shadow_warnings) = "all" )  )
+        {
+          flags +=
+            <cxxflags>"/w4456"
+            <cxxflags>"/w4459"
+          ;
+        }
+        else
+        {
+          if ( $(x_shadow_warnings) = "local" )
+          {
+            flags +=
+              <cxxflags>"/w4456"
+              <cxxflags>"/wd4459"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_warnings_as_error) != "default" )
+    {
+      if ( $(x_warnings_as_error) = "on" )
+      {
+        flags +=
+          <cxxflags>"/WX"
+          <linkflags>"/WX"
+        ;
+      }
+      else
+      {
+        if ( $(x_warnings_as_error) = "off" )
+        {
+          flags +=
+            <cxxflags>"/WX-"
+          ;
+        }
+      }
+    }
+    if ( $(x_lto) != "default" )
+    {
+      if ( $(x_lto) = "off" )
+      {
+        flags +=
+          <cxxflags>"/LTCG:OFF"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"/GL"
+          <linkflags>"/LTCG"
+        ;
+      }
+    }
     if ( $(x_sanitizers) != "default" )
     {
       if ( $(x_sanitizers) = "on" )
@@ -1575,101 +1852,6 @@ rule jln_flags ( properties * )
             ;
           }
         }
-      }
-    }
-    if ( $(x_stack_protector) != "default" )
-    {
-      if ! ( $(x_stack_protector) = "off" )
-      {
-        flags +=
-          <cxxflags>"/GS"
-          <cxxflags>"/sdl"
-        ;
-        if ( $(x_stack_protector) = "strong" )
-        {
-          flags +=
-            <cxxflags>"/RTC1"
-          ;
-        }
-        else if ( $(x_stack_protector) = "all" )
-        {
-          flags +=
-            <cxxflags>"/RTC1"
-            <cxxflags>"/RTCc"
-          ;
-        }
-      }
-    }
-    if ( $(x_shadow_warnings) != "default" )
-    {
-      if ( $(x_shadow_warnings) = "off" )
-      {
-        flags +=
-          <cxxflags>"/wd4456"
-          <cxxflags>"/wd4459"
-        ;
-      }
-      else if (  ( $(x_shadow_warnings) = "on" ) || ( $(x_shadow_warnings) = "all" )  )
-      {
-        flags +=
-          <cxxflags>"/w4456"
-          <cxxflags>"/w4459"
-        ;
-      }
-      else if ( $(x_shadow_warnings) = "local" )
-      {
-        flags +=
-          <cxxflags>"/w4456"
-          <cxxflags>"/wd4459"
-        ;
-      }
-    }
-    if ( $(x_warnings) != "default" )
-    {
-      if ( $(x_warnings) = "on" )
-      {
-        flags +=
-          <cxxflags>"/W4"
-          <cxxflags>"/wd4244"
-          <cxxflags>"/wd4245"
-        ;
-      }
-      else if ( $(x_warnings) = "strict" )
-      {
-        flags +=
-          <cxxflags>"/Wall"
-          <cxxflags>"/wd4820"
-          <cxxflags>"/wd4514"
-          <cxxflags>"/wd4710"
-        ;
-      }
-      else if ( $(x_warnings) = "very-strict" )
-      {
-        flags +=
-          <cxxflags>"/Wall"
-        ;
-      }
-      else if ( $(x_warnings) = "off" )
-      {
-        flags +=
-          <cxxflags>"/W0"
-        ;
-      }
-    }
-    if ( $(x_warnings_as_error) != "default" )
-    {
-      if ( $(x_warnings_as_error) = "on" )
-      {
-        flags +=
-          <cxxflags>"/WX"
-          <linkflags>"/WX"
-        ;
-      }
-      else if ( $(x_warnings_as_error) = "off" )
-      {
-        flags +=
-          <cxxflags>"/WX-"
-        ;
       }
     }
   }

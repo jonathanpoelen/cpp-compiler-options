@@ -5,10 +5,13 @@
 -Wno-conversion
 -Wno-covered-switch-default
 -Wno-ctad-maybe-unsupported
+-Wno-documentation
+-Wno-documentation-unknown-command
 -Wno-exit-time-destructors
 -Wno-global-constructors
 -Wno-inconsistent-missing-destructor-override
 -Wno-mismatched-tags
+-Wno-newline-eof
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field

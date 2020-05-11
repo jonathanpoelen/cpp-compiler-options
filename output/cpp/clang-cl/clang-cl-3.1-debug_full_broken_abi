@@ -1,0 +1,11 @@
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls
+-fsanitize-address-use-after-scope
+-fsanitize=address
+-fsanitize=undefined
+/DEBUG
+/DNOMINMAX
+/D_DEBUG
+/D_HAS_ITERATOR_DEBUGGING=1
+/Od
+/RTC1
