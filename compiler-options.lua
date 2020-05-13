@@ -65,12 +65,17 @@ function Logical(op, ...)
   return If({[op]=conds})
 end
 
-function Compiler(name)
+function Tool(tool, name)
   return function(x_or_major, minor)
     if type(x_or_major) == 'number' then
-      return If({_and={ {compiler=name}, {version={x_or_major, minor or 0}} }})
+      return If({_and={
+        {[tool]=name},
+        (x_or_major < 0)
+        and {_not={version={-x_or_major, minor or 0}}}
+        or {version={x_or_major, minor or 0}}
+      }})
     else
-      local r = If({compiler=name})
+      local r = If({[tool]=name})
       if x_or_major then
         return r(x_or_major)
       end
@@ -86,11 +91,14 @@ function vers(major, minor) return If({version={major, minor or 0}}) end
 function lvl(x) return If({lvl=x}) end
 function opt(x) return If({opt=x}) end
 
-local gcc = Compiler('gcc')
-local clang = Compiler('clang')
-local clang_cl = Compiler('clang-cl')
+local gcc = Tool('compiler', 'gcc')
+local clang = Tool('compiler', 'clang')
+local clang_cl = Tool('compiler', 'clang-cl')
 local clang_like = function() return Or(clang_cl(), clang()) end
-local msvc = Compiler('msvc')
+local msvc = Tool('compiler', 'msvc')
+
+local msvc_linker = Tool('linker', 'msvc')
+local clang_cl_linker = Tool('linker', 'lld-link')
 
 function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
 function flag(x) return { cxx=x } end
@@ -204,9 +212,9 @@ Or(gcc(), clang(), clang_cl()) {
             }
           }
         }
-      }
+      } /
 
-      / clang_like() {
+      clang_like {
         flag'-Weverything',
         flag'-Wno-documentation',
         flag'-Wno-documentation-unknown-command',
@@ -242,7 +250,7 @@ Or(gcc(), clang(), clang_cl()) {
         flag'-Wconversion',
         gcc(8) { flag'-Wcast-align=strict', }
       } /
-      clang_like() {
+      clang_like {
         flag'-Wno-conversion',
         flag'-Wno-sign-conversion',
       },
@@ -260,7 +268,7 @@ Or(gcc(), clang(), clang_cl()) {
         flag'-Werror=logical-op',
         flag'-Werror=logical-not-parentheses',
       } /
-      clang_like() {
+      clang_like {
         flag'-Werror=array-bounds',
         flag'-Werror=division-by-zero',
 
@@ -280,59 +288,80 @@ Or(gcc(), clang(), clang_cl()) {
     flag'-Wno-error',
   },
 
+  opt'suggestions' {
+    -lvl'off' {
+      gcc {
+        flag'-Wsuggest-attribute=pure',
+        flag'-Wsuggest-attribute=const',
+        vers(5) {
+          cxx'-Wsuggest-final-types',
+          cxx'-Wsuggest-final-methods',
+       -- flag'-Wsuggest-attribute=format',
+          vers(5,1) {
+            flag'-Wnoexcept',
+          },
+        }
+      }
+    },
+  },
+
   opt'sanitizers' {
     lvl'off' {
       fl'-fno-sanitize=all'
-    } / {
-      clang_like() {
-        vers(3,1) {
-          fl'-fsanitize=undefined',
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fsanitize-address-use-after-scope',
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
-          vers(3,4) {
-            fl'-fsanitize=leak', -- requires the address sanitizer
-          },
-        }
-      } /
-      gcc {
-        vers(4,8) {
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
+    } /
+    clang_cl_linker {
+      fl'-fsanitize=undefined',
+      fl'-fsanitize=address', -- memory, thread are mutually exclusive
+      flag'-fsanitize-address-use-after-scope',
+    } /
+    clang {
+      vers(3,1) {
+        fl'-fsanitize=undefined',
+        fl'-fsanitize=address', -- memory, thread are mutually exclusive
+        flag'-fsanitize-address-use-after-scope',
+        flag'-fno-omit-frame-pointer',
+        flag'-fno-optimize-sibling-calls',
+        vers(3,4) {
+          fl'-fsanitize=leak', -- requires the address sanitizer
+        },
+      }
+    } /
+    gcc {
+      vers(4,8) {
+        fl'-fsanitize=address', -- memory, thread are mutually exclusive
+        flag'-fno-omit-frame-pointer',
+        flag'-fno-optimize-sibling-calls',
 
-          vers(4,9) {
-            fl'-fsanitize=undefined',
-            fl'-fsanitize=leak', -- requires the address sanitizer
-          }
+        vers(4,9) {
+          fl'-fsanitize=undefined',
+          fl'-fsanitize=leak', -- requires the address sanitizer
         }
-      },
+      }
     },
   },
 
   opt'control_flow' {
     lvl'off' {
       gcc(8) { flag'-fcf-protection=none' } /
-      clang_cl { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
+      clang_cl_linker { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
       clang { fl'-fno-sanitize=cfi' },
     } /
-    {
-      gcc(8) {
-        -- flag'-mcet',
-        flag'-fcf-protection=full' --  full|branch|return|none
-      } /
-      And(lvl'allow_bugs', clang()) {
-        fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
-        flag'-fvisibility=hidden',
-        fl'-flto',
-      } /
-      clang_cl { flag'-fsanitize-cfi-cross-dso' }
-    },
+    Or(gcc(8), clang_cl()) {
+      -- gcc: flag'-mcet',
+      -- clang_cl: flag'-fsanitize-cfi-cross-dso',
+      lvl'branch' { flag'-fcf-protection=branch' } /
+      lvl'return' { flag'-fcf-protection=return' } /
+      { flag'-fcf-protection=full' }
+    } /
+    And(lvl'allow_bugs', clang()) {
+      fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
+      flag'-fvisibility=hidden',
+      fl'-flto',
+    }
   },
 
   opt'color' {
-    Or(gcc(4,9), clang(), clang_cl()) {
+    Or(gcc(4,9), clang_like()) {
       lvl'auto' { flag'-fdiagnostics-color=auto' } /
       lvl'never' { flag'-fdiagnostics-color=never' } /
       lvl'always' { flag'-fdiagnostics-color=always' },
@@ -359,9 +388,6 @@ Or(gcc(), clang(), clang_cl()) {
     }
   },
 
-},
-
-Or(gcc(), clang()) {
   opt'fix_compiler_error' {
     lvl'on' {
       gcc {
@@ -375,12 +401,15 @@ Or(gcc(), clang()) {
       },
       flag'-Werror=write-strings'
     } /
-    clang {
+    clang_like {
       flag'-Wno-error=c++11-narrowing',
       flag'-Wno-reserved-user-defined-literal',
     }
   },
 
+},
+
+Or(gcc(), clang()) {
   opt'coverage' {
     lvl'on' {
       flag'--coverage', -- -fprofile-arcs -ftest-coverage
@@ -412,7 +441,7 @@ Or(gcc(), clang()) {
       link'-fuse-ld=lld'
     } /
     lvl'bfd' { link'-fuse-ld=bfd' } /
-    Or(lvl'gold', -gcc(9)) { link'-fuse-ld=gold' } /
+    Or(lvl'gold', gcc(-9)) { link'-fuse-ld=gold' } /
     link'-fuse-ld=lld',
   },
 
@@ -426,11 +455,11 @@ Or(gcc(), clang()) {
         opt'warnings' {
           -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
         },
-        lvl'fat' { flag'-ffat-lto-objects', },
-        lvl'linker_plugin' { link'-fuse-linker-plugin' }
+        lvl'fat' { flag'-ffat-lto-objects', } /
+        lvl'thin' { link'-fuse-linker-plugin' }
       }
     } /
-    And(lvl'linker_plugin', clang(6)) { fl'-flto=thin' } /
+    And(lvl'thin', clang(6)) { fl'-flto=thin' } /
     fl'-flto',
   },
 
@@ -464,17 +493,16 @@ Or(gcc(), clang()) {
       },
       gcc {
         fl'-fwhole-program'
-      } / {
-        clang {
-          vers(3,9) {
-            opt'lto'{
-              -lvl'off' {
-                fl'-fwhole-program-vtables'
-              }
-            },
-            vers(7) {
-              fl'-fforce-emit-vtables',
+      } /
+      clang {
+        vers(3,9) {
+          opt'lto' {
+            -lvl'off' {
+              fl'-fwhole-program-vtables'
             }
+          },
+          vers(7) {
+            fl'-fforce-emit-vtables',
           }
         }
       }
@@ -538,23 +566,6 @@ Or(gcc(), clang()) {
     lvl'pic'{ flag'-fPIC', },
   },
 
-  opt'suggestions' {
-    -lvl'off' {
-      gcc {
-        flag'-Wsuggest-attribute=pure',
-        flag'-Wsuggest-attribute=const',
-        vers(5) {
-          cxx'-Wsuggest-final-types',
-          cxx'-Wsuggest-final-methods',
-       -- flag'-Wsuggest-attribute=format',
-          vers(5,1) {
-            flag'-Wnoexcept',
-          },
-        }
-      }
-    },
-  },
-
   opt'stl_debug' {
     -lvl'off' {
       lvl'assert_as_exception' {
@@ -597,7 +608,7 @@ Or(gcc(), clang()) {
 
   opt'elide_type' {
     lvl'on' {
-     gcc(8) { cxx'-felide-type' }
+      gcc(8) { cxx'-felide-type' }
     } /
     Or(gcc(8), clang(3,4)) {
       cxx'-fno-elide-type',
@@ -632,6 +643,23 @@ Or(gcc(), clang()) {
         flag'-fsanitize=pointer-subtract',
       }
     }
+  },
+},
+
+clang_cl_linker {
+  opt'lto' {
+    lvl'off' { fl'-fno-lto', } /
+    lvl'thin' { fl'-flto=thin' } /
+    fl'-flto',
+  },
+
+  opt'whole_program' {
+    lvl'off' { flag'-fno-whole-program', } /
+    opt'lto'{
+      -lvl'off' {
+        fl'-fwhole-program-vtables'
+      }
+    },
   },
 },
 
@@ -677,8 +705,14 @@ Or(msvc(), clang_cl()) {
   },
 
   opt'whole_program' {
-    lvl'off' { flag'/GL-' } /
-    { flag'/GL', flag'/Gw', link'/LTCG' }
+    lvl'off' {
+      flag'/GL-'
+    } /
+    {
+      flag'/GL',
+      flag'/Gw',
+      link'/LTCG'
+    }
   },
 
   opt'pedantic' {
@@ -690,7 +724,10 @@ Or(msvc(), clang_cl()) {
   },
 
   opt'rtti' {
-    lvl'on' { flag'/GR' } / { flag'/GR-' }
+    lvl'on' {
+      flag'/GR'
+    } /
+    { flag'/GR-' }
   },
 
   opt'stl_debug' {
@@ -703,7 +740,9 @@ Or(msvc(), clang_cl()) {
   },
 
   opt'control_flow' {
-    lvl'off' { flag'/guard:cf-', } /
+    lvl'off' {
+      flag'/guard:cf-',
+    } /
     flag'/guard:cf',
   },
 
@@ -722,7 +761,9 @@ Or(msvc(), clang_cl()) {
 
 Or(msvc()) {
   opt'warnings' {
-    lvl'off' { flag'/W0' } /
+    lvl'off' {
+      flag'/W0'
+    } /
     lvl'on' {
       flag'/W4',
       flag'/wd4244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
@@ -788,8 +829,13 @@ Or(msvc()) {
   },
 
   opt'lto' {
-    lvl'off' { flag'/LTCG:OFF' } /
-    { flag'/GL', link'/LTCG' }
+    lvl'off' {
+      flag'/LTCG:OFF'
+    } /
+    {
+      flag'/GL',
+      link'/LTCG'
+    }
   },
 
   opt'sanitizers' {
@@ -841,7 +887,7 @@ Vbase = {
 
   _opts={
     color=      {{'auto', 'never', 'always'},},
-    control_flow={{'off', 'on', 'allow_bugs'},},
+    control_flow={{'off', 'on', 'branch', 'return', 'allow_bugs'},},
     coverage=   {{'off', 'on'},},
     cpu=        {{'generic', 'native'},},
     debug=      {{'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},},
@@ -850,7 +896,7 @@ Vbase = {
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
     linker=     {{'bfd', 'gold', 'lld', 'native'},},
-    lto=        {{'off', 'on', 'fat', 'linker_plugin'},},
+    lto=        {{'off', 'on', 'fat', 'thin'},},
     fix_compiler_error={{'off', 'on'}, 'on'},
     optimization={{'0', 'g', '1', '2', '3', 'fast', 'size'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
@@ -938,7 +984,8 @@ Vbase = {
       elseif v._not     then _:write(' '.._._vcondkeyword._not) ; _:_vcond(v._not, optname);
       elseif v.lvl      then _:write(' '.._:_vcond_lvl(v.lvl, optname))
       elseif v.version  then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_verless(v.version[1], v.version[2])..' '.._._vcondkeyword.close)
-      elseif v.compiler then _:write(' '.._:_vcond_comp(v.compiler))
+      elseif v.compiler then _:write(' '.._:_vcond_compiler(v.compiler))
+      elseif v.linker then _:write(' '.._:_vcond_linker(v.linker))
       else error('Unknown cond ', ipairs(v))
       end
     end

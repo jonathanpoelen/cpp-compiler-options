@@ -69,7 +69,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
 
   _vcond_lvl=function(_, lvl, optname) return  "(___" .. _.prefixfunc .. "_flags.get('" .. optname .. "', 'default') == '" .. lvl .. "')" end,
   _vcond_verless=function(_, major, minor) return "___" .. _.prefixfunc .. "_compiler_version.version_compare('<" .. major .. '.' .. minor .. "')" end,
-  _vcond_comp=function(_, compiler) return "(___" .. _.prefixfunc .. "_compiler_id == '" .. compiler .. "')" end,
+  _vcond_compiler=function(_, compiler) return "(___" .. _.prefixfunc .. "_compiler_id == '" .. compiler .. "')" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,

@@ -112,7 +112,7 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None):
 
   _vcond_lvl=function(_, lvl, optname) return  "options.get('" .. optname .. "', _" .. _.prefixfunc .. "_default_flags['" .. optname .. "']) == '" .. lvl .. "'" end,
   _vcond_verless=function(_, major, minor) return "verless(" .. major .. ', ' .. minor .. ")" end,
-  _vcond_comp=function(_, compiler) return "compiler == '" .. compiler .. "'" end,
+  _vcond_compiler=function(_, compiler) return "compiler == '" .. compiler .. "'" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,

@@ -175,7 +175,7 @@ return {
     ['clang-cl']='"Clang" AND DEFINED MSVC',
     msvc='"MSVC"',
   },
-  _vcond_comp=function(_, compiler)
+  _vcond_compiler=function(_, compiler)
     local str_comp = _._comp_id[compiler]
     if not str_comp then
       error('Unknown ' .. compiler .. ' compiler')

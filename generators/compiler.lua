@@ -18,14 +18,13 @@ return {
           if x.compiler then
             compilers[#compilers+1] = x.compiler
           elseif x.version then
-            versions[#versions+1] = (x.version[1] < 0 and -x.version[1] or x.version[1])
-                                 .. '.' .. x.version[2]
+            versions[#versions+1] = x.version[1] .. '.' .. x.version[2]
           elseif x._not then
             _:_startcond(x._not, compilers, versions)
           else
             local sub = x._and or x._or
             if sub then
-              for k,y in pairs(sub) do
+              for k,y in ipairs(sub) do
                 _:_startcond(y, compilers, versions)
               end
             end

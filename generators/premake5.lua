@@ -160,7 +160,7 @@ function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_ot
 
   _vcond_lvl=function(_, lvl, optname) return 'values["' .. _:tostroption(optname) .. '"] == "' .. tostrlvl(lvl) .. '"' end,
   _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
-  _vcond_comp=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
+  _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
 
   cxx=function(_, x) return ' ' .. x end,
   link=function(_, x) return ' ' .. x end,

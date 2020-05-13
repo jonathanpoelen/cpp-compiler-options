@@ -29,7 +29,7 @@ return {
     return '( $(x_' .. optname .. ') != "default" )'
   end,
   _vcond_verless=function(_, major, minor) return '$(version) < "' .. normnum(major) .. '.' .. normnum(minor) .. '"' end,
-  _vcond_comp=function(_, compiler) return '$(toolset) = "' .. compiler .. '"' end,
+  _vcond_compiler=function(_, compiler) return '$(toolset) = "' .. compiler .. '"' end,
 
   cxx=function(_, x)
     return _.indent .. '  <' .. _.prefixflag .. 'flags>"' .. x .. '"\n'
