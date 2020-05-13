@@ -722,21 +722,63 @@ Or(msvc(), clang_cl()) {
 
 Or(msvc()) {
   opt'warnings' {
-    lvl'on' { flag'/W4', flag'/wd4244', flag'/wd4245' } /
-    lvl'strict' { flag'/Wall', flag'/wd4820', flag'/wd4514', flag'/wd4710' } /
-    lvl'very_strict' { flag'/Wall' } /
-    lvl'off' { flag'/W0' },
+    lvl'off' { flag'/W0' } /
+    lvl'on' {
+      flag'/W4',
+      flag'/wd4244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
+      flag'/wd4245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
+      flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+    } /
+    Or(lvl'strict', lvl'very_strict') {
+      flag'/Wall',
+
+      -- Warnings in MSVC's std
+      flag'/wd4355', -- 'this' used in base member initializing list
+      flag'/wd4365', -- Signed/unsigned mismatch (implicit conversion)
+      flag'/wd4514', -- Unreferenced inline function has been removed
+      flag'/wd4548', -- Expression before comma has no effect
+      flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
+      flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
+      flag'/wd4625', -- Copy constructor implicitly deleted
+      flag'/wd4626', -- Copy assignment operator implicitly deleted
+      flag'/wd4668', -- Preprocessor macro not defined
+      flag'/wd4710', -- Function not inlined
+      flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+      flag'/wd4774', -- 'string' : format string expected in argument number is not a string literal
+      flag'/wd4820', -- Added padding to members
+      flag'/wd5026', -- Move constructor implicitly deleted
+      flag'/wd5027', -- Move assignment operator implicitly deleted
+      flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
+
+      -- Warnings in other libs
+      flag'/wd4464', -- relative include path contains '..'
+      flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
+      flag'/wd5045', -- Spectre mitigation
+
+      lvl'strict' {
+        flag'/wd4061', -- Enum value in a switch not explicitly handled by a case label
+        flag'/wd4266', -- No override available (function is hidden)
+        flag'/wd4388', -- Signed/unsigned mismatch (equality comparison)
+        flag'/wd4583', -- Destructor not implicitly called
+        flag'/wd4619', -- Unknown warning number
+        flag'/wd4623', -- Default constructor implicitly deleted
+        flag'/wd5204', -- Class with virtual functions but no virtual destructor
+      },
+    }
   },
 
   opt'shadow_warnings' {
     lvl'off' {
-      flag'/wd4456', flag'/wd4459'
+      flag'/wd4456', -- declaration of 'identifier' hides previous local declaration
+      flag'/wd4459', -- declaration of 'identifier' hides global declaration
     } /
     Or(lvl'on', lvl'all') {
-      flag'/w4456', flag'/w4459'
+      flag'/w4456',
+      flag'/w4459',
     } /
     lvl'local' {
-      flag'/w4456', flag'/wd4459'
+      flag'/w4456',
+      flag'/wd4459'
     }
   },
 
