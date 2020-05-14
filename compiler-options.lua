@@ -94,8 +94,16 @@ function opt(x) return If({opt=x}) end
 local gcc = Tool('compiler', 'gcc')
 local clang = Tool('compiler', 'clang')
 local clang_cl = Tool('compiler', 'clang-cl')
-local clang_like = function() return Or(clang_cl(), clang()) end
 local msvc = Tool('compiler', 'msvc')
+
+local clang_like = function(x, y)
+  if type(x) == 'number' then
+    return Or(clang_cl(x, y), clang(x, y))
+  end
+
+  local r = Or(clang_cl(), clang())
+  return x and r(x) or r
+end
 
 local msvc_linker = Tool('linker', 'msvc')
 local clang_cl_linker = Tool('linker', 'lld-link')
