@@ -1,11 +1,33 @@
 #!/usr/bin/env lua
 
+--[[
+local _print_ast_ordered_vars = {
+  '_if',
+  '_else',
+  '_t'
+}
+local _kprint_ast_var_filter = {
+  _t=true,
+  _if=true,
+  _else=true,
+  _subelse=true
+}
+
 function printAST(ast, prefix)
   if type(ast) == 'table' then
     io.stdout:write('{\n')
+    prefix = prefix or ''
     local newprefix = prefix..'  '
+
+    for _,k in pairs(_print_ast_ordered_vars) do
+      if ast[k] then
+        io.stdout:write(newprefix..k..': ')
+        printAST(ast[k], newprefix)
+      end
+    end
+
     for k,x in pairs(ast) do
-      if k ~= '_subelse' then
+      if not _kprint_ast_var_filter[k] then
         io.stdout:write(newprefix..k..': ')
         printAST(x, newprefix)
       end
@@ -16,7 +38,9 @@ function printAST(ast, prefix)
   else
     io.stdout:write('nil\n')
   end
+  return ast
 end
+]]
 
 local if_mt = {
   __call = function(_, x)
@@ -52,6 +76,9 @@ end
 function Logical(op, ...)
   local conds={}
   for k,x in ipairs({...}) do
+    if type(x) == 'function' then
+      x = x()
+    end
     assert(x._if and not x._t)
     assert(not x._if.opt)
     if x._if[op] then
@@ -131,10 +158,10 @@ end
 -- https://clang.llvm.org/docs/DiagnosticsReference.html
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
-return {
+return --[[printAST]] {
 
 -- https://clang.llvm.org/docs/UsersManual.html#id9
-Or(gcc(), clang(), clang_cl()) {
+Or(gcc, clang_like) {
   opt'warnings' {
     lvl'off' {
       flag'-w'
@@ -354,14 +381,14 @@ Or(gcc(), clang(), clang_cl()) {
       clang_cl_linker { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
       clang { fl'-fno-sanitize=cfi' },
     } /
-    Or(gcc(8), clang_cl()) {
+    Or(gcc(8), clang_cl) {
       -- gcc: flag'-mcet',
       -- clang_cl: flag'-fsanitize-cfi-cross-dso',
       lvl'branch' { flag'-fcf-protection=branch' } /
       lvl'return' { flag'-fcf-protection=return' } /
       { flag'-fcf-protection=full' }
     } /
-    And(lvl'allow_bugs', clang()) {
+    And(lvl'allow_bugs', clang) {
       fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
       flag'-fvisibility=hidden',
       fl'-flto',
@@ -369,7 +396,7 @@ Or(gcc(), clang(), clang_cl()) {
   },
 
   opt'color' {
-    Or(gcc(4,9), clang_like()) {
+    Or(gcc(4,9), clang_like) {
       lvl'auto' { flag'-fdiagnostics-color=auto' } /
       lvl'never' { flag'-fdiagnostics-color=never' } /
       lvl'always' { flag'-fdiagnostics-color=always' },
@@ -417,7 +444,7 @@ Or(gcc(), clang(), clang_cl()) {
 
 },
 
-Or(gcc(), clang()) {
+Or(gcc, clang) {
   opt'coverage' {
     lvl'on' {
       flag'--coverage', -- -fprofile-arcs -ftest-coverage
@@ -598,7 +625,12 @@ Or(gcc(), clang()) {
   },
 
   opt'shadow_warnings' {
-    lvl'off' { flag'-Wno-shadow', clang(8) { flag'-Wno-shadow-field' } } /
+    lvl'off' {
+      flag'-Wno-shadow',
+      clang(8) {
+        flag'-Wno-shadow-field'
+      }
+    } /
     lvl'on' { flag'-Wshadow' } /
     lvl'all' {
       clang { flag'-Wshadow-all', } /
@@ -632,7 +664,7 @@ Or(gcc(), clang()) {
   },
 
   opt'diagnostics_show_template_tree' {
-    Or(gcc(8), clang()) {
+    Or(gcc(8), clang) {
       lvl'on' { cxx'-fdiagnostics-show-template-tree' } / cxx'-fno-diagnostics-show-template-tree',
     },
   },
@@ -673,7 +705,7 @@ clang_cl_linker {
 
 -- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options?view=vs-2019
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically?view=vs-2019
-Or(msvc(), clang_cl()) {
+Or(msvc, clang_cl) {
   opt'stl_fix' {
     lvl'on' { flag'/DNOMINMAX', },
   },
@@ -767,7 +799,7 @@ Or(msvc(), clang_cl()) {
   },
 },
 
-Or(msvc()) {
+msvc {
   opt'warnings' {
     lvl'off' {
       flag'/W0'
@@ -943,7 +975,7 @@ Vbase = {
   write=function(_, s) _._strs[#_._strs+1] = s end,
   get_output=function(_) return table.concat(_._strs) end,
 
-  startopt=noop, -- function(_, name) end,
+  startoptcond=noop, -- function(_, name) end,
   stopopt=noop, -- function(_) end,
 
   startcond=noop, -- function(_, x, optname) end,
@@ -1002,7 +1034,7 @@ Vbase = {
       return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl('default', optname).._._vcondkeyword.close
     end
 
-    _.startopt=function(_, optname)
+    _.startoptcond=function(_, optname)
       _:_vcond_printflags()
       _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
       if #_._vcondkeyword.openblock ~= 0 then
@@ -1162,7 +1194,7 @@ function evalflags(t, v, curropt)
         error('Unknown "' .. opt .. '" option')
       end
       if not v.ignore[opt] then
-        local r = v:startopt(opt)
+        local r = v:startoptcond(opt)
         if r ~= false then
           v.indent = v.indent .. '  '
           evalflags(t._t, v, opt)

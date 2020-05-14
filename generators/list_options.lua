@@ -76,7 +76,7 @@ return {
     end
   end,
 
-  startopt=function(_, optname)
+  startoptcond=function(_, optname)
     local known = _.knwon_opts[optname]
     if not known then
       _.errors[#_.errors+1] = '_opts[' .. optname .. ']: unknown key'

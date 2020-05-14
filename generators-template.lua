@@ -7,7 +7,7 @@ return {
 
   -- is_C = true | false -- set by caller
 
-  startopt=function(_, name)
+  startoptcond=function(_, name)
   end,
 
   stopopt=function(_)
@@ -31,6 +31,7 @@ return {
   elsecond=function(_, optname)
   end,
 
+  -- close startcond and startoptcond
   stopcond=function(_, optname)
   end,
 
@@ -63,7 +64,7 @@ return {
     keywords.ifopen = keywords.open
     keywords.ifclose = keywords.close
     -- _vcond_* functions initialize
-    -- Override startopt, stopopt, startcond, elsecond, markelseif, stopcond, cxx, link
+    -- Override startoptcond, stopopt, startcond, elsecond, markelseif, stopcond, cxx, link
     _:_vcond_init(keywords)
   end,
 

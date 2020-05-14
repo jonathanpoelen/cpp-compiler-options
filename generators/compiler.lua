@@ -9,74 +9,120 @@ return {
   start=function(_, compiler, ...)
     -- list compilers
     if not compiler then
-      local currcomps = {}
-      local stackcomp = {}
+      -- compilers for current depth
+      local stackcomp = {{}}
+      -- compiler used in current if
+      local stackifcomp = {{}}
       local versions_by_compiler = {}
 
       return {
-        _startcond=function(_, x, compilers, versions)
+        -- currcomp = {kcompilers, has_comp:bool}
+        _startcond=function(_, x, currcomp)
           if x.compiler then
-            compilers[#compilers+1] = x.compiler
+            versions_by_compiler[x.compiler] = versions_by_compiler[x.compiler] or {}
+            currcomp[1][x.compiler] = true
+            currcomp[2] = true
+            return {[x.compiler]=true}
           elseif x.version then
-            versions[#versions+1] = x.version[1] .. '.' .. x.version[2]
+            local vers = '-' .. x.version[1] .. '.' .. x.version[2]
+            for comp in pairs(currcomp[2] and currcomp[1] or stackcomp[#stackcomp]) do
+              local intversion = x.version[1] * 1000000 + x.version[2]
+              versions_by_compiler[comp][intversion] = {x.version[1], x.version[2], comp..vers}
+            end
           elseif x._not then
-            _:_startcond(x._not, compilers, versions)
+            return _:_startcond(x._not, currcomp)
           else
             local sub = x._and or x._or
             if sub then
+              local compilers = {}
+              local has_value
+
+              currcomp = {{}, false}
               for k,y in ipairs(sub) do
-                _:_startcond(y, compilers, versions)
+                for comp in pairs(_:_startcond(y, currcomp) or {}) do
+                  compilers[comp] = true
+                  has_value = true
+                end
               end
+
+              return has_value and compilers
             end
           end
         end,
 
         stopcond=function(_)
-          currcomps = stackcomp[#stackcomp]
+          stackcomp[#stackcomp] = nil
+          stackifcomp[#stackifcomp] = nil
+        end,
+
+        startoptcond=function(_)
+          stackcomp[#stackcomp+1] = stackcomp[#stackcomp]
+          stackifcomp[#stackifcomp+1] = false
         end,
 
         startcond=function(_, x)
-          local compilers, versions = {}, {}
-          _:_startcond(x, compilers, versions)
+          local r = _:_startcond(x, {{}, false})
+          stackifcomp[#stackifcomp+1] = r or false
+          stackcomp[#stackcomp+1] = r or stackcomp[#stackcomp]
+        end,
 
-          if #compilers == 0 then
-            compilers = currcomps
-          end
-
-          currcomps = compilers
-          stackcomp[#stackcomp+1] = compilers
-          for k,comp in ipairs(compilers) do
-            local kversions = versions_by_compiler[comp]
-            if not kversions then
-              kversions = {}
-              versions_by_compiler[comp] = kversions
+        elsecond=function(_)
+          -- exclude `if` compilers from the parent's active compilers
+          if stackifcomp[#stackifcomp] then
+            local old = stackifcomp[#stackifcomp]
+            local new = {}
+            for comp in pairs(stackcomp[#stackcomp-1]) do
+              if not old[comp] then
+                new[comp] = true
+              end
             end
-
-            for k,vers in ipairs(versions) do
-              kversions[#kversions+1] = vers
-            end
+            stackcomp[#stackcomp] = new
           end
         end,
 
         stop=function(_)
-          local kcomps = {}
-          for comp,versions in pairs(versions_by_compiler) do
-            if #versions == 0 then
-              kcomps[comp] = true
-            else
-              for k,version in ipairs(versions) do
-                kcomps[comp .. '-' .. version] = true
+          local comps = {}
+          for comp, t in pairs(versions_by_compiler) do
+            local versions = {}
+            if comp == 'clang-cl' then
+              -- assume than minimal version is 8.0
+              for vers, d in pairs(t) do
+                if d[1] >= 8 then
+                  versions[#versions+1] = d
+                end
               end
+              if #versions <= 1 then
+                comp = 'clang-cl'
+                versions = {}
+              end
+            else
+              for vers, d in pairs(t) do
+                versions[#versions+1] = d
+              end
+            end
+            comps[#comps+1] = {comp, versions}
+          end
+
+          -- sort by name
+          table.sort(comps, function(a,b) return a[1] < b[1] end)
+
+          local names = {}
+          for k,comp_vers in ipairs(comps) do
+            if #comp_vers[2] ~= 0 then
+              -- sort by version
+              table.sort(comp_vers[2], function(a,b)
+                return a[1] < b[1]
+                    or a[1] == b[1] and a[2] < b[2]
+              end)
+              for k,d in ipairs(comp_vers[2]) do
+                names[#names+1] = d[3]
+              end
+            else
+              names[#names+1] = comp_vers[1]
             end
           end
 
-          local comps = {}
-          for k in pairs(kcomps) do
-            comps[#comps+1] = k
-          end
-
-          table.sort(comps)
-          return table.concat(comps, '\n') .. '\n'
+          return table.concat(names, '\n') .. '\n'
         end,
       }
     end
@@ -190,7 +236,7 @@ return {
     return ''
   end,
 
-  startopt=function(_, name)
+  startoptcond=function(_, name)
     _.d.opt = name
     return _.d.opts[name] and true or false
   end,
