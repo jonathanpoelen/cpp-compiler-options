@@ -1,3 +1,6 @@
+-fsanitize-address-use-after-scope
+-fsanitize=address
+-fsanitize=undefined
 /DEBUG
 /DNOMINMAX
 /D_DEBUG

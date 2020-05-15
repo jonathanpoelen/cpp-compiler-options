@@ -537,7 +537,7 @@ rule jln_c_flags ( properties * )
       }
       else
       {
-        if $(linker) = "lld-link"
+        if $(toolset) = "clang-cl"
         {
           flags +=
             <cflags>"-fsanitize=undefined"
@@ -608,7 +608,7 @@ rule jln_c_flags ( properties * )
         }
         else
         {
-          if $(linker) = "lld-link"
+          if $(toolset) = "clang-cl"
           {
             flags +=
               <cflags>"-fcf-protection=none"

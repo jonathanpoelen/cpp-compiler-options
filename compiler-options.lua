@@ -358,7 +358,7 @@ Or(gcc, clang_like) {
     lvl'off' {
       fl'-fno-sanitize=all'
     } /
-    lld_link {
+    clang_cl {
       flag'-fsanitize=undefined',
       flag'-fsanitize=address', -- memory, thread are mutually exclusive
       flag'-fsanitize-address-use-after-scope',
@@ -392,7 +392,7 @@ Or(gcc, clang_like) {
   opt'control_flow' {
     lvl'off' {
       gcc(8) { flag'-fcf-protection=none' } /
-      lld_link { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
+      clang_cl { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
       clang { fl'-fno-sanitize=cfi' },
     } /
     Or(gcc(8), clang_cl) {

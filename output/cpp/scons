@@ -264,7 +264,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         flags += ('-fno-sanitize=all', )
         linkflags += ('-fno-sanitize=all', )
       else:
-        if linker == 'lld-link' :
+        if compiler == 'clang-cl' :
           flags += ('-fsanitize=undefined', '-fsanitize=address', '-fsanitize-address-use-after-scope', )
         else:
           if compiler == 'clang' :
@@ -287,7 +287,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
           flags += ('-fcf-protection=none', )
         else:
-          if linker == 'lld-link' :
+          if compiler == 'clang-cl' :
             flags += ('-fcf-protection=none', '-fno-sanitize-cfi-cross-dso', )
         if compiler == 'clang' :
           flags += ('-fno-sanitize=cfi', )

@@ -147,7 +147,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         jln_c_c_flags += ['-fno-sanitize=all', ]
         jln_c_link_flags += ['-fno-sanitize=all', ]
       else
-        if (  (___jln_c_linker_id == 'lld-link') )
+        if (  (___jln_c_compiler_id == 'clang-cl') )
           jln_c_c_flags += ['-fsanitize=undefined', '-fsanitize=address', '-fsanitize-address-use-after-scope', ]
         else
           if (  (___jln_c_compiler_id == 'clang') )
@@ -179,7 +179,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         if (  ( (___jln_c_compiler_id == 'gcc') and not ( ___jln_c_compiler_version.version_compare('<8.0') ) ) )
           jln_c_c_flags += ['-fcf-protection=none', ]
         else
-          if (  (___jln_c_linker_id == 'lld-link') )
+          if (  (___jln_c_compiler_id == 'clang-cl') )
             jln_c_c_flags += ['-fcf-protection=none', '-fno-sanitize-cfi-cross-dso', ]
           endif
         endif

@@ -410,7 +410,7 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         jln_buildoptions = jln_buildoptions .. " -fno-sanitize=all"
         jln_linkoptions = jln_linkoptions .. " -fno-sanitize=all"
       else
-        if linker == "lld-link" then
+        if compiler == "clang-cl" then
           jln_buildoptions = jln_buildoptions .. " -fsanitize=undefined -fsanitize=address -fsanitize-address-use-after-scope"
         else
           if compiler == "clang" then
@@ -442,7 +442,7 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
           jln_buildoptions = jln_buildoptions .. " -fcf-protection=none"
         else
-          if linker == "lld-link" then
+          if compiler == "clang-cl" then
             jln_buildoptions = jln_buildoptions .. " -fcf-protection=none -fno-sanitize-cfi-cross-dso"
           end
         end
