@@ -1,12 +1,11 @@
 #!/bin/bash
 
 if [ $# -ge 1 ] ; then
-  echo 'Maybe you wanted to use compiler-options.lua ?'
-  exit 1
+  set $1
 fi
 
 set -o pipefail
-set -ex
+set -e
 
 OUTPUT_DIR_NAME=output
 
@@ -79,7 +78,7 @@ for ((i=0; $i<2; ++i)) ; do
 done
 
 sgen compiler | while read comp ; do
-  compname=${comp%-*}
+  compname=${comp%-[0-9]*}
   gencompopt 1 release                       $comp cpu=native lto optimization=2 linker=gold
   gencompopt 2 warnings                      $comp shadow_warnings=off warnings pedantic
   gencompopt 2 warnings_strict               $comp shadow_warnings=off warnings=strict pedantic

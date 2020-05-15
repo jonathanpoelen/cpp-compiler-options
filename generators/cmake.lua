@@ -180,8 +180,10 @@ return {
     if not str_comp then
       error('Unknown ' .. compiler .. ' compiler')
     end
-    return 'CMAKE_CXX_COMPILER_ID MATCHES ' .. str_comp
+    return '(CMAKE_CXX_COMPILER_ID MATCHES ' .. str_comp .. ')'
   end,
+
+  _vcond_linker=function(_, linker) return 'CMAKE_LINKER MATCHES ' .. linker end,
 
   cxx=function(_, x) return ' "' .. x .. '"' end,
   link=function(_, x) return ' "' .. x .. '"' end,

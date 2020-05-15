@@ -92,22 +92,44 @@ function Logical(op, ...)
   return If({[op]=conds})
 end
 
-function Tool(tool, name)
+function Compiler(name)
   return function(x_or_major, minor)
     if type(x_or_major) == 'number' then
       return If({_and={
-        {[tool]=name},
+        {compiler=name},
         (x_or_major < 0)
         and {_not={version={-x_or_major, minor or 0}}}
         or {version={x_or_major, minor or 0}}
       }})
     else
-      local r = If({[tool]=name})
-      if x_or_major then
-        return r(x_or_major)
-      end
-      return r
+      local r = If({compiler=name})
+      return x_or_major and r(x_or_major) or r
     end
+  end
+end
+
+function Linker(name)
+  return function(x)
+    local r = If({linker=name})
+    return x and r(x) or r
+  end
+end
+
+local unpack_table = table.unpack or unpack
+
+function ToolGroup(...)
+  local tools = {...}
+  return function(x, y)
+    if type(x) == 'number' then
+      local t = {}
+      for _,tool in ipairs(tools) do
+        t[#t+1] = tool(x, y)
+      end
+      return Or(unpack_table(t))
+    end
+
+    local r = Or(unpack_table(tools))
+    return x and r(x) or r
   end
 end
 
@@ -118,22 +140,14 @@ function vers(major, minor) return If({version={major, minor or 0}}) end
 function lvl(x) return If({lvl=x}) end
 function opt(x) return If({opt=x}) end
 
-local gcc = Tool('compiler', 'gcc')
-local clang = Tool('compiler', 'clang')
-local clang_cl = Tool('compiler', 'clang-cl')
-local msvc = Tool('compiler', 'msvc')
+local gcc = Compiler('gcc')
+local clang = Compiler('clang')
+local clang_cl = Compiler('clang-cl')
+local msvc = Compiler('msvc')
+local clang_like = ToolGroup(clang, clang_cl)
 
-local clang_like = function(x, y)
-  if type(x) == 'number' then
-    return Or(clang_cl(x, y), clang(x, y))
-  end
-
-  local r = Or(clang_cl(), clang())
-  return x and r(x) or r
-end
-
-local msvc_linker = Tool('linker', 'msvc')
-local clang_cl_linker = Tool('linker', 'lld-link')
+-- local msvc_linker = Linker('msvc')
+local lld_link = Linker('lld-link')
 
 function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
 function flag(x) return { cxx=x } end
@@ -344,9 +358,9 @@ Or(gcc, clang_like) {
     lvl'off' {
       fl'-fno-sanitize=all'
     } /
-    clang_cl_linker {
-      fl'-fsanitize=undefined',
-      fl'-fsanitize=address', -- memory, thread are mutually exclusive
+    lld_link {
+      flag'-fsanitize=undefined',
+      flag'-fsanitize=address', -- memory, thread are mutually exclusive
       flag'-fsanitize-address-use-after-scope',
     } /
     clang {
@@ -378,7 +392,7 @@ Or(gcc, clang_like) {
   opt'control_flow' {
     lvl'off' {
       gcc(8) { flag'-fcf-protection=none' } /
-      clang_cl_linker { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
+      lld_link { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
       clang { fl'-fno-sanitize=cfi' },
     } /
     Or(gcc(8), clang_cl) {
@@ -686,10 +700,10 @@ Or(gcc, clang) {
   },
 },
 
-clang_cl_linker {
+lld_link {
   opt'lto' {
-    lvl'off' { fl'-fno-lto', } /
-    lvl'thin' { fl'-flto=thin' } /
+    lvl'off' { flag'-fno-lto', } /
+    lvl'thin' { flag'-flto=thin' } /
     fl'-flto',
   },
 
@@ -1018,14 +1032,24 @@ Vbase = {
       _:write(' '.._._vcondkeyword.close)
     end
 
+    local write_version=function(_, f, version)
+      _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..
+              ' '..f(_, version[1], version[2])..
+              ' '.._._vcondkeyword.close)
+    end
+
     _._vcond=function(_, v, optname)
           if v._or      then write_logical(_, v._or, _._vcondkeyword._or, optname)
       elseif v._and     then write_logical(_, v._and, _._vcondkeyword._and, optname)
-      elseif v._not     then _:write(' '.._._vcondkeyword._not) ; _:_vcond(v._not, optname);
+      elseif v._not     then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open)
+                             _:_vcond(v._not, optname)
+                             _:write(' '.._._vcondkeyword.close)
       elseif v.lvl      then _:write(' '.._:_vcond_lvl(v.lvl, optname))
-      elseif v.version  then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_verless(v.version[1], v.version[2])..' '.._._vcondkeyword.close)
+      elseif v.version  then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..
+                                     ' '.._._vcond_verless(_, v.version[1], v.version[2])..
+                                     ' '.._._vcondkeyword.close)
       elseif v.compiler then _:write(' '.._:_vcond_compiler(v.compiler))
-      elseif v.linker then _:write(' '.._:_vcond_linker(v.linker))
+      elseif v.linker   then _:write(' '.._:_vcond_linker(v.linker))
       else error('Unknown cond ', ipairs(v))
       end
     end

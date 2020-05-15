@@ -57,6 +57,7 @@ ___]] .. prefixfunc .. [[_flags = {
 ___]] .. prefixfunc .. [[_compiler = meson.get_compiler(']] .. clang .. [[')
 ___]] .. prefixfunc .. [[_compiler_id = ___]] .. prefixfunc .. [[_compiler.get_id()
 ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.version()
+___]] .. prefixfunc .. [[_linker_id = ___]] .. prefixfunc .. [[_compiler.get_linker_id()
 
 ___]] .. prefixfunc .. [[_custom_flags = get_variable(']] .. prefixfunc .. [[_custom_flags', []) + [___]] .. prefixfunc .. [[_flags]
 
@@ -70,6 +71,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
   _vcond_lvl=function(_, lvl, optname) return  "(___" .. _.prefixfunc .. "_flags.get('" .. optname .. "', 'default') == '" .. lvl .. "')" end,
   _vcond_verless=function(_, major, minor) return "___" .. _.prefixfunc .. "_compiler_version.version_compare('<" .. major .. '.' .. minor .. "')" end,
   _vcond_compiler=function(_, compiler) return "(___" .. _.prefixfunc .. "_compiler_id == '" .. compiler .. "')" end,
+  _vcond_linker=function(_, linker) return "(___" .. _.prefixfunc .. "_linker_id == '" .. linker .. "')" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,

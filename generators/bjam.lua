@@ -28,15 +28,19 @@ return {
   _vcond_hasopt=function(_, optname)
     return '( $(x_' .. optname .. ') != "default" )'
   end,
-  _vcond_verless=function(_, major, minor) return '$(version) < "' .. normnum(major) .. '.' .. normnum(minor) .. '"' end,
-  _vcond_compiler=function(_, compiler) return '$(toolset) = "' .. compiler .. '"' end,
 
-  cxx=function(_, x)
-    return _.indent .. '  <' .. _.prefixflag .. 'flags>"' .. x .. '"\n'
+  _vcond_verless=function(_, major, minor)
+    return '$(version) < "' .. normnum(major) .. '.' .. normnum(minor) .. '"'
   end,
+  _vcond_compiler=function(_, compiler) return '$(toolset) = "' .. compiler .. '"' end,
+  _vcond_linker=function(_, linker) return '$(linker) = "' .. linker .. '"' end,
+
+  cxx=function(_, x) return _.indent .. '  <' .. _.prefixflag .. 'flags>"' .. x .. '"\n' end,
   link=function(_, x) return _.indent .. '  <linkflags>"' .. x .. '"\n' end,
 
-  _vcond_toflags=function(_, cxx, links) return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;\n' end,
+  _vcond_toflags=function(_, cxx, links)
+    return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;\n'
+  end,
 
   start=function(_, optprefix, optenvprefix)
     _.prefixflag = _.is_C and 'c' or 'cxx'
@@ -194,6 +198,7 @@ rule ]] .. prefixfunc .. [[_flags ( properties * )
   local toolset = [ $(ps).get <toolset> ] ;
   local version = [ ]] .. prefixfunc .. [[-get-normalized-compiler-version $(toolset)
                   : [ $(ps).get <toolset-$(toolset):version> ] ] ;
+  local linker = [ $(ps).get <linker> ] ;
 
   local flags = ;
   if $(JLN_BJAM_YEAR_VERSION) >= 2016.00

@@ -61,7 +61,7 @@ end
 
 -- same as ]] .. prefixfunc .. [[_getoptions
 function ]] .. prefixfunc .. [[_setoptions(compiler, version, values, disable_others, print_compiler)
-  local options = jln_getoptions(compiler, version, values, disable_others, print_compiler)
+  local options = ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_others, print_compiler)
   buildoptions(options.buildoptions)
   linkoptions(options.linkoptions)
   return options
@@ -70,13 +70,15 @@ end
 -- ]] .. prefixfunc .. [[_getoptions(values, disable_others = nil, print_compiler = nil)
 -- ]] .. prefixfunc .. [[_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
 -- `= nil` indicates that the value is optional and can be nil
--- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
--- `version`: string. ex: '7', '7.2'
+-- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'. Or compiler and linker with semicolon separator. ex: 'clang-cl;lld-link'
+-- `version`: string. Compiler version. ex: '7', '7.2'
 -- `values`: table. ex: {warnings='on'}
 -- `disable_others`: boolean
 -- `print_compiler`: boolean
 -- return {buildoptions=string, linkoptions=string}
 function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_others, print_compiler)
+  local linker
+
   if compiler and type(compiler) ~= 'string' then
     values, disable_others, print_compiler, compiler, version = compiler, version, values, nil, nil
   end
@@ -84,8 +86,12 @@ function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_ot
   if not compiler then
     compiler = _OPTIONS[']] .. _:tostroption'compiler' .. [['] or _OPTIONS['cc'] or 'g++'
     version = _OPTIONS[']] .. _:tostroption'compiler-version' .. [['] or nil
-  elseif compiler == 'gcc' then compiler = 'g++'
-  elseif compiler == 'clang' then compiler = 'clang++'
+  else
+    local s, new_compiler, new_linker = compiler:match'(([^;]);(.*))'
+    if s then
+      compiler = new_compiler
+      linker = new_linker
+    end
   end
 
   local compversion = {}
@@ -104,7 +110,13 @@ function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_ot
      end
   end
 
-  compiler = (compiler:find('clang', 1, true) and 'clang') or
+  compiler = (compiler:find('clang-cl', 1, true) and 'clang-cl') or
+             (compiler:find('clang', 1, true) and 'clang') or
+             ((compiler:find('msvc', 1, true) or
+               compiler:find('MSVC', 1, true) or
+               compiler:find('^vs%d') or
+               compiler:find('^VS%d')
+              ) and 'msvc') or
              ((compiler:find('g++', 1, true) or
                compiler:find('gcc', 1, true) or
                compiler:find('GCC', 1, true) or
@@ -161,6 +173,7 @@ function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_ot
   _vcond_lvl=function(_, lvl, optname) return 'values["' .. _:tostroption(optname) .. '"] == "' .. tostrlvl(lvl) .. '"' end,
   _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
   _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
+  _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 
   cxx=function(_, x) return ' ' .. x end,
   link=function(_, x) return ' ' .. x end,

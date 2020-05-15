@@ -154,8 +154,8 @@ jln_newoptions({warnings='very_strict'})
 -- jln_getoptions(values, disable_others = nil, print_compiler = nil)
 -- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
 -- `= nil` indicates that the value is optional and can be nil
--- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'
--- `version`: string. ex: '7', '7.2'
+-- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'. Or compiler and linker with semicolon separator. ex: 'clang-cl;lld-link'
+-- `version`: string. Compiler version. ex: '7', '7.2'
 -- `values`: table. ex: {warnings='on'}
 -- `disable_others`: boolean
 -- `print_compiler`: boolean
@@ -217,6 +217,8 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 
 from jln_options import *
 
+# jln_set_global_flags(options, compiler=None, version=None, linker=None)
+# version is a string. Ex: '7.2' or '5'
 jln_set_global_flags({'rtti': 'off'})
 
 vars = Variables(None, ARGUMENTS)

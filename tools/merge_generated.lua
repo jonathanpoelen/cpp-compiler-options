@@ -20,15 +20,18 @@ for i=2,#arg do
   local filename = arg[i]:sub(subat)
   local comp, vers, cat = filename:match('^([^/]+)/%1-(%d[^-]+)-(.*)')
   if not comp then
-    comp, cat = filename:match('^([^/]+)/[^-]+-(.*)')
+    comp, cat = filename:match('^([^/]+)/%1-(.*)')
     vers = ''
   end
+  -- print(comp, vers, cat)
   if comp then
     local l = atorset(atorset(tree, comp), vers)
     categories[cat] = true
     l[#l+1] = arg[i]
   end
 end
+
+-- os.exit()
 
 function get_file_contents(path)
   local f, err = io.open(path)

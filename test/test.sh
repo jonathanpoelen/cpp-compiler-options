@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$1" = '-x' ]; then
+  set -x
+  shift
+fi
+
 set +o pipefail
 
 test_success()

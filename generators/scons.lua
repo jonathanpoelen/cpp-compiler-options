@@ -82,7 +82,7 @@ def ]] .. prefixfunc .. [[_variables_to_options(vars):
 
 _]] .. prefixfunc .. [[_default_env = Environment()
 _]] .. prefixfunc .. [[_map_compiler = {"g++": "gcc", "mingw": "gcc", "clang++": "clang"}
-def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None):
+def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=None):
   compiler = compiler or _]] .. prefixfunc .. [[_default_env[']] .. prefixenv .. [[']
 
   _compiler = None
@@ -113,6 +113,7 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None):
   _vcond_lvl=function(_, lvl, optname) return  "options.get('" .. optname .. "', _" .. _.prefixfunc .. "_default_flags['" .. optname .. "']) == '" .. lvl .. "'" end,
   _vcond_verless=function(_, major, minor) return "verless(" .. major .. ', ' .. minor .. ")" end,
   _vcond_compiler=function(_, compiler) return "compiler == '" .. compiler .. "'" end,
+  _vcond_linker=function(_, linker) return "linker == '" .. linker .. "'" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,

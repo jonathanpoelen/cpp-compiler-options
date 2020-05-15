@@ -271,6 +271,7 @@ return {
       -- print(table.concat(_.d.comp,'.'), table.concat(v.version,'.'))
       r = _.d.comp[2] > v.version[1] or (_.d.comp[2] == v.version[1] and _.d.comp[3] >= v.version[2])
     elseif v.compiler then r = _.d.comp[1] == v.compiler
+    elseif v.linker or v.linker_version then r = false
     else
       local ks = ''
       for k,_ in pairs(v) do
