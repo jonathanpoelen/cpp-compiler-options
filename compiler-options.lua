@@ -1032,12 +1032,6 @@ Vbase = {
       _:write(' '.._._vcondkeyword.close)
     end
 
-    local write_version=function(_, f, version)
-      _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..
-              ' '..f(_, version[1], version[2])..
-              ' '.._._vcondkeyword.close)
-    end
-
     _._vcond=function(_, v, optname)
           if v._or      then write_logical(_, v._or, _._vcondkeyword._or, optname)
       elseif v._and     then write_logical(_, v._and, _._vcondkeyword._and, optname)
