@@ -63,7 +63,7 @@ Supported options are (in alphabetical order):
 <!-- ./compiler-options.lua generators/list_options.lua color -->
 ```ini
 color = default auto never always
-control_flow = default off on allow_bugs
+control_flow = default off on branch return allow_bugs
 coverage = default off on
 cpu = default generic native
 debug = default off on line_tables_only gdb lldb sce
@@ -73,7 +73,7 @@ elide_type = default off on
 exceptions = default off on
 fix_compiler_error = on default off
 linker = default bfd gold lld native
-lto = default off on fat linker_plugin
+lto = default off on fat thin
 optimization = default 0 g 1 2 3 fast size
 pedantic = on default off as_error
 pie = default off on pic
