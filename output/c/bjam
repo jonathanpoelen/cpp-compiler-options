@@ -19,6 +19,8 @@ feature <jln-exceptions> : _ default off on : incidental ;
 feature <jln-fix-compiler-error> : _ on default off : incidental ;
 feature <jln-linker> : _ default bfd gold lld native : propagated ;
 feature <jln-lto> : _ default off on fat thin : incidental ;
+feature <jln-msvc-isystem> : _ default anglebrackets INCLUDE-and-CAExcludePath : incidental ;
+feature <jln-msvc-isystem-with-template-from-non-external> : _ default off on : incidental ;
 feature <jln-optimization> : _ default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic> : _ on default off as-error : incidental ;
 feature <jln-pie> : _ default off on pic : incidental ;
@@ -43,6 +45,8 @@ feature <jln-debug-incidental> : _ default off on line-tables-only gdb lldb sce 
 feature <jln-exceptions-incidental> : _ default off on : incidental ;
 feature <jln-fix-compiler-error-incidental> : _ on default off : incidental ;
 feature <jln-lto-incidental> : _ default off on fat thin : incidental ;
+feature <jln-msvc-isystem-incidental> : _ default anglebrackets INCLUDE-and-CAExcludePath : incidental ;
+feature <jln-msvc-isystem-with-template-from-non-external-incidental> : _ default off on : incidental ;
 feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic-incidental> : _ on default off as-error : incidental ;
 feature <jln-pie-incidental> : _ default off on pic : incidental ;
@@ -67,6 +71,8 @@ feature <jln-exceptions-default> : default off on : incidental ;
 feature <jln-fix-compiler-error-default> : on default off : incidental ;
 feature <jln-linker-default> : default bfd gold lld native : incidental ;
 feature <jln-lto-default> : default off on fat thin : incidental ;
+feature <jln-msvc-isystem-default> : default anglebrackets INCLUDE-and-CAExcludePath : incidental ;
+feature <jln-msvc-isystem-with-template-from-non-external-default> : default off on : incidental ;
 feature <jln-optimization-default> : default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic-default> : on default off as-error : incidental ;
 feature <jln-pie-default> : default off on pic : incidental ;
@@ -119,6 +125,8 @@ constant jln_c_env_exceptions : [ jln_c-get-env jln_exceptions : default off on 
 constant jln_c_env_fix_compiler_error : [ jln_c-get-env jln_fix_compiler_error : on default off ] ;
 constant jln_c_env_linker : [ jln_c-get-env jln_linker : default bfd gold lld native ] ;
 constant jln_c_env_lto : [ jln_c-get-env jln_lto : default off on fat thin ] ;
+constant jln_c_env_msvc_isystem : [ jln_c-get-env jln_msvc_isystem : default anglebrackets INCLUDE-and-CAExcludePath ] ;
+constant jln_c_env_msvc_isystem_with_template_from_non_external : [ jln_c-get-env jln_msvc_isystem_with_template_from_non_external : default off on ] ;
 constant jln_c_env_optimization : [ jln_c-get-env jln_optimization : default 0 g 1 2 3 fast size ] ;
 constant jln_c_env_pedantic : [ jln_c-get-env jln_pedantic : on default off as-error ] ;
 constant jln_c_env_pie : [ jln_c-get-env jln_pie : default off on pic ] ;
@@ -153,6 +161,10 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-fix-compiler-error-incidental JLN_FIX_COMPILER_ERROR_INCIDENTAL : <jln-fix-compiler-error-incidental> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-lto-incidental JLN_LTO_INCIDENTAL : <jln-lto-incidental> ;
+  toolset.flags jln-msvc-isystem JLN_MSVC_ISYSTEM : <jln-msvc-isystem> ;
+  toolset.flags jln-msvc-isystem-incidental JLN_MSVC_ISYSTEM_INCIDENTAL : <jln-msvc-isystem-incidental> ;
+  toolset.flags jln-msvc-isystem-with-template-from-non-external JLN_MSVC_ISYSTEM_WITH_TEMPLATE_FROM_NON_EXTERNAL : <jln-msvc-isystem-with-template-from-non-external> ;
+  toolset.flags jln-msvc-isystem-with-template-from-non-external-incidental JLN_MSVC_ISYSTEM_WITH_TEMPLATE_FROM_NON_EXTERNAL_INCIDENTAL : <jln-msvc-isystem-with-template-from-non-external-incidental> ;
   toolset.flags jln-optimization JLN_OPTIMIZATION : <jln-optimization> ;
   toolset.flags jln-optimization-incidental JLN_OPTIMIZATION_INCIDENTAL : <jln-optimization-incidental> ;
   toolset.flags jln-pedantic JLN_PEDANTIC : <jln-pedantic> ;
@@ -261,6 +273,8 @@ rule jln_c_flags ( properties * )
       <relevant>jln-exceptions
       <relevant>jln-fix-compiler-error
       <relevant>jln-lto
+      <relevant>jln-msvc-isystem
+      <relevant>jln-msvc-isystem-with-template-from-non-external
       <relevant>jln-optimization
       <relevant>jln-pedantic
       <relevant>jln-pie
@@ -287,6 +301,8 @@ rule jln_c_flags ( properties * )
   local x_fix_compiler_error = [ jln_c-get-value2 $(ps) : jln-fix-compiler-error : jln-fix-compiler-error-incidental : $(jln_c_env_fix_compiler_error) ] ;
   local x_linker = [ jln_c-get-value $(ps) : jln-linker : $(jln_c_env_linker) ] ;
   local x_lto = [ jln_c-get-value2 $(ps) : jln-lto : jln-lto-incidental : $(jln_c_env_lto) ] ;
+  local x_msvc_isystem = [ jln_c-get-value2 $(ps) : jln-msvc-isystem : jln-msvc-isystem-incidental : $(jln_c_env_msvc_isystem) ] ;
+  local x_msvc_isystem_with_template_from_non_external = [ jln_c-get-value2 $(ps) : jln-msvc-isystem-with-template-from-non-external : jln-msvc-isystem-with-template-from-non-external-incidental : $(jln_c_env_msvc_isystem_with_template_from_non_external) ] ;
   local x_optimization = [ jln_c-get-value2 $(ps) : jln-optimization : jln-optimization-incidental : $(jln_c_env_optimization) ] ;
   local x_pedantic = [ jln_c-get-value2 $(ps) : jln-pedantic : jln-pedantic-incidental : $(jln_c_env_pedantic) ] ;
   local x_pie = [ jln_c-get-value2 $(ps) : jln-pie : jln-pie-incidental : $(jln_c_env_pie) ] ;
@@ -1779,28 +1795,109 @@ rule jln_c_flags ( properties * )
   }
   if $(toolset) = "msvc"
   {
-    if ( $(x_warnings) != "default" )
+    if ( $(x_msvc_isystem) != "default" )
     {
-      if ( $(x_warnings) = "off" )
+      flags +=
+        <cflags>"/experimental:external"
+      ;
+      if ( $(x_msvc_isystem) = "anglebrackets" )
       {
         flags +=
-          <cflags>"/W0"
+          <cflags>"/external:anglebrackets"
         ;
       }
       else
       {
-        if ( $(x_warnings) = "on" )
+        flags +=
+          <cflags>"/external:env:INCLUDE"
+          <cflags>"/external:env:CAExcludePath"
+        ;
+      }
+      if ( $(x_msvc_isystem_with_template_from_non_external) != "default" )
+      {
+        if ( $(x_msvc_isystem_with_template_from_non_external) = "off" )
         {
           flags +=
-            <cflags>"/W4"
-            <cflags>"/wd4244"
-            <cflags>"/wd4245"
-            <cflags>"/wd4711"
+            <cflags>"/external:template"
           ;
         }
         else
         {
-          if (  ( $(x_warnings) = "strict" ) || ( $(x_warnings) = "very-strict" )  )
+          flags +=
+            <cflags>"/external:template-"
+          ;
+        }
+      }
+      if ( $(x_warnings) != "default" )
+      {
+        if ( $(x_warnings) = "off" )
+        {
+          flags +=
+            <cflags>"/W0"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"/wd4710"
+            <cflags>"/wd4711"
+            <cflags>"/wd4774"
+          ;
+          if ( $(x_warnings) = "on" )
+          {
+            flags +=
+              <cflags>"/W4"
+              <cflags>"/wd4244"
+              <cflags>"/wd4245"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"/Wall"
+              <cflags>"/wd4571"
+              <cflags>"/wd4355"
+              <cflags>"/wd4548"
+              <cflags>"/wd4577"
+              <cflags>"/wd4820"
+              <cflags>"/wd5039"
+              <cflags>"/wd4464"
+              <cflags>"/wd4868"
+              <cflags>"/wd5045"
+            ;
+            if ( $(x_warnings) = "strict" )
+            {
+              flags +=
+                <cflags>"/wd4583"
+                <cflags>"/wd4619"
+              ;
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+      if ( $(x_warnings) != "default" )
+      {
+        if ( $(x_warnings) = "off" )
+        {
+          flags +=
+            <cflags>"/W0"
+          ;
+        }
+        else
+        {
+          if ( $(x_warnings) = "on" )
+          {
+            flags +=
+              <cflags>"/W4"
+              <cflags>"/wd4244"
+              <cflags>"/wd4245"
+              <cflags>"/wd4711"
+            ;
+          }
+          else
           {
             flags +=
               <cflags>"/Wall"

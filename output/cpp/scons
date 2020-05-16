@@ -16,6 +16,8 @@ _jln_default_flags = {
   'fix_compiler_error': 'on',
   'linker': 'default',
   'lto': 'default',
+  'msvc_isystem': 'default',
+  'msvc_isystem_with_template_from_non_external': 'default',
   'optimization': 'default',
   'pedantic': 'on',
   'pie': 'default',
@@ -47,6 +49,8 @@ _jln_var2opts = {
   'jln_fix_compiler_error': 'fix_compiler_error',
   'jln_linker': 'linker',
   'jln_lto': 'lto',
+  'jln_msvc_isystem': 'msvc_isystem',
+  'jln_msvc_isystem_with_template_from_non_external': 'msvc_isystem_with_template_from_non_external',
   'jln_optimization': 'optimization',
   'jln_pedantic': 'pedantic',
   'jln_pie': 'pie',
@@ -78,6 +82,8 @@ _jln_opt2vars = {
   'fix_compiler_error': 'jln_fix_compiler_error',
   'linker': 'jln_linker',
   'lto': 'jln_lto',
+  'msvc_isystem': 'jln_msvc_isystem',
+  'msvc_isystem_with_template_from_non_external': 'jln_msvc_isystem_with_template_from_non_external',
   'optimization': 'jln_optimization',
   'pedantic': 'jln_pedantic',
   'pie': 'jln_pie',
@@ -125,6 +131,10 @@ def jln_add_variables(vars, default_values={}):
                  allowed_values=('default', 'bfd', 'gold', 'lld', 'native')),
     EnumVariable('jln_lto', '', default_values.get('lto', _jln_default_flags['lto']),
                  allowed_values=('default', 'off', 'on', 'fat', 'thin')),
+    EnumVariable('jln_msvc_isystem', '', default_values.get('msvc_isystem', _jln_default_flags['msvc_isystem']),
+                 allowed_values=('default', 'anglebrackets', 'INCLUDE_and_CAExcludePath')),
+    EnumVariable('jln_msvc_isystem_with_template_from_non_external', '', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
+                 allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_optimization', '', default_values.get('optimization', _jln_default_flags['optimization']),
                  allowed_values=('default', '0', 'g', '1', '2', '3', 'fast', 'size')),
     EnumVariable('jln_pedantic', '', default_values.get('pedantic', _jln_default_flags['pedantic']),
@@ -709,14 +719,36 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           if options.get('stack_protector', _jln_default_flags['stack_protector']) == 'all' :
             flags += ('/RTC1', '/RTCc', )
   if compiler == 'msvc' :
-    if not ( options.get('warnings', _jln_default_flags['warnings']) == 'default') :
-      if options.get('warnings', _jln_default_flags['warnings']) == 'off' :
-        flags += ('/W0', )
+    if not ( options.get('msvc_isystem', _jln_default_flags['msvc_isystem']) == 'default') :
+      flags += ('/experimental:external', )
+      if options.get('msvc_isystem', _jln_default_flags['msvc_isystem']) == 'anglebrackets' :
+        flags += ('/external:anglebrackets', )
       else:
-        if options.get('warnings', _jln_default_flags['warnings']) == 'on' :
-          flags += ('/W4', '/wd4244', '/wd4245', '/wd4711', )
+        flags += ('/external:env:INCLUDE', '/external:env:CAExcludePath', )
+      if not ( options.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']) == 'default') :
+        if options.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']) == 'off' :
+          flags += ('/external:template', )
         else:
-          if ( options.get('warnings', _jln_default_flags['warnings']) == 'strict' or options.get('warnings', _jln_default_flags['warnings']) == 'very_strict' ) :
+          flags += ('/external:template-', )
+      if not ( options.get('warnings', _jln_default_flags['warnings']) == 'default') :
+        if options.get('warnings', _jln_default_flags['warnings']) == 'off' :
+          flags += ('/W0', )
+        else:
+          flags += ('/wd4710', '/wd4711', '/wd4774', )
+          if options.get('warnings', _jln_default_flags['warnings']) == 'on' :
+            flags += ('/W4', '/wd4244', '/wd4245', )
+          else:
+            flags += ('/Wall', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
+            if options.get('warnings', _jln_default_flags['warnings']) == 'strict' :
+              flags += ('/wd4583', '/wd4619', )
+    else:
+      if not ( options.get('warnings', _jln_default_flags['warnings']) == 'default') :
+        if options.get('warnings', _jln_default_flags['warnings']) == 'off' :
+          flags += ('/W0', )
+        else:
+          if options.get('warnings', _jln_default_flags['warnings']) == 'on' :
+            flags += ('/W4', '/wd4244', '/wd4245', '/wd4711', )
+          else:
             flags += ('/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', '/wd4774', '/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
             if options.get('warnings', _jln_default_flags['warnings']) == 'strict' :
               flags += ('/wd4061', '/wd4266', '/wd4388', '/wd4583', '/wd4619', '/wd4623', '/wd5204', )

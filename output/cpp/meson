@@ -19,6 +19,8 @@ ___jln_flags = {
   'fix_compiler_error': ___jln_default_flags.get('fix_compiler_error', get_option('jln_fix_compiler_error')),
   'linker': ___jln_default_flags.get('linker', get_option('jln_linker')),
   'lto': ___jln_default_flags.get('lto', get_option('jln_lto')),
+  'msvc_isystem': ___jln_default_flags.get('msvc_isystem', get_option('jln_msvc_isystem')),
+  'msvc_isystem_with_template_from_non_external': ___jln_default_flags.get('msvc_isystem_with_template_from_non_external', get_option('jln_msvc_isystem_with_template_from_non_external')),
   'optimization': ___jln_default_flags.get('optimization', get_option('jln_optimization')),
   'pedantic': ___jln_default_flags.get('pedantic', get_option('jln_pedantic')),
   'pie': ___jln_default_flags.get('pie', get_option('jln_pie')),
@@ -783,14 +785,43 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
   endif
   if (  (___jln_compiler_id == 'msvc') )
-    if (  not ( (___jln_flags.get('warnings', 'default') == 'default')) )
-      if (  (___jln_flags.get('warnings', 'default') == 'off') )
-        jln_cpp_flags += ['/W0', ]
+    if (  not ( (___jln_flags.get('msvc_isystem', 'default') == 'default')) )
+      jln_cpp_flags += ['/experimental:external', ]
+      if (  (___jln_flags.get('msvc_isystem', 'default') == 'anglebrackets') )
+        jln_cpp_flags += ['/external:anglebrackets', ]
       else
-        if (  (___jln_flags.get('warnings', 'default') == 'on') )
-          jln_cpp_flags += ['/W4', '/wd4244', '/wd4245', '/wd4711', ]
+        jln_cpp_flags += ['/external:env:INCLUDE', '/external:env:CAExcludePath', ]
+      endif
+      if (  not ( (___jln_flags.get('msvc_isystem_with_template_from_non_external', 'default') == 'default')) )
+        if (  (___jln_flags.get('msvc_isystem_with_template_from_non_external', 'default') == 'off') )
+          jln_cpp_flags += ['/external:template', ]
         else
-          if (  ( (___jln_flags.get('warnings', 'default') == 'strict') or (___jln_flags.get('warnings', 'default') == 'very_strict') ) )
+          jln_cpp_flags += ['/external:template-', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('warnings', 'default') == 'default')) )
+        if (  (___jln_flags.get('warnings', 'default') == 'off') )
+          jln_cpp_flags += ['/W0', ]
+        else
+          jln_cpp_flags += ['/wd4710', '/wd4711', '/wd4774', ]
+          if (  (___jln_flags.get('warnings', 'default') == 'on') )
+            jln_cpp_flags += ['/W4', '/wd4244', '/wd4245', ]
+          else
+            jln_cpp_flags += ['/Wall', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
+            if (  (___jln_flags.get('warnings', 'default') == 'strict') )
+              jln_cpp_flags += ['/wd4583', '/wd4619', ]
+            endif
+          endif
+        endif
+      endif
+    else
+      if (  not ( (___jln_flags.get('warnings', 'default') == 'default')) )
+        if (  (___jln_flags.get('warnings', 'default') == 'off') )
+          jln_cpp_flags += ['/W0', ]
+        else
+          if (  (___jln_flags.get('warnings', 'default') == 'on') )
+            jln_cpp_flags += ['/W4', '/wd4244', '/wd4245', '/wd4711', ]
+          else
             jln_cpp_flags += ['/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', '/wd4774', '/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
             if (  (___jln_flags.get('warnings', 'default') == 'strict') )
               jln_cpp_flags += ['/wd4061', '/wd4266', '/wd4388', '/wd4583', '/wd4619', '/wd4623', '/wd5204', ]

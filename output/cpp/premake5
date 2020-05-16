@@ -25,6 +25,10 @@ _jln_flag_names["jln-linker"] = true
 _jln_flag_names["linker"] = true
 _jln_flag_names["jln-lto"] = true
 _jln_flag_names["lto"] = true
+_jln_flag_names["jln-msvc-isystem"] = true
+_jln_flag_names["msvc_isystem"] = true
+_jln_flag_names["jln-msvc-isystem-with-template-from-non-external"] = true
+_jln_flag_names["msvc_isystem_with_template_from_non_external"] = true
 _jln_flag_names["jln-optimization"] = true
 _jln_flag_names["optimization"] = true
 _jln_flag_names["jln-pedantic"] = true
@@ -88,6 +92,10 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"thin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
+  newoption{trigger="jln-msvc-isystem", allowed={{"default"}, {"anglebrackets"}, {"INCLUDE_and_CAExcludePath"}}, description="msvc_isystem"}
+  if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
+  newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{"default"}, {"off"}, {"on"}}, description="msvc_isystem_with_template_from_non_external"}
+  if not _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] then _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] = (defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default") end
   newoption{trigger="jln-optimization", allowed={{"default"}, {"0"}, {"g"}, {"1"}, {"2"}, {"3"}, {"fast"}, {"size"}}, description="optimization"}
   if not _OPTIONS["jln-optimization"] then _OPTIONS["jln-optimization"] = (defaults["optimization"] or defaults["jln-optimization"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
@@ -260,6 +268,12 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"])
+    name_list["jln-msvc-isystem"] = true
+    name_list["msvc_isystem"] = true
+    new_value["jln-msvc-isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem"])
+    name_list["jln-msvc-isystem-with-template-from-non-external"] = true
+    name_list["msvc_isystem_with_template_from_non_external"] = true
+    new_value["jln-msvc-isystem-with-template-from-non-external"] = values["msvc_isystem_with_template_from_non_external"] or values["jln-msvc-isystem-with-template-from-non-external"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem-with-template-from-non-external"])
     name_list["jln-optimization"] = true
     name_list["optimization"] = true
     new_value["jln-optimization"] = values["optimization"] or values["jln-optimization"] or (disable_others and "default" or _OPTIONS["jln-optimization"])
@@ -1046,14 +1060,43 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
     end
   end
   if compiler == "msvc" then
-    if not ( values["jln-warnings"] == "default") then
-      if values["jln-warnings"] == "off" then
-        jln_buildoptions = jln_buildoptions .. " /W0"
+    if not ( values["jln-msvc-isystem"] == "default") then
+      jln_buildoptions = jln_buildoptions .. " /experimental:external"
+      if values["jln-msvc-isystem"] == "anglebrackets" then
+        jln_buildoptions = jln_buildoptions .. " /external:anglebrackets"
       else
-        if values["jln-warnings"] == "on" then
-          jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245 /wd4711"
+        jln_buildoptions = jln_buildoptions .. " /external:env:INCLUDE /external:env:CAExcludePath"
+      end
+      if not ( values["jln-msvc-isystem-with-template-from-non-external"] == "default") then
+        if values["jln-msvc-isystem-with-template-from-non-external"] == "off" then
+          jln_buildoptions = jln_buildoptions .. " /external:template"
         else
-          if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
+          jln_buildoptions = jln_buildoptions .. " /external:template-"
+        end
+      end
+      if not ( values["jln-warnings"] == "default") then
+        if values["jln-warnings"] == "off" then
+          jln_buildoptions = jln_buildoptions .. " /W0"
+        else
+          jln_buildoptions = jln_buildoptions .. " /wd4710 /wd4711 /wd4774"
+          if values["jln-warnings"] == "on" then
+            jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245"
+          else
+            jln_buildoptions = jln_buildoptions .. " /Wall /wd4571 /wd4355 /wd4548 /wd4577 /wd4820 /wd5039 /wd4464 /wd4868 /wd5045"
+            if values["jln-warnings"] == "strict" then
+              jln_buildoptions = jln_buildoptions .. " /wd4583 /wd4619"
+            end
+          end
+        end
+      end
+    else
+      if not ( values["jln-warnings"] == "default") then
+        if values["jln-warnings"] == "off" then
+          jln_buildoptions = jln_buildoptions .. " /W0"
+        else
+          if values["jln-warnings"] == "on" then
+            jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245 /wd4711"
+          else
             jln_buildoptions = jln_buildoptions .. " /Wall /wd4355 /wd4365 /wd4514 /wd4548 /wd4571 /wd4577 /wd4625 /wd4626 /wd4668 /wd4710 /wd4711 /wd4774 /wd4820 /wd5026 /wd5027 /wd5039 /wd4464 /wd4868 /wd5045"
             if values["jln-warnings"] == "strict" then
               jln_buildoptions = jln_buildoptions .. " /wd4061 /wd4266 /wd4388 /wd4583 /wd4619 /wd4623 /wd5204"
