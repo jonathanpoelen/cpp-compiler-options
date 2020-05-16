@@ -491,6 +491,13 @@ Or(gcc, clang) {
     } /
     lvl'bfd' { link'-fuse-ld=bfd' } /
     Or(lvl'gold', gcc(-9)) { link'-fuse-ld=gold' } /
+    opt'lto' {
+      -- -flto is incompatible with -fuse-ld=lld
+      And(-lvl'off', gcc) {
+        link'-fuse-ld=gold'
+      } /
+      link'-fuse-ld=lld',
+    } /
     link'-fuse-ld=lld',
   },
 
@@ -537,7 +544,7 @@ Or(gcc, clang) {
     {
       link'-s',
       lvl'strip_all'{
-        link'-Wl,--gc-sections',
+        link'-Wl,--gc-sections', -- Remove unused sections
         link'-Wl,--strip-all',
       },
       gcc {
@@ -730,7 +737,20 @@ Or(msvc, clang_cl) {
       flag'/Od',
       lvl'on' { flag'/DEBUG' } / -- /DEBUG:FULL
       lvl'line_tables_only' { flag'/DEBUG:FASTLINK' },
-      opt'optimization' { lvl'g' { flag'/Zi' } / flag'/ZI' } / flag'/ZI',
+
+      opt'optimization' {
+        lvl'g' { flag'/Zi' } /
+        -- /ZI cannot be used with /GL
+        opt'whole_program' {
+          lvl'off' { flag'/ZI' } / flag'/Zi'
+        } /
+        flag'/ZI'
+      } /
+      -- /ZI cannot be used with /GL
+      opt'whole_program' {
+        lvl'off' { flag'/ZI' } / flag'/Zi'
+      } /
+      flag'/ZI',
     }
   },
 
