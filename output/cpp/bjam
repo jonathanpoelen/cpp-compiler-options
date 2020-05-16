@@ -921,9 +921,27 @@ rule jln_flags ( properties * )
           }
           else
           {
-            flags +=
-              <linkflags>"-fuse-ld=lld"
-            ;
+            if ( $(x_lto) != "default" )
+            {
+              if (  ! (  ( $(x_lto) = "off" )  ) && $(toolset) = "gcc"  )
+              {
+                flags +=
+                  <linkflags>"-fuse-ld=gold"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <linkflags>"-fuse-ld=lld"
+                ;
+              }
+            }
+            else
+            {
+              flags +=
+                <linkflags>"-fuse-ld=lld"
+              ;
+            }
           }
         }
       }
@@ -1591,16 +1609,52 @@ rule jln_flags ( properties * )
           }
           else
           {
-            flags +=
-              <cxxflags>"/ZI"
-            ;
+            if ( $(x_whole_program) != "default" )
+            {
+              if ( $(x_whole_program) = "off" )
+              {
+                flags +=
+                  <cxxflags>"/ZI"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cxxflags>"/Zi"
+                ;
+              }
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"/ZI"
+              ;
+            }
           }
         }
         else
         {
-          flags +=
-            <cxxflags>"/ZI"
-          ;
+          if ( $(x_whole_program) != "default" )
+          {
+            if ( $(x_whole_program) = "off" )
+            {
+              flags +=
+                <cxxflags>"/ZI"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"/Zi"
+              ;
+            }
+          }
+          else
+          {
+            flags +=
+              <cxxflags>"/ZI"
+            ;
+          }
         }
       }
     }

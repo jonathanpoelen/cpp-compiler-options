@@ -578,7 +578,15 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
           if ( values["jln-linker"] == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900 ) ) ) ) then
             jln_linkoptions = jln_linkoptions .. " -fuse-ld=gold"
           else
-            jln_linkoptions = jln_linkoptions .. " -fuse-ld=lld"
+            if not ( values["jln-lto"] == "default") then
+              if ( not ( values["jln-lto"] == "off" ) and compiler == "gcc" ) then
+                jln_linkoptions = jln_linkoptions .. " -fuse-ld=gold"
+              else
+                jln_linkoptions = jln_linkoptions .. " -fuse-ld=lld"
+              end
+            else
+              jln_linkoptions = jln_linkoptions .. " -fuse-ld=lld"
+            end
           end
         end
       end
@@ -901,10 +909,26 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
           if values["jln-optimization"] == "g" then
             jln_buildoptions = jln_buildoptions .. " /Zi"
           else
-            jln_buildoptions = jln_buildoptions .. " /ZI"
+            if not ( values["jln-whole-program"] == "default") then
+              if values["jln-whole-program"] == "off" then
+                jln_buildoptions = jln_buildoptions .. " /ZI"
+              else
+                jln_buildoptions = jln_buildoptions .. " /Zi"
+              end
+            else
+              jln_buildoptions = jln_buildoptions .. " /ZI"
+            end
           end
         else
-          jln_buildoptions = jln_buildoptions .. " /ZI"
+          if not ( values["jln-whole-program"] == "default") then
+            if values["jln-whole-program"] == "off" then
+              jln_buildoptions = jln_buildoptions .. " /ZI"
+            else
+              jln_buildoptions = jln_buildoptions .. " /Zi"
+            end
+          else
+            jln_buildoptions = jln_buildoptions .. " /ZI"
+          end
         end
       end
     end

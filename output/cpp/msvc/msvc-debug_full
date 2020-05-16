@@ -3,4 +3,5 @@
 /D_HAS_ITERATOR_DEBUGGING=1
 /Od
 /RTC1
+/ZI
 /sdl

@@ -383,7 +383,13 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           if ( options.get('linker', _jln_default_flags['linker']) == 'gold' or ( compiler == 'gcc' and not ( not ( verless(9, 0) ) ) ) ) :
             linkflags += ('-fuse-ld=gold', )
           else:
-            linkflags += ('-fuse-ld=lld', )
+            if not ( options.get('lto', _jln_default_flags['lto']) == 'default') :
+              if ( not ( options.get('lto', _jln_default_flags['lto']) == 'off' ) and compiler == 'gcc' ) :
+                linkflags += ('-fuse-ld=gold', )
+              else:
+                linkflags += ('-fuse-ld=lld', )
+            else:
+              linkflags += ('-fuse-ld=lld', )
     if not ( options.get('lto', _jln_default_flags['lto']) == 'default') :
       if options.get('lto', _jln_default_flags['lto']) == 'off' :
         flags += ('-fno-lto', )
@@ -622,9 +628,21 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           if options.get('optimization', _jln_default_flags['optimization']) == 'g' :
             flags += ('/Zi', )
           else:
-            flags += ('/ZI', )
+            if not ( options.get('whole_program', _jln_default_flags['whole_program']) == 'default') :
+              if options.get('whole_program', _jln_default_flags['whole_program']) == 'off' :
+                flags += ('/ZI', )
+              else:
+                flags += ('/Zi', )
+            else:
+              flags += ('/ZI', )
         else:
-          flags += ('/ZI', )
+          if not ( options.get('whole_program', _jln_default_flags['whole_program']) == 'default') :
+            if options.get('whole_program', _jln_default_flags['whole_program']) == 'off' :
+              flags += ('/ZI', )
+            else:
+              flags += ('/Zi', )
+          else:
+            flags += ('/ZI', )
     if not ( options.get('exceptions', _jln_default_flags['exceptions']) == 'default') :
       if options.get('exceptions', _jln_default_flags['exceptions']) == 'on' :
         flags += ('/EHsc', '/D_HAS_EXCEPTIONS=1', )

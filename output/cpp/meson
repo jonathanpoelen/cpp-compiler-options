@@ -324,7 +324,15 @@ foreach ___jln_flags : ___jln_custom_flags
           if (  ( (___jln_flags.get('linker', 'default') == 'gold') or ( (___jln_compiler_id == 'gcc') and not ( not ( ___jln_compiler_version.version_compare('<9.0') ) ) ) ) )
             jln_link_flags += ['-fuse-ld=gold', ]
           else
-            jln_link_flags += ['-fuse-ld=lld', ]
+            if (  not ( (___jln_flags.get('lto', 'default') == 'default')) )
+              if (  ( not ( (___jln_flags.get('lto', 'default') == 'off') ) and (___jln_compiler_id == 'gcc') ) )
+                jln_link_flags += ['-fuse-ld=gold', ]
+              else
+                jln_link_flags += ['-fuse-ld=lld', ]
+              endif
+            else
+              jln_link_flags += ['-fuse-ld=lld', ]
+            endif
           endif
         endif
       endif
@@ -661,10 +669,26 @@ foreach ___jln_flags : ___jln_custom_flags
           if (  (___jln_flags.get('optimization', 'default') == 'g') )
             jln_cpp_flags += ['/Zi', ]
           else
-            jln_cpp_flags += ['/ZI', ]
+            if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
+              if (  (___jln_flags.get('whole_program', 'default') == 'off') )
+                jln_cpp_flags += ['/ZI', ]
+              else
+                jln_cpp_flags += ['/Zi', ]
+              endif
+            else
+              jln_cpp_flags += ['/ZI', ]
+            endif
           endif
         else
-          jln_cpp_flags += ['/ZI', ]
+          if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
+            if (  (___jln_flags.get('whole_program', 'default') == 'off') )
+              jln_cpp_flags += ['/ZI', ]
+            else
+              jln_cpp_flags += ['/Zi', ]
+            endif
+          else
+            jln_cpp_flags += ['/ZI', ]
+          endif
         endif
       endif
     endif
