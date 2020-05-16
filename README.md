@@ -333,6 +333,7 @@ The following functions return the metatable `if_mt`.
 gcc { ... } -- for gcc only.
 gcc(5) { ... } -- for >= gcc-5
 gcc(5, 3) { ... } -- for >= gcc-5.3
+gcc(-5, 3) { ... } -- for < gcc-5.3
 
 gcc(major, minor) { ... } -- is a alias of `gcc { vers(major, minor) { ... } }`
 ```
