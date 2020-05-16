@@ -839,6 +839,7 @@ msvc {
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
   opt'msvc_isystem' {
     flag'/experimental:external',
+    flag'/external:W0',
 
     lvl'anglebrackets' {
       flag'/external:anglebrackets',
