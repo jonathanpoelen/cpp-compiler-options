@@ -459,9 +459,12 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           flags += ('-fno-whole-program-vtables', )
           linkflags += ('-fno-whole-program-vtables', )
       else:
-        linkflags += ('-s', )
-        if options.get('whole_program', _jln_c_default_flags['whole_program']) == 'strip_all' :
-          linkflags += ('-Wl,--gc-sections', '-Wl,--strip-all', )
+        if linker == 'ld64' :
+          linkflags += ('-Wl,-dead_strip', '-Wl,-S', )
+        else:
+          linkflags += ('-s', )
+          if options.get('whole_program', _jln_c_default_flags['whole_program']) == 'strip_all' :
+            linkflags += ('-Wl,--gc-sections', '-Wl,--strip-all', )
         if compiler == 'gcc' :
           flags += ('-fwhole-program', )
           linkflags += ('-fwhole-program', )
@@ -697,7 +700,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
             flags += ('/RTC1', '/RTCc', )
   if compiler == 'msvc' :
     if not ( options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'default') :
-      flags += ('/experimental:external', )
+      flags += ('/experimental:external', '/external:W0', )
       if options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'anglebrackets' :
         flags += ('/external:anglebrackets', )
       else:

@@ -702,9 +702,13 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           jln_linkoptions = jln_linkoptions .. " -fno-whole-program-vtables"
         end
       else
-        jln_linkoptions = jln_linkoptions .. " -s"
-        if values["jln-whole-program"] == "strip-all" then
-          jln_linkoptions = jln_linkoptions .. " -Wl,--gc-sections -Wl,--strip-all"
+        if linker == "ld64" then
+          jln_linkoptions = jln_linkoptions .. " -Wl,-dead_strip -Wl,-S"
+        else
+          jln_linkoptions = jln_linkoptions .. " -s"
+          if values["jln-whole-program"] == "strip-all" then
+            jln_linkoptions = jln_linkoptions .. " -Wl,--gc-sections -Wl,--strip-all"
+          end
         end
         if compiler == "gcc" then
           jln_buildoptions = jln_buildoptions .. " -fwhole-program"
@@ -1061,7 +1065,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
   end
   if compiler == "msvc" then
     if not ( values["jln-msvc-isystem"] == "default") then
-      jln_buildoptions = jln_buildoptions .. " /experimental:external"
+      jln_buildoptions = jln_buildoptions .. " /experimental:external /external:W0"
       if values["jln-msvc-isystem"] == "anglebrackets" then
         jln_buildoptions = jln_buildoptions .. " /external:anglebrackets"
       else

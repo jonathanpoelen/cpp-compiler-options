@@ -1136,15 +1136,25 @@ rule jln_flags ( properties * )
       }
       else
       {
-        flags +=
-          <linkflags>"-s"
-        ;
-        if ( $(x_whole_program) = "strip-all" )
+        if $(linker) = "ld64"
         {
           flags +=
-            <linkflags>"-Wl,--gc-sections"
-            <linkflags>"-Wl,--strip-all"
+            <linkflags>"-Wl,-dead_strip"
+            <linkflags>"-Wl,-S"
           ;
+        }
+        else
+        {
+          flags +=
+            <linkflags>"-s"
+          ;
+          if ( $(x_whole_program) = "strip-all" )
+          {
+            flags +=
+              <linkflags>"-Wl,--gc-sections"
+              <linkflags>"-Wl,--strip-all"
+            ;
+          }
         }
         if $(toolset) = "gcc"
         {
@@ -1875,6 +1885,7 @@ rule jln_flags ( properties * )
     {
       flags +=
         <cxxflags>"/experimental:external"
+        <cxxflags>"/external:W0"
       ;
       if ( $(x_msvc_isystem) = "anglebrackets" )
       {

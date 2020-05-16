@@ -418,9 +418,13 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           jln_c_link_flags += ['-fno-whole-program-vtables', ]
         endif
       else
-        jln_c_link_flags += ['-s', ]
-        if (  (___jln_c_flags.get('whole_program', 'default') == 'strip_all') )
-          jln_c_link_flags += ['-Wl,--gc-sections', '-Wl,--strip-all', ]
+        if (  (___jln_c_linker_id == 'ld64') )
+          jln_c_link_flags += ['-Wl,-dead_strip', '-Wl,-S', ]
+        else
+          jln_c_link_flags += ['-s', ]
+          if (  (___jln_c_flags.get('whole_program', 'default') == 'strip_all') )
+            jln_c_link_flags += ['-Wl,--gc-sections', '-Wl,--strip-all', ]
+          endif
         endif
         if (  (___jln_c_compiler_id == 'gcc') )
           jln_c_c_flags += ['-fwhole-program', ]
@@ -763,7 +767,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
   endif
   if (  (___jln_c_compiler_id == 'msvc') )
     if (  not ( (___jln_c_flags.get('msvc_isystem', 'default') == 'default')) )
-      jln_c_c_flags += ['/experimental:external', ]
+      jln_c_c_flags += ['/experimental:external', '/external:W0', ]
       if (  (___jln_c_flags.get('msvc_isystem', 'default') == 'anglebrackets') )
         jln_c_c_flags += ['/external:anglebrackets', ]
       else
