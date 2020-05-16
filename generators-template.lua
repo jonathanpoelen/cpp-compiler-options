@@ -47,6 +47,7 @@ return {
   print=function(_, s) _:write(s) ; _:write('\n') end,
   write=function(_, s) _.strs[#_.strs+1] = s end,
 
+  -- \return false == error ; number == exitcode ; table == new visitor
   start=function(_)
     -- default keywords
     local keywords = {

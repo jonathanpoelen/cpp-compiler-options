@@ -1,10 +1,5 @@
 return {
-  d = {comp={}, test={true}, opts={}},
-
-  ignore={
-  },
-
-  indent = '',
+  -- ignore={ },
 
   start=function(_, compiler, ...)
     -- list compilers
@@ -127,9 +122,11 @@ return {
       }
     end
 
+    local opts = {}
+
     for k,args,default_value in _:getoptions() do
       if default_value ~= 'default' then
-        _.d.opts[k] = default_value
+        opts[k] = default_value
       end
     end
 
@@ -151,7 +148,7 @@ return {
       print('\nsample:\n  ' .. _.generator_name .. ' gcc warnings=strict')
       print('\nBy default:')
       local lines={}
-      for k,v in pairs(_.d.opts) do
+      for k,v in pairs(opts) do
         lines[#lines+1] = '  ' .. k .. '=' .. v
       end
       table.sort(lines)
@@ -166,18 +163,21 @@ return {
     end
 
     -- list options
-    local t = _.d.comp
-    local version
-    compiler, version = compiler:match('([^%d]+)(.*)')
-    t[1] = compiler:gsub('^g%+%+','gcc'):gsub('^clang%+%+', 'clang'):gsub('-$','')
-    version:gsub('[%w_]+', function(x) t[#t+1]=x end)
-    t[2] = t[2] and tonumber(t[2]) or 999
-    t[3] = t[3] and tonumber(t[3]) or 999
-    local opts = {...}
-    if #opts ~= 0 then
+    local major, minor
+    do
+      local t, version = {}
+      compiler, version = compiler:match('([^%d]+)(.*)')
+      compiler = compiler:gsub('^g%+%+','gcc'):gsub('^clang%+%+', 'clang'):gsub('-$','')
+      version:gsub('[%w_]+', function(x) t[#t+1]=x end)
+      major = t[1] and tonumber(t[1]) or 999
+      minor = t[2] and tonumber(t[2]) or 999
+    end
+
+    local cli_opts = {...}
+    if #cli_opts ~= 0 then
       t = {}
       local concat_opts = false
-      for k,v in ipairs(opts) do
+      for k,v in ipairs(cli_opts) do
         v:gsub('([%-+]?)([%w%-_]+)=?(.*)', function(f, name, lvl)
               if name == 'warn' or name == 'warning' then name = 'warnings'
           elseif name == 'san' or name == 'sanitizer' then name = 'sanitizers'
@@ -199,111 +199,89 @@ return {
           end
 
           if f == '+' then
-            _.d.opts[name] = (lvl or true)
+            opts[name] = (lvl or true)
             concat_opts = true
           elseif f == '-' then
-            _.d.opts[name] = false
+            opts[name] = false
             concat_opts = true
           else
             t[name] = (lvl or true)
           end
         end)
       end
+
       if concat_opts then
         for k,v in pairs(t) do
-          _.d.opts[k] = v
+          opts[k] = v
         end
       elseif t then
-        _.d.opts = t
+        opts = t
       end
     end
-  end,
 
-  stop=function(_)
-    -- remove duplications
-    if #_._strs ~= 0 then
-      local t = {}
-      for k,v in ipairs(_._strs) do
-        t[v] = true
-      end
-      local l = {}
-      for k,v in pairs(t) do
-        l[#l+1] = k
-      end
-      table.sort(l)
-      return table.concat(l, '\n') .. '\n'
-    end
-    return ''
-  end,
+    local current_optname
+    local flags = {}
+    return {
+      _cond=function(_, v, r)
+        for k,x in ipairs(v) do
+          if _:cond(x) == r then
+            return r
+          end
+        end
+        return not r
+      end,
 
-  startoptcond=function(_, name)
-    _.d.opt = name
-    return _.d.opts[name] and true or false
-  end,
+      cond=function(_, v)
+        -- for k,x in pairs(v) do
+        --   if k == 'version' then
+        --     print(k, x[1],x[2])
+        --   else
+        --     print(k, x)
+        --   end
+        -- end
 
-  _cond=function(_, v, r)
-    for k,x in ipairs(v) do
-      if _:cond(x) == r then
-        return r
-      end
-    end
-    return not r
-  end,
+            if v._or  then return _:_cond(v._or, true)
+        elseif v._and then return _:_cond(v._and, false)
+        elseif v._not then return not _:cond(v._not)
+        elseif v.lvl  then return v.lvl == opts[current_optname]
+        elseif v.version then return major > v.version[1]
+                                  or (major == v.version[1] and minor >= v.version[2])
+        elseif v.compiler then return compiler == v.compiler
+        elseif v.linker or v.linker_version then return false
+        end
 
-  cond=function(_, v)
-    -- for k,x in pairs(v) do
-    --   if k == 'version' then
-    --     print(k, x[1],x[2])
-    --   else
-    --     print(k, x)
-    --   end
-    -- end
+        local ks = ''
+        for k,_ in pairs(v) do
+          ks = ks .. k .. ', '
+        end
+        error('Unknown cond ' .. ks)
+      end,
 
-    local r = true
-        if v._or  then r = _:_cond(v._or, true)
-    elseif v._and then r = _:_cond(v._and, false)
-    elseif v._not then r = not _:cond(v._not)
-    elseif v.lvl  then
-      if _.d.opts then
-        r = v.lvl == _.d.opts[_.d.opt]
-      end
-    elseif v.version then
-      -- print(table.concat(_.d.comp,'.'), table.concat(v.version,'.'))
-      r = _.d.comp[2] > v.version[1] or (_.d.comp[2] == v.version[1] and _.d.comp[3] >= v.version[2])
-    elseif v.compiler then r = _.d.comp[1] == v.compiler
-    elseif v.linker or v.linker_version then r = false
-    else
-      local ks = ''
-      for k,_ in pairs(v) do
-        ks = ks .. k .. ', '
-      end
-      error('Unknown cond ' .. ks)
-    end
-    return r
-  end,
+      startcond=function(_, x, optname)
+        current_optname = optname
+        return _:cond(x)
+      end,
 
-  startcond=function(_, x)
-    _.d.condtype = {}
-    -- print('>')
-    local r = _:cond(x)
-    -- print('---',r)
-    _.d.test[#_.d.test+1] = r
-    return r
-  end,
+      startoptcond=function(_, optname)
+        return opts[optname] and true or false
+      end,
 
-  elsecond=function(_)
-    _.d.test[#_.d.test] = not _.d.test[#_.d.test]
-  end,
+      stop=function(_)
+        local l = {}
+        for k,v in pairs(flags) do
+          l[#l+1] = k
+        end
 
-  stopcond=function(_)
-    _.d.test[#_.d.test] = nil
-  end,
+        if #l ~= 0 then
+          table.sort(l)
+          return table.concat(l, '\n') .. '\n'
+        end
 
-  cxx=function(_, x)
-    if _.d.test[#_.d.test] then
-      _:write(x)
-      -- print(x)
-    end
+        return ''
+      end,
+
+      cxx=function(_, x) flags[x] = true end,
+      link=function(_, x) flags[x] = true end,
+    }
   end,
-  link=function(_, x) _:cxx(x) end,
 }
