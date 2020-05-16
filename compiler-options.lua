@@ -148,6 +148,7 @@ local clang_like = ToolGroup(clang, clang_cl)
 
 -- local msvc_linker = Linker('msvc')
 local lld_link = Linker('lld-link')
+local ld64 = Linker('ld64') -- Apple ld64
 
 function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
 function flag(x) return { cxx=x } end
@@ -542,10 +543,16 @@ Or(gcc, clang) {
       clang(3,9) { fl'-fno-whole-program-vtables' }
     } /
     {
-      link'-s',
-      lvl'strip_all'{
-        link'-Wl,--gc-sections', -- Remove unused sections
-        link'-Wl,--strip-all',
+      ld64 {
+        link'-Wl,-dead_strip',
+        link'-Wl,-S', -- Remove debug information
+      } /
+      {
+        link'-s',
+        lvl'strip_all'{
+          link'-Wl,--gc-sections', -- Remove unused sections
+          link'-Wl,--strip-all',
+        }
       },
       gcc {
         fl'-fwhole-program'

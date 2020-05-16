@@ -172,7 +172,7 @@ return {
   _comp_id = {
     gcc='"GNU"',
     clang='"Clang"',
-    ['clang-cl']='"Clang" AND DEFINED MSVC',
+    ['clang-cl']='"Clang" AND "${MSVC}"',
     msvc='"MSVC"',
   },
   _vcond_compiler=function(_, compiler)
@@ -183,7 +183,12 @@ return {
     return '(CMAKE_CXX_COMPILER_ID MATCHES ' .. str_comp .. ')'
   end,
 
-  _vcond_linker=function(_, linker) return 'CMAKE_LINKER MATCHES ' .. linker end,
+  _linker = {
+    ld64='"${CMAKE_HOST_APPLE}"',
+  },
+  _vcond_linker=function(_, linker)
+    return _._linker[linker] or 'CMAKE_LINKER MATCHES ' .. linker
+  end,
 
   cxx=function(_, x) return ' "' .. x .. '"' end,
   link=function(_, x) return ' "' .. x .. '"' end,
