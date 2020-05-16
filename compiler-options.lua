@@ -726,6 +726,8 @@ lld_link {
 
 -- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options?view=vs-2019
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically?view=vs-2019
+-- https://clang.llvm.org/docs/UsersManual.html#id9
+-- or clang --driver-mode=cl -help
 Or(msvc, clang_cl) {
   opt'stl_fix' {
     lvl'on' { flag'/DNOMINMAX', },
@@ -834,17 +836,67 @@ Or(msvc, clang_cl) {
 },
 
 msvc {
+  -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
+  opt'msvc_isystem' {
+    flag'/experimental:external',
+
+    lvl'anglebrackets' {
+      flag'/external:anglebrackets',
+    } / {
+      flag'/external:env:INCLUDE',
+      flag'/external:env:CAExcludePath',
+    },
+
+    opt'msvc_isystem_with_template_from_non_external' {
+      lvl'off' { flag'/external:template', } / flag'/external:template-',
+    },
+
+    opt'warnings' {
+      lvl'off' {
+        flag'/W0'
+      } /
+      {
+        -- /external:... ignores warnings start with C47XX
+        flag'/wd4710', -- Function not inlined
+        flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+        flag'/wd4774', -- 'string' : format string expected in argument number is not a string literal
+
+        lvl'on' {
+          flag'/W4',
+          flag'/wd4244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
+          flag'/wd4245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
+        } /
+        {
+          flag'/Wall',
+
+          flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
+          flag'/wd4355', -- 'this' used in base member initializing list
+          flag'/wd4548', -- Expression before comma has no effect
+          flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
+          flag'/wd4820', -- Added padding to members
+          flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
+
+          flag'/wd4464', -- relative include path contains '..'
+          flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
+          flag'/wd5045', -- Spectre mitigation
+
+          lvl'strict' {
+            flag'/wd4583', -- Destructor not implicitly called
+            flag'/wd4619', -- Unknown warning number
+          },
+        }
+      }
+    }
+  } /
   opt'warnings' {
-    lvl'off' {
-      flag'/W0'
-    } /
+    lvl'off' { flag'/W0' } /
     lvl'on' {
       flag'/W4',
       flag'/wd4244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
       flag'/wd4245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
       flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
     } /
-    Or(lvl'strict', lvl'very_strict') {
+    {
       flag'/Wall',
 
       -- Warnings in MSVC's std
@@ -987,6 +1039,8 @@ Vbase = {
     suggestions={{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on', 'basic'},},
+    msvc_isystem={{'anglebrackets', 'INCLUDE_and_CAExcludePath',},},
+    msvc_isystem_with_template_from_non_external={{'off', 'on',},},
     whole_program={{'off', 'on', 'strip_all'},},
   },
 
