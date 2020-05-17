@@ -45,11 +45,13 @@ return {
       _:print('set(' .. opt .. ' ${' .. opt .. '} CACHE STRING "")')
     end
 
+    local compiler_type = _.is_C and 'C' or 'CXX'
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
     local cvar = _.is_C and 'C_VAR' or 'CXX_VAR'
     _.cvar = cvar
 
-    _:print('\n# init default values')
+    _:print('set(JLN_' .. compiler_type .. '_IS_INITIALIZED 0 CACHE BOOL "private" FORCE)\n\n')
+    _:print('# init default values')
     _:print('# '.. prefixfunc .. '_init_flags([<'.. prefixfunc .. '-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])')
     _:print('# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)')
     _:print('function('.. prefixfunc .. '_init_flags)')
@@ -129,9 +131,9 @@ return {
       _:print('    message(STATUS "' .. opt .. ' = ${' .. opt .. '_D}\t[' .. table.concat(args, ', ') .. ']")')
     end
     _:print('  endif()\n')
+    _:print('  set(JLN_' .. compiler_type .. '_IS_INITIALIZED 1 CACHE BOOL "private" FORCE)\n')
     _:print('endfunction()\n')
 
-    local compiler_type = _.is_C and 'C' or 'CXX'
     _:print([[
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(JLN_GCC_]].. compiler_type .. [[_COMPILER 1)
@@ -179,6 +181,9 @@ endif()
 
     _:print('# '.. prefixfunc .. '_flags(' .. cvar .. ' <out-variable> LINK_VAR <out-variable> [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off])')
     _:print('function('.. prefixfunc .. '_flags)')
+    _:print('  if(NOT JLN_' .. compiler_type .. '_IS_INITIALIZED)')
+    _:print('    '.. prefixfunc .. '_init_flags()')
+    _:print('  endif()')
     _:print('  set(CXX_FLAGS "")')
     _:print('  set(LINK_LINK "")')
     _:write('  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "' .. cvar .. ';LINK_VAR')
