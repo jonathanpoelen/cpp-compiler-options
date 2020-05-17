@@ -2,6 +2,8 @@ Compilation options for different versions of Clang, GCC and MSVC. Provided a ge
 
 The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson`, `scons` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
+Each build system also has a branch with only the files it needs.
+
 ```cpp
 int main()
 {
