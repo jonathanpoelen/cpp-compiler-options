@@ -391,7 +391,7 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         jln_buildoptions = jln_buildoptions .. " -Werror"
       else
         if values["jln-warnings-as-error"] == "basic" then
-          jln_buildoptions = jln_buildoptions .. " -Werror=non-virtual-dtor -Werror=return-type -Werror=init-self"
+          jln_buildoptions = jln_buildoptions .. " -Werror=return-type -Werror=init-self"
           if ( compiler == "gcc" and not ( compversion < 501 ) ) then
             jln_buildoptions = jln_buildoptions .. " -Werror=array-bounds -Werror=logical-op -Werror=logical-not-parentheses"
           else

@@ -494,7 +494,6 @@ rule jln_flags ( properties * )
         if ( $(x_warnings_as_error) = "basic" )
         {
           flags +=
-            <cxxflags>"-Werror=non-virtual-dtor"
             <cxxflags>"-Werror=return-type"
             <cxxflags>"-Werror=init-self"
           ;

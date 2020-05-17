@@ -247,7 +247,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         flags += ('-Werror', )
       else:
         if options.get('warnings_as_error', _jln_default_flags['warnings_as_error']) == 'basic' :
-          flags += ('-Werror=non-virtual-dtor', '-Werror=return-type', '-Werror=init-self', )
+          flags += ('-Werror=return-type', '-Werror=init-self', )
           if ( compiler == 'gcc' and not ( verless(5, 1) ) ) :
             flags += ('-Werror=array-bounds', '-Werror=logical-op', '-Werror=logical-not-parentheses', )
           else:

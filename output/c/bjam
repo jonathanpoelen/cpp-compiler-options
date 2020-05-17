@@ -471,7 +471,6 @@ rule jln_c_flags ( properties * )
         if ( $(x_warnings_as_error) = "basic" )
         {
           flags +=
-            <cflags>"-Werror=non-virtual-dtor"
             <cflags>"-Werror=return-type"
             <cflags>"-Werror=init-self"
           ;
