@@ -310,7 +310,7 @@ Or(gcc, clang_like) {
   opt'warnings_as_error' {
     lvl'on' { flag'-Werror', } /
     lvl'basic' {
-      flag'-Werror=non-virtual-dtor',
+      -- flag'-Werror=non-virtual-dtor',
       flag'-Werror=return-type',
       flag'-Werror=init-self',
       gcc(5,1) {
