@@ -98,7 +98,7 @@ return {
         _:print('\n    if("' .. cmake_buildtype .. '" STREQUAL "${JLN_BUILD_TYPE}")')
         for i,xs in pairs(opts) do
           local cmake_opt = 'JLN_DEFAULT_FLAG_' .. xs[1]:upper()
-          _:print('      if(NOT(DEFINED ' .. cmake_opt .. '))')
+          _:print('      if(NOT DEFINED ' .. cmake_opt .. ')')
           _:print('        set(' .. cmake_opt .. ' "' .. xs[2] .. '")')
           _:print('      endif()')
         end
@@ -131,6 +131,44 @@ return {
     _:print('  endif()\n')
     _:print('endfunction()\n')
 
+    local compiler_type = _.is_C and 'C' or 'CXX'
+    _:print([[
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set(JLN_GCC_]].. compiler_type .. [[_COMPILER 1)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  if(MSVC)
+    set(JLN_CLANG_CL_]].. compiler_type .. [[_COMPILER 1)
+  else()
+    set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
+  endif()
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set(JLN_MSVC_]].. compiler_type .. [[_COMPILER 1)
+endif()
+
+if(CMAKE_HOST_APPLE)
+  set(JLN_LD64_]].. compiler_type .. [[_LINKER 1)
+elseif(CMAKE_LINKER MATCHES "lld-link")
+  set(JLN_LLD_LINK_]].. compiler_type .. [[_LINKER 1)
+endif()
+    ]])
+
+    local tool_ids = {
+      -- compiler
+      gcc='JLN_GCC_'.. compiler_type .. '_COMPILER',
+      msvc='JLN_MSVC_'.. compiler_type .. '_COMPILER',
+      clang='JLN_CLANG_'.. compiler_type .. '_COMPILER',
+      ['clang-cl']='JLN_CLANG_CL_'.. compiler_type .. '_COMPILER',
+      -- linker
+      ld64='JLN_LD64_'.. compiler_type .. '_LINKER',
+      ['lld-link']='JLN_LLD_LINK_'.. compiler_type .. '_LINKER',
+    }
+    local vcond_tool = function(_, toolname)
+      return tool_ids[toolname] or error('Unknown ' .. toolname .. ' tool')
+    end
+
+    _._vcond_compiler = vcond_tool
+    _._vcond_linker = vcond_tool
+
     _:print('# '.. prefixfunc .. '_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off])')
     _:print('function('.. prefixfunc .. '_target_interface name type)')
     _:print('  '.. prefixfunc .. '_flags(' .. cvar .. ' cxx LINK_VAR link ${ARGV})')
@@ -157,7 +195,7 @@ return {
       _:print('    string(TOLOWER "${' .. cmake_opt .. '}" ' .. cmake_opt .. ')')
       print_check_value('    ', cmake_opt, localname, args)
       _:print('  else()')
-      _:print('    if(${JLN_FLAGS_DISABLE_OTHERS})')
+      _:print('    if(JLN_FLAGS_DISABLE_OTHERS)')
       _:print('      set(' .. cmake_opt .. ' "' .. default_value .. '")')
       _:print('    else()')
       _:print('      set(' .. cmake_opt .. ' "${' .. opt .. '_D}")')
@@ -168,27 +206,6 @@ return {
 
   _vcond_lvl=function(_, lvl, optname) return 'JLN_FLAGS_' .. optname:upper() .. ' STREQUAL "' .. lvl .. '"' end,
   _vcond_verless=function(_, major, minor) return 'CMAKE_CXX_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
-
-  _comp_id = {
-    gcc='"GNU"',
-    clang='"Clang"',
-    ['clang-cl']='"Clang" AND "${MSVC}"',
-    msvc='"MSVC"',
-  },
-  _vcond_compiler=function(_, compiler)
-    local str_comp = _._comp_id[compiler]
-    if not str_comp then
-      error('Unknown ' .. compiler .. ' compiler')
-    end
-    return '(CMAKE_CXX_COMPILER_ID MATCHES ' .. str_comp .. ')'
-  end,
-
-  _linker = {
-    ld64='"${CMAKE_HOST_APPLE}"',
-  },
-  _vcond_linker=function(_, linker)
-    return _._linker[linker] or 'CMAKE_LINKER MATCHES ' .. linker
-  end,
 
   cxx=function(_, x) return ' "' .. x .. '"' end,
   link=function(_, x) return ' "' .. x .. '"' end,
