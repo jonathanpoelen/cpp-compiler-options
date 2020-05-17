@@ -43,7 +43,7 @@ $ `scons jln_sanitizers=on`
 1. [Options](#options)
     1. [Recommended options](#recommended-options)
 2. [Use generated files](#use-generated-files)
-    1. [Cmake](#cmake)
+    1. [CMake](#cmake)
     2. [Premake5](#premake5)
     3. [Meson](#meson)
     4. [SCons](#scons)
@@ -62,7 +62,7 @@ $ `scons jln_sanitizers=on`
 
 Supported options are (in alphabetical order):
 
-<!-- ./compiler-options.lua generators/list_options.lua color -->
+<!-- ./compiler-options.lua generators/list_options.lua --color -->
 ```ini
 color = default auto never always
 control_flow = default off on branch return allow_bugs
@@ -119,7 +119,7 @@ really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`sugg
 
 # Use generated files
 
-## Cmake
+## CMake
 
 ```cmake
 # launch example: cmake -DJLN_SANITIZERS=on
