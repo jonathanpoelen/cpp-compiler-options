@@ -875,7 +875,10 @@ msvc {
         -- /external:... ignores warnings start with C47XX
         flag'/wd4710', -- Function not inlined
         flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-        flag'/wd4774', -- 'string' : format string expected in argument number is not a string literal
+
+        -vers(19,21) {
+          flag'/wd4774', -- format not a string literal
+        },
 
         lvl'on' {
           flag'/W4',
@@ -927,7 +930,9 @@ msvc {
       flag'/wd4668', -- Preprocessor macro not defined
       flag'/wd4710', -- Function not inlined
       flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-      flag'/wd4774', -- 'string' : format string expected in argument number is not a string literal
+      -vers(19,21) {
+        flag'/wd4774', -- format not a string literal
+      },
       flag'/wd4820', -- Added padding to members
       flag'/wd5026', -- Move constructor implicitly deleted
       flag'/wd5027', -- Move assignment operator implicitly deleted
