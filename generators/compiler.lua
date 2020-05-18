@@ -22,7 +22,7 @@ return {
             local vers = '-' .. x.version[1] .. '.' .. x.version[2]
             for comp in pairs(currcomp[2] and currcomp[1] or stackcomp[#stackcomp]) do
               local intversion = x.version[1] * 1000000 + x.version[2]
-              versions_by_compiler[comp][intversion] = {x.version[1], x.version[2], comp..vers}
+              versions_by_compiler[comp][intversion] = {x.version[1], x.version[2], comp..vers, comp}
             end
           elseif x._not then
             return _:_startcond(x._not, currcomp)
@@ -87,7 +87,6 @@ return {
                 end
               end
               if #versions <= 1 then
-                comp = 'clang-cl'
                 versions = {}
               end
             else
@@ -109,6 +108,19 @@ return {
                 return a[1] < b[1]
                     or a[1] == b[1] and a[2] < b[2]
               end)
+
+              -- add a lower version to those tested
+              -- vers(2) { ... } / { ... } -> version 2 and 1.99
+              local minimal_comp = comp_vers[2][1]
+              if minimal_comp[2] == 0 then
+                names[#names+1] = minimal_comp[4] .. '-'
+                              .. (minimal_comp[1] - 1) .. '.0'
+              else
+                names[#names+1] = minimal_comp[4] .. '-'
+                              .. minimal_comp[1] .. '.'
+                              .. (minimal_comp[2] - 1)
+              end
+
               for k,d in ipairs(comp_vers[2]) do
                 names[#names+1] = d[3]
               end
