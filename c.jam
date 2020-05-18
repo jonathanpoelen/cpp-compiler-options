@@ -1731,7 +1731,7 @@ rule jln_c_flags ( properties * )
           if ( $(x_optimization) = "1" )
           {
             flags +=
-              <cflags>"/01"
+              <cflags>"/O1"
             ;
           }
           else
