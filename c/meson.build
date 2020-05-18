@@ -786,7 +786,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         else
           jln_c_c_flags += ['/DNDEBUG', ]
           if (  (___jln_c_flags.get('optimization', 'default') == '1') )
-            jln_c_c_flags += ['/01', ]
+            jln_c_c_flags += ['/O1', ]
           else
             if (  (___jln_c_flags.get('optimization', 'default') == '2') )
               jln_c_c_flags += ['/O2', ]
