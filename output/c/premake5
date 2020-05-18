@@ -966,7 +966,7 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         else
           jln_buildoptions = jln_buildoptions .. " /DNDEBUG"
           if values["jln-optimization"] == "1" then
-            jln_buildoptions = jln_buildoptions .. " /01"
+            jln_buildoptions = jln_buildoptions .. " /O1"
           else
             if values["jln-optimization"] == "2" then
               jln_buildoptions = jln_buildoptions .. " /O2"

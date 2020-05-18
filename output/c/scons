@@ -647,7 +647,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         else:
           flags += ('/DNDEBUG', )
           if options.get('optimization', _jln_c_default_flags['optimization']) == '1' :
-            flags += ('/01', )
+            flags += ('/O1', )
           else:
             if options.get('optimization', _jln_c_default_flags['optimization']) == '2' :
               flags += ('/O2', )
