@@ -345,6 +345,10 @@ else()
 endif()
 
 function(jln_parse_arguments prefix one_value_keywords)
+  if(${ARGC} LESS 3)
+    return()
+  endif()
+
   set(SAME_BUILD_TYPE 1)
   foreach(ival RANGE 3 ${ARGC} 2)
     math(EXPR i ${ival}-1)
