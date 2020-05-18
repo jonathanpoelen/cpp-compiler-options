@@ -1047,7 +1047,7 @@ Vbase = {
     suggestions={{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on', 'basic'},},
-    msvc_isystem={{'anglebrackets', 'INCLUDE_and_CAExcludePath',},},
+    msvc_isystem={{'anglebrackets', 'include_and_caexcludepath',},},
     msvc_isystem_with_template_from_non_external={{'off', 'on',},},
     whole_program={{'off', 'on', 'strip_all'},},
   },
