@@ -774,7 +774,12 @@ Or(msvc, clang_cl) {
   },
 
   opt'optimization' {
-    lvl'0' { flag'/Ob0 /Od /Oi- /Oy-' } /
+    lvl'0' {
+      flag'/Ob0',
+      flag'/Od',
+      flag'/Oi-',
+      flag'/Oy-',
+    } /
     lvl'g' { flag'/Ob1' } / {
       flag'/DNDEBUG',
       -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
@@ -842,6 +847,9 @@ Or(msvc, clang_cl) {
   },
 },
 
+-- warnings:
+-- https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-c4000-c5999?view=vs-2019
+-- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=vs-2019
 msvc {
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
   opt'msvc_isystem' {

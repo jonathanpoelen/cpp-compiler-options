@@ -1,7 +1,13 @@
-return {
-  knwon_opts = {},
-  errors = {},
+local knwon_opts = {}
+local errors = {}
 
+local without_space_or_error = function(_, s)
+  if s:find(' ') then
+    errors[#errors+1] = '"' .. s .. '" contains a space'
+  end
+end
+
+return {
   start=function(_, ...)
     local show_profile, color
     local help = function()
@@ -24,13 +30,12 @@ return {
       end
     end
 
-    local knwon_opts = _.knwon_opts
     local add_opt = function(optname, args)
       local t = {}
       for k,v in pairs(args) do
         t[v] = true
       end
-      _.knwon_opts[optname] = {t}
+      knwon_opts[optname] = {t}
     end
 
     if color then
@@ -77,9 +82,9 @@ return {
   end,
 
   startoptcond=function(_, optname)
-    local known = _.knwon_opts[optname]
+    local known = knwon_opts[optname]
     if not known then
-      _.errors[#_.errors+1] = '_opts[' .. optname .. ']: unknown key'
+      errors[#errors+1] = '_opts[' .. optname .. ']: unknown key'
     else
       known[2] = true
     end
@@ -87,11 +92,11 @@ return {
 
   startcond=function(_, x, optname)
     if x.lvl then
-      local known = _.knwon_opts[optname]
+      local known = knwon_opts[optname]
       if not known then
-        _.errors[#_.errors+1] = '_opts[' .. optname .. ']: unknown key'
+        errors[#errors+1] = '_opts[' .. optname .. ']: unknown key'
       elseif not known[1][x.lvl] then
-        _.errors[#_.errors+1] = '_opts[' .. optname .. ']: unknown value: ' .. x.lvl
+        errors[#errors+1] = '_opts[' .. optname .. ']: unknown value: ' .. x.lvl
       else
         known[2] = true
       end
@@ -108,13 +113,16 @@ return {
   end,
 
   stop=function(_)
-    for k,opts in pairs(_.knwon_opts) do
+    for k,opts in pairs(knwon_opts) do
       if not opts[2] then
-        _.errors[#_.errors+1] = '_opts[' .. k .. ']: not used in the tree'
+        errors[#errors+1] = '_opts[' .. k .. ']: not used in the tree'
       end
     end
-    if #_.errors ~= 0 then
-      error(table.concat(_.errors, '\n'))
+    if #errors ~= 0 then
+      error(table.concat(errors, '\n'))
     end
   end,
+
+  cxx=without_space_or_error,
+  link=without_space_or_error,
 }
