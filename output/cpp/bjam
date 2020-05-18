@@ -1705,7 +1705,10 @@ rule jln_flags ( properties * )
       if ( $(x_optimization) = "0" )
       {
         flags +=
-          <cxxflags>"/Ob0 /Od /Oi- /Oy-"
+          <cxxflags>"/Ob0"
+          <cxxflags>"/Od"
+          <cxxflags>"/Oi-"
+          <cxxflags>"/Oy-"
         ;
       }
       else
