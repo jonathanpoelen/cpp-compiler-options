@@ -790,19 +790,15 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           else
             if (  (___jln_c_flags.get('optimization', 'default') == '2') )
               jln_c_c_flags += ['/O2', ]
-              jln_c_link_flags += ['/OPT:REF', ]
             else
               if (  (___jln_c_flags.get('optimization', 'default') == '3') )
                 jln_c_c_flags += ['/O2', ]
-                jln_c_link_flags += ['/OPT:REF', ]
               else
                 if (  (___jln_c_flags.get('optimization', 'default') == 'size') )
                   jln_c_c_flags += ['/O1', '/Gw', ]
-                  jln_c_link_flags += ['/OPT:REF', ]
                 else
                   if (  (___jln_c_flags.get('optimization', 'default') == 'fast') )
                     jln_c_c_flags += ['/O2', '/fp:fast', ]
-                    jln_c_link_flags += ['/OPT:REF', ]
                   endif
                 endif
               endif
@@ -817,6 +813,9 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       else
         jln_c_c_flags += ['/GL', '/Gw', ]
         jln_c_link_flags += ['/LTCG', ]
+        if (  (___jln_c_flags.get('whole_program', 'default') == 'strip_all') )
+          jln_c_link_flags += ['/OPT:REF', ]
+        endif
       endif
     endif
     if (  not ( (___jln_c_flags.get('pedantic', 'default') == 'default')) )
@@ -879,7 +878,10 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         if (  (___jln_c_flags.get('warnings', 'default') == 'off') )
           jln_c_c_flags += ['/W0', ]
         else
-          jln_c_c_flags += ['/wd4710', '/wd4711', '/wd4774', ]
+          jln_c_c_flags += ['/wd4710', '/wd4711', ]
+          if (  not ( not ( ___jln_c_compiler_version.version_compare('<19.21') ) ) )
+            jln_c_c_flags += ['/wd4774', ]
+          endif
           if (  (___jln_c_flags.get('warnings', 'default') == 'on') )
             jln_c_c_flags += ['/W4', '/wd4244', '/wd4245', ]
           else
@@ -898,7 +900,11 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           if (  (___jln_c_flags.get('warnings', 'default') == 'on') )
             jln_c_c_flags += ['/W4', '/wd4244', '/wd4245', '/wd4711', ]
           else
-            jln_c_c_flags += ['/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', '/wd4774', '/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
+            jln_c_c_flags += ['/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', ]
+            if (  not ( not ( ___jln_c_compiler_version.version_compare('<19.21') ) ) )
+              jln_c_c_flags += ['/wd4774', ]
+            endif
+            jln_c_c_flags += ['/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
             if (  (___jln_c_flags.get('warnings', 'default') == 'strict') )
               jln_c_c_flags += ['/wd4061', '/wd4266', '/wd4388', '/wd4583', '/wd4619', '/wd4623', '/wd5204', ]
             endif
