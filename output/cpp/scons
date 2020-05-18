@@ -674,25 +674,23 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           else:
             if options.get('optimization', _jln_default_flags['optimization']) == '2' :
               flags += ('/O2', )
-              linkflags += ('/OPT:REF', )
             else:
               if options.get('optimization', _jln_default_flags['optimization']) == '3' :
                 flags += ('/O2', )
-                linkflags += ('/OPT:REF', )
               else:
                 if options.get('optimization', _jln_default_flags['optimization']) == 'size' :
                   flags += ('/O1', '/Gw', )
-                  linkflags += ('/OPT:REF', )
                 else:
                   if options.get('optimization', _jln_default_flags['optimization']) == 'fast' :
                     flags += ('/O2', '/fp:fast', )
-                    linkflags += ('/OPT:REF', )
     if not ( options.get('whole_program', _jln_default_flags['whole_program']) == 'default') :
       if options.get('whole_program', _jln_default_flags['whole_program']) == 'off' :
         flags += ('/GL-', )
       else:
         flags += ('/GL', '/Gw', )
         linkflags += ('/LTCG', )
+        if options.get('whole_program', _jln_default_flags['whole_program']) == 'strip_all' :
+          linkflags += ('/OPT:REF', )
     if not ( options.get('pedantic', _jln_default_flags['pedantic']) == 'default') :
       if not ( options.get('pedantic', _jln_default_flags['pedantic']) == 'off' ) :
         flags += ('/permissive-', '/Zc:__cplusplus', )
@@ -737,7 +735,9 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         if options.get('warnings', _jln_default_flags['warnings']) == 'off' :
           flags += ('/W0', )
         else:
-          flags += ('/wd4710', '/wd4711', '/wd4774', )
+          flags += ('/wd4710', '/wd4711', )
+          if not ( not ( verless(19, 21) ) ) :
+            flags += ('/wd4774', )
           if options.get('warnings', _jln_default_flags['warnings']) == 'on' :
             flags += ('/W4', '/wd4244', '/wd4245', )
           else:
@@ -752,7 +752,10 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           if options.get('warnings', _jln_default_flags['warnings']) == 'on' :
             flags += ('/W4', '/wd4244', '/wd4245', '/wd4711', )
           else:
-            flags += ('/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', '/wd4774', '/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
+            flags += ('/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', )
+            if not ( not ( verless(19, 21) ) ) :
+              flags += ('/wd4774', )
+            flags += ('/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
             if options.get('warnings', _jln_default_flags['warnings']) == 'strict' :
               flags += ('/wd4061', '/wd4266', '/wd4388', '/wd4583', '/wd4619', '/wd4623', '/wd5204', )
     if not ( options.get('shadow_warnings', _jln_default_flags['shadow_warnings']) == 'default') :
