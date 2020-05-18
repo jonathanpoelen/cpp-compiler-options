@@ -57,17 +57,3 @@ for _,t in ipairs({
     writefile(dst, readfile(src))
   end
 end
-
--- cd $(realpath $(dirname "$0"))/..
---
--- set -e
---
---
--- for d in bjam cmake meson premake5 scons ; do
---   echo "> $d"
---   cd w/$d
---   git commit -am "update $d files" ||:
---   cd ../..
---
---
--- git push --all
