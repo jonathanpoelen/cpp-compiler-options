@@ -718,7 +718,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         flags += ('/EHs-', '/D_HAS_EXCEPTIONS=0', )
     if not ( options.get('optimization', _jln_c_default_flags['optimization']) == 'default') :
       if options.get('optimization', _jln_c_default_flags['optimization']) == '0' :
-        flags += ('/Ob0 /Od /Oi- /Oy-', )
+        flags += ('/Ob0', '/Od', '/Oi-', '/Oy-', )
       else:
         if options.get('optimization', _jln_c_default_flags['optimization']) == 'g' :
           flags += ('/Ob1', )
