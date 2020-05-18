@@ -235,7 +235,7 @@ endif()
     _:print('function('.. prefixfunc .. '_target_interface name type)')
     _:print('  '.. prefixfunc .. '_flags(' .. cvar .. ' cxx LINK_VAR link ${ARGN})')
     _:print('  add_library(${name} ${type})')
-    _:print('  target_link_libraries(${name} ${type} ${link})')
+    _:print('  target_link_options(${name} ${type} ${link})')
     _:print('  target_compile_options(${name} ${type} ${cxx})')
     _:print('endfunction()\n')
 
