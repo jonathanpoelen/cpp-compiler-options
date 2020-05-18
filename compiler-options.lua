@@ -784,7 +784,7 @@ Or(msvc, clang_cl) {
       flag'/DNDEBUG',
       -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
       -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-      lvl'1' { flag'/01', } /
+      lvl'1' { flag'/O1', } /
       lvl'2' { flag'/O2', link'/OPT:REF', } /
       lvl'3' { flag'/O2', link'/OPT:REF', } /
       lvl'size' { flag'/O1', link'/OPT:REF', flag'/Gw' } /
