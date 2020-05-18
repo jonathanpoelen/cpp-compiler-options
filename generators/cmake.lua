@@ -23,18 +23,26 @@ return {
 
     _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
-    local print_check_value = function(prefix, localname, expositionname, values)
-      _:print(prefix .. 'if(NOT(("' .. table.concat(values, '" STREQUAL ' .. localname .. ') OR ("') .. '" STREQUAL ' .. localname .. ')))')
-      _:print(prefix .. '  message(FATAL_ERROR "Unknow value \\\"${' .. localname .. '}\\\" for ' .. expositionname .. ', expected: ' .. table.concat(values, ', ') .. '")')
-      _:print(prefix .. 'endif()')
+    for optname,args in _:getoptions() do
+      _:print('set(_JLN_' .. optname:upper() .. '_VALUES '.. table.concat(args, ' ') .. ')')
     end
+    _:print[[
+set(_JLN_VERBOSE_VALUES on off)
+set(_JLN_AUTO_PROFILE_VALUES on off)
+set(_JLN_DISABLE_OTHERS_VALUES on off)
+
+]]
 
     for optname,args in _:getoptions() do
       local opt = _:tocmakeoption(optname)
       _:print('set(' .. opt .. ' "${' .. opt .. '}" CACHE STRING "")')
       _:print('if(NOT("${' .. opt .. '}" STREQUAL ""))')
       _:print('  string(TOLOWER "${' .. opt .. '}" ' .. opt .. ')')
-      print_check_value('  ', opt, opt, args)
+      _:print('  if(NOT(("' .. table.concat(args, '" STREQUAL ' .. opt .. ') OR ("')
+              .. '" STREQUAL ' .. opt .. ')))')
+      _:print('    message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for '
+              .. opt .. ', expected: ' .. table.concat(args, ', ') .. '")')
+      _:print('  endif()')
       _:print('endif()')
     end
 
@@ -50,12 +58,67 @@ return {
     local cvar = _.is_C and 'C_VAR' or 'CXX_VAR'
     _.cvar = cvar
 
+    _:print[[
+if("${CMAKE_BUILD_TYPE}" STREQUAL "")
+  set(_JLN_BUILD_TYPE "Debug")
+  set(_JLN_BUILD_TYPE_PARSER "Debug")
+else()
+  set(_JLN_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+  string(TOLOWER ${CMAKE_BUILD_TYPE} _JLN_BUILD_TYPE_PARSER)
+endif()
+]]
+    _:print('function('.. prefixfunc .. '_parse_arguments prefix one_value_keywords)')
+    _:print([[
+  set(SAME_BUILD_TYPE 1)
+  foreach(ival RANGE 3 ${ARGC} 2)
+    math(EXPR i ${ival}-1)
+    set(name ${ARGV${i}})
+    if(${name} STREQUAL "BUILD_TYPE")
+      string(TOLOWER "${ARGV${ival}}" type)
+      if(${_JLN_BUILD_TYPE_PARSER} STREQUAL "${type}")
+        set(SAME_BUILD_TYPE 1)
+      else()
+        set(SAME_BUILD_TYPE 0)
+      endif()
+    else()
+      list(FIND one_value_keywords "${name}" INDEX)
+      if(${INDEX} EQUAL -1)
+        message(FATAL_ERROR "Unknown '${name}' parameter")
+      endif()
+
+      set(value "${ARGV${ival}}")
+      string(TOLOWER "${value}" lowercase_value)
+      list(FIND _JLN_${name}_VALUES "${lowercase_value}" INDEX)
+      if(${INDEX} EQUAL -1)
+        if(${name} STREQUAL "]] .. cvar .. [[" OR ${name} STREQUAL "LINK_VAR")
+          if(SAME_BUILD_TYPE)
+            set("${prefix}_${name}" ${value} PARENT_SCOPE)
+          endif()
+        else()
+          list(JOIN _JLN_${name}_VALUES ", " values)
+          message(FATAL_ERROR "Parameter '${name}': Unknown '${value}', expected: ${values}")
+        endif()
+      elseif(SAME_BUILD_TYPE)
+        set("${prefix}_${name}" ${lowercase_value} PARENT_SCOPE)
+      endif()
+    endif()
+  endforeach()
+endfunction()
+]])
     _:print('set(JLN_' .. compiler_type .. '_IS_INITIALIZED 0 CACHE BOOL "private" FORCE)\n\n')
     _:print('# init default values')
-    _:print('# '.. prefixfunc .. '_init_flags([<'.. prefixfunc .. '-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])')
+    _:print('# '.. prefixfunc .. '_init_flags([<'.. prefixfunc .. '-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on] [BUILD_TYPE type conditioned-options])')
     _:print('# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)')
+    _:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
+    _:print('# Example:')
+    _:print('#   '.. prefixfunc .. '_init_flags(')
+    _:print('#       SUGGESTIONS on')
+    _:print('#')
+    _:print('#       BUILD_TYPE debug SANITIZERS on')
+    _:print('#       BUILD_TYPE release LTO on')
+    _:print('#   )')
     _:print('function('.. prefixfunc .. '_init_flags)')
-    _:write('  cmake_parse_arguments(JLN_DEFAULT_FLAG "" "VERBOSE')
+    _:write('  '.. prefixfunc .. '_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE')
     local names = {}
     for optname in _:getoptions() do
       local name = optname:upper()
@@ -63,10 +126,10 @@ return {
       _:write(';' .. name)
     end
     if _._opts['auto_profile'] then
-      error('profile option is reserved')
+      error('"auto_profile" option is reserved')
     end
     _:write(';AUTO_PROFILE')
-    _:print('" "" ${ARGN})\n')
+    _:print('" ${ARGN})\n')
 
     for _k, optname in ipairs(extraopts) do
       local opt = _:tocmakeoption(optname)
@@ -77,17 +140,11 @@ return {
       _:print('  elseif("${' .. opt .. '}" STREQUAL "")')
       _:print('    set(' .. opt .. '_D "")')
       _:print('  else()')
-      _:print('    set(' .. opt .. '_D "${' .. opt .. '}")')
-      _:print('  endif()')
-      _:print('  string(TOLOWER "${' .. opt .. '}" ' .. opt .. ')\n')
+      _:print('    string(TOLOWER "${' .. opt .. '}" ' .. opt .. '_D)')
+      _:print('  endif()\n')
     end
 
     _:print('  if("${JLN_AUTO_PROFILE_D}" STREQUAL "on")')
-    _:print('    if("${CMAKE_BUILD_TYPE}" STREQUAL "")')
-    _:print('      set(JLN_BUILD_TYPE "Debug")')
-    _:print('    else()')
-    _:print('      set(JLN_BUILD_TYPE ${CMAKE_BUILD_TYPE})')
-    _:print('    endif()')
     local buildtypes = {
       debug='Debug',
       release='Release',
@@ -97,7 +154,7 @@ return {
     for buildtypename, opts in _:getbuildtype() do
       local cmake_buildtype = buildtypes[buildtypename]
       if cmake_buildtype then
-        _:print('\n    if("' .. cmake_buildtype .. '" STREQUAL "${JLN_BUILD_TYPE}")')
+        _:print('\n    if("' .. cmake_buildtype .. '" STREQUAL "${_JLN_BUILD_TYPE}")')
         for i,xs in pairs(opts) do
           local cmake_opt = 'JLN_DEFAULT_FLAG_' .. xs[1]:upper()
           _:print('      if(NOT DEFINED ' .. cmake_opt .. ')')
@@ -114,8 +171,6 @@ return {
       local cmake_opt = 'JLN_DEFAULT_FLAG_' .. localname;
       local opt = _:tocmakeoption(optname)
       _:print('  if(DEFINED ' .. cmake_opt .. ')')
-      _:print('    string(TOLOWER "${' .. cmake_opt .. '}" ' .. cmake_opt .. ')')
-      print_check_value('    ', cmake_opt, localname, args)
       _:print('    set(' .. opt .. '_D ${' .. cmake_opt .. '} CACHE STRING "private" FORCE)')
       _:print('  elseif("${' .. opt .. '}" STREQUAL "")')
       _:print('    set(' .. opt .. '_D "' .. default_value .. '" CACHE STRING "private" FORCE)')
@@ -171,35 +226,34 @@ endif()
     _._vcond_compiler = vcond_tool
     _._vcond_linker = vcond_tool
 
-    _:print('# '.. prefixfunc .. '_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off])')
+    _:print('# '.. prefixfunc .. '_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off] [BUILD_TYPE type])')
+    _:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
     _:print('function('.. prefixfunc .. '_target_interface name type)')
-    _:print('  '.. prefixfunc .. '_flags(' .. cvar .. ' cxx LINK_VAR link ${ARGV})')
+    _:print('  '.. prefixfunc .. '_flags(' .. cvar .. ' cxx LINK_VAR link ${ARGN})')
     _:print('  add_library(${name} ${type})')
     _:print('  target_link_libraries(${name} ${type} ${link})')
     _:print('  target_compile_options(${name} ${type} ${cxx})')
     _:print('endfunction()\n')
 
-    _:print('# '.. prefixfunc .. '_flags(' .. cvar .. ' <out-variable> LINK_VAR <out-variable> [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off])')
+    _:print('# '.. prefixfunc .. '_flags(' .. cvar .. ' <out-variable> LINK_VAR <out-variable> [<'.. prefixfunc .. '-option> <value>]... [DISABLE_OTHERS on|off] [BUILD_TYPE type])')
+    _:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
     _:print('function('.. prefixfunc .. '_flags)')
     _:print('  if(NOT JLN_' .. compiler_type .. '_IS_INITIALIZED)')
     _:print('    '.. prefixfunc .. '_init_flags()')
     _:print('  endif()')
     _:print('  set(CXX_FLAGS "")')
     _:print('  set(LINK_LINK "")')
-    _:write('  cmake_parse_arguments(JLN_FLAGS "DISABLE_OTHERS" "' .. cvar .. ';LINK_VAR')
+    _:write('  '.. prefixfunc .. '_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;' .. cvar .. ';LINK_VAR')
     for optname in _:getoptions() do
        _:write(';' .. optname:upper())
     end
-    _:print('" "" ${ARGN})\n')
+    _:print('" ${ARGN})\n')
 
     for optname,args,default_value in _:getoptions() do
       local opt = _:tocmakeoption(optname)
       local localname = optname:upper()
       local cmake_opt = 'JLN_FLAGS_' .. localname;
-      _:print('  if(DEFINED ' .. cmake_opt .. ')')
-      _:print('    string(TOLOWER "${' .. cmake_opt .. '}" ' .. cmake_opt .. ')')
-      print_check_value('    ', cmake_opt, localname, args)
-      _:print('  else()')
+      _:print('  if(NOT DEFINED ' .. cmake_opt .. ')')
       _:print('    if(JLN_FLAGS_DISABLE_OTHERS)')
       _:print('      set(' .. cmake_opt .. ' "' .. default_value .. '")')
       _:print('    else()')
@@ -222,8 +276,12 @@ endif()
 
   stop=function(_)
     return _:get_output() .. [[
-set(${JLN_FLAGS_]] .. _.cvar .. [[} ${CXX_FLAGS} PARENT_SCOPE)
-set(${JLN_FLAGS_LINK_VAR} ${LINK_FLAGS} PARENT_SCOPE)
+  if(JLN_FLAGS_]] .. _.cvar .. [[)
+    set(${JLN_FLAGS_]] .. _.cvar .. [[} ${CXX_FLAGS} PARENT_SCOPE)
+  endif()
+  if(JLN_FLAGS_LINK_VAR)
+    set(${JLN_FLAGS_LINK_VAR} ${LINK_FLAGS} PARENT_SCOPE)
+  endif()
 endfunction()
 ]]
   end
