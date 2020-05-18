@@ -210,7 +210,7 @@ def jln_add_variables(vars, default_values={}):
     EnumVariable('jln_lto', '', default_values.get('lto', _jln_default_flags['lto']),
                  allowed_values=('default', 'off', 'on', 'fat', 'thin')),
     EnumVariable('jln_msvc_isystem', '', default_values.get('msvc_isystem', _jln_default_flags['msvc_isystem']),
-                 allowed_values=('default', 'anglebrackets', 'INCLUDE_and_CAExcludePath')),
+                 allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', '', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_optimization', '', default_values.get('optimization', _jln_default_flags['optimization']),
