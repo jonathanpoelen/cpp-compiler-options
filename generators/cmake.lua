@@ -69,6 +69,10 @@ endif()
 ]]
     _:print('function('.. prefixfunc .. '_parse_arguments prefix one_value_keywords)')
     _:print([[
+  if(${ARGC} LESS 3)
+    return()
+  endif()
+
   set(SAME_BUILD_TYPE 1)
   foreach(ival RANGE 3 ${ARGC} 2)
     math(EXPR i ${ival}-1)

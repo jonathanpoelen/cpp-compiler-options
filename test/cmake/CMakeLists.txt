@@ -25,6 +25,18 @@ add_compile_options(${JLN_CXX_FLAGS})
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${JLN_LINK_FLAGS}")
 
 jln_target_interface(lib_test INTERFACE DEBUG on DISABLE_OTHERS on)
+jln_target_interface(lib_test2 INTERFACE
+  BUILD_TYPE release SUGGESTIONS on)
+jln_target_interface(lib_test3 INTERFACE
+  DEBUG on
+  BUILD_TYPE release SUGGESTIONS on)
+jln_target_interface(lib_test4 INTERFACE
+  BUILD_TYPE release SUGGESTIONS on
+  BUILD_TYPE debug WARNINGS on)
+jln_target_interface(lib_test5 INTERFACE
+  DEBUG on
+  BUILD_TYPE release SUGGESTIONS on
+  BUILD_TYPE debug WARNINGS on)
 
 add_executable(test test.cpp)
 target_link_libraries(test INTERFACE $<TARGET_PROPERTY:lib_test,LINK_OPTIONS>)
