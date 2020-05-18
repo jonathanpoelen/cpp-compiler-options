@@ -1081,19 +1081,15 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           else
             if values["jln-optimization"] == "2" then
               jln_buildoptions = jln_buildoptions .. " /O2"
-              jln_linkoptions = jln_linkoptions .. " /OPT:REF"
             else
               if values["jln-optimization"] == "3" then
                 jln_buildoptions = jln_buildoptions .. " /O2"
-                jln_linkoptions = jln_linkoptions .. " /OPT:REF"
               else
                 if values["jln-optimization"] == "size" then
                   jln_buildoptions = jln_buildoptions .. " /O1 /Gw"
-                  jln_linkoptions = jln_linkoptions .. " /OPT:REF"
                 else
                   if values["jln-optimization"] == "fast" then
                     jln_buildoptions = jln_buildoptions .. " /O2 /fp:fast"
-                    jln_linkoptions = jln_linkoptions .. " /OPT:REF"
                   end
                 end
               end
@@ -1108,6 +1104,9 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
       else
         jln_buildoptions = jln_buildoptions .. " /GL /Gw"
         jln_linkoptions = jln_linkoptions .. " /LTCG"
+        if values["jln-whole-program"] == "strip-all" then
+          jln_linkoptions = jln_linkoptions .. " /OPT:REF"
+        end
       end
     end
     if not ( values["jln-pedantic"] == "default") then
@@ -1170,7 +1169,10 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
         if values["jln-warnings"] == "off" then
           jln_buildoptions = jln_buildoptions .. " /W0"
         else
-          jln_buildoptions = jln_buildoptions .. " /wd4710 /wd4711 /wd4774"
+          jln_buildoptions = jln_buildoptions .. " /wd4710 /wd4711"
+          if not ( not ( compversion < 1921 ) ) then
+            jln_buildoptions = jln_buildoptions .. " /wd4774"
+          end
           if values["jln-warnings"] == "on" then
             jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245"
           else
@@ -1189,7 +1191,11 @@ function jln_getoptions(compiler, version, values, disable_others, print_compile
           if values["jln-warnings"] == "on" then
             jln_buildoptions = jln_buildoptions .. " /W4 /wd4244 /wd4245 /wd4711"
           else
-            jln_buildoptions = jln_buildoptions .. " /Wall /wd4355 /wd4365 /wd4514 /wd4548 /wd4571 /wd4577 /wd4625 /wd4626 /wd4668 /wd4710 /wd4711 /wd4774 /wd4820 /wd5026 /wd5027 /wd5039 /wd4464 /wd4868 /wd5045"
+            jln_buildoptions = jln_buildoptions .. " /Wall /wd4355 /wd4365 /wd4514 /wd4548 /wd4571 /wd4577 /wd4625 /wd4626 /wd4668 /wd4710 /wd4711"
+            if not ( not ( compversion < 1921 ) ) then
+              jln_buildoptions = jln_buildoptions .. " /wd4774"
+            end
+            jln_buildoptions = jln_buildoptions .. " /wd4820 /wd5026 /wd5027 /wd5039 /wd4464 /wd4868 /wd5045"
             if values["jln-warnings"] == "strict" then
               jln_buildoptions = jln_buildoptions .. " /wd4061 /wd4266 /wd4388 /wd4583 /wd4619 /wd4623 /wd5204"
             end
