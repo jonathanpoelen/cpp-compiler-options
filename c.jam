@@ -1740,7 +1740,6 @@ rule jln_c_flags ( properties * )
             {
               flags +=
                 <cflags>"/O2"
-                <linkflags>"/OPT:REF"
               ;
             }
             else
@@ -1749,7 +1748,6 @@ rule jln_c_flags ( properties * )
               {
                 flags +=
                   <cflags>"/O2"
-                  <linkflags>"/OPT:REF"
                 ;
               }
               else
@@ -1759,7 +1757,6 @@ rule jln_c_flags ( properties * )
                   flags +=
                     <cflags>"/O1"
                     <cflags>"/Gw"
-                    <linkflags>"/OPT:REF"
                   ;
                 }
                 else
@@ -1769,7 +1766,6 @@ rule jln_c_flags ( properties * )
                     flags +=
                       <cflags>"/O2"
                       <cflags>"/fp:fast"
-                      <linkflags>"/OPT:REF"
                     ;
                   }
                 }
@@ -1794,6 +1790,12 @@ rule jln_c_flags ( properties * )
           <cflags>"/Gw"
           <linkflags>"/LTCG"
         ;
+        if ( $(x_whole_program) = "strip-all" )
+        {
+          flags +=
+            <linkflags>"/OPT:REF"
+          ;
+        }
       }
     }
     if ( $(x_pedantic) != "default" )
@@ -1933,8 +1935,13 @@ rule jln_c_flags ( properties * )
           flags +=
             <cflags>"/wd4710"
             <cflags>"/wd4711"
-            <cflags>"/wd4774"
           ;
+          if ! (  ! (  $(version) < "19.21"  )  )
+          {
+            flags +=
+              <cflags>"/wd4774"
+            ;
+          }
           if ( $(x_warnings) = "on" )
           {
             flags +=
@@ -2004,7 +2011,14 @@ rule jln_c_flags ( properties * )
               <cflags>"/wd4668"
               <cflags>"/wd4710"
               <cflags>"/wd4711"
-              <cflags>"/wd4774"
+            ;
+            if ! (  ! (  $(version) < "19.21"  )  )
+            {
+              flags +=
+                <cflags>"/wd4774"
+              ;
+            }
+            flags +=
               <cflags>"/wd4820"
               <cflags>"/wd5026"
               <cflags>"/wd5027"
