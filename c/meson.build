@@ -779,7 +779,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     endif
     if (  not ( (___jln_c_flags.get('optimization', 'default') == 'default')) )
       if (  (___jln_c_flags.get('optimization', 'default') == '0') )
-        jln_c_c_flags += ['/Ob0 /Od /Oi- /Oy-', ]
+        jln_c_c_flags += ['/Ob0', '/Od', '/Oi-', '/Oy-', ]
       else
         if (  (___jln_c_flags.get('optimization', 'default') == 'g') )
           jln_c_c_flags += ['/Ob1', ]

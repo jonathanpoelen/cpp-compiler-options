@@ -802,7 +802,7 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
     if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
       if (  (___jln_flags.get('optimization', 'default') == '0') )
-        jln_cpp_flags += ['/Ob0 /Od /Oi- /Oy-', ]
+        jln_cpp_flags += ['/Ob0', '/Od', '/Oi-', '/Oy-', ]
       else
         if (  (___jln_flags.get('optimization', 'default') == 'g') )
           jln_cpp_flags += ['/Ob1', ]
