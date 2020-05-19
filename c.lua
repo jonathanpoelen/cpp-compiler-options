@@ -436,8 +436,6 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
                     if not ( compversion < 700 ) then
                       if not ( compversion < 701 ) then
                         jln_buildoptions = jln_buildoptions .. " -Walloc-zero -Walloca -Wformat-overflow=2 -Wduplicated-branches"
-                        if not ( compversion < 800 ) then
-                        end
                       end
                     end
                   end
@@ -448,12 +446,6 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         else
           if ( compiler == "clang" or compiler == "clang-cl" ) then
             jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-documentation -Wno-documentation-unknown-command -Wno-newline-eof -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum"
-            if not ( compversion < 309 ) then
-              if not ( compversion < 500 ) then
-                if not ( compversion < 900 ) then
-                end
-              end
-            end
           end
         end
         if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
@@ -616,12 +608,6 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
     end
     if not ( values["jln-fix-compiler-error"] == "default") then
       if values["jln-fix-compiler-error"] == "on" then
-        if compiler == "gcc" then
-          if not ( compversion < 407 ) then
-            if not ( compversion < 701 ) then
-            end
-          end
-        end
         jln_buildoptions = jln_buildoptions .. " -Werror=write-strings"
       else
         if ( compiler == "clang" or compiler == "clang-cl" ) then
@@ -883,22 +869,6 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         end
       end
     end
-    if not ( values["jln-stl-debug"] == "default") then
-      if not ( values["jln-stl-debug"] == "off" ) then
-        if values["jln-stl-debug"] == "assert-as-exception" then
-        end
-        if ( values["jln-stl-debug"] == "allow-broken-abi" or values["jln-stl-debug"] == "allow-broken-abi-and-bugs" ) then
-          if compiler == "clang" then
-            if ( not ( compversion < 800 ) or values["jln-stl-debug"] == "allow-broken-abi-and-bugs" ) then
-            end
-          end
-        end
-        if not ( values["jln-pedantic"] == "default") then
-          if not ( values["jln-pedantic"] == "off" ) then
-          end
-        end
-      end
-    end
     if not ( values["jln-shadow-warnings"] == "default") then
       if values["jln-shadow-warnings"] == "off" then
         jln_buildoptions = jln_buildoptions .. " -Wno-shadow"
@@ -929,30 +899,11 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         end
       end
     end
-    if not ( values["jln-elide-type"] == "default") then
-      if values["jln-elide-type"] == "on" then
-        if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-        end
-      else
-        if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or ( compiler == "clang" and not ( compversion < 304 ) ) ) then
-        end
-      end
-    end
     if not ( values["jln-exceptions"] == "default") then
       if values["jln-exceptions"] == "on" then
         jln_buildoptions = jln_buildoptions .. " -fexceptions"
       else
         jln_buildoptions = jln_buildoptions .. " -fno-exceptions"
-      end
-    end
-    if not ( values["jln-rtti"] == "default") then
-      if values["jln-rtti"] == "on" then
-      end
-    end
-    if not ( values["jln-diagnostics-show-template-tree"] == "default") then
-      if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or compiler == "clang" ) then
-        if values["jln-diagnostics-show-template-tree"] == "on" then
-        end
       end
     end
     if not ( values["jln-sanitizers-extra"] == "default") then
