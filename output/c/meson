@@ -73,8 +73,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
                     if (  not ( ___jln_c_compiler_version.version_compare('<7.0') ) )
                       if (  not ( ___jln_c_compiler_version.version_compare('<7.1') ) )
                         jln_c_c_flags += ['-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', ]
-                        if (  not ( ___jln_c_compiler_version.version_compare('<8.0') ) )
-                        endif
                       endif
                     endif
                   endif
@@ -85,12 +83,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         else
           if (  ( (___jln_c_compiler_id == 'clang') or (___jln_c_compiler_id == 'clang-cl') ) )
             jln_c_c_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', ]
-            if (  not ( ___jln_c_compiler_version.version_compare('<3.9') ) )
-              if (  not ( ___jln_c_compiler_version.version_compare('<5.0') ) )
-                if (  not ( ___jln_c_compiler_version.version_compare('<9.0') ) )
-                endif
-              endif
-            endif
           endif
         endif
         if (  ( (___jln_c_flags.get('warnings', 'default') == 'strict') or (___jln_c_flags.get('warnings', 'default') == 'very_strict') ) )
@@ -253,12 +245,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     endif
     if (  not ( (___jln_c_flags.get('fix_compiler_error', 'default') == 'default')) )
       if (  (___jln_c_flags.get('fix_compiler_error', 'default') == 'on') )
-        if (  (___jln_c_compiler_id == 'gcc') )
-          if (  not ( ___jln_c_compiler_version.version_compare('<4.7') ) )
-            if (  not ( ___jln_c_compiler_version.version_compare('<7.1') ) )
-            endif
-          endif
-        endif
         jln_c_c_flags += ['-Werror=write-strings', ]
       else
         if (  ( (___jln_c_compiler_id == 'clang') or (___jln_c_compiler_id == 'clang-cl') ) )
@@ -520,22 +506,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         endif
       endif
     endif
-    if (  not ( (___jln_c_flags.get('stl_debug', 'default') == 'default')) )
-      if (  not ( (___jln_c_flags.get('stl_debug', 'default') == 'off') ) )
-        if (  (___jln_c_flags.get('stl_debug', 'default') == 'assert_as_exception') )
-        endif
-        if (  ( (___jln_c_flags.get('stl_debug', 'default') == 'allow_broken_abi') or (___jln_c_flags.get('stl_debug', 'default') == 'allow_broken_abi_and_bugs') ) )
-          if (  (___jln_c_compiler_id == 'clang') )
-            if (  ( not ( ___jln_c_compiler_version.version_compare('<8.0') ) or (___jln_c_flags.get('stl_debug', 'default') == 'allow_broken_abi_and_bugs') ) )
-            endif
-          endif
-        endif
-        if (  not ( (___jln_c_flags.get('pedantic', 'default') == 'default')) )
-          if (  not ( (___jln_c_flags.get('pedantic', 'default') == 'off') ) )
-          endif
-        endif
-      endif
-    endif
     if (  not ( (___jln_c_flags.get('shadow_warnings', 'default') == 'default')) )
       if (  (___jln_c_flags.get('shadow_warnings', 'default') == 'off') )
         jln_c_c_flags += ['-Wno-shadow', ]
@@ -566,30 +536,11 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         endif
       endif
     endif
-    if (  not ( (___jln_c_flags.get('elide_type', 'default') == 'default')) )
-      if (  (___jln_c_flags.get('elide_type', 'default') == 'on') )
-        if (  ( (___jln_c_compiler_id == 'gcc') and not ( ___jln_c_compiler_version.version_compare('<8.0') ) ) )
-        endif
-      else
-        if (  ( ( (___jln_c_compiler_id == 'gcc') and not ( ___jln_c_compiler_version.version_compare('<8.0') ) ) or ( (___jln_c_compiler_id == 'clang') and not ( ___jln_c_compiler_version.version_compare('<3.4') ) ) ) )
-        endif
-      endif
-    endif
     if (  not ( (___jln_c_flags.get('exceptions', 'default') == 'default')) )
       if (  (___jln_c_flags.get('exceptions', 'default') == 'on') )
         jln_c_c_flags += ['-fexceptions', ]
       else
         jln_c_c_flags += ['-fno-exceptions', ]
-      endif
-    endif
-    if (  not ( (___jln_c_flags.get('rtti', 'default') == 'default')) )
-      if (  (___jln_c_flags.get('rtti', 'default') == 'on') )
-      endif
-    endif
-    if (  not ( (___jln_c_flags.get('diagnostics_show_template_tree', 'default') == 'default')) )
-      if (  ( ( (___jln_c_compiler_id == 'gcc') and not ( ___jln_c_compiler_version.version_compare('<8.0') ) ) or (___jln_c_compiler_id == 'clang') ) )
-        if (  (___jln_c_flags.get('diagnostics_show_template_tree', 'default') == 'on') )
-        endif
       endif
     endif
     if (  not ( (___jln_c_flags.get('sanitizers_extra', 'default') == 'default')) )

@@ -396,9 +396,6 @@ rule jln_c_flags ( properties * )
                           <cflags>"-Wformat-overflow=2"
                           <cflags>"-Wduplicated-branches"
                         ;
-                        if ! (  $(version) < "08.00"  )
-                        {
-                        }
                       }
                     }
                   }
@@ -423,15 +420,6 @@ rule jln_c_flags ( properties * )
               <cflags>"-Wno-switch-default"
               <cflags>"-Wno-switch-enum"
             ;
-            if ! (  $(version) < "03.09"  )
-            {
-              if ! (  $(version) < "05.00"  )
-              {
-                if ! (  $(version) < "09.00"  )
-                {
-                }
-              }
-            }
           }
         }
         if (  ( $(x_warnings) = "strict" ) || ( $(x_warnings) = "very-strict" )  )
@@ -768,15 +756,6 @@ rule jln_c_flags ( properties * )
     {
       if ( $(x_fix_compiler_error) = "on" )
       {
-        if $(toolset) = "gcc"
-        {
-          if ! (  $(version) < "04.07"  )
-          {
-            if ! (  $(version) < "07.01"  )
-            {
-            }
-          }
-        }
         flags +=
           <cflags>"-Werror=write-strings"
         ;
@@ -1304,30 +1283,6 @@ rule jln_c_flags ( properties * )
         }
       }
     }
-    if ( $(x_stl_debug) != "default" )
-    {
-      if ! (  ( $(x_stl_debug) = "off" )  )
-      {
-        if ( $(x_stl_debug) = "assert-as-exception" )
-        {
-        }
-        if (  ( $(x_stl_debug) = "allow-broken-abi" ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
-        {
-          if $(toolset) = "clang"
-          {
-            if (  ! (  $(version) < "08.00"  ) || ( $(x_stl_debug) = "allow-broken-abi-and-bugs" )  )
-            {
-            }
-          }
-        }
-        if ( $(x_pedantic) != "default" )
-        {
-          if ! (  ( $(x_pedantic) = "off" )  )
-          {
-          }
-        }
-      }
-    }
     if ( $(x_shadow_warnings) != "default" )
     {
       if ( $(x_shadow_warnings) = "off" )
@@ -1391,21 +1346,6 @@ rule jln_c_flags ( properties * )
         }
       }
     }
-    if ( $(x_elide_type) != "default" )
-    {
-      if ( $(x_elide_type) = "on" )
-      {
-        if (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  )
-        {
-        }
-      }
-      else
-      {
-        if (  (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "03.04"  )  )  )
-        {
-        }
-      }
-    }
     if ( $(x_exceptions) != "default" )
     {
       if ( $(x_exceptions) = "on" )
@@ -1419,21 +1359,6 @@ rule jln_c_flags ( properties * )
         flags +=
           <cflags>"-fno-exceptions"
         ;
-      }
-    }
-    if ( $(x_rtti) != "default" )
-    {
-      if ( $(x_rtti) = "on" )
-      {
-      }
-    }
-    if ( $(x_diagnostics_show_template_tree) != "default" )
-    {
-      if (  (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  ) || $(toolset) = "clang"  )
-      {
-        if ( $(x_diagnostics_show_template_tree) = "on" )
-        {
-        }
       }
     }
     if ( $(x_sanitizers_extra) != "default" )

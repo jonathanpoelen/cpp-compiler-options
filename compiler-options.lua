@@ -42,18 +42,46 @@ function printAST(ast, prefix)
 end
 ]]
 
+
+function has_value(t)
+  for k in pairs(t) do
+    return true
+  end
+  return false
+end
+
+function has_data(x)
+  return has_value(x._t) or (x._else and has_value(x._else))
+end
+
+function ramify(x)
+  if x._if then
+    if not has_data(x) then
+      x = {}
+    end
+  else
+    for k,y in pairs(x) do
+      if y._if and not has_data(y) then
+        x[k] = nil
+      end
+    end
+  end
+  return x
+end
+
 local if_mt = {
   __call = function(_, x)
     assert(not _._t, '`_t` is not nil')
-    if #x == 1 then
-      x = x[1]
-    end
-    _._t = x
+
+    _._t = ramify(x)
     return _
   end,
   __div = function(_, x)
     local subelse = _._subelse or _
     assert(subelse._if and not subelse._else)
+
+    x = x and ramify(x)
+
     _._subelse = x
     subelse._else = x
     return _

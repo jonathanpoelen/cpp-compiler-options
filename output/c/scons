@@ -222,13 +222,9 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
                     if not ( verless(7, 0) ) :
                       if not ( verless(7, 1) ) :
                         flags += ('-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', )
-                        if not ( verless(8, 0) ) :
         else:
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
             flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', )
-            if not ( verless(3, 9) ) :
-              if not ( verless(5, 0) ) :
-                if not ( verless(9, 0) ) :
         if ( options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' or options.get('warnings', _jln_c_default_flags['warnings']) == 'very_strict' ) :
           flags += ('-Wconversion', )
           if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
@@ -338,9 +334,6 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
               flags += ('-fdiagnostics-print-source-range-info', )
     if not ( options.get('fix_compiler_error', _jln_c_default_flags['fix_compiler_error']) == 'default') :
       if options.get('fix_compiler_error', _jln_c_default_flags['fix_compiler_error']) == 'on' :
-        if compiler == 'gcc' :
-          if not ( verless(4, 7) ) :
-            if not ( verless(7, 1) ) :
         flags += ('-Werror=write-strings', )
       else:
         if ( compiler == 'clang' or compiler == 'clang-cl' ) :
@@ -531,14 +524,6 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         else:
           if options.get('pie', _jln_c_default_flags['pie']) == 'pic' :
             flags += ('-fPIC', )
-    if not ( options.get('stl_debug', _jln_c_default_flags['stl_debug']) == 'default') :
-      if not ( options.get('stl_debug', _jln_c_default_flags['stl_debug']) == 'off' ) :
-        if options.get('stl_debug', _jln_c_default_flags['stl_debug']) == 'assert_as_exception' :
-        if ( options.get('stl_debug', _jln_c_default_flags['stl_debug']) == 'allow_broken_abi' or options.get('stl_debug', _jln_c_default_flags['stl_debug']) == 'allow_broken_abi_and_bugs' ) :
-          if compiler == 'clang' :
-            if ( not ( verless(8, 0) ) or options.get('stl_debug', _jln_c_default_flags['stl_debug']) == 'allow_broken_abi_and_bugs' ) :
-        if not ( options.get('pedantic', _jln_c_default_flags['pedantic']) == 'default') :
-          if not ( options.get('pedantic', _jln_c_default_flags['pedantic']) == 'off' ) :
     if not ( options.get('shadow_warnings', _jln_c_default_flags['shadow_warnings']) == 'default') :
       if options.get('shadow_warnings', _jln_c_default_flags['shadow_warnings']) == 'off' :
         flags += ('-Wno-shadow', )
@@ -560,21 +545,11 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
               else:
                 if options.get('shadow_warnings', _jln_c_default_flags['shadow_warnings']) == 'compatible_local' :
                   flags += ('-Wshadow=compatible-local', )
-    if not ( options.get('elide_type', _jln_c_default_flags['elide_type']) == 'default') :
-      if options.get('elide_type', _jln_c_default_flags['elide_type']) == 'on' :
-        if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
-      else:
-        if ( ( compiler == 'gcc' and not ( verless(8, 0) ) ) or ( compiler == 'clang' and not ( verless(3, 4) ) ) ) :
     if not ( options.get('exceptions', _jln_c_default_flags['exceptions']) == 'default') :
       if options.get('exceptions', _jln_c_default_flags['exceptions']) == 'on' :
         flags += ('-fexceptions', )
       else:
         flags += ('-fno-exceptions', )
-    if not ( options.get('rtti', _jln_c_default_flags['rtti']) == 'default') :
-      if options.get('rtti', _jln_c_default_flags['rtti']) == 'on' :
-    if not ( options.get('diagnostics_show_template_tree', _jln_c_default_flags['diagnostics_show_template_tree']) == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(8, 0) ) ) or compiler == 'clang' ) :
-        if options.get('diagnostics_show_template_tree', _jln_c_default_flags['diagnostics_show_template_tree']) == 'on' :
     if not ( options.get('sanitizers_extra', _jln_c_default_flags['sanitizers_extra']) == 'default') :
       if options.get('sanitizers_extra', _jln_c_default_flags['sanitizers_extra']) == 'thread' :
         flags += ('-fsanitize=thread', )
