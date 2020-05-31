@@ -4,6 +4,7 @@
 -Walloca
 -Walloc-zero
 -Warray-bounds=2
+-Wcast-align
 -Wcast-align=strict
 -Wcast-qual
 -Wclass-memaccess

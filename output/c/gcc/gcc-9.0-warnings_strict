@@ -4,6 +4,7 @@
 -Walloc-zero
 -Warray-bounds=2
 -Wbad-function-cast
+-Wcast-align
 -Wcast-align=strict
 -Wcast-qual
 -Wconversion

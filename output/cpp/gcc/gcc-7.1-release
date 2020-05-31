@@ -4,3 +4,4 @@
 -march=native
 -mtune=native
 -O2
+-Wl,-01

@@ -2,7 +2,7 @@
 -Waligned-new
 -Wall
 -Warray-bounds=2
--Wcast-align=strict
+-Wcast-align
 -Wcast-qual
 -Wconditionally-supported
 -Wconversion

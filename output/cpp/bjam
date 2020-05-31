@@ -337,7 +337,7 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>"-Wall"
             <cxxflags>"-Wextra"
-            <cxxflags>"-Wcast-align=strict"
+            <cxxflags>"-Wcast-align"
             <cxxflags>"-Wcast-qual"
             <cxxflags>"-Wdisabled-optimization"
             <cxxflags>"-Wfloat-equal"
@@ -1048,6 +1048,7 @@ rule jln_flags ( properties * )
         {
           flags +=
             <cxxflags>"-DNDEBUG"
+            <linkflags>"-Wl,-01"
           ;
           if ( $(x_optimization) = "size" )
           {

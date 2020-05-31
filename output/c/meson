@@ -60,7 +60,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         jln_c_c_flags += ['-w', ]
       else
         if (  (___jln_c_compiler_id == 'gcc') )
-          jln_c_c_flags += ['-Wall', '-Wextra', '-Wcast-align=strict', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
+          jln_c_c_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
           if (  not ( ___jln_c_compiler_version.version_compare('<4.7') ) )
             jln_c_c_flags += ['-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', ]
             if (  not ( ___jln_c_compiler_version.version_compare('<4.8') ) )
@@ -360,6 +360,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           jln_c_link_flags += ['-Og', ]
         else
           jln_c_c_flags += ['-DNDEBUG', ]
+          jln_c_link_flags += ['-Wl,-01', ]
           if (  (___jln_c_flags.get('optimization', 'default') == 'size') )
             jln_c_c_flags += ['-Os', ]
             jln_c_link_flags += ['-Os', ]

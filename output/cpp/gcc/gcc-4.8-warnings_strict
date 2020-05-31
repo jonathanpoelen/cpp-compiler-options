@@ -1,6 +1,6 @@
 -pedantic
 -Wall
--Wcast-align=strict
+-Wcast-align
 -Wcast-qual
 -Wconversion
 -Wdisabled-optimization

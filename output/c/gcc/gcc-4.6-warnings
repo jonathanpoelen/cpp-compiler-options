@@ -1,7 +1,7 @@
 -pedantic
 -Wall
 -Wbad-function-cast
--Wcast-align=strict
+-Wcast-align
 -Wcast-qual
 -Wdisabled-optimization
 -Wextra

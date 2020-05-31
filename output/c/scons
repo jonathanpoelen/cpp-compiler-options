@@ -209,7 +209,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         flags += ('-w', )
       else:
         if compiler == 'gcc' :
-          flags += ('-Wall', '-Wextra', '-Wcast-align=strict', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
+          flags += ('-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
           if not ( verless(4, 7) ) :
             flags += ('-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', )
             if not ( verless(4, 8) ) :
@@ -419,6 +419,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           linkflags += ('-Og', )
         else:
           flags += ('-DNDEBUG', )
+          linkflags += ('-Wl,-01', )
           if options.get('optimization', _jln_c_default_flags['optimization']) == 'size' :
             flags += ('-Os', )
             linkflags += ('-Os', )
