@@ -552,6 +552,7 @@ Or(gcc, clang) {
     lvl'0' { fl'-O0' } /
     lvl'g' { fl'-Og' } / {
       flag'-DNDEBUG',
+      link'-Wl,-01',
       lvl'size' { fl'-Os' } /
       lvl'fast' { fl'-Ofast' } /
       lvl'1' { fl'-O1' } /
