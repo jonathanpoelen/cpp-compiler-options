@@ -423,7 +423,7 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
         jln_buildoptions = jln_buildoptions .. " -w"
       else
         if compiler == "gcc" then
-          jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align=strict -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat=2 -Wmissing-include-dirs -Wpacked -Wredundant-decls -Wundef -Wunused-macros -Winvalid-pch -Wpointer-arith -Wbad-function-cast -Winit-self -Wjump-misses-init -Wnested-externs -Wold-style-definition -Wstrict-prototypes -Wwrite-strings"
+          jln_buildoptions = jln_buildoptions .. " -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wfloat-equal -Wformat-security -Wformat=2 -Wmissing-include-dirs -Wpacked -Wredundant-decls -Wundef -Wunused-macros -Winvalid-pch -Wpointer-arith -Wbad-function-cast -Winit-self -Wjump-misses-init -Wnested-externs -Wold-style-definition -Wstrict-prototypes -Wwrite-strings"
           if not ( compversion < 407 ) then
             jln_buildoptions = jln_buildoptions .. " -Wsuggest-attribute=noreturn -Wlogical-op -Wvector-operation-performance -Wdouble-promotion -Wtrampolines"
             if not ( compversion < 408 ) then
@@ -723,6 +723,7 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
           jln_linkoptions = jln_linkoptions .. " -Og"
         else
           jln_buildoptions = jln_buildoptions .. " -DNDEBUG"
+          jln_linkoptions = jln_linkoptions .. " -Wl,-01"
           if values["jln-optimization"] == "size" then
             jln_buildoptions = jln_buildoptions .. " -Os"
             jln_linkoptions = jln_linkoptions .. " -Os"
