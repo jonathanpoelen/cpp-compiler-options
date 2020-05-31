@@ -212,7 +212,7 @@ Or(gcc, clang_like) {
       gcc {
         flag'-Wall',
         flag'-Wextra',
-        flag'-Wcast-align=strict',
+        flag'-Wcast-align',
         flag'-Wcast-qual',
         flag'-Wdisabled-optimization',
         flag'-Wfloat-equal',
