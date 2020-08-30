@@ -3,7 +3,12 @@
 #  include(cpp.cmake)
 #  
 #  # init default values
-#  # jln_init_flags([<jln-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on])
+#  # jln_init_flags(
+#  #     [jln-option> <default_value>]...
+#  #     [AUTO_PROFILE on]
+#  #     [VERBOSE on]
+#  #     [BUILD_TYPE type [jln-option> <default_value>]...]...
+#  # )
 #  # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
 #  # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 #  jln_init_flags(
@@ -13,11 +18,22 @@
 #  )
 #  
 #  
-#  # jln_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln-option> <value>]... [DISABLE_OTHERS on|off] [BUILD_TYPE type])
+#  # jln_target_interface(
+#  #     <libname> {INTERFACE|PUBLIC|PRIVATE}
+#  #     [<jln-option> <value>]...
+#  #     [DISABLE_OTHERS {on|off}]
+#  #     [BUILD_TYPE type [jln-option> <value>]...]...
+#  # )
 #  jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to "very_strict"
 #  
 #  
-#  # jln_flags(CXX_VAR <out-variable> LINK_VAR <out-variable> [<jln-option> <value>]... [DISABLE_OTHERS on|off])
+#  # jln_flags(
+#  #     CXX_VAR <out-variable>
+#  #     LINK_VAR <out-variable>
+#  #     [<jln-option> <value>]...
+#  #     [DISABLE_OTHERS {on|off}]
+#  #     [BUILD_TYPE type [jln-option> <value>]...]...
+#  # )
 #  jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS WARNINGS very_strict)
 #  
 #  target_link_libraries(mytarget2 INTERFACE ${LINK_FLAGS})
@@ -389,7 +405,12 @@ set(JLN_C_IS_INITIALIZED 0 CACHE BOOL "private" FORCE)
 
 
 # init default values
-# jln_c_init_flags([<jln_c-option> <default_value>]... [AUTO_PROFILE on] [VERBOSE on] [BUILD_TYPE type conditioned-options])
+# jln_c_init_flags(
+#     [jln_c-option> <default_value>]...
+#     [AUTO_PROFILE on]
+#     [VERBOSE on]
+#     [BUILD_TYPE type [jln_c-option> <default_value>]...]...
+# )
 # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
 # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 # Example:
@@ -777,7 +798,12 @@ elseif(CMAKE_LINKER MATCHES "lld-link")
   set(JLN_LLD_LINK_C_LINKER 1)
 endif()
     
-# jln_c_target_interface(<libname> {INTERFACE|PUBLIC|PRIVATE} [<jln_c-option> <value>]... [DISABLE_OTHERS on|off] [BUILD_TYPE type])
+# jln_c_target_interface(
+#     <libname> {INTERFACE|PUBLIC|PRIVATE}
+#     [<jln_c-option> <value>]...
+#     [DISABLE_OTHERS {on|off}]
+#     [BUILD_TYPE type [jln_c-option> <value>]...]...
+# )
 # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 function(jln_c_target_interface name type)
   jln_c_flags(C_VAR cxx LINK_VAR link ${ARGN})
@@ -786,7 +812,13 @@ function(jln_c_target_interface name type)
   target_compile_options(${name} ${type} ${cxx})
 endfunction()
 
-# jln_c_flags(C_VAR <out-variable> LINK_VAR <out-variable> [<jln_c-option> <value>]... [DISABLE_OTHERS on|off] [BUILD_TYPE type])
+# jln_c_flags(
+#     C_VAR <out-variable>
+#     LINK_VAR <out-variable>
+#     [<jln_c-option> <value>]...
+#     [DISABLE_OTHERS {on|off}]
+#     [BUILD_TYPE type [jln_c-option> <value>]...]...
+# )
 # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 function(jln_c_flags)
   if(NOT JLN_C_IS_INITIALIZED)
