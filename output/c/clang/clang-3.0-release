@@ -1,0 +1,7 @@
+-DNDEBUG
+-flto
+-fuse-ld=lld
+-march=native
+-mtune=native
+-O2
+-Wl,-01
