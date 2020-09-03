@@ -99,10 +99,10 @@ function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_ot
      local output = os.outputof(compiler .. " --version")
      if output then
        output = output:sub(0, output:find('\n') or #output)
-       version = output:gsub(".*(%d+%.%d+%.%d+).*", "%1")
+       version = output:match("%d+%.%d+%.%d+")
      else
        printf("WARNING: `%s --version` failed", compiler)
-       output = compiler:gmatch(".*%-(%d+%.?%d*%.?%d*)$")()
+       output = compiler:match("%d+%.?%d*%.?%d*$")
        if output then
          version = output
          printf("Extract version %s of the compiler name", version)
