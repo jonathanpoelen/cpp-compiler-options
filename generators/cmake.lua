@@ -36,6 +36,8 @@ set(_JLN_DISABLE_OTHERS_VALUES on off)
     for optname,args in _:getoptions() do
       local opt = _:tocmakeoption(optname)
       _:print('set(' .. opt .. ' "${' .. opt .. '}" CACHE STRING "")')
+      _:print('set_property(CACHE ' .. opt .. ' PROPERTY STRINGS "'
+              .. table.concat(args, '" "') .. '")')
       _:print('if(NOT("${' .. opt .. '}" STREQUAL ""))')
       _:print('  string(TOLOWER "${' .. opt .. '}" ' .. opt .. ')')
       _:print('  if(NOT(("' .. table.concat(args, '" STREQUAL ' .. opt .. ') OR ("')
