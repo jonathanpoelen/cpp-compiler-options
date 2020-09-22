@@ -78,7 +78,7 @@ local if_mt = {
   end,
   __div = function(_, x)
     local subelse = _._subelse or _
-    assert(subelse._if and not subelse._else)
+    assert(subelse._if and not subelse._else, 'replace `x / y / z` with `x / { y / z }`')
 
     x = x and ramify(x)
 
@@ -301,7 +301,6 @@ Or(gcc, clang_like) {
      -- flag'-Wno-disabled-macro-expansion',
         cxx'-Wno-c++98-compat',
         cxx'-Wno-c++98-compat-pedantic',
-        flag'-Wno-mismatched-tags',
         flag'-Wno-padded',
         flag'-Wno-global-constructors',
         cxx'-Wno-weak-vtables',
@@ -335,6 +334,16 @@ Or(gcc, clang_like) {
     },
   },
 
+  opt'microsoft_abi_compatibility_warning' {
+    lvl'on' {
+      gcc(10) { cxx'-Wmismatched-tags' } /
+      clang_like { cxx'-Wmismatched-tags' }
+    } / {
+      gcc(10) { cxx'-Wno-mismatched-tags' } /
+      clang_like { cxx'-Wno-mismatched-tags' }
+    }
+  },
+
   opt'warnings_as_error' {
     lvl'on' { flag'-Werror', } /
     lvl'basic' {
@@ -354,10 +363,10 @@ Or(gcc, clang_like) {
           flag'-Werror=logical-not-parentheses',
 
           vers(3,6) {
-            flag'-Werror=delete-incomplete',
+            cxx'-Werror=delete-incomplete',
 
             vers(7) {
-              flag'-Werror=dynamic-class-memaccess',
+              cxx'-Werror=dynamic-class-memaccess',
             }
           }
         }
@@ -1074,9 +1083,12 @@ Vbase = {
     diagnostics_show_template_tree={{'off', 'on'},},
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
+    fix_compiler_error={{'off', 'on'}, 'on'},
     linker=     {{'bfd', 'gold', 'lld', 'native'},},
     lto=        {{'off', 'on', 'fat', 'thin'},},
-    fix_compiler_error={{'off', 'on'}, 'on'},
+    microsoft_abi_compatibility_warning={{'off', 'on'}, 'off'},
+    msvc_isystem={{'anglebrackets', 'include_and_caexcludepath',},},
+    msvc_isystem_with_template_from_non_external={{'off', 'on',},},
     optimization={{'0', 'g', '1', '2', '3', 'fast', 'size'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     pie=        {{'off', 'on', 'pic'},},
@@ -1092,8 +1104,6 @@ Vbase = {
     suggestions={{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on', 'basic'},},
-    msvc_isystem={{'anglebrackets', 'include_and_caexcludepath',},},
-    msvc_isystem_with_template_from_non_external={{'off', 'on',},},
     whole_program={{'off', 'on', 'strip_all'},},
   },
 
