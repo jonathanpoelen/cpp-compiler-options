@@ -1,0 +1,7 @@
+-D_GLIBCXX_ASSERTIONS
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls
+-fsanitize=address
+-fsanitize=leak
+-fsanitize=undefined
+-g
