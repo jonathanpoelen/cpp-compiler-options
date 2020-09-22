@@ -34,6 +34,7 @@
 #  fix_compiler_error = on default off
 #  linker = default bfd gold lld native
 #  lto = default off on fat thin
+#  microsoft_abi_compatibility_warning = off default on
 #  msvc_isystem = default anglebrackets include_and_caexcludepath
 #  msvc_isystem_with_template_from_non_external = default off on
 #  optimization = default 0 g 1 2 3 fast size
@@ -57,7 +58,7 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
+#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -94,6 +95,7 @@ _jln_default_flags = {
   'fix_compiler_error': 'on',
   'linker': 'default',
   'lto': 'default',
+  'microsoft_abi_compatibility_warning': 'off',
   'msvc_isystem': 'default',
   'msvc_isystem_with_template_from_non_external': 'default',
   'optimization': 'default',
@@ -127,6 +129,7 @@ _jln_var2opts = {
   'jln_fix_compiler_error': 'fix_compiler_error',
   'jln_linker': 'linker',
   'jln_lto': 'lto',
+  'jln_microsoft_abi_compatibility_warning': 'microsoft_abi_compatibility_warning',
   'jln_msvc_isystem': 'msvc_isystem',
   'jln_msvc_isystem_with_template_from_non_external': 'msvc_isystem_with_template_from_non_external',
   'jln_optimization': 'optimization',
@@ -160,6 +163,7 @@ _jln_opt2vars = {
   'fix_compiler_error': 'jln_fix_compiler_error',
   'linker': 'jln_linker',
   'lto': 'jln_lto',
+  'microsoft_abi_compatibility_warning': 'jln_microsoft_abi_compatibility_warning',
   'msvc_isystem': 'jln_msvc_isystem',
   'msvc_isystem_with_template_from_non_external': 'jln_msvc_isystem_with_template_from_non_external',
   'optimization': 'jln_optimization',
@@ -209,6 +213,8 @@ def jln_add_variables(vars, default_values={}):
                  allowed_values=('default', 'bfd', 'gold', 'lld', 'native')),
     EnumVariable('jln_lto', '', default_values.get('lto', _jln_default_flags['lto']),
                  allowed_values=('default', 'off', 'on', 'fat', 'thin')),
+    EnumVariable('jln_microsoft_abi_compatibility_warning', '', default_values.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']),
+                 allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_msvc_isystem', '', default_values.get('msvc_isystem', _jln_default_flags['msvc_isystem']),
                  allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', '', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
@@ -306,7 +312,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
                           flags += ('-Wclass-memaccess', )
         else:
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-            flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', )
+            flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', )
             if not ( verless(3, 9) ) :
               flags += ('-Wno-undefined-var-template', )
               if not ( verless(5, 0) ) :
@@ -320,6 +326,19 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         else:
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
             flags += ('-Wno-conversion', '-Wno-sign-conversion', )
+    if not ( options.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']) == 'default') :
+      if options.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']) == 'on' :
+        if ( compiler == 'gcc' and not ( verless(10, 0) ) ) :
+          flags += ('-Wmismatched-tags', )
+        else:
+          if ( compiler == 'clang' or compiler == 'clang-cl' ) :
+            flags += ('-Wmismatched-tags', )
+      else:
+        if ( compiler == 'gcc' and not ( verless(10, 0) ) ) :
+          flags += ('-Wno-mismatched-tags', )
+        else:
+          if ( compiler == 'clang' or compiler == 'clang-cl' ) :
+            flags += ('-Wno-mismatched-tags', )
     if not ( options.get('warnings_as_error', _jln_default_flags['warnings_as_error']) == 'default') :
       if options.get('warnings_as_error', _jln_default_flags['warnings_as_error']) == 'on' :
         flags += ('-Werror', )
