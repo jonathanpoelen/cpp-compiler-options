@@ -51,6 +51,7 @@
 #  fix_compiler_error = on default off
 #  linker = default bfd gold lld native
 #  lto = default off on fat thin
+#  microsoft_abi_compatibility_warning = off default on
 #  msvc_isystem = default anglebrackets include_and_caexcludepath
 #  msvc_isystem_with_template_from_non_external = default off on
 #  optimization = default 0 g 1 2 3 fast size
@@ -74,7 +75,7 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
+#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -114,6 +115,7 @@ ___jln_c_flags = {
   'fix_compiler_error': ___jln_c_default_flags.get('fix_compiler_error', get_option('jln_fix_compiler_error')),
   'linker': ___jln_c_default_flags.get('linker', get_option('jln_linker')),
   'lto': ___jln_c_default_flags.get('lto', get_option('jln_lto')),
+  'microsoft_abi_compatibility_warning': ___jln_c_default_flags.get('microsoft_abi_compatibility_warning', get_option('jln_microsoft_abi_compatibility_warning')),
   'msvc_isystem': ___jln_c_default_flags.get('msvc_isystem', get_option('jln_msvc_isystem')),
   'msvc_isystem_with_template_from_non_external': ___jln_c_default_flags.get('msvc_isystem_with_template_from_non_external', get_option('jln_msvc_isystem_with_template_from_non_external')),
   'optimization': ___jln_c_default_flags.get('optimization', get_option('jln_optimization')),
@@ -177,7 +179,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           endif
         else
           if (  ( (___jln_c_compiler_id == 'clang') or (___jln_c_compiler_id == 'clang-cl') ) )
-            jln_c_c_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', ]
+            jln_c_c_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', ]
           endif
         endif
         if (  ( (___jln_c_flags.get('warnings', 'default') == 'strict') or (___jln_c_flags.get('warnings', 'default') == 'very_strict') ) )
@@ -205,12 +207,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
               jln_c_c_flags += ['-Werror=array-bounds', '-Werror=division-by-zero', ]
               if (  not ( ___jln_c_compiler_version.version_compare('<3.4') ) )
                 jln_c_c_flags += ['-Werror=logical-not-parentheses', ]
-                if (  not ( ___jln_c_compiler_version.version_compare('<3.6') ) )
-                  jln_c_c_flags += ['-Werror=delete-incomplete', ]
-                  if (  not ( ___jln_c_compiler_version.version_compare('<7.0') ) )
-                    jln_c_c_flags += ['-Werror=dynamic-class-memaccess', ]
-                  endif
-                endif
               endif
             endif
           endif

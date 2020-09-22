@@ -51,6 +51,7 @@
 #  fix_compiler_error = on default off
 #  linker = default bfd gold lld native
 #  lto = default off on fat thin
+#  microsoft_abi_compatibility_warning = off default on
 #  msvc_isystem = default anglebrackets include_and_caexcludepath
 #  msvc_isystem_with_template_from_non_external = default off on
 #  optimization = default 0 g 1 2 3 fast size
@@ -74,7 +75,7 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
+#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -114,6 +115,7 @@ ___jln_flags = {
   'fix_compiler_error': ___jln_default_flags.get('fix_compiler_error', get_option('jln_fix_compiler_error')),
   'linker': ___jln_default_flags.get('linker', get_option('jln_linker')),
   'lto': ___jln_default_flags.get('lto', get_option('jln_lto')),
+  'microsoft_abi_compatibility_warning': ___jln_default_flags.get('microsoft_abi_compatibility_warning', get_option('jln_microsoft_abi_compatibility_warning')),
   'msvc_isystem': ___jln_default_flags.get('msvc_isystem', get_option('jln_msvc_isystem')),
   'msvc_isystem_with_template_from_non_external': ___jln_default_flags.get('msvc_isystem_with_template_from_non_external', get_option('jln_msvc_isystem_with_template_from_non_external')),
   'optimization': ___jln_default_flags.get('optimization', get_option('jln_optimization')),
@@ -182,7 +184,7 @@ foreach ___jln_flags : ___jln_custom_flags
           endif
         else
           if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
-            jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', ]
+            jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', ]
             if (  not ( ___jln_compiler_version.version_compare('<3.9') ) )
               jln_cpp_flags += ['-Wno-undefined-var-template', ]
               if (  not ( ___jln_compiler_version.version_compare('<5.0') ) )
@@ -202,6 +204,25 @@ foreach ___jln_flags : ___jln_custom_flags
         else
           if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
             jln_cpp_flags += ['-Wno-conversion', '-Wno-sign-conversion', ]
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('microsoft_abi_compatibility_warning', 'default') == 'default')) )
+      if (  (___jln_flags.get('microsoft_abi_compatibility_warning', 'default') == 'on') )
+        if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) )
+          jln_cpp_flags += ['-Wmismatched-tags', ]
+        else
+          if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+            jln_cpp_flags += ['-Wmismatched-tags', ]
+          endif
+        endif
+      else
+        if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) )
+          jln_cpp_flags += ['-Wno-mismatched-tags', ]
+        else
+          if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+            jln_cpp_flags += ['-Wno-mismatched-tags', ]
           endif
         endif
       endif
