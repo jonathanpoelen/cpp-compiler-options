@@ -35,6 +35,7 @@ exceptions = default off on
 fix_compiler_error = on default off
 linker = default bfd gold lld native
 lto = default off on fat thin
+microsoft_abi_compatibility_warning = off default on
 msvc_isystem = default anglebrackets include_and_caexcludepath
 msvc_isystem_with_template_from_non_external = default off on
 optimization = default 0 g 1 2 3 fast size
@@ -58,7 +59,7 @@ whole_program = default off on strip_all
 
 The value `default` does nothing.
 
-If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
+If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
