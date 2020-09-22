@@ -92,7 +92,7 @@ sgen compiler | while read comp ; do
 done
 
 echo -e "\n"Duplicated and removed:
-for d in $DIR_COMP_GEN ; do
+for d in ${DIR_COMP_GEN[@]} ; do
   $LUA_BIN "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/$d/" "$OUTPUT_DIR"/$d/*/*
 done
 
