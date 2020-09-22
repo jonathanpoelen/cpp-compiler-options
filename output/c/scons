@@ -16,6 +16,7 @@ _jln_c_default_flags = {
   'fix_compiler_error': 'on',
   'linker': 'default',
   'lto': 'default',
+  'microsoft_abi_compatibility_warning': 'off',
   'msvc_isystem': 'default',
   'msvc_isystem_with_template_from_non_external': 'default',
   'optimization': 'default',
@@ -49,6 +50,7 @@ _jln_c_var2opts = {
   'jln_fix_compiler_error': 'fix_compiler_error',
   'jln_linker': 'linker',
   'jln_lto': 'lto',
+  'jln_microsoft_abi_compatibility_warning': 'microsoft_abi_compatibility_warning',
   'jln_msvc_isystem': 'msvc_isystem',
   'jln_msvc_isystem_with_template_from_non_external': 'msvc_isystem_with_template_from_non_external',
   'jln_optimization': 'optimization',
@@ -82,6 +84,7 @@ _jln_c_opt2vars = {
   'fix_compiler_error': 'jln_fix_compiler_error',
   'linker': 'jln_linker',
   'lto': 'jln_lto',
+  'microsoft_abi_compatibility_warning': 'jln_microsoft_abi_compatibility_warning',
   'msvc_isystem': 'jln_msvc_isystem',
   'msvc_isystem_with_template_from_non_external': 'jln_msvc_isystem_with_template_from_non_external',
   'optimization': 'jln_optimization',
@@ -131,6 +134,8 @@ def jln_c_add_variables(vars, default_values={}):
                  allowed_values=('default', 'bfd', 'gold', 'lld', 'native')),
     EnumVariable('jln_lto', '', default_values.get('lto', _jln_default_flags['lto']),
                  allowed_values=('default', 'off', 'on', 'fat', 'thin')),
+    EnumVariable('jln_microsoft_abi_compatibility_warning', '', default_values.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']),
+                 allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_msvc_isystem', '', default_values.get('msvc_isystem', _jln_default_flags['msvc_isystem']),
                  allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', '', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
@@ -224,7 +229,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
                         flags += ('-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', )
         else:
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-            flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-mismatched-tags', '-Wno-padded', '-Wno-global-constructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', )
+            flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', )
         if ( options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' or options.get('warnings', _jln_c_default_flags['warnings']) == 'very_strict' ) :
           flags += ('-Wconversion', )
           if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
@@ -245,10 +250,6 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
               flags += ('-Werror=array-bounds', '-Werror=division-by-zero', )
               if not ( verless(3, 4) ) :
                 flags += ('-Werror=logical-not-parentheses', )
-                if not ( verless(3, 6) ) :
-                  flags += ('-Werror=delete-incomplete', )
-                  if not ( verless(7, 0) ) :
-                    flags += ('-Werror=dynamic-class-memaccess', )
         else:
           flags += ('-Wno-error', )
     if not ( options.get('suggestions', _jln_c_default_flags['suggestions']) == 'default') :

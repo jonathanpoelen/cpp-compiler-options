@@ -19,6 +19,7 @@ feature <jln-exceptions> : _ default off on : incidental ;
 feature <jln-fix-compiler-error> : _ on default off : incidental ;
 feature <jln-linker> : _ default bfd gold lld native : propagated ;
 feature <jln-lto> : _ default off on fat thin : incidental ;
+feature <jln-microsoft-abi-compatibility-warning> : _ off default on : incidental ;
 feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external> : _ default off on : incidental ;
 feature <jln-optimization> : _ default 0 g 1 2 3 fast size : incidental ;
@@ -45,6 +46,7 @@ feature <jln-debug-incidental> : _ default off on line-tables-only gdb lldb sce 
 feature <jln-exceptions-incidental> : _ default off on : incidental ;
 feature <jln-fix-compiler-error-incidental> : _ on default off : incidental ;
 feature <jln-lto-incidental> : _ default off on fat thin : incidental ;
+feature <jln-microsoft-abi-compatibility-warning-incidental> : _ off default on : incidental ;
 feature <jln-msvc-isystem-incidental> : _ default anglebrackets include-and-caexcludepath : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external-incidental> : _ default off on : incidental ;
 feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size : incidental ;
@@ -71,6 +73,7 @@ feature <jln-exceptions-default> : default off on : incidental ;
 feature <jln-fix-compiler-error-default> : on default off : incidental ;
 feature <jln-linker-default> : default bfd gold lld native : incidental ;
 feature <jln-lto-default> : default off on fat thin : incidental ;
+feature <jln-microsoft-abi-compatibility-warning-default> : off default on : incidental ;
 feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external-default> : default off on : incidental ;
 feature <jln-optimization-default> : default 0 g 1 2 3 fast size : incidental ;
@@ -125,6 +128,7 @@ constant jln_env_exceptions : [ jln-get-env jln_exceptions : default off on ] ;
 constant jln_env_fix_compiler_error : [ jln-get-env jln_fix_compiler_error : on default off ] ;
 constant jln_env_linker : [ jln-get-env jln_linker : default bfd gold lld native ] ;
 constant jln_env_lto : [ jln-get-env jln_lto : default off on fat thin ] ;
+constant jln_env_microsoft_abi_compatibility_warning : [ jln-get-env jln_microsoft_abi_compatibility_warning : off default on ] ;
 constant jln_env_msvc_isystem : [ jln-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath ] ;
 constant jln_env_msvc_isystem_with_template_from_non_external : [ jln-get-env jln_msvc_isystem_with_template_from_non_external : default off on ] ;
 constant jln_env_optimization : [ jln-get-env jln_optimization : default 0 g 1 2 3 fast size ] ;
@@ -161,6 +165,8 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-fix-compiler-error-incidental JLN_FIX_COMPILER_ERROR_INCIDENTAL : <jln-fix-compiler-error-incidental> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-lto-incidental JLN_LTO_INCIDENTAL : <jln-lto-incidental> ;
+  toolset.flags jln-microsoft-abi-compatibility-warning JLN_MICROSOFT_ABI_COMPATIBILITY_WARNING : <jln-microsoft-abi-compatibility-warning> ;
+  toolset.flags jln-microsoft-abi-compatibility-warning-incidental JLN_MICROSOFT_ABI_COMPATIBILITY_WARNING_INCIDENTAL : <jln-microsoft-abi-compatibility-warning-incidental> ;
   toolset.flags jln-msvc-isystem JLN_MSVC_ISYSTEM : <jln-msvc-isystem> ;
   toolset.flags jln-msvc-isystem-incidental JLN_MSVC_ISYSTEM_INCIDENTAL : <jln-msvc-isystem-incidental> ;
   toolset.flags jln-msvc-isystem-with-template-from-non-external JLN_MSVC_ISYSTEM_WITH_TEMPLATE_FROM_NON_EXTERNAL : <jln-msvc-isystem-with-template-from-non-external> ;
@@ -273,6 +279,7 @@ rule jln_flags ( properties * )
       <relevant>jln-exceptions
       <relevant>jln-fix-compiler-error
       <relevant>jln-lto
+      <relevant>jln-microsoft-abi-compatibility-warning
       <relevant>jln-msvc-isystem
       <relevant>jln-msvc-isystem-with-template-from-non-external
       <relevant>jln-optimization
@@ -301,6 +308,7 @@ rule jln_flags ( properties * )
   local x_fix_compiler_error = [ jln-get-value2 $(ps) : jln-fix-compiler-error : jln-fix-compiler-error-incidental : $(jln_env_fix_compiler_error) ] ;
   local x_linker = [ jln-get-value $(ps) : jln-linker : $(jln_env_linker) ] ;
   local x_lto = [ jln-get-value2 $(ps) : jln-lto : jln-lto-incidental : $(jln_env_lto) ] ;
+  local x_microsoft_abi_compatibility_warning = [ jln-get-value2 $(ps) : jln-microsoft-abi-compatibility-warning : jln-microsoft-abi-compatibility-warning-incidental : $(jln_env_microsoft_abi_compatibility_warning) ] ;
   local x_msvc_isystem = [ jln-get-value2 $(ps) : jln-msvc-isystem : jln-msvc-isystem-incidental : $(jln_env_msvc_isystem) ] ;
   local x_msvc_isystem_with_template_from_non_external = [ jln-get-value2 $(ps) : jln-msvc-isystem-with-template-from-non-external : jln-msvc-isystem-with-template-from-non-external-incidental : $(jln_env_msvc_isystem_with_template_from_non_external) ] ;
   local x_optimization = [ jln-get-value2 $(ps) : jln-optimization : jln-optimization-incidental : $(jln_env_optimization) ] ;
@@ -428,7 +436,6 @@ rule jln_flags ( properties * )
               <cxxflags>"-Wno-newline-eof"
               <cxxflags>"-Wno-c++98-compat"
               <cxxflags>"-Wno-c++98-compat-pedantic"
-              <cxxflags>"-Wno-mismatched-tags"
               <cxxflags>"-Wno-padded"
               <cxxflags>"-Wno-global-constructors"
               <cxxflags>"-Wno-weak-vtables"
@@ -476,6 +483,45 @@ rule jln_flags ( properties * )
             flags +=
               <cxxflags>"-Wno-conversion"
               <cxxflags>"-Wno-sign-conversion"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_microsoft_abi_compatibility_warning) != "default" )
+    {
+      if ( $(x_microsoft_abi_compatibility_warning) = "on" )
+      {
+        if (  $(toolset) = "gcc" && ! (  $(version) < "10.00"  )  )
+        {
+          flags +=
+            <cxxflags>"-Wmismatched-tags"
+          ;
+        }
+        else
+        {
+          if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+          {
+            flags +=
+              <cxxflags>"-Wmismatched-tags"
+            ;
+          }
+        }
+      }
+      else
+      {
+        if (  $(toolset) = "gcc" && ! (  $(version) < "10.00"  )  )
+        {
+          flags +=
+            <cxxflags>"-Wno-mismatched-tags"
+          ;
+        }
+        else
+        {
+          if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+          {
+            flags +=
+              <cxxflags>"-Wno-mismatched-tags"
             ;
           }
         }

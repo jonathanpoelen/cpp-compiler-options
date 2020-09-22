@@ -5,7 +5,6 @@
 -Wno-documentation
 -Wno-documentation-unknown-command
 -Wno-global-constructors
--Wno-mismatched-tags
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow

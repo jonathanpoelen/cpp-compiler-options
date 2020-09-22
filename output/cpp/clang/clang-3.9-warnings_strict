@@ -8,7 +8,6 @@
 -Wno-documentation-unknown-command
 -Wno-exit-time-destructors
 -Wno-global-constructors
--Wno-mismatched-tags
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
