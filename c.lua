@@ -44,6 +44,7 @@
 --  fix_compiler_error = on default off
 --  linker = default bfd gold lld native
 --  lto = default off on fat thin
+--  microsoft_abi_compatibility_warning = off default on
 --  msvc_isystem = default anglebrackets include_and_caexcludepath
 --  msvc_isystem_with_template_from_non_external = default off on
 --  optimization = default 0 g 1 2 3 fast size
@@ -67,7 +68,7 @@
 --  
 --  The value `default` does nothing.
 --  
---  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `shadow_warnings` is `off`.
+--  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 --  
 --  - `control_flow=allow_bugs`
 --    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -113,6 +114,8 @@ _jln_c_flag_names["jln-linker"] = true
 _jln_c_flag_names["linker"] = true
 _jln_c_flag_names["jln-lto"] = true
 _jln_c_flag_names["lto"] = true
+_jln_c_flag_names["jln-microsoft-abi-compatibility-warning"] = true
+_jln_c_flag_names["microsoft_abi_compatibility_warning"] = true
 _jln_c_flag_names["jln-msvc-isystem"] = true
 _jln_c_flag_names["msvc_isystem"] = true
 _jln_c_flag_names["jln-msvc-isystem-with-template-from-non-external"] = true
@@ -180,6 +183,8 @@ function jln_c_newoptions(defaults)
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"thin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
+  newoption{trigger="jln-microsoft-abi-compatibility-warning", allowed={{"default"}, {"off"}, {"on"}}, description="microsoft_abi_compatibility_warning"}
+  if not _OPTIONS["jln-microsoft-abi-compatibility-warning"] then _OPTIONS["jln-microsoft-abi-compatibility-warning"] = (defaults["microsoft_abi_compatibility_warning"] or defaults["jln-microsoft-abi-compatibility-warning"] or "default") end
   newoption{trigger="jln-msvc-isystem", allowed={{"default"}, {"anglebrackets"}, {"include_and_caexcludepath"}}, description="msvc_isystem"}
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
   newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{"default"}, {"off"}, {"on"}}, description="msvc_isystem_with_template_from_non_external"}
@@ -356,6 +361,9 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
     name_list["jln-lto"] = true
     name_list["lto"] = true
     new_value["jln-lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"])
+    name_list["jln-microsoft-abi-compatibility-warning"] = true
+    name_list["microsoft_abi_compatibility_warning"] = true
+    new_value["jln-microsoft-abi-compatibility-warning"] = values["microsoft_abi_compatibility_warning"] or values["jln-microsoft-abi-compatibility-warning"] or (disable_others and "default" or _OPTIONS["jln-microsoft-abi-compatibility-warning"])
     name_list["jln-msvc-isystem"] = true
     name_list["msvc_isystem"] = true
     new_value["jln-msvc-isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem"])
@@ -445,7 +453,7 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
           end
         else
           if ( compiler == "clang" or compiler == "clang-cl" ) then
-            jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-documentation -Wno-documentation-unknown-command -Wno-newline-eof -Wno-mismatched-tags -Wno-padded -Wno-global-constructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum"
+            jln_buildoptions = jln_buildoptions .. " -Weverything -Wno-documentation -Wno-documentation-unknown-command -Wno-newline-eof -Wno-padded -Wno-global-constructors -Wno-covered-switch-default -Wno-switch-default -Wno-switch-enum"
           end
         end
         if ( values["jln-warnings"] == "strict" or values["jln-warnings"] == "very-strict" ) then
@@ -473,12 +481,6 @@ function jln_c_getoptions(compiler, version, values, disable_others, print_compi
               jln_buildoptions = jln_buildoptions .. " -Werror=array-bounds -Werror=division-by-zero"
               if not ( compversion < 304 ) then
                 jln_buildoptions = jln_buildoptions .. " -Werror=logical-not-parentheses"
-                if not ( compversion < 306 ) then
-                  jln_buildoptions = jln_buildoptions .. " -Werror=delete-incomplete"
-                  if not ( compversion < 700 ) then
-                    jln_buildoptions = jln_buildoptions .. " -Werror=dynamic-class-memaccess"
-                  end
-                end
               end
             end
           end
