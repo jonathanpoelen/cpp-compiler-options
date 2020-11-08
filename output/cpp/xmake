@@ -88,10 +88,10 @@ local _check_flags = function(d)
     local ref = _flag_names[k]
     if not ref then
       if not _extraopt_flag_names[k] then
-        os.raise(vformat("Unknown key: '${red}%s${reset}'", k))
+        os.raise(vformat("${color.error}Unknown key: '%s'", k))
       end
     elseif not ref[v] then
-      os.raise(vformat("Unknown value '${red}%s${reset}' for '${cyan}%s${reset}'", v, k))
+      os.raise(vformat("${color.error}Unknown value '%s' for '%s'", v, k))
     end    
   end
 end
@@ -238,7 +238,7 @@ function getoptions(values, disable_others, print_compiler)
     version = compcache[2]
     compversion = compcache[3]
     if not compiler then
-      -- printf("WARNING: unknown compiler")
+      -- wrintf("Unknown compiler")
       return {buildoptions={}, linkoptions={}}
     end
   else
@@ -250,7 +250,7 @@ function getoptions(values, disable_others, print_compiler)
     end
 
     if not compiler then
-      -- cprint("${color.red}Unknown compiler")
+      -- wprint("Unknown compiler")
       return {cxxflags={}, ldflags={}}
     end
 

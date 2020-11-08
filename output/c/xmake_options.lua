@@ -82,12 +82,12 @@ local _flag_names = {
       local ref = _flag_names[k]
       if not ref then
         if not _extraopt_flag_names[k] then
-          local msg = "unknown '" .. k .. "' jln flag name"
+          local msg = "Unknown '" .. k .. "' jln flag name"
           print(msg)
           error(msg)
         end
       elseif not ref[v] then
-        local msg = "unknown value '" .. v .. "' for '" .. k .. "'"
+        local msg = "Unknown value '" .. v .. "' for '" .. k .. "'"
         print(msg)
         error(msg)
       end    
@@ -99,7 +99,7 @@ local _flag_names = {
   local check_option = function(opt, optname)
     local value = get_config(opt)
     if not _flag_names[optname][value] then
-      os.raise(vformat("Unknown value '${red}%s${reset}' for '${cyan}%s${reset}'", value, opt))
+      os.raise(vformat("${color.error}Unknown value '%s' for '%s'", value, opt))
     end
   end
     
@@ -320,8 +320,8 @@ local _flag_names = {
            default=defaults["whole_program"] or defaults["jln-whole-program"] or "",
            after_check=function(option) check_option("jln-whole-program", "whole_program") end,
          })
-  option("jln-cc", {showmenu=true, description="Path or name of the compiler for jln function", default=""})
-  option("jln-ld", {showmenu=true, description="Path or name of the linker for jln function", default=""})
-  option("jln-cc-version", {showmenu=true, description="Force the compiler version for jln function", default=""})
+  option("jln-cc", {showmenu=true, description="Path or name of the compiler for jln functions", default=""})
+  option("jln-ld", {showmenu=true, description="Path or name of the linker for jln functions", default=""})
+  option("jln-cc-version", {showmenu=true, description="Force the compiler version for jln functions", default=""})
 end
 
