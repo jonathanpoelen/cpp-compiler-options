@@ -1230,7 +1230,7 @@ Vbase = {
 
     _._vcond_flags_cxx = ''
     _._vcond_flags_link = ''
-    _._vcond_toflags=function(_, cxx, link)
+    _._vcond_toflags = _._vcond_toflags or function(_, cxx, link)
       return cxx and link and cxx .. link or cxx or link
     end
     _._vcond_printflags=function(_)
