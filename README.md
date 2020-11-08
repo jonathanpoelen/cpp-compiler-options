@@ -263,21 +263,47 @@ include "output/cpp/premake5"
 -- Registers new command-line options and set default values
 jln_newoptions({warnings='very_strict'})
 
--- jln_getoptions(values, disable_others = nil, print_compiler = nil)
--- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
--- `= nil` indicates that the value is optional and can be nil
--- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'. Or compiler and linker with semicolon separator. ex: 'clang-cl;lld-link'
--- `version`: string. Compiler version. ex: '7', '7.2'
+    -- getoptions(values = {}, disable_others = false, print_compiler = false)
+    -- `values`: table. ex: {warnings='on'}
+    -- `values` can have 3 additional fields:
+    --  - `cxx`: compiler name (otherwise deducted from --cxx and --toolchain)
+    --  - `cxx_version` (otherwise deducted from cxx)
+    --  - `ld`: linker name
+    -- `disable_others`: boolean
+    -- `print_compiler`: boolean
+    -- return {cxxflags=table, ldflags=table}
+    -- Note: with C language, cxxflags, cxx and cxx_version become cflags, cc and cc_version
+    local options = flags.getoptions({elide_type='on'})
+    for _,opt in ipairs(options.cxxflags) do target:add('cxxflags', opt, {force=true}) end
+    for _,opt in ipairs(options.ldflags) do target:add('ldflags', opt, {force=true}) end
+
+    -- or equivalent (return also options)
+    flags.setoptions(target, {elide_type='on'})
+
+    -- return the merge of the default values and new value table
+    local values = flags.tovalues({elide_type='on'}, --[[disable_others:bool]])
+    print(values)
+
+-- jln_getoptions(values = {}, disable_others = false, print_compiler = false)
 -- `values`: table. ex: {warnings='on'}
+-- `values` can have 3 additional fields:
+--  - `cxx`: compiler name
+--  - `cxx_version` (otherwise deducted from cxx)
+--  - `ld`: linker name
 -- `disable_others`: boolean
 -- `print_compiler`: boolean
--- return {buildoptions=string, linkoptions=string}
+-- return {buildoptions=table, linkoptions=table}
+-- Note: with C language, cxx and cxx_version become cc and cc_version
 local mylib_options = jln_getoptions({elide_type='on'})
 buildoptions(mylib_options.buildoptions)
 linkoptions(mylib_options.linkoptions)
 
 -- or equivalent
 jln_setoptions({elide_type='on'})
+
+-- returns the merge of the default values and new value table
+local values = jln_tovalues({elide_type='on'}, --[[disable_others:bool]])
+print(values)
 
 -- NOTE: for C, jln_ prefix function becomes jln_c_
 ```

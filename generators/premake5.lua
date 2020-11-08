@@ -1,7 +1,3 @@
-local tostrlvl=function(lvl)
-  return lvl:gsub('_', '-')
-end
-
 return {
   -- ignore = { optimization=true, }
 
@@ -24,41 +20,63 @@ return {
 
     _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
+    local compprefix = (_.is_C and 'cc' or 'cxx')
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
+    local comp_gcc = _.is_C and "'gcc'" or "'g++'"
+    local comp_clang = _.is_C and "'clang'" or "'clang++'"
 
-    _:print('local _' .. prefixfunc .. '_flag_names = {}')
+    local extraopts = {
+      [compprefix]='Path or name of the compiler for jln function',
+      [compprefix..'_version']='Force the compiler version for jln function',
+      ['ld']='Path or name of the linker for jln function',
+    }
+
+    _:print('local _' .. prefixfunc .. '_extraopt_flag_names = {')
+    for optname,desc in pairs(extraopts) do
+      local opt = _:tostroption(optname)
+      _:print('  ["' .. opt .. '"] = true,')
+      _:print('  ["' .. optname .. '"] = true,')
+    end
+    _:print('}\n')
+
+    _:print('local _' .. prefixfunc .. '_flag_names = {')
     for optname in _:getoptions() do
       local opt = _:tostroption(optname)
-      _:print('_' .. prefixfunc .. '_flag_names["' .. opt .. '"] = true')
+      _:print('  ["' .. opt .. '"] = true,')
       if opt ~= optname then
-        _:print('_' .. prefixfunc .. '_flag_names["' .. optname .. '"] = true')
+        _:print('  ["' .. optname .. '"] = true,')
       end
     end
-
-    _:print('\nfunction ' .. prefixfunc .. '_newoptions(defaults)')
-    _:print('  if defaults then')
-    _:print('    jln_check_flag_names(defaults)')
-    _:print('  else')
-    _:print('    defaults = {}')
-    _:print('  end')
-    for optname,args in _:getoptions() do
-      local opt = _:tostroption(optname)
-      _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(args, '"}, {"') .. '"}}, description="' .. optname .. '"}')
-      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. args[1] .. '") end')
-    end
-    _:print('  newoption{trigger="' .. _.optprefix .. 'compiler", description="Path or name of the compiler"}')
-    _:print('  newoption{trigger="' .. _.optprefix .. 'compiler-version", description="Force the compiler version"}')
-    _:print('end\n')
+    _:print('}\n')
 
     _:print([[
-function ]] .. prefixfunc .. [[_check_flag_names(t)
+local _]] .. prefixfunc .. [[_check_flag_names = function(t)
   for k in pairs(t) do
-    if not _]] .. prefixfunc .. [[_flag_names[k] then
+    if not _]] .. prefixfunc .. [[_flag_names[k]
+    and not _]] .. prefixfunc .. [[_extraopt_flag_names[k] then
       error("unknown '" .. k .. "' jln flag name")
     end
   end
-end
+end]])
 
+    _:print('\nfunction ' .. prefixfunc .. '_newoptions(defaults)')
+    _:print('  if defaults then')
+    _:print('    _' .. prefixfunc .. '_check_flag_names(defaults)')
+    _:print('  else')
+    _:print('    defaults = {}')
+    _:print('  end')
+    for optname,args,default in _:getoptions() do
+      local opt = _:tostroption(optname)
+      _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(args, '"}, {"') .. '"}}, description="' .. optname .. '"}')
+      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. default .. '") end')
+    end
+    for optname,desc in pairs(extraopts) do
+      local opt = _:tostroption(optname)
+      _:print('  newoption{trigger="' .. opt .. '", description="' .. desc .. '"}')
+    end
+    _:print('end\n')
+
+    _:print([[
 -- same as ]] .. prefixfunc .. [[_getoptions
 function ]] .. prefixfunc .. [[_setoptions(compiler, version, values, disable_others, print_compiler)
   local options = ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_others, print_compiler)
@@ -67,123 +85,172 @@ function ]] .. prefixfunc .. [[_setoptions(compiler, version, values, disable_ot
   return options
 end
 
--- ]] .. prefixfunc .. [[_getoptions(values, disable_others = nil, print_compiler = nil)
--- ]] .. prefixfunc .. [[_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
--- `= nil` indicates that the value is optional and can be nil
--- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'. Or compiler and linker with semicolon separator. ex: 'clang-cl;lld-link'
--- `version`: string. Compiler version. ex: '7', '7.2'
+local _]] .. prefixfunc .. [[_compiler_by_os = {
+  windows='msvc',
+  linux=]] .. comp_gcc .. [[,
+  cygwin=]] .. comp_gcc .. [[,
+  mingw=]] .. comp_gcc .. [[,
+  bsd=]] .. comp_gcc .. [[,
+  macosx=]] .. comp_clang .. [[,
+}
+
+local _]] .. prefixfunc .. [[_default_compiler = ]] .. comp_gcc .. [[
+
+local _]] .. prefixfunc .. [[_comp_cache = {}
+
+local _get_extra = function(opt)
+  local x = _OPTIONS[opt]
+  return x ~= '' and x or nil
+end
+
+-- Returns the merge of the default values and new value table
+-- ]] .. prefixfunc .. [[_tovalues(table, disable_others = false)
 -- `values`: table. ex: {warnings='on'}
+-- `values` can have 3 additional fields:
+--  - `cxx`: compiler name (otherwise deducted from --cxx and --toolchain)
+--  - `cxx_version`: compiler version (otherwise deducted from cxx). ex: '7', '7.2'
+--  - `ld`: linker name
+function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
+  if values then
+    _]] .. prefixfunc .. [[_check_flag_names(values)
+    return {]])
+    for optname,args in _:getoptions() do
+      local opt = _:tostroption(optname)
+      local isnotsamename = (opt ~= optname)
+      _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
+              .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
+              .. 'or (disable_others and "default" or _OPTIONS["' .. opt .. '"]),')
+    end
+    for optname,desc in pairs(extraopts) do
+      local opt = _:tostroption(optname)
+      _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
+              .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
+              .. 'or (not disable_others and _get_extra("' .. opt .. '")) or nil,')
+    end
+    _:print([[}
+  else
+    return {]])
+    for optname,args,default in _:getoptions() do
+      local opt = _:tostroption(optname)
+      _:print('      ["' .. optname .. '"] = _OPTIONS["' .. opt .. '"],')
+    end
+    for optname in pairs(extraopts) do
+      local opt = _:tostroption(optname)
+      _:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
+    end
+    _:print([[}
+  end
+end
+
+-- ]] .. prefixfunc .. [[_getoptions(values = {}, disable_others = false, print_compiler = false)
+-- `values`: same as ]] .. prefixfunc .. [[_tovalue()
 -- `disable_others`: boolean
 -- `print_compiler`: boolean
--- return {buildoptions=string, linkoptions=string}
-function ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_others, print_compiler)
-  local linker
+-- return {buildoptions={}, linkoptions={}}
+function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compiler)
+  local compversion
 
-  if compiler and type(compiler) ~= 'string' then
-    values, disable_others, print_compiler, compiler, version = compiler, version, values, nil, nil
-  end
+  values = ]] .. prefixfunc .. [[_tovalues(values, disable_others)
+  local compiler = values.]] .. compprefix .. [[
+  local version = values.]] .. compprefix .. [[_version
+  local linker = values.ld or (not disable_others and _OPTIONS['ld']) or nil
 
-  if not compiler then
-    compiler = _OPTIONS[']] .. _:tostroption'compiler' .. [['] or _OPTIONS['cc'] or 'g++'
-    version = _OPTIONS[']] .. _:tostroption'compiler-version' .. [['] or nil
-  else
-    local s, new_compiler, new_linker = compiler:match'(([^;]);(.*))'
-    if s then
-      compiler = new_compiler
-      linker = new_linker
+  local cache = _]] .. prefixfunc .. [[_comp_cache
+  local original_compiler = compiler or ''
+  local compcache = cache[original_compiler]
+
+  if compcache then
+    compiler = compcache[1]
+    version = compcache[2]
+    compversion = compcache[3]
+    if not compiler then
+      -- printf("WARNING: unknown compiler")
+      return {buildoptions={}, linkoptions={}}
     end
-  end
+  else
+    cache[original_compiler] = {}
 
-  local compversion = {}
-  if not version then
-     local output = os.outputof(compiler .. " --version")
-     if output then
-       output = output:sub(0, output:find('\n') or #output)
-       version = output:match("%d+%.%d+%.%d+")
-     else
-       printf("WARNING: `%s --version` failed", compiler)
-       output = compiler:match("%d+%.?%d*%.?%d*$")
-       if output then
-         version = output
-         printf("Extract version %s of the compiler name", version)
-       end
-     end
-  end
+    if not compiler then
+      compiler = _OPTIONS[']] .. _:tostroption'compiler' .. [[']
+              or _OPTIONS['cc']
+              or _]] .. prefixfunc .. [[_compiler_by_os[os.target()]
+              or _]] .. prefixfunc .. [[_default_compiler
+      version = _OPTIONS[']] .. _:tostroption'compiler-version' .. [['] or nil
+    end
 
-  compiler = (compiler:find('clang-cl', 1, true) and 'clang-cl') or
-             (compiler:find('clang', 1, true) and 'clang') or
-             ((compiler:find('msvc', 1, true) or
-               compiler:find('MSVC', 1, true) or
-               compiler:find('^vs%d') or
-               compiler:find('^VS%d')
-              ) and 'msvc') or
-             ((compiler:find('g++', 1, true) or
-               compiler:find('gcc', 1, true) or
-               compiler:find('GCC', 1, true) or
-               compiler:find('MinGW', 1, true) or
-               compiler:find('mingw', 1, true)
-              ) and 'gcc') or
-             nil
+    local compiler_path = compiler
+    if compiler then
+      compiler = (compiler:find('clang-cl', 1, true) and 'clang-cl') or
+                 (compiler:find('clang', 1, true) and 'clang') or
+                 ((compiler:find('msvc', 1, true) or
+                   compiler:find('MSVC', 1, true) or
+                   compiler:find('^vs%d') or
+                   compiler:find('^VS%d')
+                  ) and 'msvc') or
+                 ((compiler:find('g++', 1, true) or
+                   compiler:find('gcc', 1, true) or
+                   compiler:find('GCC', 1, true) or
+                   compiler:find('MinGW', 1, true) or
+                   compiler:find('mingw', 1, true)
+                  ) and 'gcc') or
+                 nil
+    end
 
-  if not compiler then
-    printf("WARNING: unknown compiler")
-    return {buildoptions='', linkoptions=''}
-  end
+    if not compiler then
+      -- printf("WARNING: unknown compiler")
+      return {buildoptions={}, linkoptions={}}
+    end
 
-  if not version then
-    version = tostring(tonumber(os.date("%y")) - (compiler == 'clang' and 14 or 12))
+    if not version then
+      local output = os.outputof(compiler_path .. " --version")
+      if output then
+        output = output:sub(0, output:find('\n') or #output)
+        version = output:match("%d+%.%d+%.%d+")
+      else
+        printf("WARNING: `%s --version` failed", compiler)
+        output = original_compiler:match("%d+%.?%d*%.?%d*$")
+        if output then
+          version = output
+          printf("Extract version %s of the compiler name", version)
+        end
+      end
+
+      if not version then
+        version = tostring(tonumber(os.date("%y")) - (compiler:sub(0, 5) == 'clang' and 14 or 12))
+      end
+    end
+
+    compversion = {}
+    for i in version:gmatch("%d+") do
+      compversion[#compversion+1] = tonumber(i)
+    end
+    if not compversion[1] then
+      printf("WARNING: wrong version format")
+      return {buildoptions={}, linkoptions={}}
+    end
+    compversion = compversion[1] * 100 + (compversion[2] or 0)
+
+    cache[original_compiler] = {compiler, version, compversion}
   end
 
   if print_compiler then
-    printf("getoptions: compiler: %s, version: %s", compiler, version)
+    printf("]] .. prefixfunc .. [[_getoptions: compiler: %s, version: %s", compiler, version)
   end
 
-  for i in version:gmatch("%d+") do
-    compversion[#compversion+1] = tonumber(i)
-  end
-  if not compversion[1] then
-    printf("WARNING: wrong version format")
-    return {buildoptions='', linkoptions=''}
-  end
-  compversion = compversion[1] * 100 + (compversion[2] or 0)
-
-  if values then
-    jln_check_flag_names(values)
-    local name_list = {}
-    local new_value = {}]])
-    for optname,args in _:getoptions() do
-      local opt = _:tostroption(optname)
-      _:print('    name_list["' .. opt .. '"] = true')
-      local isnotsamename = (opt ~= optname)
-      if isnotsamename then
-        _:print('    name_list["' .. optname .. '"] = true')
-      end
-      _:print('    new_value["' .. opt .. '"] = values["' .. optname .. '"] ' .. (isnotsamename and 'or values["' .. opt .. '"] ' or '') .. 'or (disable_others and "default" or _OPTIONS["' .. opt .. '"])')
-    end
-    _:print([[
-    values = new_value
-  else
-    values = _OPTIONS
-  end
-
-  local jln_buildoptions, jln_linkoptions = '', ''
+  local jln_buildoptions, jln_linkoptions = {}, {}
 ]])
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return 'values["' .. _:tostroption(optname) .. '"] == "' .. tostrlvl(lvl) .. '"' end,
+  _vcond_lvl=function(_, lvl, optname) return 'values["' .. optname .. '"] == "' .. lvl .. '"' end,
   _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
   _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
   _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 
-  cxx=function(_, x) return ' ' .. x end,
-  link=function(_, x) return ' ' .. x end,
-
-  _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. '  jln_buildoptions = jln_buildoptions .. "' .. cxx .. '"\n' or '')
-        .. (#links ~= 0                  and _.indent .. '  jln_linkoptions = jln_linkoptions .. "' .. links .. '"\n' or '')
-  end,
+  cxx=function(_, x) return _.indent .. 'jln_buildoptions[#jln_buildoptions+1] = "' .. x .. '"\n' end,
+  link=function(_, x) return _.indent .. 'jln_linkoptions[#jln_linkoptions+1] = "' .. x .. '"\n' end,
 
   stop=function(_)
-    return _:get_output() .. '  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\n'
+    _:print('  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\n')
+    return _:get_output()
   end,
 }

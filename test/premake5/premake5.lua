@@ -10,5 +10,7 @@ project "HelloWorld"
 
    jln_newoptions({warnings='on'})
    options=jln_setoptions({sanitizers=true})
-   printf("cxx=%s\nlink=%s", options.buildoptions, options.linkoptions)
+   printf("cxx:\n%s\nlink:\n%s",
+          table.concat(options.buildoptions, '\n'),
+          table.concat(options.linkoptions, '\n'))
    files { "test.cpp" }
