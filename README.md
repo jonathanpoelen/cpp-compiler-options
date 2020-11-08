@@ -1,6 +1,6 @@
 Compilation options for different versions of Clang, GCC and MSVC. Provided a generator and different file formats (build system and compiler).
 
-The `output` directory contains files for `cmake`, `premake5`, `bjam`/`b2`, `meson`, `scons` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
+The `output` directory contains files for `cmake`, `xmake`, `premake5`, `meson`, bjam`/`b2`, `scons` and command-line options for `gcc/g++`, `clang/clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
 Each build system also has a branch with only the files it needs.
 
@@ -29,34 +29,37 @@ main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninit
 
 $ `cmake -DJLN_SANITIZERS=on`
 
+$ `xmake f --jln-sanitizers=on`
+
 $ `premake5 --jln-sanitizers=on`
 
-$ `bjam -s jln_sanitizers=on`
-
 $ `meson -Djln_sanitizers=on`
+
+$ `bjam -s jln_sanitizers=on`
 
 $ `scons jln_sanitizers=on`
 
 (`jln` is a parameterizable prefix: `./compiler-options.lua generators/cmake.lua [prefix]`)
 
-<!-- summary -->
+<!-- toc -->
 1. [Options](#options)
     1. [Recommended options](#recommended-options)
 2. [Use generated files](#use-generated-files)
     1. [CMake](#cmake)
-    2. [Premake5](#premake5)
+    2. [xmake](#xmake)
     3. [Meson](#meson)
-    4. [SCons](#scons)
+    4. [Premake5](#premake5)
     5. [Bjam/B2 (Boost.Build)](#bjamb2-boostbuild)
-    6. [Bash alias for gcc/clang](#bash-alias-for-gccclang)
+    6. [SCons](#scons)
+    7. [Bash alias for gcc/clang](#bash-alias-for-gccclang)
 3. [Generators](#generators)
     1. [generators/compiler.lua](#generatorscompilerlua)
     2. [generators/list_options.lua](#generatorslist_optionslua)
-    3. [generators/{bjam,cmake,meson,premake5,scons}.lua](#generatorsbjamcmakemesonpremake5sconslua)
+    3. [generators/{cmake,xmake,meson,premake5,bjam,scons}.lua](#generatorscmakexmakemesonpremake5bjamsconslua)
 4. [How to add options?](#how-to-add-options)
     1. [Update the options tree](#update-the-options-tree)
         1. [if_mt](#if_mt)
-<!-- /summary -->
+<!-- /toc -->
 
 # Options
 
@@ -167,39 +170,53 @@ target_compile_options(mytarget2 INTERFACE ${CXX_FLAGS})
 ```
 
 
-## Premake5
+## xmake
+
+Copy `output/cpp/xmake_options.lua` to `myproj/cpp/xmake.lua` and `output/cpp/xmake` to `myproj/cpp/flags.lua`.
 
 ```lua
--- launch example: premake5 --jln-sanitizers=on
+-- launch example: xmake f --jln-sanitizers=on
 
-include "output/cpp/premake5"
+includes'cpp'
 
 -- Registers new command-line options and set default values
-jln_newoptions({warnings='very_strict'})
+jln_cxx_init_options({warnings='very_strict'})
 
--- jln_getoptions(values, disable_others = nil, print_compiler = nil)
--- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
--- `= nil` indicates that the value is optional and can be nil
--- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'. Or compiler and linker with semicolon separator. ex: 'clang-cl;lld-link'
--- `version`: string. Compiler version. ex: '7', '7.2'
--- `values`: table. ex: {warnings='on'}
--- `disable_others`: boolean
--- `print_compiler`: boolean
--- return {buildoptions=string, linkoptions=string}
-local mylib_options = jln_getoptions({elide_type='on'})
-buildoptions(mylib_options.buildoptions)
-linkoptions(mylib_options.linkoptions)
+target("hello")
+  set_kind("binary")
+  on_load(function(target)
+    import'cpp.flags'
+    -- getoptions(values = {}, disable_others = false, print_compiler = false)
+    -- `values`: table. ex: {warnings='on'}
+    -- `values` can have 3 additional fields:
+    --  - `cxx`: compiler name (otherwise deducted from --cxx and --toolchain)
+    --  - `cxx_version` (otherwise deducted from cxx)
+    --  - `ld`: linker name
+    -- `disable_others`: boolean
+    -- `print_compiler`: boolean
+    -- return {cxxflags=table, ldflags=table}
+    -- Note: with C language, cxxflags, cxx and cxx_version become cflags, cc and cc_version
+    local options = flags.getoptions({elide_type='on'})
+    for _,opt in ipairs(options.cxxflags) do target:add('cxxflags', opt, {force=true}) end
+    for _,opt in ipairs(options.ldflags) do target:add('ldflags', opt, {force=true}) end
 
--- or equivalent
-jln_setoptions({elide_type='on'})
+    -- or equivalent (return also options)
+    flags.setoptions(target, {elide_type='on'})
 
--- NOTE: for C, jln_ prefix function becomes jln_c_
+    -- return the merge of the default values and new value table
+    local values = flags.tovalues({elide_type='on'}, --[[disable_others:bool]])
+    print(values)
+  end)
+
+  add_files("src/*.cpp")
+
+-- NOTE: for C, jln_ and jln_cxx_ prefix function become jln_c_
 ```
 
 
 ## Meson
 
-Copy `meson_options.txt` and rename `output/cpp/meson` to `meson_jln_flags/meson.build`.
+Copy `output/cpp/meson_options.txt` and rename `output/cpp/meson` to `meson_jln_flags/meson.build`.
 
 ```meson
 # launch example: meson -Djln_sanitizers=on
@@ -236,24 +253,35 @@ executable('demo', 'main.cpp', link_args: jln_link_flags, cpp_args: jln_cpp_flag
 ```
 
 
-## SCons
+## Premake5
 
-```py
-# launch example: scons jln_sanitizers=on
+```lua
+-- launch example: premake5 --jln-sanitizers=on
 
-from jln_options import *
+include "output/cpp/premake5"
 
-# jln_set_global_flags(options, compiler=None, version=None, linker=None)
-# version is a string. Ex: '7.2' or '5'
-jln_set_global_flags({'rtti': 'off'})
+-- Registers new command-line options and set default values
+jln_newoptions({warnings='very_strict'})
 
-vars = Variables(None, ARGUMENTS)
-jln_add_variables(vars, {'debug':'on'}) # default value of debug to on
+-- jln_getoptions(values, disable_others = nil, print_compiler = nil)
+-- jln_getoptions(compiler, version = nil, values = nil, disable_others = nil, print_compiler = nil)
+-- `= nil` indicates that the value is optional and can be nil
+-- `compiler`: string. ex: 'gcc', 'g++', 'clang++', 'clang'. Or compiler and linker with semicolon separator. ex: 'clang-cl;lld-link'
+-- `version`: string. Compiler version. ex: '7', '7.2'
+-- `values`: table. ex: {warnings='on'}
+-- `disable_others`: boolean
+-- `print_compiler`: boolean
+-- return {buildoptions=string, linkoptions=string}
+local mylib_options = jln_getoptions({elide_type='on'})
+buildoptions(mylib_options.buildoptions)
+linkoptions(mylib_options.linkoptions)
 
-# {flags=[...], linkflags=[...]}
-flags1 = jln_flags(vars)
-flags2 = jln_flags({'debug':'on'})
+-- or equivalent
+jln_setoptions({elide_type='on'})
+
+-- NOTE: for C, jln_ prefix function becomes jln_c_
 ```
+
 
 ## Bjam/B2 (Boost.Build)
 
@@ -273,6 +301,26 @@ project name : requirements
 exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-relro>off
 
 # NOTE: for C, jln_flags becomes jln_c_flags
+```
+
+
+## SCons
+
+```py
+# launch example: scons jln_sanitizers=on
+
+from jln_options import *
+
+# jln_set_global_flags(options, compiler=None, version=None, linker=None)
+# version is a string. Ex: '7.2' or '5'
+jln_set_global_flags({'rtti': 'off'})
+
+vars = Variables(None, ARGUMENTS)
+jln_add_variables(vars, {'debug':'on'}) # default value of debug to on
+
+# {flags=[...], linkflags=[...]}
+flags1 = jln_flags(vars)
+flags2 = jln_flags({'debug':'on'})
 ```
 
 
@@ -322,7 +370,7 @@ $ `./compiler-options.lua generators/list_options.lua [--profile] [--color]`
 
 Checks and displays options and their values.
 
-## generators/{bjam,cmake,meson,premake5,scons}.lua
+## generators/{cmake,xmake,meson,premake5,bjam,scons}.lua
 
 Generators for different build system.
 

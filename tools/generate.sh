@@ -72,7 +72,7 @@ sgen list_options
 
 for ((i=0; $i<2; ++i)) ; do
   suffix=${DIR_COMP_GEN[$i]}
-  for g in bjam cmake premake5 meson scons ; do
+  for g in bjam cmake premake5 meson scons xmake ; do
     gen "${OPT_COMP_GEN[$i]}" $suffix/$g $g jln-
   done
 done

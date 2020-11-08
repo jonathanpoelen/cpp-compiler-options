@@ -1,7 +1,7 @@
 #!/usr/bin/env lua
 
 -- mkdir w
--- for d in bjam cmake meson premake5 scons ; do git worktree add w/$d ; done
+-- for d in bjam cmake meson premake5 scons xmake ; do git worktree add w/$d ; done
 
 function readfile(filename)
   local f,e = io.open(filename)
@@ -39,6 +39,10 @@ for _,t in ipairs({
   }},
   {'premake5', 'Premake5', '--', 'c.lua', 'cpp.lua', },
   {'scons', 'SCons', '#', 'c/SConscript', 'cpp/SConscript', },
+  {'xmake', 'xmake', '--', 'c/flags.lua', 'cpp/flags.lua', {
+    ['output/c/xmake_options.lua'] = 'w/xmake/c/xmake.lua',
+    ['output/cpp/xmake_options.lua'] = 'w/xmake/cpp/xmake.lua',
+  }},
 }) do
   start_build = readme:find('## ' .. t[2], end_options, true)
   start_build = readme:find('```', start_build, true)

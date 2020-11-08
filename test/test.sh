@@ -95,6 +95,20 @@ if [ -z "$1" ] || [ "$1" = bjam ]; then
   test_success 'bjam -n --build-dir="$TMPDIR"/compgenbjam jln-lto=on | grep lto'
 fi
 
+if [ -z "$1" ] || [ "$1" = xmake ]; then
+  mkdir -p "$TMPDIR"/compgenxmake/cpp
+  cp "$d/xmake"/* "$TMPDIR"/compgenxmake/
+  cp "$d"/../output/cpp/xmake_options.lua "$TMPDIR"/compgenxmake/cpp/xmake.lua
+  cp "$d"/../output/cpp/xmake "$TMPDIR"/compgenxmake/cpp/flags.lua
+  cd "$TMPDIR"/compgenxmake
+  xmake f -c --toolchain=gcc --cxx=g++ >/dev/null
+  test_success 'xmake b -rvD --dry-run | grep -Em1 Wall'
+  test_success 'xmake b -rvD --dry-run | grep -Em1 Wconversion'
+  test_failure 'xmake b -rvD --dry-run | grep -Em1 fsanitize'
+  test_failure 'xmake f --jln-warnings=off >/dev/null ; xmake b -rvD --dry-run | grep -Em1 Wall'
+  test_siccess 'xmake f --jln-sanitizers=on >/dev/null ; xmake b -rvD --dry-run | grep -Em1 fsanitize'
+fi
+
 if [ -z "$1" ] || [ "$1" = meson ]; then
   mkdir -p "$TMPDIR"/compgenmeson
   cp "$d"/../output/cpp/meson_options.txt "$TMPDIR"/compgenmeson
