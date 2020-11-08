@@ -266,9 +266,9 @@ function jln_c_newoptions(defaults)
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
   newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}, {"strip_all"}}, description="whole_program"}
   if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
-  newoption{trigger="jln-cc", description="Path or name of the compiler for jln function"}
-  newoption{trigger="jln-ld", description="Path or name of the linker for jln function"}
-  newoption{trigger="jln-cc-version", description="Force the compiler version for jln function"}
+  newoption{trigger="jln-cc", description="Path or name of the compiler for jln functions"}
+  newoption{trigger="jln-ld", description="Path or name of the linker for jln functions"}
+  newoption{trigger="jln-cc-version", description="Force the compiler version for jln functions"}
 end
 
 -- same as jln_c_getoptions
