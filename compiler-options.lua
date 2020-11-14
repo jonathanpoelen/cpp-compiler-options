@@ -143,7 +143,7 @@ function Linker(name)
   end
 end
 
-local unpack_table = table.unpack or unpack
+local unpack = table.unpack or unpack
 
 function ToolGroup(...)
   local tools = {...}
@@ -153,10 +153,10 @@ function ToolGroup(...)
       for _,tool in ipairs(tools) do
         t[#t+1] = tool(x, y)
       end
-      return Or(unpack_table(t))
+      return Or(unpack(t))
     end
 
-    local r = Or(unpack_table(tools))
+    local r = Or(unpack(tools))
     return x and r(x) or r
   end
 end
@@ -336,11 +336,9 @@ Or(gcc, clang_like) {
 
   opt'microsoft_abi_compatibility_warning' {
     lvl'on' {
-      gcc(10) { cxx'-Wmismatched-tags' } /
-      clang_like { cxx'-Wmismatched-tags' }
+      Or(gcc(10), clang_like) { cxx'-Wmismatched-tags' }
     } / {
-      gcc(10) { cxx'-Wno-mismatched-tags' } /
-      clang_like { cxx'-Wno-mismatched-tags' }
+      Or(gcc(10), clang_like) { cxx'-Wno-mismatched-tags' }
     }
   },
 
@@ -1050,7 +1048,6 @@ function create_ordered_keys(t)
   return ordered_keys
 end
 
-unpack = unpack or table.unpack
 function unpack_table_iterator(t)
   local i = 0
   return function()
