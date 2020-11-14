@@ -105,7 +105,7 @@ return {
       _:print('           values={"' .. table.concat(args, '", "') .. '"},')
       _:print('           default=defaults["' .. optname .. '"] '
               .. (opt ~= optname and 'or defaults["' .. opt .. '"] ' or '')
-              .. 'or "' .. todefault(default) .. '",')
+              .. 'or "' .. default .. '",')
       _:print('           after_check=function(option) check_option("'
               .. opt .. '", "' .. optname .. '") end,')
       _:print('         })')
