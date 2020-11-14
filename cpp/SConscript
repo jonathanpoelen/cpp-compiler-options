@@ -328,17 +328,11 @@ def jln_flags(options, compiler=None, version=None, linker=None):
             flags += ('-Wno-conversion', '-Wno-sign-conversion', )
     if not ( options.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']) == 'default') :
       if options.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']) == 'on' :
-        if ( compiler == 'gcc' and not ( verless(10, 0) ) ) :
+        if ( ( compiler == 'gcc' and not ( verless(10, 0) ) ) or compiler == 'clang' or compiler == 'clang-cl' ) :
           flags += ('-Wmismatched-tags', )
-        else:
-          if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-            flags += ('-Wmismatched-tags', )
       else:
-        if ( compiler == 'gcc' and not ( verless(10, 0) ) ) :
+        if ( ( compiler == 'gcc' and not ( verless(10, 0) ) ) or compiler == 'clang' or compiler == 'clang-cl' ) :
           flags += ('-Wno-mismatched-tags', )
-        else:
-          if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-            flags += ('-Wno-mismatched-tags', )
     if not ( options.get('warnings_as_error', _jln_default_flags['warnings_as_error']) == 'default') :
       if options.get('warnings_as_error', _jln_default_flags['warnings_as_error']) == 'on' :
         flags += ('-Werror', )
