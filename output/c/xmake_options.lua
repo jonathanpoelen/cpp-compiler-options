@@ -112,7 +112,7 @@ local _flag_names = {
            category=add_category,
            description="color",
            values={"default", "auto", "never", "always"},
-           default=defaults["color"] or defaults["jln-color"] or "",
+           default=defaults["color"] or defaults["jln-color"] or "default",
            after_check=function(option) check_option("jln-color", "color") end,
          })
   option("jln-control-flow", {
@@ -120,7 +120,7 @@ local _flag_names = {
            category=add_category,
            description="control_flow",
            values={"default", "off", "on", "branch", "return", "allow_bugs"},
-           default=defaults["control_flow"] or defaults["jln-control-flow"] or "",
+           default=defaults["control_flow"] or defaults["jln-control-flow"] or "default",
            after_check=function(option) check_option("jln-control-flow", "control_flow") end,
          })
   option("jln-coverage", {
@@ -128,7 +128,7 @@ local _flag_names = {
            category=add_category,
            description="coverage",
            values={"default", "off", "on"},
-           default=defaults["coverage"] or defaults["jln-coverage"] or "",
+           default=defaults["coverage"] or defaults["jln-coverage"] or "default",
            after_check=function(option) check_option("jln-coverage", "coverage") end,
          })
   option("jln-cpu", {
@@ -136,7 +136,7 @@ local _flag_names = {
            category=add_category,
            description="cpu",
            values={"default", "generic", "native"},
-           default=defaults["cpu"] or defaults["jln-cpu"] or "",
+           default=defaults["cpu"] or defaults["jln-cpu"] or "default",
            after_check=function(option) check_option("jln-cpu", "cpu") end,
          })
   option("jln-debug", {
@@ -144,7 +144,7 @@ local _flag_names = {
            category=add_category,
            description="debug",
            values={"default", "off", "on", "line_tables_only", "gdb", "lldb", "sce"},
-           default=defaults["debug"] or defaults["jln-debug"] or "",
+           default=defaults["debug"] or defaults["jln-debug"] or "default",
            after_check=function(option) check_option("jln-debug", "debug") end,
          })
   option("jln-diagnostics-format", {
@@ -152,7 +152,7 @@ local _flag_names = {
            category=add_category,
            description="diagnostics_format",
            values={"default", "fixits", "patch", "print_source_range_info"},
-           default=defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "",
+           default=defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "default",
            after_check=function(option) check_option("jln-diagnostics-format", "diagnostics_format") end,
          })
   option("jln-diagnostics-show-template-tree", {
@@ -160,7 +160,7 @@ local _flag_names = {
            category=add_category,
            description="diagnostics_show_template_tree",
            values={"default", "off", "on"},
-           default=defaults["diagnostics_show_template_tree"] or defaults["jln-diagnostics-show-template-tree"] or "",
+           default=defaults["diagnostics_show_template_tree"] or defaults["jln-diagnostics-show-template-tree"] or "default",
            after_check=function(option) check_option("jln-diagnostics-show-template-tree", "diagnostics_show_template_tree") end,
          })
   option("jln-elide-type", {
@@ -168,7 +168,7 @@ local _flag_names = {
            category=add_category,
            description="elide_type",
            values={"default", "off", "on"},
-           default=defaults["elide_type"] or defaults["jln-elide-type"] or "",
+           default=defaults["elide_type"] or defaults["jln-elide-type"] or "default",
            after_check=function(option) check_option("jln-elide-type", "elide_type") end,
          })
   option("jln-exceptions", {
@@ -176,7 +176,7 @@ local _flag_names = {
            category=add_category,
            description="exceptions",
            values={"default", "off", "on"},
-           default=defaults["exceptions"] or defaults["jln-exceptions"] or "",
+           default=defaults["exceptions"] or defaults["jln-exceptions"] or "default",
            after_check=function(option) check_option("jln-exceptions", "exceptions") end,
          })
   option("jln-fix-compiler-error", {
@@ -192,7 +192,7 @@ local _flag_names = {
            category=add_category,
            description="linker",
            values={"default", "bfd", "gold", "lld", "native"},
-           default=defaults["linker"] or defaults["jln-linker"] or "",
+           default=defaults["linker"] or defaults["jln-linker"] or "default",
            after_check=function(option) check_option("jln-linker", "linker") end,
          })
   option("jln-lto", {
@@ -200,7 +200,7 @@ local _flag_names = {
            category=add_category,
            description="lto",
            values={"default", "off", "on", "fat", "thin"},
-           default=defaults["lto"] or defaults["jln-lto"] or "",
+           default=defaults["lto"] or defaults["jln-lto"] or "default",
            after_check=function(option) check_option("jln-lto", "lto") end,
          })
   option("jln-microsoft-abi-compatibility-warning", {
@@ -216,7 +216,7 @@ local _flag_names = {
            category=add_category,
            description="msvc_isystem",
            values={"default", "anglebrackets", "include_and_caexcludepath"},
-           default=defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "",
+           default=defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem", "msvc_isystem") end,
          })
   option("jln-msvc-isystem-with-template-from-non-external", {
@@ -224,7 +224,7 @@ local _flag_names = {
            category=add_category,
            description="msvc_isystem_with_template_from_non_external",
            values={"default", "off", "on"},
-           default=defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "",
+           default=defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem-with-template-from-non-external", "msvc_isystem_with_template_from_non_external") end,
          })
   option("jln-optimization", {
@@ -232,7 +232,7 @@ local _flag_names = {
            category=add_category,
            description="optimization",
            values={"default", "0", "g", "1", "2", "3", "fast", "size"},
-           default=defaults["optimization"] or defaults["jln-optimization"] or "",
+           default=defaults["optimization"] or defaults["jln-optimization"] or "default",
            after_check=function(option) check_option("jln-optimization", "optimization") end,
          })
   option("jln-pedantic", {
@@ -248,7 +248,7 @@ local _flag_names = {
            category=add_category,
            description="pie",
            values={"default", "off", "on", "pic"},
-           default=defaults["pie"] or defaults["jln-pie"] or "",
+           default=defaults["pie"] or defaults["jln-pie"] or "default",
            after_check=function(option) check_option("jln-pie", "pie") end,
          })
   option("jln-relro", {
@@ -256,7 +256,7 @@ local _flag_names = {
            category=add_category,
            description="relro",
            values={"default", "off", "on", "full"},
-           default=defaults["relro"] or defaults["jln-relro"] or "",
+           default=defaults["relro"] or defaults["jln-relro"] or "default",
            after_check=function(option) check_option("jln-relro", "relro") end,
          })
   option("jln-reproducible-build-warnings", {
@@ -264,7 +264,7 @@ local _flag_names = {
            category=add_category,
            description="reproducible_build_warnings",
            values={"default", "off", "on"},
-           default=defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "",
+           default=defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "default",
            after_check=function(option) check_option("jln-reproducible-build-warnings", "reproducible_build_warnings") end,
          })
   option("jln-rtti", {
@@ -272,7 +272,7 @@ local _flag_names = {
            category=add_category,
            description="rtti",
            values={"default", "off", "on"},
-           default=defaults["rtti"] or defaults["jln-rtti"] or "",
+           default=defaults["rtti"] or defaults["jln-rtti"] or "default",
            after_check=function(option) check_option("jln-rtti", "rtti") end,
          })
   option("jln-sanitizers", {
@@ -280,7 +280,7 @@ local _flag_names = {
            category=add_category,
            description="sanitizers",
            values={"default", "off", "on"},
-           default=defaults["sanitizers"] or defaults["jln-sanitizers"] or "",
+           default=defaults["sanitizers"] or defaults["jln-sanitizers"] or "default",
            after_check=function(option) check_option("jln-sanitizers", "sanitizers") end,
          })
   option("jln-sanitizers-extra", {
@@ -288,7 +288,7 @@ local _flag_names = {
            category=add_category,
            description="sanitizers_extra",
            values={"default", "off", "thread", "pointer"},
-           default=defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "",
+           default=defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default",
            after_check=function(option) check_option("jln-sanitizers-extra", "sanitizers_extra") end,
          })
   option("jln-shadow-warnings", {
@@ -304,7 +304,7 @@ local _flag_names = {
            category=add_category,
            description="stack_protector",
            values={"default", "off", "on", "strong", "all"},
-           default=defaults["stack_protector"] or defaults["jln-stack-protector"] or "",
+           default=defaults["stack_protector"] or defaults["jln-stack-protector"] or "default",
            after_check=function(option) check_option("jln-stack-protector", "stack_protector") end,
          })
   option("jln-stl-debug", {
@@ -312,7 +312,7 @@ local _flag_names = {
            category=add_category,
            description="stl_debug",
            values={"default", "off", "on", "allow_broken_abi", "allow_broken_abi_and_bugs", "assert_as_exception"},
-           default=defaults["stl_debug"] or defaults["jln-stl-debug"] or "",
+           default=defaults["stl_debug"] or defaults["jln-stl-debug"] or "default",
            after_check=function(option) check_option("jln-stl-debug", "stl_debug") end,
          })
   option("jln-stl-fix", {
@@ -328,7 +328,7 @@ local _flag_names = {
            category=add_category,
            description="suggestions",
            values={"default", "off", "on"},
-           default=defaults["suggestions"] or defaults["jln-suggestions"] or "",
+           default=defaults["suggestions"] or defaults["jln-suggestions"] or "default",
            after_check=function(option) check_option("jln-suggestions", "suggestions") end,
          })
   option("jln-warnings", {
@@ -344,7 +344,7 @@ local _flag_names = {
            category=add_category,
            description="warnings_as_error",
            values={"default", "off", "on", "basic"},
-           default=defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "",
+           default=defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default",
            after_check=function(option) check_option("jln-warnings-as-error", "warnings_as_error") end,
          })
   option("jln-whole-program", {
@@ -352,7 +352,7 @@ local _flag_names = {
            category=add_category,
            description="whole_program",
            values={"default", "off", "on", "strip_all"},
-           default=defaults["whole_program"] or defaults["jln-whole-program"] or "",
+           default=defaults["whole_program"] or defaults["jln-whole-program"] or "default",
            after_check=function(option) check_option("jln-whole-program", "whole_program") end,
          })
   option("jln-cc", {showmenu=true, description="Path or name of the compiler for jln functions", default=""})

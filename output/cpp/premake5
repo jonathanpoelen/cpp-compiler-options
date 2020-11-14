@@ -3,10 +3,10 @@
 local _jln_extraopt_flag_names = {
   ["jln-cxx"] = true,
   ["cxx"] = true,
-  ["jln-ld"] = true,
-  ["ld"] = true,
   ["jln-cxx-version"] = true,
   ["cxx_version"] = true,
+  ["jln-ld"] = true,
+  ["ld"] = true,
 }
 
 local _jln_flag_names = {
@@ -152,8 +152,8 @@ function jln_newoptions(defaults)
   newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}, {"strip_all"}}, description="whole_program"}
   if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
   newoption{trigger="jln-cxx", description="Path or name of the compiler for jln functions"}
-  newoption{trigger="jln-ld", description="Path or name of the linker for jln functions"}
   newoption{trigger="jln-cxx-version", description="Force the compiler version for jln functions"}
+  newoption{trigger="jln-ld", description="Path or name of the linker for jln functions"}
 end
 
 -- same as jln_getoptions
@@ -224,8 +224,8 @@ function jln_tovalues(values, disable_others)
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "default" or _OPTIONS["jln-warnings-as-error"]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "default" or _OPTIONS["jln-whole-program"]),
       ["cxx"] = values["cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
-      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
       ["cxx_version"] = values["cxx_version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
+      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
 }
   else
     return {
@@ -261,8 +261,8 @@ function jln_tovalues(values, disable_others)
       ["warnings_as_error"] = _OPTIONS["jln-warnings-as-error"],
       ["whole_program"] = _OPTIONS["jln-whole-program"],
       ["cxx"] = _get_extra("jln-cxx"),
-      ["ld"] = _get_extra("jln-ld"),
       ["cxx_version"] = _get_extra("jln-cxx-version"),
+      ["ld"] = _get_extra("jln-ld"),
 }
   end
 end
