@@ -466,20 +466,12 @@ function jln_getoptions(values, disable_others, print_compiler)
     end
     if not ( values["microsoft_abi_compatibility_warning"] == "default") then
       if values["microsoft_abi_compatibility_warning"] == "on" then
-        if ( compiler == "gcc" and not ( compversion < 1000 ) ) then
+        if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
           jln_buildoptions[#jln_buildoptions+1] = "-Wmismatched-tags"
-        else
-          if ( compiler == "clang" or compiler == "clang-cl" ) then
-            jln_buildoptions[#jln_buildoptions+1] = "-Wmismatched-tags"
-          end
         end
       else
-        if ( compiler == "gcc" and not ( compversion < 1000 ) ) then
+        if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
           jln_buildoptions[#jln_buildoptions+1] = "-Wno-mismatched-tags"
-        else
-          if ( compiler == "clang" or compiler == "clang-cl" ) then
-            jln_buildoptions[#jln_buildoptions+1] = "-Wno-mismatched-tags"
-          end
         end
       end
     end

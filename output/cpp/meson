@@ -114,20 +114,12 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
     if (  not ( (___jln_flags.get('microsoft_abi_compatibility_warning', 'default') == 'default')) )
       if (  (___jln_flags.get('microsoft_abi_compatibility_warning', 'default') == 'on') )
-        if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) )
+        if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
           jln_cpp_flags += ['-Wmismatched-tags', ]
-        else
-          if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
-            jln_cpp_flags += ['-Wmismatched-tags', ]
-          endif
         endif
       else
-        if (  ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) )
+        if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
           jln_cpp_flags += ['-Wno-mismatched-tags', ]
-        else
-          if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
-            jln_cpp_flags += ['-Wno-mismatched-tags', ]
-          endif
         endif
       endif
     endif

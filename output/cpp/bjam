@@ -492,38 +492,20 @@ rule jln_flags ( properties * )
     {
       if ( $(x_microsoft_abi_compatibility_warning) = "on" )
       {
-        if (  $(toolset) = "gcc" && ! (  $(version) < "10.00"  )  )
+        if (  (  $(toolset) = "gcc" && ! (  $(version) < "10.00"  )  ) || $(toolset) = "clang" || $(toolset) = "clang-cl"  )
         {
           flags +=
             <cxxflags>"-Wmismatched-tags"
           ;
         }
-        else
-        {
-          if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
-          {
-            flags +=
-              <cxxflags>"-Wmismatched-tags"
-            ;
-          }
-        }
       }
       else
       {
-        if (  $(toolset) = "gcc" && ! (  $(version) < "10.00"  )  )
+        if (  (  $(toolset) = "gcc" && ! (  $(version) < "10.00"  )  ) || $(toolset) = "clang" || $(toolset) = "clang-cl"  )
         {
           flags +=
             <cxxflags>"-Wno-mismatched-tags"
           ;
-        }
-        else
-        {
-          if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
-          {
-            flags +=
-              <cxxflags>"-Wno-mismatched-tags"
-            ;
-          }
         }
       }
     }
