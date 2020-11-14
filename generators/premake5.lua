@@ -26,13 +26,14 @@ return {
     local comp_clang = _.is_C and "'clang'" or "'clang++'"
 
     local extraopts = {
-      [compprefix]='Path or name of the compiler for jln function',
-      [compprefix..'_version']='Force the compiler version for jln function',
-      ['ld']='Path or name of the linker for jln function',
+      {compprefix, 'Path or name of the compiler for jln functions'},
+      {compprefix..'_version', 'Force the compiler version for jln functions'},
+      {'ld', 'Path or name of the linker for jln functions'},
     }
 
     _:print('local _' .. prefixfunc .. '_extraopt_flag_names = {')
-    for optname,desc in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
       local opt = _:tostroption(optname)
       _:print('  ["' .. opt .. '"] = true,')
       _:print('  ["' .. optname .. '"] = true,')
@@ -70,7 +71,9 @@ end]])
       _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(args, '"}, {"') .. '"}}, description="' .. optname .. '"}')
       _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. default .. '") end')
     end
-    for optname,desc in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
+      local desc = extra[2]
       local opt = _:tostroption(optname)
       _:print('  newoption{trigger="' .. opt .. '", description="' .. desc .. '"}')
     end
@@ -121,7 +124,8 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
               .. 'or (disable_others and "default" or _OPTIONS["' .. opt .. '"]),')
     end
-    for optname,desc in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
@@ -134,7 +138,8 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = _OPTIONS["' .. opt .. '"],')
     end
-    for optname in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
     end
