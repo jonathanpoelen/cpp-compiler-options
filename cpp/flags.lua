@@ -4,7 +4,7 @@
 --  includes'cpp'
 --  
 --  -- Registers new command-line options and set default values
---  jln_cxx_init_options({warnings='very_strict'})
+--  jln_cxx_init_options({warnings='very_strict'} --[[, add_category=boolean|string]])
 --  
 --  target("hello")
 --    set_kind("binary")
@@ -104,10 +104,10 @@
 local _extraopt_flag_names = {
   ["jln-cxx"] = true,
   ["cxx"] = true,
-  ["jln-ld"] = true,
-  ["ld"] = true,
   ["jln-cxx-version"] = true,
   ["cxx_version"] = true,
+  ["jln-ld"] = true,
+  ["ld"] = true,
 }
 
 local _flag_names = {
@@ -240,8 +240,8 @@ function tovalues(values, disable_others)
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "" or _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "" or _flag_names["whole_program"][get_config("jln-whole-program")]),
       ["cxx"] = values["cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
-      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
       ["cxx_version"] = values["cxx_version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
+      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
 }
   else
     return {
@@ -277,8 +277,8 @@ function tovalues(values, disable_others)
       ["warnings_as_error"] = _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")],
       ["whole_program"] = _flag_names["whole_program"][get_config("jln-whole-program")],
       ["cxx"] = _get_extra("jln-cxx"),
-      ["ld"] = _get_extra("jln-ld"),
       ["cxx_version"] = _get_extra("jln-cxx-version"),
+      ["ld"] = _get_extra("jln-ld"),
 }
   end
 end
@@ -502,20 +502,12 @@ function getoptions(values, disable_others, print_compiler)
     end
     if not ( values["microsoft_abi_compatibility_warning"] == "") then
       if values["microsoft_abi_compatibility_warning"] == "on" then
-        if ( compiler == "gcc" and not ( compversion < 1000 ) ) then
+        if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
           jln_cxflags[#jln_cxflags+1] = "-Wmismatched-tags"
-        else
-          if ( compiler == "clang" or compiler == "clang-cl" ) then
-            jln_cxflags[#jln_cxflags+1] = "-Wmismatched-tags"
-          end
         end
       else
-        if ( compiler == "gcc" and not ( compversion < 1000 ) ) then
+        if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
           jln_cxflags[#jln_cxflags+1] = "-Wno-mismatched-tags"
-        else
-          if ( compiler == "clang" or compiler == "clang-cl" ) then
-            jln_cxflags[#jln_cxflags+1] = "-Wno-mismatched-tags"
-          end
         end
       end
     end

@@ -4,7 +4,7 @@
 --  includes'cpp'
 --  
 --  -- Registers new command-line options and set default values
---  jln_cxx_init_options({warnings='very_strict'})
+--  jln_cxx_init_options({warnings='very_strict'} --[[, add_category=boolean|string]])
 --  
 --  target("hello")
 --    set_kind("binary")
@@ -104,10 +104,10 @@
 local _extraopt_flag_names = {
   ["jln-cc"] = true,
   ["cc"] = true,
-  ["jln-ld"] = true,
-  ["ld"] = true,
   ["jln-cc-version"] = true,
   ["cc_version"] = true,
+  ["jln-ld"] = true,
+  ["ld"] = true,
 }
 
 local _flag_names = {
@@ -240,8 +240,8 @@ function tovalues(values, disable_others)
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "" or _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "" or _flag_names["whole_program"][get_config("jln-whole-program")]),
       ["cc"] = values["cc"] or (not disable_others and _get_extra("jln-cc")) or nil,
-      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
       ["cc_version"] = values["cc_version"] or (not disable_others and _get_extra("jln-cc-version")) or nil,
+      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
 }
   else
     return {
@@ -277,8 +277,8 @@ function tovalues(values, disable_others)
       ["warnings_as_error"] = _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")],
       ["whole_program"] = _flag_names["whole_program"][get_config("jln-whole-program")],
       ["cc"] = _get_extra("jln-cc"),
-      ["ld"] = _get_extra("jln-ld"),
       ["cc_version"] = _get_extra("jln-cc-version"),
+      ["ld"] = _get_extra("jln-ld"),
 }
   end
 end
