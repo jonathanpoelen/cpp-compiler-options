@@ -30,13 +30,14 @@ return {
     _.cxflags_name = cxflags
 
     local extraopts = {
-      [compprefix]='Path or name of the compiler for jln function',
-      [compprefix..'_version']='Force the compiler version for jln function',
-      ['ld']='Path or name of the linker for jln function',
+      {compprefix, 'Path or name of the compiler for jln functions'},
+      {compprefix..'_version', 'Force the compiler version for jln functions'},
+      {'ld', 'Path or name of the linker for jln functions'},
     }
 
     _:print('local _extraopt_flag_names = {')
-    for optname,desc in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
       local opt = _:tostroption(optname)
       _:print('  ["' .. opt .. '"] = true,')
       _:print('  ["' .. optname .. '"] = true,')
@@ -62,39 +63,44 @@ return {
     _._strs = {}
 
     _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
-    _:print('\nfunction ' .. funcprefix .. 'init_options(defaults)')
+    _:print('\nfunction ' .. funcprefix .. 'init_options(defaults, add_category)')
     _:print(common_code)
-    _:print('  if defaults then')
     _:print([[
+  if defaults then
     for k,v in pairs(defaults) do
       local ref = _flag_names[k]
       if not ref then
         if not _extraopt_flag_names[k] then
-          local msg = "unknown '" .. k .. "' jln flag name"
+          local msg = "Unknown '" .. k .. "' jln flag name"
           print(msg)
           error(msg)
         end
       elseif not ref[v] then
-        local msg = "unknown value '" .. v .. "' for '" .. k .. "'"
+        local msg = "Unknown value '" .. v .. "' for '" .. k .. "'"
         print(msg)
         error(msg)
       end    
-    end]])
-    _:print('  else')
-    _:print('    defaults = {}')
-    _:print('  end\n')
-    _:print([[
+    end
+  else
+    defaults = {}
+  end
+
   local check_option = function(opt, optname)
     local value = get_config(opt)
     if not _flag_names[optname][value] then
-      os.raise(vformat("Unknown value '${red}%s${reset}' for '${cyan}%s${reset}'", value, opt))
+      os.raise(vformat("${color.error}Unknown value '%s' for '%s'", value, opt))
     end
   end
+
+  add_category = add_category == true and "]] .. funcprefix:sub(1, -2) .. [["
+              or add_category
+              or nil
     ]])
     for optname,args,default in _:getoptions() do
       local opt = _:tostroption(optname)
       _:print('  option("' .. opt .. '", {')
       _:print('           showmenu=true,')
+      _:print('           category=add_category,')
       _:print('           description="' .. optname .. '",')
       _:print('           values={"' .. table.concat(args, '", "') .. '"},')
       _:print('           default=defaults["' .. optname .. '"] '
@@ -104,7 +110,9 @@ return {
               .. opt .. '", "' .. optname .. '") end,')
       _:print('         })')
     end
-    for optname,desc in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
+      local desc = extra[2]
       local opt = _:tostroption(optname)
       _:print('  option("' .. opt .. '", {showmenu=true, description="' .. desc .. '", default=""})')
     end
@@ -129,10 +137,10 @@ local _check_flags = function(d)
     local ref = _flag_names[k]
     if not ref then
       if not _extraopt_flag_names[k] then
-        os.raise(vformat("Unknown key: '${red}%s${reset}'", k))
+        os.raise(vformat("${color.error}Unknown key: '%s'", k))
       end
     elseif not ref[v] then
-      os.raise(vformat("Unknown value '${red}%s${reset}' for '${cyan}%s${reset}'", v, k))
+      os.raise(vformat("${color.error}Unknown value '%s' for '%s'", v, k))
     end    
   end
 end
@@ -156,7 +164,8 @@ function tovalues(values, disable_others)
               .. 'or (disable_others and "" or _flag_names["' .. optname
               .. '"][get_config("' .. opt .. '")]),')
     end
-    for optname,desc in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
@@ -170,7 +179,8 @@ function tovalues(values, disable_others)
       _:print('      ["' .. optname .. '"] = _flag_names["' .. optname
               .. '"][get_config("' .. opt .. '")],')
     end
-    for optname in pairs(extraopts) do
+    for i,extra in ipairs(extraopts) do
+      local optname = extra[1]
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
     end
@@ -235,7 +245,7 @@ function getoptions(values, disable_others, print_compiler)
     version = compcache[2]
     compversion = compcache[3]
     if not compiler then
-      -- printf("WARNING: unknown compiler")
+      -- wrintf("Unknown compiler")
       return {buildoptions={}, linkoptions={}}
     end
   else
@@ -247,7 +257,7 @@ function getoptions(values, disable_others, print_compiler)
     end
 
     if not compiler then
-      -- cprint("${color.red}Unknown compiler")
+      -- wprint("Unknown compiler")
       return {]] .. cxflags .. [[={}, ldflags={}}
     end
 

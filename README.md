@@ -180,7 +180,7 @@ Copy `output/cpp/xmake_options.lua` to `myproj/cpp/xmake.lua` and `output/cpp/xm
 includes'cpp'
 
 -- Registers new command-line options and set default values
-jln_cxx_init_options({warnings='very_strict'})
+jln_cxx_init_options({warnings='very_strict'} --[[, add_category=boolean|string]])
 
 target("hello")
   set_kind("binary")
