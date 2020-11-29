@@ -25,6 +25,7 @@
 #  ```ini
 #  color = default auto never always
 #  control_flow = default off on branch return allow_bugs
+#  conversion_warnings = on default off sign conversion
 #  coverage = default off on
 #  cpu = default generic native
 #  debug = default off on line_tables_only gdb lldb sce
@@ -36,7 +37,7 @@
 #  linker = default bfd gold lld native
 #  lto = default off on fat thin
 #  microsoft_abi_compatibility_warning = off default on
-#  msvc_isystem = default anglebrackets include_and_caexcludepath
+#  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 #  msvc_isystem_with_template_from_non_external = default off on
 #  optimization = default 0 g 1 2 3 fast size
 #  pedantic = on default off as_error
@@ -59,12 +60,13 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
+#  If not specified, `conversion_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
 #  - `stl_debug=allow_broken_abi_and_bugs`
 #    - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
+#  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
 #  
 #  
 #  ## Recommended options
@@ -89,6 +91,7 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
 feature <jln-color> : _ default auto never always : propagated ;
 feature <jln-control-flow> : _ default off on branch return allow-bugs : incidental ;
+feature <jln-conversion-warnings> : _ on default off sign conversion : propagated ;
 feature <jln-coverage> : _ default off on : incidental ;
 feature <jln-cpu> : _ default generic native : incidental ;
 feature <jln-debug> : _ default off on line-tables-only gdb lldb sce : incidental ;
@@ -100,7 +103,7 @@ feature <jln-fix-compiler-error> : _ on default off : incidental ;
 feature <jln-linker> : _ default bfd gold lld native : propagated ;
 feature <jln-lto> : _ default off on fat thin : incidental ;
 feature <jln-microsoft-abi-compatibility-warning> : _ off default on : incidental ;
-feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath : incidental ;
+feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath external-as-include-system-flag : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external> : _ default off on : incidental ;
 feature <jln-optimization> : _ default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic> : _ on default off as-error : incidental ;
@@ -127,7 +130,7 @@ feature <jln-exceptions-incidental> : _ default off on : incidental ;
 feature <jln-fix-compiler-error-incidental> : _ on default off : incidental ;
 feature <jln-lto-incidental> : _ default off on fat thin : incidental ;
 feature <jln-microsoft-abi-compatibility-warning-incidental> : _ off default on : incidental ;
-feature <jln-msvc-isystem-incidental> : _ default anglebrackets include-and-caexcludepath : incidental ;
+feature <jln-msvc-isystem-incidental> : _ default anglebrackets include-and-caexcludepath external-as-include-system-flag : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external-incidental> : _ default off on : incidental ;
 feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic-incidental> : _ on default off as-error : incidental ;
@@ -143,6 +146,7 @@ feature <jln-whole-program-incidental> : _ default off on strip-all : incidental
 
 feature <jln-color-default> : default auto never always : incidental ;
 feature <jln-control-flow-default> : default off on branch return allow-bugs : incidental ;
+feature <jln-conversion-warnings-default> : on default off sign conversion : incidental ;
 feature <jln-coverage-default> : default off on : incidental ;
 feature <jln-cpu-default> : default generic native : incidental ;
 feature <jln-debug-default> : default off on line-tables-only gdb lldb sce : incidental ;
@@ -154,7 +158,7 @@ feature <jln-fix-compiler-error-default> : on default off : incidental ;
 feature <jln-linker-default> : default bfd gold lld native : incidental ;
 feature <jln-lto-default> : default off on fat thin : incidental ;
 feature <jln-microsoft-abi-compatibility-warning-default> : off default on : incidental ;
-feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath : incidental ;
+feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath external-as-include-system-flag : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external-default> : default off on : incidental ;
 feature <jln-optimization-default> : default 0 g 1 2 3 fast size : incidental ;
 feature <jln-pedantic-default> : on default off as-error : incidental ;
@@ -198,6 +202,7 @@ rule jln_c-get-env ( env : values * )
 
 constant jln_c_env_color : [ jln_c-get-env jln_color : default auto never always ] ;
 constant jln_c_env_control_flow : [ jln_c-get-env jln_control_flow : default off on branch return allow-bugs ] ;
+constant jln_c_env_conversion_warnings : [ jln_c-get-env jln_conversion_warnings : on default off sign conversion ] ;
 constant jln_c_env_coverage : [ jln_c-get-env jln_coverage : default off on ] ;
 constant jln_c_env_cpu : [ jln_c-get-env jln_cpu : default generic native ] ;
 constant jln_c_env_debug : [ jln_c-get-env jln_debug : default off on line-tables-only gdb lldb sce ] ;
@@ -209,7 +214,7 @@ constant jln_c_env_fix_compiler_error : [ jln_c-get-env jln_fix_compiler_error :
 constant jln_c_env_linker : [ jln_c-get-env jln_linker : default bfd gold lld native ] ;
 constant jln_c_env_lto : [ jln_c-get-env jln_lto : default off on fat thin ] ;
 constant jln_c_env_microsoft_abi_compatibility_warning : [ jln_c-get-env jln_microsoft_abi_compatibility_warning : off default on ] ;
-constant jln_c_env_msvc_isystem : [ jln_c-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath ] ;
+constant jln_c_env_msvc_isystem : [ jln_c-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath external-as-include-system-flag ] ;
 constant jln_c_env_msvc_isystem_with_template_from_non_external : [ jln_c-get-env jln_msvc_isystem_with_template_from_non_external : default off on ] ;
 constant jln_c_env_optimization : [ jln_c-get-env jln_optimization : default 0 g 1 2 3 fast size ] ;
 constant jln_c_env_pedantic : [ jln_c-get-env jln_pedantic : on default off as-error ] ;
@@ -378,6 +383,7 @@ rule jln_c_flags ( properties * )
 
   local x_color = [ jln_c-get-value $(ps) : jln-color : $(jln_c_env_color) ] ;
   local x_control_flow = [ jln_c-get-value2 $(ps) : jln-control-flow : jln-control-flow-incidental : $(jln_c_env_control_flow) ] ;
+  local x_conversion_warnings = [ jln_c-get-value $(ps) : jln-conversion-warnings : $(jln_c_env_conversion_warnings) ] ;
   local x_coverage = [ jln_c-get-value2 $(ps) : jln-coverage : jln-coverage-incidental : $(jln_c_env_coverage) ] ;
   local x_cpu = [ jln_c-get-value2 $(ps) : jln-cpu : jln-cpu-incidental : $(jln_c_env_cpu) ] ;
   local x_debug = [ jln_c-get-value2 $(ps) : jln-debug : jln-debug-incidental : $(jln_c_env_debug) ] ;
@@ -511,9 +517,6 @@ rule jln_c_flags ( properties * )
         }
         if (  ( $(x_warnings) = "strict" ) || ( $(x_warnings) = "very-strict" )  )
         {
-          flags +=
-            <cflags>"-Wconversion"
-          ;
           if (  $(toolset) = "gcc" && ! (  $(version) < "08.00"  )  )
           {
             flags +=
@@ -521,12 +524,40 @@ rule jln_c_flags ( properties * )
             ;
           }
         }
+      }
+    }
+    if ( $(x_conversion_warnings) != "default" )
+    {
+      if ( $(x_conversion_warnings) = "on" )
+      {
+        flags +=
+          <cflags>"-Wconversion"
+          <cflags>"-Wsign-compare"
+          <cflags>"-Wsign-conversion"
+        ;
+      }
+      else
+      {
+        if ( $(x_conversion_warnings) = "conversion" )
+        {
+          flags +=
+            <cflags>"-Wconversion"
+          ;
+        }
         else
         {
-          if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+          if ( $(x_conversion_warnings) = "sign" )
+          {
+            flags +=
+              <cflags>"-Wsign-compare"
+              <cflags>"-Wsign-conversion"
+            ;
+          }
+          else
           {
             flags +=
               <cflags>"-Wno-conversion"
+              <cflags>"-Wno-sign-compare"
               <cflags>"-Wno-sign-conversion"
             ;
           }
@@ -1812,22 +1843,29 @@ rule jln_c_flags ( properties * )
   {
     if ( $(x_msvc_isystem) != "default" )
     {
-      flags +=
-        <cflags>"/experimental:external"
-        <cflags>"/external:W0"
-      ;
-      if ( $(x_msvc_isystem) = "anglebrackets" )
+      if ( $(x_msvc_isystem) = "external-as-include-system-flag" )
       {
-        flags +=
-          <cflags>"/external:anglebrackets"
-        ;
+        # unimplementable
       }
       else
       {
         flags +=
-          <cflags>"/external:env:INCLUDE"
-          <cflags>"/external:env:CAExcludePath"
+          <cflags>"/experimental:external"
+          <cflags>"/external:W0"
         ;
+        if ( $(x_msvc_isystem) = "anglebrackets" )
+        {
+          flags +=
+            <cflags>"/external:anglebrackets"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"/external:env:INCLUDE"
+            <cflags>"/external:env:CAExcludePath"
+          ;
+        }
       }
       if ( $(x_msvc_isystem_with_template_from_non_external) != "default" )
       {
@@ -1868,8 +1906,6 @@ rule jln_c_flags ( properties * )
           {
             flags +=
               <cflags>"/W4"
-              <cflags>"/wd4244"
-              <cflags>"/wd4245"
             ;
           }
           else
@@ -1913,8 +1949,6 @@ rule jln_c_flags ( properties * )
           {
             flags +=
               <cflags>"/W4"
-              <cflags>"/wd4244"
-              <cflags>"/wd4245"
               <cflags>"/wd4711"
             ;
           }
@@ -1923,7 +1957,6 @@ rule jln_c_flags ( properties * )
             flags +=
               <cflags>"/Wall"
               <cflags>"/wd4355"
-              <cflags>"/wd4365"
               <cflags>"/wd4514"
               <cflags>"/wd4548"
               <cflags>"/wd4571"
@@ -1954,13 +1987,53 @@ rule jln_c_flags ( properties * )
               flags +=
                 <cflags>"/wd4061"
                 <cflags>"/wd4266"
-                <cflags>"/wd4388"
                 <cflags>"/wd4583"
                 <cflags>"/wd4619"
                 <cflags>"/wd4623"
                 <cflags>"/wd5204"
               ;
             }
+          }
+        }
+      }
+    }
+    if ( $(x_conversion_warnings) != "default" )
+    {
+      if ( $(x_conversion_warnings) = "on" )
+      {
+        flags +=
+          <cflags>"/w14244"
+          <cflags>"/w14245"
+          <cflags>"/w14388"
+          <cflags>"/w14365"
+        ;
+      }
+      else
+      {
+        if ( $(x_conversion_warnings) = "conversion" )
+        {
+          flags +=
+            <cflags>"/w14244"
+            <cflags>"/w14365"
+          ;
+        }
+        else
+        {
+          if ( $(x_conversion_warnings) = "sign" )
+          {
+            flags +=
+              <cflags>"/w14388"
+              <cflags>"/w14245"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"/wd4244"
+              <cflags>"/wd4365"
+              <cflags>"/wd4388"
+              <cflags>"/wd4245"
+            ;
           }
         }
       }
