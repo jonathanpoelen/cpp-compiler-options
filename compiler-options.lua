@@ -318,7 +318,11 @@ Or(gcc, clang_like) {
 
             vers(9) {
               cxx'-Wno-ctad-maybe-unsupported',
-            },
+
+              vers(11) {
+                cxx'-Wno-suggest-destructor-override',
+              }
+            }
           }
         }
       },
