@@ -121,6 +121,7 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=No
 
   act=function(_, name, datas, optname)
     _:print(_.indent .. '# unimplementable')
+    _:print(_.indent .. 'pass')
     return true
   end,
 
