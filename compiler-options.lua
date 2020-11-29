@@ -181,6 +181,7 @@ local ld64 = Linker('ld64') -- Apple ld64
 function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
 function flag(x) return { cxx=x } end
 function fl(x) return { cxx=x, link=x } end
+function act(id, datas) return { act={id, datas} } end
 function noop() end
 
 function MakeAST(is_C)
@@ -910,15 +911,28 @@ Or(msvc, clang_cl) {
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=vs-2019
 msvc {
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
+  -- vers(19,14)
   opt'msvc_isystem' {
-    flag'/experimental:external',
-    flag'/external:W0',
-
-    lvl'anglebrackets' {
-      flag'/external:anglebrackets',
+    lvl'external_as_include_system_flag' {
+      act('msvc_external', {
+        cxx={
+          '/experimental:external',
+          '/external:W0',
+        },
+        SYSTEM_FLAG='/external:I',
+      }),
     } / {
-      flag'/external:env:INCLUDE',
-      flag'/external:env:CAExcludePath',
+      flag'/experimental:external',
+      flag'/external:W0',
+
+      lvl'anglebrackets' {
+        flag'/external:anglebrackets',
+      } /
+      -- include_and_caexcludepath
+      {
+        flag'/external:env:INCLUDE',
+        flag'/external:env:CAExcludePath',
+      },
     },
 
     opt'msvc_isystem_with_template_from_non_external' {
@@ -1123,7 +1137,7 @@ Vbase = {
     linker=     {{'bfd', 'gold', 'lld', 'native'},},
     lto=        {{'off', 'on', 'fat', 'thin'},},
     microsoft_abi_compatibility_warning={{'off', 'on'}, 'off'},
-    msvc_isystem={{'anglebrackets', 'include_and_caexcludepath',},},
+    msvc_isystem={{'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},},
     msvc_isystem_with_template_from_non_external={{'off', 'on',},},
     optimization={{'0', 'g', '1', '2', '3', 'fast', 'size'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
@@ -1172,6 +1186,7 @@ Vbase = {
 
   cxx=noop,
   link=noop,
+  act=function(_, name, datas, optname) error('Unknown action: ' .. name) end,
 
   _vcond_init=function(_, keywords)
     _._vcondkeyword = keywords or {}
@@ -1300,8 +1315,19 @@ Vbase = {
       local ignore = _.ignore
 
       for i,k in ipairs(create_ordered_keys(_._opts)) do
-        if not ignore[k] then
+        local filter = ignore[k]
+        if filter ~= true then
           local v = _._opts[k]
+          if filter then
+            local newargs = {}
+            for j,arg in ipairs(v[1]) do
+              if not filter[arg] then
+                newargs[#newargs+1] = arg
+              end
+            end
+            v = {newargs, filter[v[2]] or v[2]}
+          end
+
           local ordered_args = v[1]
           local default_value = v[2] or 'default'
           if default_value ~= v[1][1] then
@@ -1388,7 +1414,7 @@ function evalflags(t, v, curropt)
       if not v._opts[opt] then
         error('Unknown "' .. opt .. '" option')
       end
-      if not v.ignore[opt] then
+      if v.ignore[opt] ~= true then
         local r = v:startoptcond(opt)
         if r ~= false then
           v.indent = v.indent .. '  '
@@ -1418,6 +1444,13 @@ function evalflags(t, v, curropt)
   elseif t.cxx or t.link then
     if t.cxx  then v:cxx(t.cxx, curropt) end
     if t.link then v:link(t.link, curropt) end
+  elseif t.act then
+    local r = v:act(t.act[1], t.act[2], curropt)
+    if r == false or r == nil then
+      error('Unknown action: ' .. t.act[1])
+    elseif r ~= true then
+      error('Error with Action ' .. t.act[1] .. ': ' .. r)
+    end
   else
     for k,x in pairs(t) do
       evalflags(x, v, curropt)

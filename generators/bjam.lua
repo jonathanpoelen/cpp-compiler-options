@@ -12,6 +12,7 @@ return {
   -- warnings_as_error=true,
   -- optimization=true,
   -- debug=true,
+    msvc_isystem={force_system_flag=true},
   },
 
   tobjamoption=function(_, optname)
@@ -37,6 +38,11 @@ return {
 
   cxx=function(_, x) return _.indent .. '  <' .. _.prefixflag .. 'flags>"' .. x .. '"\n' end,
   link=function(_, x) return _.indent .. '  <linkflags>"' .. x .. '"\n' end,
+
+  act=function(_, name, datas, optname)
+    _:print(_.indent .. '# unimplementable')
+    return true
+  end,
 
   _vcond_toflags=function(_, cxx, links)
     return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;\n'

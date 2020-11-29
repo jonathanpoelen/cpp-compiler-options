@@ -2,6 +2,7 @@ return {
   ignore={
   --  optimization=true,
   --  debug=true, -- reserved
+    msvc_isystem={force_system_flag=true},
   },
 
   _option_strs = {},
@@ -117,6 +118,11 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=No
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,
+
+  act=function(_, name, datas, optname)
+    _:print(_.indent .. '# unimplementable')
+    return true
+  end,
 
   _vcond_toflags=function(_, cxx, links)
     return (#cxx ~= 0 and _.indent .. '  flags += (' .. cxx .. ')\n' or '')

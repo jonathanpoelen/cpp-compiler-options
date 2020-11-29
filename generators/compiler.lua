@@ -131,6 +131,8 @@ return {
 
           return table.concat(names, '\n') .. '\n'
         end,
+
+        act=function() return true end
       }
     end
 
@@ -294,6 +296,15 @@ return {
 
       cxx=function(_, x) flags[x] = true end,
       link=function(_, x) flags[x] = true end,
+
+      act=function(_, name, datas)
+        for _,k in ipairs({'cxx','link'}) do
+          for _,x in ipairs(datas[k] or {}) do
+            flags[x] = true
+          end
+        end
+        return true
+      end,
     }
   end,
 }

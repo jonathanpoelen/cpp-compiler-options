@@ -3,7 +3,10 @@ local todefault = function(x)
 end
 
 return {
-  -- ignore = { optimization=true, }
+  ignore = {
+    -- msvc_isystem=true,
+    msvc_isystem={force_system_flag=true},
+  },
 
   tostroption=function(_, optname)
     return _.optprefix .. optname:gsub('_', '-')
@@ -79,7 +82,7 @@ return {
         local msg = "Unknown value '" .. v .. "' for '" .. k .. "'"
         print(msg)
         error(msg)
-      end    
+      end
     end
   else
     defaults = {}
@@ -141,7 +144,7 @@ local _check_flags = function(d)
       end
     elseif not ref[v] then
       os.raise(vformat("${color.error}Unknown value '%s' for '%s'", v, k))
-    end    
+    end
   end
 end
 
@@ -314,6 +317,11 @@ function getoptions(values, disable_others, print_compiler)
 
   cxx=function(_, x) return _.indent .. 'jln_cxflags[#jln_cxflags+1] = "' .. x .. '"\n' end,
   link=function(_, x) return _.indent .. 'jln_ldflags[#jln_ldflags+1] = "' .. x .. '"\n' end,
+
+  act=function(_, name, datas, optname)
+    _:print(_.indent .. '-- unimplementable')
+    return true
+  end,
 
   stop=function(_, filebase)
     _:print('  return {' .. _.cxflags_name .. '=jln_cxflags, ldflags=jln_ldflags}\nend\n')

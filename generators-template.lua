@@ -1,6 +1,8 @@
 -- all functions are optional
 return {
   ignore={
+    -- [optname]=true,
+    -- [optname]={[lvl]=true, ...},
   },
 
   indent = '',
@@ -39,6 +41,10 @@ return {
   end,
 
   link=function(_, x)
+  end,
+
+  act=function(_, name, datas, optname)
+    -- return true when name is found
   end,
 
   stop=function(_) return table.concat(_.strs) end,

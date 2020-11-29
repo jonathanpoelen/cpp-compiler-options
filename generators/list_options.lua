@@ -125,4 +125,5 @@ return {
 
   cxx=without_space_or_error,
   link=without_space_or_error,
+  act=function() return true end,
 }

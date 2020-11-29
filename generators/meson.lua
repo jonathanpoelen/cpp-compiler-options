@@ -2,6 +2,7 @@ return {
   ignore={
   --  optimization=true,
   --  debug=true, -- reserved
+    msvc_isystem={force_system_flag=true},
   },
 
   tobuildoption=function(_, optname)
@@ -75,6 +76,11 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
 
   cxx=function(_, x) return "'" .. x .. "', " end,
   link=function(_, x) return "'" .. x .. "', " end,
+
+  act=function(_, name, datas, optname)
+    _:print(_.indent .. '# unimplementable')
+    return true
+  end,
 
   _vcond_toflags=function(_, cxx, links)
     return (#cxx ~= 0 and _.indent .. '  ' .. _.prefixfunc .. '_' .. _.clang .. '_flags += [' .. cxx .. ']\n' or '')

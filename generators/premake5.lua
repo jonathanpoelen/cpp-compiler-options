@@ -1,5 +1,8 @@
 return {
-  -- ignore = { optimization=true, }
+  ignore={
+  --  optimization=true,
+    msvc_isystem={force_system_flag=true},
+  },
 
   tostroption=function(_, optname)
     return _.optprefix .. optname:gsub('_', '-')
@@ -253,6 +256,11 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
 
   cxx=function(_, x) return _.indent .. 'jln_buildoptions[#jln_buildoptions+1] = "' .. x .. '"\n' end,
   link=function(_, x) return _.indent .. 'jln_linkoptions[#jln_linkoptions+1] = "' .. x .. '"\n' end,
+
+  act=function(_, name, datas, optname)
+    _:print(_.indent .. '-- unimplementable')
+    return true
+  end,
 
   stop=function(_)
     _:print('  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\n')

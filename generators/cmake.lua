@@ -291,6 +291,33 @@ endif()
   cxx=function(_, x) return ' "' .. x .. '"' end,
   link=function(_, x) return ' "' .. x .. '"' end,
 
+  act=function(_, name, datas, optname)
+    if name == 'msvc_external' then
+      local cxx_flags,isystem_flag
+
+      local cat = _.is_C and 'C' or 'CXX'
+      for k,d in pairs(datas) do
+        if k == 'cxx' then
+          cxx_flags = _.indent .. 'set(CMAKE_' .. cat .. '_FLAGS "${CMAKE_' .. cat .. '_FLAGS} '
+                      .. table.concat(d, ' ') .. ' ")'
+        elseif k == 'SYSTEM_FLAG' then
+          isystem_flag = _.indent .. 'set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "' .. d .. ' ")'
+        else
+          return 'Unknow ' .. k
+        end
+      end
+
+      if cxx_flags and isystem_flag then
+        _:print(cxx_flags)
+        _:print(isystem_flag)
+      else
+        return 'Missing key: ' .. (cxx_flags and 'flags' or 'cxx')
+      end
+
+      return true
+    end
+  end,
+
   _vcond_toflags=function(_, cxx, links)
     return (#cxx ~= 0 and _.indent .. '  list(APPEND CXX_FLAGS ' .. cxx .. ')\n' or '')
         .. (#links ~= 0 and _.indent .. '  list(APPEND LINK_FLAGS ' .. links .. ')\n' or '')
