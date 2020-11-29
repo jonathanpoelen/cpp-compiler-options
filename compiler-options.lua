@@ -1543,15 +1543,30 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
 end
 
 function help(out)
-  out:write(arg[0] .. [==[' [-c] [-o filebase] [-f [-]{option_name[=value_name][,...]}] {generator.lua} [-h|{options}...]
+  out:write(arg[0] .. [==[' [-c] [-o filebase] [-f [-]{option_name[=value_name][,...]}] [-d option_name=value_name[,...]] {generator.lua} [-h|{options}...]
   -c  Generator for C, not for C++
   -f  Restrict to a list of option/value. When the list is prefixed by '-', options/values are removed.
+  -d  Set new default value. An empty string for value_name is equivalent to 'default'.
 ]==])
 end
 
 local filebase
 local ignore_options = {}
 local is_C = false
+
+function check_optname(cond, optname)
+  if not cond then
+    io.stderr:write(arg[0] .. ": Unknown option: " .. optname .. '\n')
+    os.exit(2)
+  end
+end
+
+function check_optvalue(cond, optname, optvalue)
+  if not cond then
+    io.stderr:write(arg[0] .. ": Unknown value: " .. optvalue .. ' in ' .. optname .. '\n')
+    os.exit(2)
+  end
+end
 
 cli={
   c={function() is_C=true end},
@@ -1561,20 +1576,27 @@ cli={
     filebase = (value ~= '-') and value or nil
   end},
 
+  d={arg=true, function(value)
+    for optname,optvalue in value:gmatch('([_%w]+)=([_%w]*)') do
+      local optkv = Vbase._opts_krev[optname]
+      check_optname(optkv, optname)
+
+      if optvalue == '' or optvalue == 'default' then
+        Vbase._opts[optname][2] = nil
+      else
+        check_optvalue(optkv[optvalue], optname, optvalue)
+        Vbase._opts[optname][2] = optvalue
+      end
+    end
+  end},
+
   f={arg=true, function(value)
     for optname,optvalue in value:gmatch('([_%w]+)=?([_%w]*)') do
       local optkv = Vbase._opts_krev[optname]
-      if not optkv then
-        io.stderr:write(arg[0] .. ": Unknown option: " .. optname .. '\n')
-        os.exit(2)
-      end
+      check_optname(optkv, optname)
 
       if optvalue ~= '' then
-        if not optkv[optvalue] or optkv == 'default' then
-          io.stderr:write(arg[0] .. ": Unknown value: " .. optvalue .. ' in ' .. optname .. '\n')
-          os.exit(2)
-        end
-
+        check_optvalue(optkv[optvalue], optname, optvalue)
         local t = ignore_options[optname]
         if t then
           -- optname takes priority over optname=xxx

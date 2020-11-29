@@ -379,14 +379,16 @@ done >> ~/.bashrc
 
 # Generators
 
-$ `./compiler-options.lua [-h] [-c] [-o filebase] [-f [-]option_list[,...]] {generator} [options...]`
+$ `./compiler-options.lua [-h] [-c] [-o filebase] [-f [-]{option_name[=value_name][,...]}] [-d option_name=value_name[,...]] {generator} [options...]`
 
 ```bash
 ./compiler-options.lua -f debug,warning generators/cmake.lua # only with debug and warning
 ./compiler-options.lua -f -debug,warning generators/cmake.lua # without debug nor warning
 ```
 
-- `-c` for C, default is C++
+- `-c` for C, default is C++.
+- `-f` Restrict to a list of option/value. When the list is prefixed by `-`, options/values are removed.
+- `-d` Set new default value. An empty string for `value_name` is equivalent to `default`.
 
 ## generators/compiler.lua
 
