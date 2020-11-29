@@ -917,6 +917,7 @@ msvc {
       act('msvc_external', {
         cxx={
           '/experimental:external',
+          '/external:env:INCLUDE',
           '/external:W0',
         },
         SYSTEM_FLAG='/external:I',
