@@ -328,13 +328,28 @@ Or(gcc, clang_like) {
       },
 
       Or(lvl'strict', lvl'very_strict') {
-        flag'-Wconversion',
         gcc(8) { flag'-Wcast-align=strict', }
-      } /
-      clang_like {
-        flag'-Wno-conversion',
-        flag'-Wno-sign-conversion',
-      },
+      }
+    },
+  },
+
+  opt'conversion_warnings' {
+    lvl'on' {
+      flag'-Wconversion',
+      flag'-Wsign-compare',
+      flag'-Wsign-conversion',
+    } /
+    lvl'conversion'{
+      flag'-Wconversion',
+    } /
+    lvl'sign'{
+      flag'-Wsign-compare',
+      flag'-Wsign-conversion',
+    } /
+    {
+      flag'-Wno-conversion',
+      flag'-Wno-sign-compare',
+      flag'-Wno-sign-conversion',
     },
   },
 
@@ -925,9 +940,8 @@ msvc {
 
         lvl'on' {
           flag'/W4',
-          flag'/wd4244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
-          flag'/wd4245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
         } /
+        -- strict / very_strict
         {
           flag'/Wall',
 
@@ -948,22 +962,20 @@ msvc {
           },
         }
       }
-    }
+    },
   } /
   opt'warnings' {
     lvl'off' { flag'/W0' } /
     lvl'on' {
       flag'/W4',
-      flag'/wd4244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
-      flag'/wd4245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
       flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
     } /
+    -- strict / very_strict
     {
       flag'/Wall',
 
       -- Warnings in MSVC's std
       flag'/wd4355', -- 'this' used in base member initializing list
-      flag'/wd4365', -- Signed/unsigned mismatch (implicit conversion)
       flag'/wd4514', -- Unreferenced inline function has been removed
       flag'/wd4548', -- Expression before comma has no effect
       flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
@@ -989,13 +1001,35 @@ msvc {
       lvl'strict' {
         flag'/wd4061', -- Enum value in a switch not explicitly handled by a case label
         flag'/wd4266', -- No override available (function is hidden)
-        flag'/wd4388', -- Signed/unsigned mismatch (equality comparison)
         flag'/wd4583', -- Destructor not implicitly called
         flag'/wd4619', -- Unknown warning number
         flag'/wd4623', -- Default constructor implicitly deleted
         flag'/wd5204', -- Class with virtual functions but no virtual destructor
       },
     }
+  },
+
+  opt'conversion_warnings' {
+    lvl'on' {
+      flag'/w14244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
+      flag'/w14245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
+      flag'/w14388', -- Signed/unsigned mismatch (equality comparison)
+      flag'/w14365', -- Signed/unsigned mismatch (implicit conversion)
+    } /
+    lvl'conversion'{
+      flag'/w14244',
+      flag'/w14365',
+    } /
+    lvl'sign'{
+      flag'/w14388',
+      flag'/w14245',
+    } /
+    {
+      flag'/wd4244',
+      flag'/wd4365',
+      flag'/wd4388',
+      flag'/wd4245',
+    },
   },
 
   opt'shadow_warnings' {
@@ -1071,6 +1105,7 @@ Vbase = {
     shadow_warnings=true,
     suggestions=true,
     warnings=true,
+    conversion_warnings=true,
     warnings_as_error=true,
   },
 
@@ -1104,6 +1139,7 @@ Vbase = {
     stack_protector={{'off', 'on', 'strong', 'all'},},
     suggestions={{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
+    conversion_warnings={{'off', 'on', 'sign', 'conversion'}, 'on'},
     warnings_as_error={{'off', 'on', 'basic'},},
     whole_program={{'off', 'on', 'strip_all'},},
   },
