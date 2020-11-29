@@ -689,6 +689,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
     if not ( options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'default') :
       if options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'external_as_include_system_flag' :
         # unimplementable
+        pass
       else:
         flags += ('/experimental:external', '/external:W0', )
         if options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'anglebrackets' :
