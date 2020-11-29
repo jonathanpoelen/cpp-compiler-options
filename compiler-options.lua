@@ -1477,8 +1477,20 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
     end
   end
 
-  for name in pairs(ignore_options) do
-    V.ignore[name] = true
+  for name,x in pairs(ignore_options) do
+    local y = V.ignore[name]
+    if x == true then
+      V.ignore[name] = true
+    elseif y ~= true then
+      if y then
+        -- merge tables
+        for name2 in pairs(x) do
+          y[name2] = true
+        end
+      else
+        V.ignore[name] = x
+      end
+    end
   end
 
   V.is_C = is_C
@@ -1531,7 +1543,10 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
 end
 
 function help(out)
-  out:write(arg[0] .. ' [-c] [-o filebase] [-f [-]option_list[,...]] {generator.lua} [-h|{options}...]\n\n  -c  Generator for C, not for C++\n')
+  out:write(arg[0] .. [==[' [-c] [-o filebase] [-f [-]{option_name[=value_name][,...]}] {generator.lua} [-h|{options}...]
+  -c  Generator for C, not for C++
+  -f  Restrict to a list of option/value. When the list is prefixed by '-', options/values are removed.
+]==])
 end
 
 local filebase
@@ -1547,19 +1562,48 @@ cli={
   end},
 
   f={arg=true, function(value)
-    for name in value:gmatch('([_%w]+)') do
-      if not Vbase._opts[name] then
-        io.stderr:write(arg[0] .. ": Unknown option: " .. name)
+    for optname,optvalue in value:gmatch('([_%w]+)=?([_%w]*)') do
+      local optkv = Vbase._opts_krev[optname]
+      if not optkv then
+        io.stderr:write(arg[0] .. ": Unknown option: " .. optname .. '\n')
         os.exit(2)
       end
-      ignore_options[name] = true
+
+      if optvalue ~= '' then
+        if not optkv[optvalue] or optkv == 'default' then
+          io.stderr:write(arg[0] .. ": Unknown value: " .. optvalue .. ' in ' .. optname .. '\n')
+          os.exit(2)
+        end
+
+        local t = ignore_options[optname]
+        if t then
+          -- optname takes priority over optname=xxx
+          if t ~= true then
+            t[optvalue] = true
+          end
+        else
+          ignore_options[optname] = {[optvalue]=true}
+        end
+      else
+        ignore_options[optname] = true
+      end
     end
+
     if value:sub(1,1) ~= '-' then
       local select_options = ignore_options
       ignore_options = {}
-      for name in pairs(Vbase._opts) do
-        if not select_options[name] then
-          ignore_options[name] = true
+      for optname in pairs(Vbase._opts) do
+        local v = select_options[optname]
+        if not v then
+          ignore_options[optname] = true
+        elseif v ~= true then
+          local t = {}
+          for k in pairs(optkv[optname]) do
+            if not v[k] then
+              t[k] = true
+            end
+          end
+          ignore_options[optname] = t
         end
       end
     end
