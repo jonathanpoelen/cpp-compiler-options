@@ -299,9 +299,9 @@ endif()
       for k,d in pairs(datas) do
         if k == 'cxx' then
           cxx_flags = _.indent .. 'set(CMAKE_' .. cat .. '_FLAGS "${CMAKE_' .. cat .. '_FLAGS} '
-                      .. table.concat(d, ' ') .. ' " PARENT_SCOPE)'
+                      .. table.concat(d, ' ') .. ' " CACHE INTERNAL "")'
         elseif k == 'SYSTEM_FLAG' then
-          isystem_flag = _.indent .. 'set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "' .. d .. ' " PARENT_SCOPE)'
+          isystem_flag = _.indent .. 'set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "' .. d .. ' " CACHE INTERNAL "")'
         else
           return 'Unknow ' .. k
         end
