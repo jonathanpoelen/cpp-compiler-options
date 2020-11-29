@@ -41,6 +41,7 @@
 #  ```ini
 #  color = default auto never always
 #  control_flow = default off on branch return allow_bugs
+#  conversion_warnings = on default off sign conversion
 #  coverage = default off on
 #  cpu = default generic native
 #  debug = default off on line_tables_only gdb lldb sce
@@ -52,7 +53,7 @@
 #  linker = default bfd gold lld native
 #  lto = default off on fat thin
 #  microsoft_abi_compatibility_warning = off default on
-#  msvc_isystem = default anglebrackets include_and_caexcludepath
+#  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 #  msvc_isystem_with_template_from_non_external = default off on
 #  optimization = default 0 g 1 2 3 fast size
 #  pedantic = on default off as_error
@@ -75,12 +76,13 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
+#  If not specified, `conversion_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
 #  - `stl_debug=allow_broken_abi_and_bugs`
 #    - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
+#  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
 #  
 #  
 #  ## Recommended options
@@ -105,6 +107,7 @@ endif
 ___jln_c_flags = {
   'color': ___jln_c_default_flags.get('color', get_option('jln_color')),
   'control_flow': ___jln_c_default_flags.get('control_flow', get_option('jln_control_flow')),
+  'conversion_warnings': ___jln_c_default_flags.get('conversion_warnings', get_option('jln_conversion_warnings')),
   'coverage': ___jln_c_default_flags.get('coverage', get_option('jln_coverage')),
   'cpu': ___jln_c_default_flags.get('cpu', get_option('jln_cpu')),
   'debug': ___jln_c_default_flags.get('debug', get_option('jln_debug')),
@@ -183,13 +186,23 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           endif
         endif
         if (  ( (___jln_c_flags.get('warnings', 'default') == 'strict') or (___jln_c_flags.get('warnings', 'default') == 'very_strict') ) )
-          jln_c_c_flags += ['-Wconversion', ]
           if (  ( (___jln_c_compiler_id == 'gcc') and not ( ___jln_c_compiler_version.version_compare('<8.0') ) ) )
             jln_c_c_flags += ['-Wcast-align=strict', ]
           endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_c_flags.get('conversion_warnings', 'default') == 'default')) )
+      if (  (___jln_c_flags.get('conversion_warnings', 'default') == 'on') )
+        jln_c_c_flags += ['-Wconversion', '-Wsign-compare', '-Wsign-conversion', ]
+      else
+        if (  (___jln_c_flags.get('conversion_warnings', 'default') == 'conversion') )
+          jln_c_c_flags += ['-Wconversion', ]
         else
-          if (  ( (___jln_c_compiler_id == 'clang') or (___jln_c_compiler_id == 'clang-cl') ) )
-            jln_c_c_flags += ['-Wno-conversion', '-Wno-sign-conversion', ]
+          if (  (___jln_c_flags.get('conversion_warnings', 'default') == 'sign') )
+            jln_c_c_flags += ['-Wsign-compare', '-Wsign-conversion', ]
+          else
+            jln_c_c_flags += ['-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', ]
           endif
         endif
       endif
@@ -809,11 +822,15 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
   endif
   if (  (___jln_c_compiler_id == 'msvc') )
     if (  not ( (___jln_c_flags.get('msvc_isystem', 'default') == 'default')) )
-      jln_c_c_flags += ['/experimental:external', '/external:W0', ]
-      if (  (___jln_c_flags.get('msvc_isystem', 'default') == 'anglebrackets') )
-        jln_c_c_flags += ['/external:anglebrackets', ]
+      if (  (___jln_c_flags.get('msvc_isystem', 'default') == 'external_as_include_system_flag') )
+        # unimplementable
       else
-        jln_c_c_flags += ['/external:env:INCLUDE', '/external:env:CAExcludePath', ]
+        jln_c_c_flags += ['/experimental:external', '/external:W0', ]
+        if (  (___jln_c_flags.get('msvc_isystem', 'default') == 'anglebrackets') )
+          jln_c_c_flags += ['/external:anglebrackets', ]
+        else
+          jln_c_c_flags += ['/external:env:INCLUDE', '/external:env:CAExcludePath', ]
+        endif
       endif
       if (  not ( (___jln_c_flags.get('msvc_isystem_with_template_from_non_external', 'default') == 'default')) )
         if (  (___jln_c_flags.get('msvc_isystem_with_template_from_non_external', 'default') == 'off') )
@@ -831,7 +848,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
             jln_c_c_flags += ['/wd4774', ]
           endif
           if (  (___jln_c_flags.get('warnings', 'default') == 'on') )
-            jln_c_c_flags += ['/W4', '/wd4244', '/wd4245', ]
+            jln_c_c_flags += ['/W4', ]
           else
             jln_c_c_flags += ['/Wall', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
             if (  (___jln_c_flags.get('warnings', 'default') == 'strict') )
@@ -846,16 +863,31 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           jln_c_c_flags += ['/W0', ]
         else
           if (  (___jln_c_flags.get('warnings', 'default') == 'on') )
-            jln_c_c_flags += ['/W4', '/wd4244', '/wd4245', '/wd4711', ]
+            jln_c_c_flags += ['/W4', '/wd4711', ]
           else
-            jln_c_c_flags += ['/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', ]
+            jln_c_c_flags += ['/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', ]
             if (  not ( not ( ___jln_c_compiler_version.version_compare('<19.21') ) ) )
               jln_c_c_flags += ['/wd4774', ]
             endif
             jln_c_c_flags += ['/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
             if (  (___jln_c_flags.get('warnings', 'default') == 'strict') )
-              jln_c_c_flags += ['/wd4061', '/wd4266', '/wd4388', '/wd4583', '/wd4619', '/wd4623', '/wd5204', ]
+              jln_c_c_flags += ['/wd4061', '/wd4266', '/wd4583', '/wd4619', '/wd4623', '/wd5204', ]
             endif
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_c_flags.get('conversion_warnings', 'default') == 'default')) )
+      if (  (___jln_c_flags.get('conversion_warnings', 'default') == 'on') )
+        jln_c_c_flags += ['/w14244', '/w14245', '/w14388', '/w14365', ]
+      else
+        if (  (___jln_c_flags.get('conversion_warnings', 'default') == 'conversion') )
+          jln_c_c_flags += ['/w14244', '/w14365', ]
+        else
+          if (  (___jln_c_flags.get('conversion_warnings', 'default') == 'sign') )
+            jln_c_c_flags += ['/w14388', '/w14245', ]
+          else
+            jln_c_c_flags += ['/wd4244', '/wd4365', '/wd4388', '/wd4245', ]
           endif
         endif
       endif
