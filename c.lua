@@ -60,6 +60,7 @@
 --  ```ini
 --  color = default auto never always
 --  control_flow = default off on branch return allow_bugs
+--  conversion_warnings = on default off sign conversion
 --  coverage = default off on
 --  cpu = default generic native
 --  debug = default off on line_tables_only gdb lldb sce
@@ -71,7 +72,7 @@
 --  linker = default bfd gold lld native
 --  lto = default off on fat thin
 --  microsoft_abi_compatibility_warning = off default on
---  msvc_isystem = default anglebrackets include_and_caexcludepath
+--  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 --  msvc_isystem_with_template_from_non_external = default off on
 --  optimization = default 0 g 1 2 3 fast size
 --  pedantic = on default off as_error
@@ -94,12 +95,13 @@
 --  
 --  The value `default` does nothing.
 --  
---  If not specified, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
+--  If not specified, `conversion_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 --  
 --  - `control_flow=allow_bugs`
 --    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
 --  - `stl_debug=allow_broken_abi_and_bugs`
 --    - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
+--  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
 --  
 --  
 --  ## Recommended options
@@ -129,6 +131,8 @@ local _jln_c_flag_names = {
   ["color"] = true,
   ["jln-control-flow"] = true,
   ["control_flow"] = true,
+  ["jln-conversion-warnings"] = true,
+  ["conversion_warnings"] = true,
   ["jln-coverage"] = true,
   ["coverage"] = true,
   ["jln-cpu"] = true,
@@ -208,6 +212,8 @@ function jln_c_newoptions(defaults)
   if not _OPTIONS["jln-color"] then _OPTIONS["jln-color"] = (defaults["color"] or defaults["jln-color"] or "default") end
   newoption{trigger="jln-control-flow", allowed={{"default"}, {"off"}, {"on"}, {"branch"}, {"return"}, {"allow_bugs"}}, description="control_flow"}
   if not _OPTIONS["jln-control-flow"] then _OPTIONS["jln-control-flow"] = (defaults["control_flow"] or defaults["jln-control-flow"] or "default") end
+  newoption{trigger="jln-conversion-warnings", allowed={{"default"}, {"off"}, {"on"}, {"sign"}, {"conversion"}}, description="conversion_warnings"}
+  if not _OPTIONS["jln-conversion-warnings"] then _OPTIONS["jln-conversion-warnings"] = (defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on") end
   newoption{trigger="jln-coverage", allowed={{"default"}, {"off"}, {"on"}}, description="coverage"}
   if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or defaults["jln-coverage"] or "default") end
   newoption{trigger="jln-cpu", allowed={{"default"}, {"generic"}, {"native"}}, description="cpu"}
@@ -230,7 +236,7 @@ function jln_c_newoptions(defaults)
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
   newoption{trigger="jln-microsoft-abi-compatibility-warning", allowed={{"default"}, {"off"}, {"on"}}, description="microsoft_abi_compatibility_warning"}
   if not _OPTIONS["jln-microsoft-abi-compatibility-warning"] then _OPTIONS["jln-microsoft-abi-compatibility-warning"] = (defaults["microsoft_abi_compatibility_warning"] or defaults["jln-microsoft-abi-compatibility-warning"] or "off") end
-  newoption{trigger="jln-msvc-isystem", allowed={{"default"}, {"anglebrackets"}, {"include_and_caexcludepath"}}, description="msvc_isystem"}
+  newoption{trigger="jln-msvc-isystem", allowed={{"default"}, {"anglebrackets"}, {"include_and_caexcludepath"}, {"external_as_include_system_flag"}}, description="msvc_isystem"}
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
   newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{"default"}, {"off"}, {"on"}}, description="msvc_isystem_with_template_from_non_external"}
   if not _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] then _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] = (defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default") end
@@ -309,6 +315,7 @@ function jln_c_tovalues(values, disable_others)
     return {
       ["color"] = values["color"] or values["jln-color"] or (disable_others and "default" or _OPTIONS["jln-color"]),
       ["control_flow"] = values["control_flow"] or values["jln-control-flow"] or (disable_others and "default" or _OPTIONS["jln-control-flow"]),
+      ["conversion_warnings"] = values["conversion_warnings"] or values["jln-conversion-warnings"] or (disable_others and "default" or _OPTIONS["jln-conversion-warnings"]),
       ["coverage"] = values["coverage"] or values["jln-coverage"] or (disable_others and "default" or _OPTIONS["jln-coverage"]),
       ["cpu"] = values["cpu"] or values["jln-cpu"] or (disable_others and "default" or _OPTIONS["jln-cpu"]),
       ["debug"] = values["debug"] or values["jln-debug"] or (disable_others and "default" or _OPTIONS["jln-debug"]),
@@ -346,6 +353,7 @@ function jln_c_tovalues(values, disable_others)
     return {
       ["color"] = _OPTIONS["jln-color"],
       ["control_flow"] = _OPTIONS["jln-control-flow"],
+      ["conversion_warnings"] = _OPTIONS["jln-conversion-warnings"],
       ["coverage"] = _OPTIONS["jln-coverage"],
       ["cpu"] = _OPTIONS["jln-cpu"],
       ["debug"] = _OPTIONS["jln-debug"],
@@ -548,13 +556,27 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           end
         end
         if ( values["warnings"] == "strict" or values["warnings"] == "very_strict" ) then
-          jln_buildoptions[#jln_buildoptions+1] = "-Wconversion"
           if ( compiler == "gcc" and not ( compversion < 800 ) ) then
             jln_buildoptions[#jln_buildoptions+1] = "-Wcast-align=strict"
           end
+        end
+      end
+    end
+    if not ( values["conversion_warnings"] == "default") then
+      if values["conversion_warnings"] == "on" then
+        jln_buildoptions[#jln_buildoptions+1] = "-Wconversion"
+        jln_buildoptions[#jln_buildoptions+1] = "-Wsign-compare"
+        jln_buildoptions[#jln_buildoptions+1] = "-Wsign-conversion"
+      else
+        if values["conversion_warnings"] == "conversion" then
+          jln_buildoptions[#jln_buildoptions+1] = "-Wconversion"
         else
-          if ( compiler == "clang" or compiler == "clang-cl" ) then
+          if values["conversion_warnings"] == "sign" then
+            jln_buildoptions[#jln_buildoptions+1] = "-Wsign-compare"
+            jln_buildoptions[#jln_buildoptions+1] = "-Wsign-conversion"
+          else
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-conversion"
+            jln_buildoptions[#jln_buildoptions+1] = "-Wno-sign-compare"
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-sign-conversion"
           end
         end
@@ -1217,13 +1239,17 @@ function jln_c_getoptions(values, disable_others, print_compiler)
   end
   if compiler == "msvc" then
     if not ( values["msvc_isystem"] == "default") then
-      jln_buildoptions[#jln_buildoptions+1] = "/experimental:external"
-      jln_buildoptions[#jln_buildoptions+1] = "/external:W0"
-      if values["msvc_isystem"] == "anglebrackets" then
-        jln_buildoptions[#jln_buildoptions+1] = "/external:anglebrackets"
+      if values["msvc_isystem"] == "external_as_include_system_flag" then
+        -- unimplementable
       else
-        jln_buildoptions[#jln_buildoptions+1] = "/external:env:INCLUDE"
-        jln_buildoptions[#jln_buildoptions+1] = "/external:env:CAExcludePath"
+        jln_buildoptions[#jln_buildoptions+1] = "/experimental:external"
+        jln_buildoptions[#jln_buildoptions+1] = "/external:W0"
+        if values["msvc_isystem"] == "anglebrackets" then
+          jln_buildoptions[#jln_buildoptions+1] = "/external:anglebrackets"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "/external:env:INCLUDE"
+          jln_buildoptions[#jln_buildoptions+1] = "/external:env:CAExcludePath"
+        end
       end
       if not ( values["msvc_isystem_with_template_from_non_external"] == "default") then
         if values["msvc_isystem_with_template_from_non_external"] == "off" then
@@ -1243,8 +1269,6 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           end
           if values["warnings"] == "on" then
             jln_buildoptions[#jln_buildoptions+1] = "/W4"
-            jln_buildoptions[#jln_buildoptions+1] = "/wd4244"
-            jln_buildoptions[#jln_buildoptions+1] = "/wd4245"
           else
             jln_buildoptions[#jln_buildoptions+1] = "/Wall"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4571"
@@ -1270,13 +1294,10 @@ function jln_c_getoptions(values, disable_others, print_compiler)
         else
           if values["warnings"] == "on" then
             jln_buildoptions[#jln_buildoptions+1] = "/W4"
-            jln_buildoptions[#jln_buildoptions+1] = "/wd4244"
-            jln_buildoptions[#jln_buildoptions+1] = "/wd4245"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4711"
           else
             jln_buildoptions[#jln_buildoptions+1] = "/Wall"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4355"
-            jln_buildoptions[#jln_buildoptions+1] = "/wd4365"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4514"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4548"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4571"
@@ -1299,12 +1320,34 @@ function jln_c_getoptions(values, disable_others, print_compiler)
             if values["warnings"] == "strict" then
               jln_buildoptions[#jln_buildoptions+1] = "/wd4061"
               jln_buildoptions[#jln_buildoptions+1] = "/wd4266"
-              jln_buildoptions[#jln_buildoptions+1] = "/wd4388"
               jln_buildoptions[#jln_buildoptions+1] = "/wd4583"
               jln_buildoptions[#jln_buildoptions+1] = "/wd4619"
               jln_buildoptions[#jln_buildoptions+1] = "/wd4623"
               jln_buildoptions[#jln_buildoptions+1] = "/wd5204"
             end
+          end
+        end
+      end
+    end
+    if not ( values["conversion_warnings"] == "default") then
+      if values["conversion_warnings"] == "on" then
+        jln_buildoptions[#jln_buildoptions+1] = "/w14244"
+        jln_buildoptions[#jln_buildoptions+1] = "/w14245"
+        jln_buildoptions[#jln_buildoptions+1] = "/w14388"
+        jln_buildoptions[#jln_buildoptions+1] = "/w14365"
+      else
+        if values["conversion_warnings"] == "conversion" then
+          jln_buildoptions[#jln_buildoptions+1] = "/w14244"
+          jln_buildoptions[#jln_buildoptions+1] = "/w14365"
+        else
+          if values["conversion_warnings"] == "sign" then
+            jln_buildoptions[#jln_buildoptions+1] = "/w14388"
+            jln_buildoptions[#jln_buildoptions+1] = "/w14245"
+          else
+            jln_buildoptions[#jln_buildoptions+1] = "/wd4244"
+            jln_buildoptions[#jln_buildoptions+1] = "/wd4365"
+            jln_buildoptions[#jln_buildoptions+1] = "/wd4388"
+            jln_buildoptions[#jln_buildoptions+1] = "/wd4245"
           end
         end
       end
