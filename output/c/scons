@@ -6,6 +6,7 @@ from SCons.Variables.EnumVariable import EnumVariable
 _jln_c_default_flags = {
   'color': 'default',
   'control_flow': 'default',
+  'conversion_warnings': 'on',
   'coverage': 'default',
   'cpu': 'default',
   'debug': 'default',
@@ -40,6 +41,7 @@ _jln_c_default_flags = {
 _jln_c_var2opts = {
   'jln_color': 'color',
   'jln_control_flow': 'control_flow',
+  'jln_conversion_warnings': 'conversion_warnings',
   'jln_coverage': 'coverage',
   'jln_cpu': 'cpu',
   'jln_debug': 'debug',
@@ -74,6 +76,7 @@ _jln_c_var2opts = {
 _jln_c_opt2vars = {
   'color': 'jln_color',
   'control_flow': 'jln_control_flow',
+  'conversion_warnings': 'jln_conversion_warnings',
   'coverage': 'jln_coverage',
   'cpu': 'jln_cpu',
   'debug': 'jln_debug',
@@ -114,6 +117,8 @@ def jln_c_add_variables(vars, default_values={}):
                  allowed_values=('default', 'auto', 'never', 'always')),
     EnumVariable('jln_control_flow', '', default_values.get('control_flow', _jln_default_flags['control_flow']),
                  allowed_values=('default', 'off', 'on', 'branch', 'return', 'allow_bugs')),
+    EnumVariable('jln_conversion_warnings', '', default_values.get('conversion_warnings', _jln_default_flags['conversion_warnings']),
+                 allowed_values=('default', 'off', 'on', 'sign', 'conversion')),
     EnumVariable('jln_coverage', '', default_values.get('coverage', _jln_default_flags['coverage']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_cpu', '', default_values.get('cpu', _jln_default_flags['cpu']),
@@ -137,7 +142,7 @@ def jln_c_add_variables(vars, default_values={}):
     EnumVariable('jln_microsoft_abi_compatibility_warning', '', default_values.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_msvc_isystem', '', default_values.get('msvc_isystem', _jln_default_flags['msvc_isystem']),
-                 allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
+                 allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag')),
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', '', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_optimization', '', default_values.get('optimization', _jln_default_flags['optimization']),
@@ -231,12 +236,19 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
             flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', )
         if ( options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' or options.get('warnings', _jln_c_default_flags['warnings']) == 'very_strict' ) :
-          flags += ('-Wconversion', )
           if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
             flags += ('-Wcast-align=strict', )
+    if not ( options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'default') :
+      if options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'on' :
+        flags += ('-Wconversion', '-Wsign-compare', '-Wsign-conversion', )
+      else:
+        if options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'conversion' :
+          flags += ('-Wconversion', )
         else:
-          if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-            flags += ('-Wno-conversion', '-Wno-sign-conversion', )
+          if options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'sign' :
+            flags += ('-Wsign-compare', '-Wsign-conversion', )
+          else:
+            flags += ('-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', )
     if not ( options.get('warnings_as_error', _jln_c_default_flags['warnings_as_error']) == 'default') :
       if options.get('warnings_as_error', _jln_c_default_flags['warnings_as_error']) == 'on' :
         flags += ('-Werror', )
@@ -675,11 +687,14 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
             flags += ('/RTC1', '/RTCc', )
   if compiler == 'msvc' :
     if not ( options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'default') :
-      flags += ('/experimental:external', '/external:W0', )
-      if options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'anglebrackets' :
-        flags += ('/external:anglebrackets', )
+      if options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'external_as_include_system_flag' :
+        # unimplementable
       else:
-        flags += ('/external:env:INCLUDE', '/external:env:CAExcludePath', )
+        flags += ('/experimental:external', '/external:W0', )
+        if options.get('msvc_isystem', _jln_c_default_flags['msvc_isystem']) == 'anglebrackets' :
+          flags += ('/external:anglebrackets', )
+        else:
+          flags += ('/external:env:INCLUDE', '/external:env:CAExcludePath', )
       if not ( options.get('msvc_isystem_with_template_from_non_external', _jln_c_default_flags['msvc_isystem_with_template_from_non_external']) == 'default') :
         if options.get('msvc_isystem_with_template_from_non_external', _jln_c_default_flags['msvc_isystem_with_template_from_non_external']) == 'off' :
           flags += ('/external:template', )
@@ -693,7 +708,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           if not ( not ( verless(19, 21) ) ) :
             flags += ('/wd4774', )
           if options.get('warnings', _jln_c_default_flags['warnings']) == 'on' :
-            flags += ('/W4', '/wd4244', '/wd4245', )
+            flags += ('/W4', )
           else:
             flags += ('/Wall', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
             if options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' :
@@ -704,14 +719,25 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           flags += ('/W0', )
         else:
           if options.get('warnings', _jln_c_default_flags['warnings']) == 'on' :
-            flags += ('/W4', '/wd4244', '/wd4245', '/wd4711', )
+            flags += ('/W4', '/wd4711', )
           else:
-            flags += ('/Wall', '/wd4355', '/wd4365', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', )
+            flags += ('/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', )
             if not ( not ( verless(19, 21) ) ) :
               flags += ('/wd4774', )
             flags += ('/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
             if options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' :
-              flags += ('/wd4061', '/wd4266', '/wd4388', '/wd4583', '/wd4619', '/wd4623', '/wd5204', )
+              flags += ('/wd4061', '/wd4266', '/wd4583', '/wd4619', '/wd4623', '/wd5204', )
+    if not ( options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'default') :
+      if options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'on' :
+        flags += ('/w14244', '/w14245', '/w14388', '/w14365', )
+      else:
+        if options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'conversion' :
+          flags += ('/w14244', '/w14365', )
+        else:
+          if options.get('conversion_warnings', _jln_c_default_flags['conversion_warnings']) == 'sign' :
+            flags += ('/w14388', '/w14245', )
+          else:
+            flags += ('/wd4244', '/wd4365', '/wd4388', '/wd4245', )
     if not ( options.get('shadow_warnings', _jln_c_default_flags['shadow_warnings']) == 'default') :
       if options.get('shadow_warnings', _jln_c_default_flags['shadow_warnings']) == 'off' :
         flags += ('/wd4456', '/wd4459', )

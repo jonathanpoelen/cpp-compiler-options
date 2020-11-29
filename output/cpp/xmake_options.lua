@@ -16,6 +16,8 @@ local _flag_names = {
   ["color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["jln-control-flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
   ["control_flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
+  ["jln-conversion-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["conversion"]="conversion", [""]=""},
+  ["conversion_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["conversion"]="conversion", [""]=""},
   ["jln-coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
@@ -38,8 +40,8 @@ local _flag_names = {
   ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
   ["jln-microsoft-abi-compatibility-warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["microsoft_abi_compatibility_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
-  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
+  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
+  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", [""]=""},
@@ -90,7 +92,7 @@ local _flag_names = {
         local msg = "Unknown value '" .. v .. "' for '" .. k .. "'"
         print(msg)
         error(msg)
-      end    
+      end
     end
   else
     defaults = {}
@@ -122,6 +124,14 @@ local _flag_names = {
            values={"default", "off", "on", "branch", "return", "allow_bugs"},
            default=defaults["control_flow"] or defaults["jln-control-flow"] or "default",
            after_check=function(option) check_option("jln-control-flow", "control_flow") end,
+         })
+  option("jln-conversion-warnings", {
+           showmenu=true,
+           category=add_category,
+           description="conversion_warnings",
+           values={"default", "off", "on", "sign", "conversion"},
+           default=defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on",
+           after_check=function(option) check_option("jln-conversion-warnings", "conversion_warnings") end,
          })
   option("jln-coverage", {
            showmenu=true,
@@ -215,7 +225,7 @@ local _flag_names = {
            showmenu=true,
            category=add_category,
            description="msvc_isystem",
-           values={"default", "anglebrackets", "include_and_caexcludepath"},
+           values={"default", "anglebrackets", "include_and_caexcludepath", "external_as_include_system_flag"},
            default=defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem", "msvc_isystem") end,
          })

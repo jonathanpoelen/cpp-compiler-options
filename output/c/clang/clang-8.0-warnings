@@ -1,6 +1,5 @@
 -pedantic
 -Weverything
--Wno-conversion
 -Wno-covered-switch-default
 -Wno-documentation
 -Wno-documentation-unknown-command
@@ -9,6 +8,5 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
--Wno-sign-conversion
 -Wno-switch-default
 -Wno-switch-enum

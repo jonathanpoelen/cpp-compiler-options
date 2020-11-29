@@ -2,7 +2,6 @@
 -Weverything
 -Wno-c++98-compat
 -Wno-c++98-compat-pedantic
--Wno-conversion
 -Wno-covered-switch-default
 -Wno-documentation
 -Wno-documentation-unknown-command
@@ -13,7 +12,6 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
--Wno-sign-conversion
 -Wno-switch-default
 -Wno-switch-enum
 -Wno-undefined-var-template
