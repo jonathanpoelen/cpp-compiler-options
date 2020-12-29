@@ -6,5 +6,6 @@
 /W4
 /wd4456
 /wd4459
+/wd4514
 /wd4711
 /Zc:__cplusplus

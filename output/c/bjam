@@ -1824,12 +1824,14 @@ rule jln_c_flags ( properties * )
           {
             flags +=
               <cflags>"/W4"
+              <cflags>"/wd4514"
             ;
           }
           else
           {
             flags +=
               <cflags>"/Wall"
+              <cflags>"/wd4514"
               <cflags>"/wd4571"
               <cflags>"/wd4355"
               <cflags>"/wd4548"
@@ -1867,6 +1869,7 @@ rule jln_c_flags ( properties * )
           {
             flags +=
               <cflags>"/W4"
+              <cflags>"/wd4514"
               <cflags>"/wd4711"
             ;
           }
