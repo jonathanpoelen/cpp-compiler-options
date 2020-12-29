@@ -1188,8 +1188,10 @@ function getoptions(values, disable_others, print_compiler)
           end
           if values["warnings"] == "on" then
             jln_cxflags[#jln_cxflags+1] = "/W4"
+            jln_cxflags[#jln_cxflags+1] = "/wd4514"
           else
             jln_cxflags[#jln_cxflags+1] = "/Wall"
+            jln_cxflags[#jln_cxflags+1] = "/wd4514"
             jln_cxflags[#jln_cxflags+1] = "/wd4571"
             jln_cxflags[#jln_cxflags+1] = "/wd4355"
             jln_cxflags[#jln_cxflags+1] = "/wd4548"
@@ -1213,6 +1215,7 @@ function getoptions(values, disable_others, print_compiler)
         else
           if values["warnings"] == "on" then
             jln_cxflags[#jln_cxflags+1] = "/W4"
+            jln_cxflags[#jln_cxflags+1] = "/wd4514"
             jln_cxflags[#jln_cxflags+1] = "/wd4711"
           else
             jln_cxflags[#jln_cxflags+1] = "/Wall"
