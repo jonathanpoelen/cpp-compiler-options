@@ -955,10 +955,13 @@ msvc {
 
         lvl'on' {
           flag'/W4',
+          flag'/wd4514', -- Unreferenced inline function has been removed
         } /
         -- strict / very_strict
         {
           flag'/Wall',
+
+          flag'/wd4514', -- Unreferenced inline function has been removed
 
           flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
           flag'/wd4355', -- 'this' used in base member initializing list
@@ -983,6 +986,7 @@ msvc {
     lvl'off' { flag'/W0' } /
     lvl'on' {
       flag'/W4',
+      flag'/wd4514', -- Unreferenced inline function has been removed
       flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
     } /
     -- strict / very_strict
