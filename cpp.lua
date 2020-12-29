@@ -1368,8 +1368,10 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
           if values["warnings"] == "on" then
             jln_buildoptions[#jln_buildoptions+1] = "/W4"
+            jln_buildoptions[#jln_buildoptions+1] = "/wd4514"
           else
             jln_buildoptions[#jln_buildoptions+1] = "/Wall"
+            jln_buildoptions[#jln_buildoptions+1] = "/wd4514"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4571"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4355"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4548"
@@ -1393,6 +1395,7 @@ function jln_getoptions(values, disable_others, print_compiler)
         else
           if values["warnings"] == "on" then
             jln_buildoptions[#jln_buildoptions+1] = "/W4"
+            jln_buildoptions[#jln_buildoptions+1] = "/wd4514"
             jln_buildoptions[#jln_buildoptions+1] = "/wd4711"
           else
             jln_buildoptions[#jln_buildoptions+1] = "/Wall"
