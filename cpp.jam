@@ -2096,12 +2096,14 @@ rule jln_flags ( properties * )
           {
             flags +=
               <cxxflags>"/W4"
+              <cxxflags>"/wd4514"
             ;
           }
           else
           {
             flags +=
               <cxxflags>"/Wall"
+              <cxxflags>"/wd4514"
               <cxxflags>"/wd4571"
               <cxxflags>"/wd4355"
               <cxxflags>"/wd4548"
@@ -2139,6 +2141,7 @@ rule jln_flags ( properties * )
           {
             flags +=
               <cxxflags>"/W4"
+              <cxxflags>"/wd4514"
               <cxxflags>"/wd4711"
             ;
           }
