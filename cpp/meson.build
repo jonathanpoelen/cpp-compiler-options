@@ -940,9 +940,9 @@ foreach ___jln_flags : ___jln_custom_flags
             jln_cpp_flags += ['/wd4774', ]
           endif
           if (  (___jln_flags.get('warnings', 'default') == 'on') )
-            jln_cpp_flags += ['/W4', ]
+            jln_cpp_flags += ['/W4', '/wd4514', ]
           else
-            jln_cpp_flags += ['/Wall', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
+            jln_cpp_flags += ['/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
             if (  (___jln_flags.get('warnings', 'default') == 'strict') )
               jln_cpp_flags += ['/wd4583', '/wd4619', ]
             endif
@@ -955,7 +955,7 @@ foreach ___jln_flags : ___jln_custom_flags
           jln_cpp_flags += ['/W0', ]
         else
           if (  (___jln_flags.get('warnings', 'default') == 'on') )
-            jln_cpp_flags += ['/W4', '/wd4711', ]
+            jln_cpp_flags += ['/W4', '/wd4514', '/wd4711', ]
           else
             jln_cpp_flags += ['/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', ]
             if (  not ( not ( ___jln_compiler_version.version_compare('<19.21') ) ) )
