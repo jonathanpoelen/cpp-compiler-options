@@ -790,9 +790,9 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           if not ( not ( verless(19, 21) ) ) :
             flags += ('/wd4774', )
           if options.get('warnings', _jln_c_default_flags['warnings']) == 'on' :
-            flags += ('/W4', )
+            flags += ('/W4', '/wd4514', )
           else:
-            flags += ('/Wall', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
+            flags += ('/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
             if options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' :
               flags += ('/wd4583', '/wd4619', )
     else:
@@ -801,7 +801,7 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           flags += ('/W0', )
         else:
           if options.get('warnings', _jln_c_default_flags['warnings']) == 'on' :
-            flags += ('/W4', '/wd4711', )
+            flags += ('/W4', '/wd4514', '/wd4711', )
           else:
             flags += ('/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', )
             if not ( not ( verless(19, 21) ) ) :
