@@ -66,7 +66,7 @@ return {
     _._strs = {}
 
     _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
-    _:print('\nfunction ' .. funcprefix .. 'init_options(defaults, add_category)')
+    _:print('\nfunction ' .. funcprefix .. 'init_options(defaults, category)')
     _:print(common_code)
     _:print([[
   if defaults then
@@ -95,15 +95,15 @@ return {
     end
   end
 
-  add_category = add_category == true and "]] .. funcprefix:sub(1, -2) .. [["
-              or add_category
-              or nil
+  category = category == true and "]] .. funcprefix:sub(1, -2) .. [["
+          or category
+          or nil
     ]])
     for optname,args,default in _:getoptions() do
       local opt = _:tostroption(optname)
       _:print('  option("' .. opt .. '", {')
       _:print('           showmenu=true,')
-      _:print('           category=add_category,')
+      _:print('           category=category,')
       _:print('           description="' .. optname .. '",')
       _:print('           values={"' .. table.concat(args, '", "') .. '"},')
       _:print('           default=defaults["' .. optname .. '"] '
