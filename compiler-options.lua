@@ -581,6 +581,7 @@ Or(gcc, clang) {
       flag'-DNDEBUG',
       link'-Wl,-O1',
       lvl'size' { fl'-Os' } /
+      lvl'z' { clang_like { fl'-Oz' } / fl'-Os' } /
       lvl'fast' { fl'-Ofast' } /
       lvl'1' { fl'-O1' } /
       lvl'2' { fl'-O2' } /
@@ -1144,7 +1145,7 @@ Vbase = {
     microsoft_abi_compatibility_warning={{'off', 'on'}, 'off'},
     msvc_isystem={{'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},},
     msvc_isystem_with_template_from_non_external={{'off', 'on',},},
-    optimization={{'0', 'g', '1', '2', '3', 'fast', 'size'},},
+    optimization={{'0', 'g', '1', '2', '3', 'fast', 'size', 'z'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
     pie=        {{'off', 'on', 'pic'},},
     relro=      {{'off', 'on', 'full'},},
