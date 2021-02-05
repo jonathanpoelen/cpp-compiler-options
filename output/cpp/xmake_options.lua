@@ -1,7 +1,7 @@
 -- File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
 
-function jln_cxx_init_options(defaults, add_category)
+function jln_cxx_init_options(defaults, category)
 local _extraopt_flag_names = {
   ["jln-cxx"] = true,
   ["cxx"] = true,
@@ -44,8 +44,8 @@ local _flag_names = {
   ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", [""]=""},
-  ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", [""]=""},
+  ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
+  ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["jln-pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["pic"]="pic", [""]=""},
@@ -74,6 +74,10 @@ local _flag_names = {
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
+  ["jln-warnings-covered-switch-default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
+  ["warnings_covered_switch_default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
+  ["jln-warnings-switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
+  ["warnings_switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
   ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
   ["whole_program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
 }
@@ -105,13 +109,13 @@ local _flag_names = {
     end
   end
 
-  add_category = add_category == true and "jln_cxx"
-              or add_category
-              or nil
+  category = category == true and "jln_cxx"
+          or category
+          or nil
     
   option("jln-color", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="color",
            values={"default", "auto", "never", "always"},
            default=defaults["color"] or defaults["jln-color"] or "default",
@@ -119,7 +123,7 @@ local _flag_names = {
          })
   option("jln-control-flow", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="control_flow",
            values={"default", "off", "on", "branch", "return", "allow_bugs"},
            default=defaults["control_flow"] or defaults["jln-control-flow"] or "default",
@@ -127,7 +131,7 @@ local _flag_names = {
          })
   option("jln-conversion-warnings", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="conversion_warnings",
            values={"default", "off", "on", "sign", "conversion"},
            default=defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on",
@@ -135,7 +139,7 @@ local _flag_names = {
          })
   option("jln-coverage", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="coverage",
            values={"default", "off", "on"},
            default=defaults["coverage"] or defaults["jln-coverage"] or "default",
@@ -143,7 +147,7 @@ local _flag_names = {
          })
   option("jln-cpu", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="cpu",
            values={"default", "generic", "native"},
            default=defaults["cpu"] or defaults["jln-cpu"] or "default",
@@ -151,7 +155,7 @@ local _flag_names = {
          })
   option("jln-debug", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="debug",
            values={"default", "off", "on", "line_tables_only", "gdb", "lldb", "sce"},
            default=defaults["debug"] or defaults["jln-debug"] or "default",
@@ -159,7 +163,7 @@ local _flag_names = {
          })
   option("jln-diagnostics-format", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="diagnostics_format",
            values={"default", "fixits", "patch", "print_source_range_info"},
            default=defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "default",
@@ -167,7 +171,7 @@ local _flag_names = {
          })
   option("jln-diagnostics-show-template-tree", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="diagnostics_show_template_tree",
            values={"default", "off", "on"},
            default=defaults["diagnostics_show_template_tree"] or defaults["jln-diagnostics-show-template-tree"] or "default",
@@ -175,7 +179,7 @@ local _flag_names = {
          })
   option("jln-elide-type", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="elide_type",
            values={"default", "off", "on"},
            default=defaults["elide_type"] or defaults["jln-elide-type"] or "default",
@@ -183,7 +187,7 @@ local _flag_names = {
          })
   option("jln-exceptions", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="exceptions",
            values={"default", "off", "on"},
            default=defaults["exceptions"] or defaults["jln-exceptions"] or "default",
@@ -191,7 +195,7 @@ local _flag_names = {
          })
   option("jln-fix-compiler-error", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="fix_compiler_error",
            values={"default", "off", "on"},
            default=defaults["fix_compiler_error"] or defaults["jln-fix-compiler-error"] or "on",
@@ -199,7 +203,7 @@ local _flag_names = {
          })
   option("jln-linker", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="linker",
            values={"default", "bfd", "gold", "lld", "native"},
            default=defaults["linker"] or defaults["jln-linker"] or "default",
@@ -207,7 +211,7 @@ local _flag_names = {
          })
   option("jln-lto", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="lto",
            values={"default", "off", "on", "fat", "thin"},
            default=defaults["lto"] or defaults["jln-lto"] or "default",
@@ -215,7 +219,7 @@ local _flag_names = {
          })
   option("jln-microsoft-abi-compatibility-warning", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="microsoft_abi_compatibility_warning",
            values={"default", "off", "on"},
            default=defaults["microsoft_abi_compatibility_warning"] or defaults["jln-microsoft-abi-compatibility-warning"] or "off",
@@ -223,7 +227,7 @@ local _flag_names = {
          })
   option("jln-msvc-isystem", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="msvc_isystem",
            values={"default", "anglebrackets", "include_and_caexcludepath", "external_as_include_system_flag"},
            default=defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default",
@@ -231,7 +235,7 @@ local _flag_names = {
          })
   option("jln-msvc-isystem-with-template-from-non-external", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="msvc_isystem_with_template_from_non_external",
            values={"default", "off", "on"},
            default=defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default",
@@ -239,15 +243,15 @@ local _flag_names = {
          })
   option("jln-optimization", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="optimization",
-           values={"default", "0", "g", "1", "2", "3", "fast", "size"},
+           values={"default", "0", "g", "1", "2", "3", "fast", "size", "z"},
            default=defaults["optimization"] or defaults["jln-optimization"] or "default",
            after_check=function(option) check_option("jln-optimization", "optimization") end,
          })
   option("jln-pedantic", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="pedantic",
            values={"default", "off", "on", "as_error"},
            default=defaults["pedantic"] or defaults["jln-pedantic"] or "on",
@@ -255,7 +259,7 @@ local _flag_names = {
          })
   option("jln-pie", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="pie",
            values={"default", "off", "on", "pic"},
            default=defaults["pie"] or defaults["jln-pie"] or "default",
@@ -263,7 +267,7 @@ local _flag_names = {
          })
   option("jln-relro", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="relro",
            values={"default", "off", "on", "full"},
            default=defaults["relro"] or defaults["jln-relro"] or "default",
@@ -271,7 +275,7 @@ local _flag_names = {
          })
   option("jln-reproducible-build-warnings", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="reproducible_build_warnings",
            values={"default", "off", "on"},
            default=defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "default",
@@ -279,7 +283,7 @@ local _flag_names = {
          })
   option("jln-rtti", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="rtti",
            values={"default", "off", "on"},
            default=defaults["rtti"] or defaults["jln-rtti"] or "default",
@@ -287,7 +291,7 @@ local _flag_names = {
          })
   option("jln-sanitizers", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="sanitizers",
            values={"default", "off", "on"},
            default=defaults["sanitizers"] or defaults["jln-sanitizers"] or "default",
@@ -295,7 +299,7 @@ local _flag_names = {
          })
   option("jln-sanitizers-extra", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="sanitizers_extra",
            values={"default", "off", "thread", "pointer"},
            default=defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default",
@@ -303,7 +307,7 @@ local _flag_names = {
          })
   option("jln-shadow-warnings", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="shadow_warnings",
            values={"default", "off", "on", "local", "compatible_local", "all"},
            default=defaults["shadow_warnings"] or defaults["jln-shadow-warnings"] or "off",
@@ -311,7 +315,7 @@ local _flag_names = {
          })
   option("jln-stack-protector", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="stack_protector",
            values={"default", "off", "on", "strong", "all"},
            default=defaults["stack_protector"] or defaults["jln-stack-protector"] or "default",
@@ -319,7 +323,7 @@ local _flag_names = {
          })
   option("jln-stl-debug", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="stl_debug",
            values={"default", "off", "on", "allow_broken_abi", "allow_broken_abi_and_bugs", "assert_as_exception"},
            default=defaults["stl_debug"] or defaults["jln-stl-debug"] or "default",
@@ -327,7 +331,7 @@ local _flag_names = {
          })
   option("jln-stl-fix", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="stl_fix",
            values={"default", "off", "on"},
            default=defaults["stl_fix"] or defaults["jln-stl-fix"] or "on",
@@ -335,7 +339,7 @@ local _flag_names = {
          })
   option("jln-suggestions", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="suggestions",
            values={"default", "off", "on"},
            default=defaults["suggestions"] or defaults["jln-suggestions"] or "default",
@@ -343,7 +347,7 @@ local _flag_names = {
          })
   option("jln-warnings", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="warnings",
            values={"default", "off", "on", "strict", "very_strict"},
            default=defaults["warnings"] or defaults["jln-warnings"] or "on",
@@ -351,15 +355,31 @@ local _flag_names = {
          })
   option("jln-warnings-as-error", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="warnings_as_error",
            values={"default", "off", "on", "basic"},
            default=defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default",
            after_check=function(option) check_option("jln-warnings-as-error", "warnings_as_error") end,
          })
+  option("jln-warnings-covered-switch-default", {
+           showmenu=true,
+           category=category,
+           description="warnings_covered_switch_default",
+           values={"default", "on", "off"},
+           default=defaults["warnings_covered_switch_default"] or defaults["jln-warnings-covered-switch-default"] or "on",
+           after_check=function(option) check_option("jln-warnings-covered-switch-default", "warnings_covered_switch_default") end,
+         })
+  option("jln-warnings-switch", {
+           showmenu=true,
+           category=category,
+           description="warnings_switch",
+           values={"default", "on", "off", "enum", "mandatory_default"},
+           default=defaults["warnings_switch"] or defaults["jln-warnings-switch"] or "on",
+           after_check=function(option) check_option("jln-warnings-switch", "warnings_switch") end,
+         })
   option("jln-whole-program", {
            showmenu=true,
-           category=add_category,
+           category=category,
            description="whole_program",
            values={"default", "off", "on", "strip_all"},
            default=defaults["whole_program"] or defaults["jln-whole-program"] or "default",

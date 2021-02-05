@@ -38,6 +38,8 @@ ___jln_flags = {
   'suggestions': ___jln_default_flags.get('suggestions', get_option('jln_suggestions')),
   'warnings': ___jln_warnings,
   'warnings_as_error': ___jln_default_flags.get('warnings_as_error', get_option('jln_warnings_as_error')),
+  'warnings_covered_switch_default': ___jln_default_flags.get('warnings_covered_switch_default', get_option('jln_warnings_covered_switch_default')),
+  'warnings_switch': ___jln_default_flags.get('warnings_switch', get_option('jln_warnings_switch')),
   'whole_program': ___jln_default_flags.get('whole_program', get_option('jln_whole_program')),
 }
 
@@ -62,7 +64,22 @@ foreach ___jln_flags : ___jln_custom_flags
         jln_cpp_flags += ['-w', ]
       else
         if (  (___jln_compiler_id == 'gcc') )
-          jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
+            jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
+          if (  not ( (___jln_flags.get('warnings_switch', 'default') == 'default')) )
+            if (  (___jln_flags.get('warnings_switch', 'default') == 'on') )
+              jln_cpp_flags += ['-Wswitch', ]
+            else
+              if (  (___jln_flags.get('warnings_switch', 'default') == 'enum') )
+                jln_cpp_flags += ['-Wswitch-enum', ]
+              else
+                if (  (___jln_flags.get('warnings_switch', 'default') == 'mandatory_default') )
+                  jln_cpp_flags += ['-Wswitch-default', ]
+                else
+                  jln_cpp_flags += ['-Wno-switch', ]
+                endif
+              endif
+            endif
+          endif
           if (  not ( ___jln_compiler_version.version_compare('<4.7') ) )
             jln_cpp_flags += ['-Wsuggest-attribute=noreturn', '-Wzero-as-null-pointer-constant', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', ]
             if (  not ( ___jln_compiler_version.version_compare('<4.8') ) )
@@ -89,7 +106,27 @@ foreach ___jln_flags : ___jln_custom_flags
           endif
         else
           if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
-            jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', ]
+              jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', ]
+            if (  not ( (___jln_flags.get('warnings_switch', 'default') == 'default')) )
+              if (  (___jln_flags.get('warnings_switch', 'default') == 'on') )
+                jln_cpp_flags += ['-Wno-switch-enum', ]
+              else
+                if (  (___jln_flags.get('warnings_switch', 'default') == 'enum') )
+                  jln_cpp_flags += ['-Wswitch-enum', ]
+                else
+                  if (  (___jln_flags.get('warnings_switch', 'default') == 'off') )
+                    jln_cpp_flags += ['-Wno-switch', '-Wno-switch-enum', ]
+                  endif
+                endif
+              endif
+            else
+              jln_cpp_flags += ['-Wno-switch', '-Wno-switch-enum', ]
+            endif
+            if (  not ( (___jln_flags.get('warnings_covered_switch_default', 'default') == 'default')) )
+              if (  (___jln_flags.get('warnings_covered_switch_default', 'default') == 'off') )
+                jln_cpp_flags += ['-Wno-covered-switch-default', ]
+              endif
+            endif
             if (  not ( ___jln_compiler_version.version_compare('<3.9') ) )
               jln_cpp_flags += ['-Wno-undefined-var-template', ]
               if (  not ( ___jln_compiler_version.version_compare('<5.0') ) )
@@ -414,21 +451,31 @@ foreach ___jln_flags : ___jln_custom_flags
             jln_cpp_flags += ['-Os', ]
             jln_link_flags += ['-Os', ]
           else
-            if (  (___jln_flags.get('optimization', 'default') == 'fast') )
-              jln_cpp_flags += ['-Ofast', ]
-              jln_link_flags += ['-Ofast', ]
-            else
-              if (  (___jln_flags.get('optimization', 'default') == '1') )
-                jln_cpp_flags += ['-O1', ]
-                jln_link_flags += ['-O1', ]
+            if (  (___jln_flags.get('optimization', 'default') == 'z') )
+              if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+                jln_cpp_flags += ['-Oz', ]
+                jln_link_flags += ['-Oz', ]
               else
-                if (  (___jln_flags.get('optimization', 'default') == '2') )
-                  jln_cpp_flags += ['-O2', ]
-                  jln_link_flags += ['-O2', ]
+                jln_cpp_flags += ['-Os', ]
+                jln_link_flags += ['-Os', ]
+              endif
+            else
+              if (  (___jln_flags.get('optimization', 'default') == 'fast') )
+                jln_cpp_flags += ['-Ofast', ]
+                jln_link_flags += ['-Ofast', ]
+              else
+                if (  (___jln_flags.get('optimization', 'default') == '1') )
+                  jln_cpp_flags += ['-O1', ]
+                  jln_link_flags += ['-O1', ]
                 else
-                  if (  (___jln_flags.get('optimization', 'default') == '3') )
-                    jln_cpp_flags += ['-O3', ]
-                    jln_link_flags += ['-O3', ]
+                  if (  (___jln_flags.get('optimization', 'default') == '2') )
+                    jln_cpp_flags += ['-O2', ]
+                    jln_link_flags += ['-O2', ]
+                  else
+                    if (  (___jln_flags.get('optimization', 'default') == '3') )
+                      jln_cpp_flags += ['-O3', ]
+                      jln_link_flags += ['-O3', ]
+                    endif
                   endif
                 endif
               endif
@@ -847,6 +894,19 @@ foreach ___jln_flags : ___jln_custom_flags
             jln_cpp_flags += ['/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
             if (  (___jln_flags.get('warnings', 'default') == 'strict') )
               jln_cpp_flags += ['/wd4583', '/wd4619', ]
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('warnings_switch', 'default') == 'default')) )
+        if (  (___jln_flags.get('warnings_switch', 'default') == 'on') )
+          jln_cpp_flags += ['/we4061', ]
+        else
+          if (  (___jln_flags.get('warnings_switch', 'default') == 'enum') )
+            jln_cpp_flags += ['/we4062', ]
+          else
+            if (  (___jln_flags.get('warnings_switch', 'default') == 'off') )
+              jln_cpp_flags += ['/wd4061', '/wd4062', ]
             endif
           endif
         endif

@@ -2,7 +2,6 @@
 -Weverything
 -Wno-c++98-compat
 -Wno-c++98-compat-pedantic
--Wno-covered-switch-default
 -Wno-documentation
 -Wno-documentation-unknown-command
 -Wno-exit-time-destructors
@@ -11,7 +10,7 @@
 -Wno-mismatched-tags
 -Wno-newline-eof
 -Wno-padded
--Wno-switch-default
+-Wno-switch
 -Wno-switch-enum
 -Wno-undefined-var-template
 -Wno-weak-vtables

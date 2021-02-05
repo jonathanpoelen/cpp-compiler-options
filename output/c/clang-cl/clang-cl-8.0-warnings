@@ -1,10 +1,9 @@
 /permissive-
 -Weverything
--Wno-covered-switch-default
 -Wno-documentation
 -Wno-documentation-unknown-command
 -Wno-global-constructors
 -Wno-newline-eof
 -Wno-padded
--Wno-switch-default
+-Wno-switch
 -Wno-switch-enum
