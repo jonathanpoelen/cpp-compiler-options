@@ -116,6 +116,8 @@ _jln_default_flags = {
   'suggestions': 'default',
   'warnings': 'on',
   'warnings_as_error': 'default',
+  'warnings_covered_switch_default': 'on',
+  'warnings_switch': 'on',
   'whole_program': 'default',
 }
 
@@ -151,6 +153,8 @@ _jln_var2opts = {
   'jln_suggestions': 'suggestions',
   'jln_warnings': 'warnings',
   'jln_warnings_as_error': 'warnings_as_error',
+  'jln_warnings_covered_switch_default': 'warnings_covered_switch_default',
+  'jln_warnings_switch': 'warnings_switch',
   'jln_whole_program': 'whole_program',
 }
 
@@ -186,6 +190,8 @@ _jln_opt2vars = {
   'suggestions': 'jln_suggestions',
   'warnings': 'jln_warnings',
   'warnings_as_error': 'jln_warnings_as_error',
+  'warnings_covered_switch_default': 'jln_warnings_covered_switch_default',
+  'warnings_switch': 'jln_warnings_switch',
   'whole_program': 'jln_whole_program',
 }
 
@@ -227,7 +233,7 @@ def jln_add_variables(vars, default_values={}):
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', '', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_optimization', '', default_values.get('optimization', _jln_default_flags['optimization']),
-                 allowed_values=('default', '0', 'g', '1', '2', '3', 'fast', 'size')),
+                 allowed_values=('default', '0', 'g', '1', '2', '3', 'fast', 'size', 'z')),
     EnumVariable('jln_pedantic', '', default_values.get('pedantic', _jln_default_flags['pedantic']),
                  allowed_values=('default', 'off', 'on', 'as_error')),
     EnumVariable('jln_pie', '', default_values.get('pie', _jln_default_flags['pie']),
@@ -256,6 +262,10 @@ def jln_add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
     EnumVariable('jln_warnings_as_error', '', default_values.get('warnings_as_error', _jln_default_flags['warnings_as_error']),
                  allowed_values=('default', 'off', 'on', 'basic')),
+    EnumVariable('jln_warnings_covered_switch_default', '', default_values.get('warnings_covered_switch_default', _jln_default_flags['warnings_covered_switch_default']),
+                 allowed_values=('default', 'on', 'off')),
+    EnumVariable('jln_warnings_switch', '', default_values.get('warnings_switch', _jln_default_flags['warnings_switch']),
+                 allowed_values=('default', 'on', 'off', 'enum', 'mandatory_default')),
     EnumVariable('jln_whole_program', '', default_values.get('whole_program', _jln_default_flags['whole_program']),
                  allowed_values=('default', 'off', 'on', 'strip_all'))  )
 
@@ -300,7 +310,18 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         flags += ('-w', )
       else:
         if compiler == 'gcc' :
-          flags += ('-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', )
+            flags += ('-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', )
+          if not ( options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'default') :
+            if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'on' :
+              flags += ('-Wswitch', )
+            else:
+              if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'enum' :
+                flags += ('-Wswitch-enum', )
+              else:
+                if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'mandatory_default' :
+                  flags += ('-Wswitch-default', )
+                else:
+                  flags += ('-Wno-switch', )
           if not ( verless(4, 7) ) :
             flags += ('-Wsuggest-attribute=noreturn', '-Wzero-as-null-pointer-constant', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', )
             if not ( verless(4, 8) ) :
@@ -319,7 +340,21 @@ def jln_flags(options, compiler=None, version=None, linker=None):
                           flags += ('-Wclass-memaccess', )
         else:
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-            flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', '-Wno-covered-switch-default', '-Wno-switch-default', '-Wno-switch-enum', )
+              flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', )
+            if not ( options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'default') :
+              if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'on' :
+                flags += ('-Wno-switch-enum', )
+              else:
+                if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'enum' :
+                  flags += ('-Wswitch-enum', )
+                else:
+                  if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'off' :
+                    flags += ('-Wno-switch', '-Wno-switch-enum', )
+            else:
+              flags += ('-Wno-switch', '-Wno-switch-enum', )
+            if not ( options.get('warnings_covered_switch_default', _jln_default_flags['warnings_covered_switch_default']) == 'default') :
+              if options.get('warnings_covered_switch_default', _jln_default_flags['warnings_covered_switch_default']) == 'off' :
+                flags += ('-Wno-covered-switch-default', )
             if not ( verless(3, 9) ) :
               flags += ('-Wno-undefined-var-template', )
               if not ( verless(5, 0) ) :
@@ -547,21 +582,29 @@ def jln_flags(options, compiler=None, version=None, linker=None):
             flags += ('-Os', )
             linkflags += ('-Os', )
           else:
-            if options.get('optimization', _jln_default_flags['optimization']) == 'fast' :
-              flags += ('-Ofast', )
-              linkflags += ('-Ofast', )
-            else:
-              if options.get('optimization', _jln_default_flags['optimization']) == '1' :
-                flags += ('-O1', )
-                linkflags += ('-O1', )
+            if options.get('optimization', _jln_default_flags['optimization']) == 'z' :
+              if ( compiler == 'clang' or compiler == 'clang-cl' ) :
+                flags += ('-Oz', )
+                linkflags += ('-Oz', )
               else:
-                if options.get('optimization', _jln_default_flags['optimization']) == '2' :
-                  flags += ('-O2', )
-                  linkflags += ('-O2', )
+                flags += ('-Os', )
+                linkflags += ('-Os', )
+            else:
+              if options.get('optimization', _jln_default_flags['optimization']) == 'fast' :
+                flags += ('-Ofast', )
+                linkflags += ('-Ofast', )
+              else:
+                if options.get('optimization', _jln_default_flags['optimization']) == '1' :
+                  flags += ('-O1', )
+                  linkflags += ('-O1', )
                 else:
-                  if options.get('optimization', _jln_default_flags['optimization']) == '3' :
-                    flags += ('-O3', )
-                    linkflags += ('-O3', )
+                  if options.get('optimization', _jln_default_flags['optimization']) == '2' :
+                    flags += ('-O2', )
+                    linkflags += ('-O2', )
+                  else:
+                    if options.get('optimization', _jln_default_flags['optimization']) == '3' :
+                      flags += ('-O3', )
+                      linkflags += ('-O3', )
     if not ( options.get('cpu', _jln_default_flags['cpu']) == 'default') :
       if options.get('cpu', _jln_default_flags['cpu']) == 'generic' :
         flags += ('-mtune=generic', )
@@ -856,6 +899,15 @@ def jln_flags(options, compiler=None, version=None, linker=None):
             flags += ('/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
             if options.get('warnings', _jln_default_flags['warnings']) == 'strict' :
               flags += ('/wd4583', '/wd4619', )
+      if not ( options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'default') :
+        if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'on' :
+          flags += ('/we4061', )
+        else:
+          if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'enum' :
+            flags += ('/we4062', )
+          else:
+            if options.get('warnings_switch', _jln_default_flags['warnings_switch']) == 'off' :
+              flags += ('/wd4061', '/wd4062', )
     else:
       if not ( options.get('warnings', _jln_default_flags['warnings']) == 'default') :
         if options.get('warnings', _jln_default_flags['warnings']) == 'off' :
