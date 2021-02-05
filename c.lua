@@ -189,6 +189,10 @@ local _jln_c_flag_names = {
   ["warnings"] = true,
   ["jln-warnings-as-error"] = true,
   ["warnings_as_error"] = true,
+  ["jln-warnings-covered-switch-default"] = true,
+  ["warnings_covered_switch_default"] = true,
+  ["jln-warnings-switch"] = true,
+  ["warnings_switch"] = true,
   ["jln-whole-program"] = true,
   ["whole_program"] = true,
 }
@@ -240,7 +244,7 @@ function jln_c_newoptions(defaults)
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
   newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{"default"}, {"off"}, {"on"}}, description="msvc_isystem_with_template_from_non_external"}
   if not _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] then _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] = (defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default") end
-  newoption{trigger="jln-optimization", allowed={{"default"}, {"0"}, {"g"}, {"1"}, {"2"}, {"3"}, {"fast"}, {"size"}}, description="optimization"}
+  newoption{trigger="jln-optimization", allowed={{"default"}, {"0"}, {"g"}, {"1"}, {"2"}, {"3"}, {"fast"}, {"size"}, {"z"}}, description="optimization"}
   if not _OPTIONS["jln-optimization"] then _OPTIONS["jln-optimization"] = (defaults["optimization"] or defaults["jln-optimization"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "on") end
@@ -270,6 +274,10 @@ function jln_c_newoptions(defaults)
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "on") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}, {"basic"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
+  newoption{trigger="jln-warnings-covered-switch-default", allowed={{"default"}, {"on"}, {"off"}}, description="warnings_covered_switch_default"}
+  if not _OPTIONS["jln-warnings-covered-switch-default"] then _OPTIONS["jln-warnings-covered-switch-default"] = (defaults["warnings_covered_switch_default"] or defaults["jln-warnings-covered-switch-default"] or "on") end
+  newoption{trigger="jln-warnings-switch", allowed={{"default"}, {"on"}, {"off"}, {"enum"}, {"mandatory_default"}}, description="warnings_switch"}
+  if not _OPTIONS["jln-warnings-switch"] then _OPTIONS["jln-warnings-switch"] = (defaults["warnings_switch"] or defaults["jln-warnings-switch"] or "on") end
   newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}, {"strip_all"}}, description="whole_program"}
   if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
   newoption{trigger="jln-cc", description="Path or name of the compiler for jln functions"}
@@ -344,6 +352,8 @@ function jln_c_tovalues(values, disable_others)
       ["suggestions"] = values["suggestions"] or values["jln-suggestions"] or (disable_others and "default" or _OPTIONS["jln-suggestions"]),
       ["warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "default" or _OPTIONS["jln-warnings"]),
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "default" or _OPTIONS["jln-warnings-as-error"]),
+      ["warnings_covered_switch_default"] = values["warnings_covered_switch_default"] or values["jln-warnings-covered-switch-default"] or (disable_others and "default" or _OPTIONS["jln-warnings-covered-switch-default"]),
+      ["warnings_switch"] = values["warnings_switch"] or values["jln-warnings-switch"] or (disable_others and "default" or _OPTIONS["jln-warnings-switch"]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "default" or _OPTIONS["jln-whole-program"]),
       ["cc"] = values["cc"] or (not disable_others and _get_extra("jln-cc")) or nil,
       ["cc_version"] = values["cc_version"] or (not disable_others and _get_extra("jln-cc-version")) or nil,
@@ -382,6 +392,8 @@ function jln_c_tovalues(values, disable_others)
       ["suggestions"] = _OPTIONS["jln-suggestions"],
       ["warnings"] = _OPTIONS["jln-warnings"],
       ["warnings_as_error"] = _OPTIONS["jln-warnings-as-error"],
+      ["warnings_covered_switch_default"] = _OPTIONS["jln-warnings-covered-switch-default"],
+      ["warnings_switch"] = _OPTIONS["jln-warnings-switch"],
       ["whole_program"] = _OPTIONS["jln-whole-program"],
       ["cc"] = _get_extra("jln-cc"),
       ["cc_version"] = _get_extra("jln-cc-version"),
@@ -514,6 +526,21 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           jln_buildoptions[#jln_buildoptions+1] = "-Wold-style-definition"
           jln_buildoptions[#jln_buildoptions+1] = "-Wstrict-prototypes"
           jln_buildoptions[#jln_buildoptions+1] = "-Wwrite-strings"
+          if not ( values["warnings_switch"] == "default") then
+            if values["warnings_switch"] == "on" then
+              jln_buildoptions[#jln_buildoptions+1] = "-Wswitch"
+            else
+              if values["warnings_switch"] == "enum" then
+                jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-enum"
+              else
+                if values["warnings_switch"] == "mandatory_default" then
+                  jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-default"
+                else
+                  jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch"
+                end
+              end
+            end
+          end
           if not ( compversion < 407 ) then
             jln_buildoptions[#jln_buildoptions+1] = "-Wsuggest-attribute=noreturn"
             jln_buildoptions[#jln_buildoptions+1] = "-Wlogical-op"
@@ -550,9 +577,28 @@ function jln_c_getoptions(values, disable_others, print_compiler)
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-newline-eof"
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-padded"
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-global-constructors"
-            jln_buildoptions[#jln_buildoptions+1] = "-Wno-covered-switch-default"
-            jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-default"
-            jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-enum"
+            if not ( values["warnings_switch"] == "default") then
+              if values["warnings_switch"] == "on" then
+                jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-enum"
+              else
+                if values["warnings_switch"] == "enum" then
+                  jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-enum"
+                else
+                  if values["warnings_switch"] == "off" then
+                    jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch"
+                    jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-enum"
+                  end
+                end
+              end
+            else
+              jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch"
+              jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-enum"
+            end
+            if not ( values["warnings_covered_switch_default"] == "default") then
+              if values["warnings_covered_switch_default"] == "off" then
+                jln_buildoptions[#jln_buildoptions+1] = "-Wno-covered-switch-default"
+              end
+            end
           end
         end
         if ( values["warnings"] == "strict" or values["warnings"] == "very_strict" ) then
@@ -865,21 +911,31 @@ function jln_c_getoptions(values, disable_others, print_compiler)
             jln_buildoptions[#jln_buildoptions+1] = "-Os"
             jln_linkoptions[#jln_linkoptions+1] = "-Os"
           else
-            if values["optimization"] == "fast" then
-              jln_buildoptions[#jln_buildoptions+1] = "-Ofast"
-              jln_linkoptions[#jln_linkoptions+1] = "-Ofast"
-            else
-              if values["optimization"] == "1" then
-                jln_buildoptions[#jln_buildoptions+1] = "-O1"
-                jln_linkoptions[#jln_linkoptions+1] = "-O1"
+            if values["optimization"] == "z" then
+              if ( compiler == "clang" or compiler == "clang-cl" ) then
+                jln_buildoptions[#jln_buildoptions+1] = "-Oz"
+                jln_linkoptions[#jln_linkoptions+1] = "-Oz"
               else
-                if values["optimization"] == "2" then
-                  jln_buildoptions[#jln_buildoptions+1] = "-O2"
-                  jln_linkoptions[#jln_linkoptions+1] = "-O2"
+                jln_buildoptions[#jln_buildoptions+1] = "-Os"
+                jln_linkoptions[#jln_linkoptions+1] = "-Os"
+              end
+            else
+              if values["optimization"] == "fast" then
+                jln_buildoptions[#jln_buildoptions+1] = "-Ofast"
+                jln_linkoptions[#jln_linkoptions+1] = "-Ofast"
+              else
+                if values["optimization"] == "1" then
+                  jln_buildoptions[#jln_buildoptions+1] = "-O1"
+                  jln_linkoptions[#jln_linkoptions+1] = "-O1"
                 else
-                  if values["optimization"] == "3" then
-                    jln_buildoptions[#jln_buildoptions+1] = "-O3"
-                    jln_linkoptions[#jln_linkoptions+1] = "-O3"
+                  if values["optimization"] == "2" then
+                    jln_buildoptions[#jln_buildoptions+1] = "-O2"
+                    jln_linkoptions[#jln_linkoptions+1] = "-O2"
+                  else
+                    if values["optimization"] == "3" then
+                      jln_buildoptions[#jln_buildoptions+1] = "-O3"
+                      jln_linkoptions[#jln_linkoptions+1] = "-O3"
+                    end
                   end
                 end
               end
@@ -1285,6 +1341,20 @@ function jln_c_getoptions(values, disable_others, print_compiler)
             if values["warnings"] == "strict" then
               jln_buildoptions[#jln_buildoptions+1] = "/wd4583"
               jln_buildoptions[#jln_buildoptions+1] = "/wd4619"
+            end
+          end
+        end
+      end
+      if not ( values["warnings_switch"] == "default") then
+        if values["warnings_switch"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "/we4061"
+        else
+          if values["warnings_switch"] == "enum" then
+            jln_buildoptions[#jln_buildoptions+1] = "/we4062"
+          else
+            if values["warnings_switch"] == "off" then
+              jln_buildoptions[#jln_buildoptions+1] = "/wd4061"
+              jln_buildoptions[#jln_buildoptions+1] = "/wd4062"
             end
           end
         end
