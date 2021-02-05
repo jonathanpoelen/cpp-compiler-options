@@ -4,7 +4,7 @@
 includes'cpp'
 
 -- Registers new command-line options and set default values
-jln_cxx_init_options({warnings='very_strict'} --[[, add_category=boolean|string]])
+jln_cxx_init_options({warnings='very_strict'} --[[, category=string|boolean]])
 
 target("hello")
   set_kind("binary")

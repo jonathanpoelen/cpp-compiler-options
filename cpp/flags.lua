@@ -4,7 +4,7 @@
 --  includes'cpp'
 --  
 --  -- Registers new command-line options and set default values
---  jln_cxx_init_options({warnings='very_strict'} --[[, add_category=boolean|string]])
+--  jln_cxx_init_options({warnings='very_strict'} --[[, category=string|boolean]])
 --  
 --  target("hello")
 --    set_kind("binary")
@@ -145,8 +145,8 @@ local _flag_names = {
   ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", [""]=""},
-  ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", [""]=""},
+  ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
+  ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["jln-pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["pic"]="pic", [""]=""},
@@ -175,6 +175,10 @@ local _flag_names = {
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
+  ["jln-warnings-covered-switch-default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
+  ["warnings_covered_switch_default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
+  ["jln-warnings-switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
+  ["warnings_switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
   ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
   ["whole_program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
 }
@@ -243,6 +247,8 @@ function tovalues(values, disable_others)
       ["suggestions"] = values["suggestions"] or values["jln-suggestions"] or (disable_others and "" or _flag_names["suggestions"][get_config("jln-suggestions")]),
       ["warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "" or _flag_names["warnings"][get_config("jln-warnings")]),
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "" or _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")]),
+      ["warnings_covered_switch_default"] = values["warnings_covered_switch_default"] or values["jln-warnings-covered-switch-default"] or (disable_others and "" or _flag_names["warnings_covered_switch_default"][get_config("jln-warnings-covered-switch-default")]),
+      ["warnings_switch"] = values["warnings_switch"] or values["jln-warnings-switch"] or (disable_others and "" or _flag_names["warnings_switch"][get_config("jln-warnings-switch")]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "" or _flag_names["whole_program"][get_config("jln-whole-program")]),
       ["cxx"] = values["cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
       ["cxx_version"] = values["cxx_version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
@@ -281,6 +287,8 @@ function tovalues(values, disable_others)
       ["suggestions"] = _flag_names["suggestions"][get_config("jln-suggestions")],
       ["warnings"] = _flag_names["warnings"][get_config("jln-warnings")],
       ["warnings_as_error"] = _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")],
+      ["warnings_covered_switch_default"] = _flag_names["warnings_covered_switch_default"][get_config("jln-warnings-covered-switch-default")],
+      ["warnings_switch"] = _flag_names["warnings_switch"][get_config("jln-warnings-switch")],
       ["whole_program"] = _flag_names["whole_program"][get_config("jln-whole-program")],
       ["cxx"] = _get_extra("jln-cxx"),
       ["cxx_version"] = _get_extra("jln-cxx-version"),
@@ -430,6 +438,21 @@ function getoptions(values, disable_others, print_compiler)
           jln_cxflags[#jln_cxflags+1] = "-Wnon-virtual-dtor"
           jln_cxflags[#jln_cxflags+1] = "-Wold-style-cast"
           jln_cxflags[#jln_cxflags+1] = "-Woverloaded-virtual"
+          if not ( values["warnings_switch"] == "") then
+            if values["warnings_switch"] == "on" then
+              jln_cxflags[#jln_cxflags+1] = "-Wswitch"
+            else
+              if values["warnings_switch"] == "enum" then
+                jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
+              else
+                if values["warnings_switch"] == "mandatory_default" then
+                  jln_cxflags[#jln_cxflags+1] = "-Wswitch-default"
+                else
+                  jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
+                end
+              end
+            end
+          end
           if not ( compversion < 407 ) then
             jln_cxflags[#jln_cxflags+1] = "-Wsuggest-attribute=noreturn"
             jln_cxflags[#jln_cxflags+1] = "-Wzero-as-null-pointer-constant"
@@ -479,9 +502,28 @@ function getoptions(values, disable_others, print_compiler)
             jln_cxflags[#jln_cxflags+1] = "-Wno-global-constructors"
             jln_cxflags[#jln_cxflags+1] = "-Wno-weak-vtables"
             jln_cxflags[#jln_cxflags+1] = "-Wno-exit-time-destructors"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-covered-switch-default"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-switch-default"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
+            if not ( values["warnings_switch"] == "") then
+              if values["warnings_switch"] == "on" then
+                jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
+              else
+                if values["warnings_switch"] == "enum" then
+                  jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
+                else
+                  if values["warnings_switch"] == "off" then
+                    jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
+                    jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
+                  end
+                end
+              end
+            else
+              jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
+              jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
+            end
+            if not ( values["warnings_covered_switch_default"] == "") then
+              if values["warnings_covered_switch_default"] == "off" then
+                jln_cxflags[#jln_cxflags+1] = "-Wno-covered-switch-default"
+              end
+            end
             if not ( compversion < 309 ) then
               jln_cxflags[#jln_cxflags+1] = "-Wno-undefined-var-template"
               if not ( compversion < 500 ) then
@@ -833,21 +875,31 @@ function getoptions(values, disable_others, print_compiler)
             jln_cxflags[#jln_cxflags+1] = "-Os"
             jln_ldflags[#jln_ldflags+1] = "-Os"
           else
-            if values["optimization"] == "fast" then
-              jln_cxflags[#jln_cxflags+1] = "-Ofast"
-              jln_ldflags[#jln_ldflags+1] = "-Ofast"
-            else
-              if values["optimization"] == "1" then
-                jln_cxflags[#jln_cxflags+1] = "-O1"
-                jln_ldflags[#jln_ldflags+1] = "-O1"
+            if values["optimization"] == "z" then
+              if ( compiler == "clang" or compiler == "clang-cl" ) then
+                jln_cxflags[#jln_cxflags+1] = "-Oz"
+                jln_ldflags[#jln_ldflags+1] = "-Oz"
               else
-                if values["optimization"] == "2" then
-                  jln_cxflags[#jln_cxflags+1] = "-O2"
-                  jln_ldflags[#jln_ldflags+1] = "-O2"
+                jln_cxflags[#jln_cxflags+1] = "-Os"
+                jln_ldflags[#jln_ldflags+1] = "-Os"
+              end
+            else
+              if values["optimization"] == "fast" then
+                jln_cxflags[#jln_cxflags+1] = "-Ofast"
+                jln_ldflags[#jln_ldflags+1] = "-Ofast"
+              else
+                if values["optimization"] == "1" then
+                  jln_cxflags[#jln_cxflags+1] = "-O1"
+                  jln_ldflags[#jln_ldflags+1] = "-O1"
                 else
-                  if values["optimization"] == "3" then
-                    jln_cxflags[#jln_cxflags+1] = "-O3"
-                    jln_ldflags[#jln_ldflags+1] = "-O3"
+                  if values["optimization"] == "2" then
+                    jln_cxflags[#jln_cxflags+1] = "-O2"
+                    jln_ldflags[#jln_ldflags+1] = "-O2"
+                  else
+                    if values["optimization"] == "3" then
+                      jln_cxflags[#jln_cxflags+1] = "-O3"
+                      jln_ldflags[#jln_ldflags+1] = "-O3"
+                    end
                   end
                 end
               end
@@ -1303,6 +1355,20 @@ function getoptions(values, disable_others, print_compiler)
             if values["warnings"] == "strict" then
               jln_cxflags[#jln_cxflags+1] = "/wd4583"
               jln_cxflags[#jln_cxflags+1] = "/wd4619"
+            end
+          end
+        end
+      end
+      if not ( values["warnings_switch"] == "") then
+        if values["warnings_switch"] == "on" then
+          jln_cxflags[#jln_cxflags+1] = "/we4061"
+        else
+          if values["warnings_switch"] == "enum" then
+            jln_cxflags[#jln_cxflags+1] = "/we4062"
+          else
+            if values["warnings_switch"] == "off" then
+              jln_cxflags[#jln_cxflags+1] = "/wd4061"
+              jln_cxflags[#jln_cxflags+1] = "/wd4062"
             end
           end
         end
