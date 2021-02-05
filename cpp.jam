@@ -105,7 +105,7 @@ feature <jln-lto> : _ default off on fat thin : incidental ;
 feature <jln-microsoft-abi-compatibility-warning> : _ off default on : incidental ;
 feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath external-as-include-system-flag : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external> : _ default off on : incidental ;
-feature <jln-optimization> : _ default 0 g 1 2 3 fast size : incidental ;
+feature <jln-optimization> : _ default 0 g 1 2 3 fast size z : incidental ;
 feature <jln-pedantic> : _ on default off as-error : incidental ;
 feature <jln-pie> : _ default off on pic : incidental ;
 feature <jln-relro> : _ default off on full : incidental ;
@@ -120,6 +120,8 @@ feature <jln-stl-fix> : _ on default off : incidental ;
 feature <jln-suggestions> : _ default off on : propagated ;
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
 feature <jln-warnings-as-error> : _ default off on basic : propagated ;
+feature <jln-warnings-covered-switch-default> : _ on default off : incidental ;
+feature <jln-warnings-switch> : _ on default off enum mandatory-default : incidental ;
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
 
 feature <jln-control-flow-incidental> : _ default off on branch return allow-bugs : incidental ;
@@ -132,7 +134,7 @@ feature <jln-lto-incidental> : _ default off on fat thin : incidental ;
 feature <jln-microsoft-abi-compatibility-warning-incidental> : _ off default on : incidental ;
 feature <jln-msvc-isystem-incidental> : _ default anglebrackets include-and-caexcludepath external-as-include-system-flag : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external-incidental> : _ default off on : incidental ;
-feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size : incidental ;
+feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size z : incidental ;
 feature <jln-pedantic-incidental> : _ on default off as-error : incidental ;
 feature <jln-pie-incidental> : _ default off on pic : incidental ;
 feature <jln-relro-incidental> : _ default off on full : incidental ;
@@ -142,6 +144,8 @@ feature <jln-sanitizers-extra-incidental> : _ default off thread pointer : incid
 feature <jln-stack-protector-incidental> : _ default off on strong all : incidental ;
 feature <jln-stl-debug-incidental> : _ default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix-incidental> : _ on default off : incidental ;
+feature <jln-warnings-covered-switch-default-incidental> : _ on default off : incidental ;
+feature <jln-warnings-switch-incidental> : _ on default off enum mandatory-default : incidental ;
 feature <jln-whole-program-incidental> : _ default off on strip-all : incidental ;
 
 feature <jln-color-default> : default auto never always : incidental ;
@@ -160,7 +164,7 @@ feature <jln-lto-default> : default off on fat thin : incidental ;
 feature <jln-microsoft-abi-compatibility-warning-default> : off default on : incidental ;
 feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath external-as-include-system-flag : incidental ;
 feature <jln-msvc-isystem-with-template-from-non-external-default> : default off on : incidental ;
-feature <jln-optimization-default> : default 0 g 1 2 3 fast size : incidental ;
+feature <jln-optimization-default> : default 0 g 1 2 3 fast size z : incidental ;
 feature <jln-pedantic-default> : on default off as-error : incidental ;
 feature <jln-pie-default> : default off on pic : incidental ;
 feature <jln-relro-default> : default off on full : incidental ;
@@ -175,6 +179,8 @@ feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
+feature <jln-warnings-covered-switch-default-default> : on default off : incidental ;
+feature <jln-warnings-switch-default> : on default off enum mandatory-default : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
 
 
@@ -216,7 +222,7 @@ constant jln_env_lto : [ jln-get-env jln_lto : default off on fat thin ] ;
 constant jln_env_microsoft_abi_compatibility_warning : [ jln-get-env jln_microsoft_abi_compatibility_warning : off default on ] ;
 constant jln_env_msvc_isystem : [ jln-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath external-as-include-system-flag ] ;
 constant jln_env_msvc_isystem_with_template_from_non_external : [ jln-get-env jln_msvc_isystem_with_template_from_non_external : default off on ] ;
-constant jln_env_optimization : [ jln-get-env jln_optimization : default 0 g 1 2 3 fast size ] ;
+constant jln_env_optimization : [ jln-get-env jln_optimization : default 0 g 1 2 3 fast size z ] ;
 constant jln_env_pedantic : [ jln-get-env jln_pedantic : on default off as-error ] ;
 constant jln_env_pie : [ jln-get-env jln_pie : default off on pic ] ;
 constant jln_env_relro : [ jln-get-env jln_relro : default off on full ] ;
@@ -231,6 +237,8 @@ constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
 constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_env_warnings_as_error : [ jln-get-env jln_warnings_as_error : default off on basic ] ;
+constant jln_env_warnings_covered_switch_default : [ jln-get-env jln_warnings_covered_switch_default : on default off ] ;
+constant jln_env_warnings_switch : [ jln-get-env jln_warnings_switch : on default off enum mandatory-default ] ;
 constant jln_env_whole_program : [ jln-get-env jln_whole_program : default off on strip-all ] ;
 
 if $(JLN_BJAM_YEAR_VERSION) < 2016.00
@@ -276,6 +284,10 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-stl-debug-incidental JLN_STL_DEBUG_INCIDENTAL : <jln-stl-debug-incidental> ;
   toolset.flags jln-stl-fix JLN_STL_FIX : <jln-stl-fix> ;
   toolset.flags jln-stl-fix-incidental JLN_STL_FIX_INCIDENTAL : <jln-stl-fix-incidental> ;
+  toolset.flags jln-warnings-covered-switch-default JLN_WARNINGS_COVERED_SWITCH_DEFAULT : <jln-warnings-covered-switch-default> ;
+  toolset.flags jln-warnings-covered-switch-default-incidental JLN_WARNINGS_COVERED_SWITCH_DEFAULT_INCIDENTAL : <jln-warnings-covered-switch-default-incidental> ;
+  toolset.flags jln-warnings-switch JLN_WARNINGS_SWITCH : <jln-warnings-switch> ;
+  toolset.flags jln-warnings-switch-incidental JLN_WARNINGS_SWITCH_INCIDENTAL : <jln-warnings-switch-incidental> ;
   toolset.flags jln-whole-program JLN_WHOLE_PROGRAM : <jln-whole-program> ;
   toolset.flags jln-whole-program-incidental JLN_WHOLE_PROGRAM_INCIDENTAL : <jln-whole-program-incidental> ;
 
@@ -377,6 +389,8 @@ rule jln_flags ( properties * )
       <relevant>jln-stack-protector
       <relevant>jln-stl-debug
       <relevant>jln-stl-fix
+      <relevant>jln-warnings-covered-switch-default
+      <relevant>jln-warnings-switch
       <relevant>jln-whole-program
     ;
   }
@@ -412,6 +426,8 @@ rule jln_flags ( properties * )
   local x_suggestions = [ jln-get-value $(ps) : jln-suggestions : $(jln_env_suggestions) ] ;
   local x_warnings = [ jln-get-value $(ps) : jln-warnings : $(jln_env_warnings) ] ;
   local x_warnings_as_error = [ jln-get-value $(ps) : jln-warnings-as-error : $(jln_env_warnings_as_error) ] ;
+  local x_warnings_covered_switch_default = [ jln-get-value2 $(ps) : jln-warnings-covered-switch-default : jln-warnings-covered-switch-default-incidental : $(jln_env_warnings_covered_switch_default) ] ;
+  local x_warnings_switch = [ jln-get-value2 $(ps) : jln-warnings-switch : jln-warnings-switch-incidental : $(jln_env_warnings_switch) ] ;
   local x_whole_program = [ jln-get-value2 $(ps) : jln-whole-program : jln-whole-program-incidental : $(jln_env_whole_program) ] ;
 
   if (  $(toolset) = "gcc" || $(toolset) = "clang" || $(toolset) = "clang-cl"  )
@@ -428,7 +444,7 @@ rule jln_flags ( properties * )
       {
         if $(toolset) = "gcc"
         {
-          flags +=
+            flags +=
             <cxxflags>"-Wall"
             <cxxflags>"-Wextra"
             <cxxflags>"-Wcast-align"
@@ -448,7 +464,40 @@ rule jln_flags ( properties * )
             <cxxflags>"-Wnon-virtual-dtor"
             <cxxflags>"-Wold-style-cast"
             <cxxflags>"-Woverloaded-virtual"
-          ;
+            ;
+          if ( $(x_warnings_switch) != "default" )
+          {
+            if ( $(x_warnings_switch) = "on" )
+            {
+              flags +=
+                <cxxflags>"-Wswitch"
+              ;
+            }
+            else
+            {
+              if ( $(x_warnings_switch) = "enum" )
+              {
+                flags +=
+                  <cxxflags>"-Wswitch-enum"
+                ;
+              }
+              else
+              {
+                if ( $(x_warnings_switch) = "mandatory-default" )
+                {
+                  flags +=
+                    <cxxflags>"-Wswitch-default"
+                  ;
+                }
+                else
+                {
+                  flags +=
+                    <cxxflags>"-Wno-switch"
+                  ;
+                }
+              }
+            }
+          }
           if ! (  $(version) < "04.07"  )
           {
             flags +=
@@ -515,7 +564,7 @@ rule jln_flags ( properties * )
         {
           if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
           {
-            flags +=
+              flags +=
               <cxxflags>"-Weverything"
               <cxxflags>"-Wno-documentation"
               <cxxflags>"-Wno-documentation-unknown-command"
@@ -526,10 +575,51 @@ rule jln_flags ( properties * )
               <cxxflags>"-Wno-global-constructors"
               <cxxflags>"-Wno-weak-vtables"
               <cxxflags>"-Wno-exit-time-destructors"
-              <cxxflags>"-Wno-covered-switch-default"
-              <cxxflags>"-Wno-switch-default"
-              <cxxflags>"-Wno-switch-enum"
-            ;
+              ;
+            if ( $(x_warnings_switch) != "default" )
+            {
+              if ( $(x_warnings_switch) = "on" )
+              {
+                flags +=
+                  <cxxflags>"-Wno-switch-enum"
+                ;
+              }
+              else
+              {
+                if ( $(x_warnings_switch) = "enum" )
+                {
+                  flags +=
+                    <cxxflags>"-Wswitch-enum"
+                  ;
+                }
+                else
+                {
+                  if ( $(x_warnings_switch) = "off" )
+                  {
+                    flags +=
+                      <cxxflags>"-Wno-switch"
+                      <cxxflags>"-Wno-switch-enum"
+                    ;
+                  }
+                }
+              }
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-Wno-switch"
+                <cxxflags>"-Wno-switch-enum"
+              ;
+            }
+            if ( $(x_warnings_covered_switch_default) != "default" )
+            {
+              if ( $(x_warnings_covered_switch_default) = "off" )
+              {
+                flags +=
+                  <cxxflags>"-Wno-covered-switch-default"
+                ;
+              }
+            }
             if ! (  $(version) < "03.09"  )
             {
               flags +=
@@ -1204,39 +1294,59 @@ rule jln_flags ( properties * )
           }
           else
           {
-            if ( $(x_optimization) = "fast" )
+            if ( $(x_optimization) = "z" )
             {
-              flags +=
-                <cxxflags>"-Ofast"
-                <linkflags>"-Ofast"
-              ;
-            }
-            else
-            {
-              if ( $(x_optimization) = "1" )
+              if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
               {
                 flags +=
-                  <cxxflags>"-O1"
-                  <linkflags>"-O1"
+                  <cxxflags>"-Oz"
+                  <linkflags>"-Oz"
                 ;
               }
               else
               {
-                if ( $(x_optimization) = "2" )
+                flags +=
+                  <cxxflags>"-Os"
+                  <linkflags>"-Os"
+                ;
+              }
+            }
+            else
+            {
+              if ( $(x_optimization) = "fast" )
+              {
+                flags +=
+                  <cxxflags>"-Ofast"
+                  <linkflags>"-Ofast"
+                ;
+              }
+              else
+              {
+                if ( $(x_optimization) = "1" )
                 {
                   flags +=
-                    <cxxflags>"-O2"
-                    <linkflags>"-O2"
+                    <cxxflags>"-O1"
+                    <linkflags>"-O1"
                   ;
                 }
                 else
                 {
-                  if ( $(x_optimization) = "3" )
+                  if ( $(x_optimization) = "2" )
                   {
                     flags +=
-                      <cxxflags>"-O3"
-                      <linkflags>"-O3"
+                      <cxxflags>"-O2"
+                      <linkflags>"-O2"
                     ;
+                  }
+                  else
+                  {
+                    if ( $(x_optimization) = "3" )
+                    {
+                      flags +=
+                        <cxxflags>"-O3"
+                        <linkflags>"-O3"
+                      ;
+                    }
                   }
                 }
               }
@@ -2119,6 +2229,34 @@ rule jln_flags ( properties * )
               flags +=
                 <cxxflags>"/wd4583"
                 <cxxflags>"/wd4619"
+              ;
+            }
+          }
+        }
+      }
+      if ( $(x_warnings_switch) != "default" )
+      {
+        if ( $(x_warnings_switch) = "on" )
+        {
+          flags +=
+            <cxxflags>"/we4061"
+          ;
+        }
+        else
+        {
+          if ( $(x_warnings_switch) = "enum" )
+          {
+            flags +=
+              <cxxflags>"/we4062"
+            ;
+          }
+          else
+          {
+            if ( $(x_warnings_switch) = "off" )
+            {
+              flags +=
+                <cxxflags>"/wd4061"
+                <cxxflags>"/wd4062"
               ;
             }
           }
