@@ -226,8 +226,6 @@ Or(gcc, clang_like) {
         flag'-Wundef',
         flag'-Wunused-macros',
      -- flag'-Winline',
-     -- flag'-Wswitch-default',
-     -- flag'-Wswitch-enum',
         flag'-Winvalid-pch',
         flag'-Wpointer-arith',
         cxx'-Wmissing-declarations',
@@ -241,6 +239,13 @@ Or(gcc, clang_like) {
         c'-Wold-style-definition',
         c'-Wstrict-prototypes',
         c'-Wwrite-strings',
+
+        opt'warnings_switch' {
+          lvl'on' { flag'-Wswitch' } / -- enabled by -Wall
+          lvl'enum' { flag'-Wswitch-enum' } /
+          lvl'mandatory_default' { flag'-Wswitch-default' } /
+          { flag'-Wno-switch' }
+        },
 
         vers(4,7) {
           flag'-Wsuggest-attribute=noreturn',
@@ -306,10 +311,23 @@ Or(gcc, clang_like) {
         flag'-Wno-global-constructors',
         cxx'-Wno-weak-vtables',
         cxx'-Wno-exit-time-destructors',
-        flag'-Wno-covered-switch-default',
      -- cxx'-Qunused-arguments',
-        flag'-Wno-switch-default',
-        flag'-Wno-switch-enum',
+
+        opt'warnings_switch' {
+          lvl'on' { flag'-Wno-switch-enum' } /
+          lvl'enum' { flag'-Wswitch-enum' } /
+          lvl'off' {
+            flag'-Wno-switch',
+            flag'-Wno-switch-enum',
+          }
+        } / {
+          flag'-Wno-switch',
+          flag'-Wno-switch-enum',
+        },
+
+        opt'warnings_covered_switch_default' {
+          lvl'off' { flag'-Wno-covered-switch-default', }
+        },
 
         vers(3,9) {
           cxx'-Wno-undefined-var-template',
@@ -982,6 +1000,12 @@ msvc {
         }
       }
     },
+
+    opt'warnings_switch' {
+      lvl'on' { flag'/we4061', } /
+      lvl'enum' { flag'/we4062', } /
+      lvl'off' { flag'/wd4061', flag'/wd4062' }
+    },
   } /
   opt'warnings' {
     lvl'off' { flag'/W0' } /
@@ -1159,6 +1183,8 @@ Vbase = {
     stack_protector={{'off', 'on', 'strong', 'all'},},
     suggestions={{'off', 'on'},},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
+    warnings_switch={{'on', 'off', 'enum', 'mandatory_default'}, 'on'},
+    warnings_covered_switch_default={{'on', 'off'}, 'on'},
     conversion_warnings={{'off', 'on', 'sign', 'conversion'}, 'on'},
     warnings_as_error={{'off', 'on', 'basic'},},
     whole_program={{'off', 'on', 'strip_all'},},
