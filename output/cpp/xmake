@@ -194,7 +194,7 @@ function tovalues(values, disable_others)
   end
 end
 
--- same as getoptions but with target as first parameter
+-- same as getoptions() and apply the options on a target
 function setoptions(target, values, disable_others, print_compiler)
   local options = getoptions(values, disable_others, print_compiler)
   for _,opt in ipairs(options.cxxflags) do target:add('cxxflags', opt, {force=true}) end

@@ -390,3 +390,15 @@ local _flag_names = {
   option("jln-ld", {showmenu=true, description="Path or name of the linker for jln functions", default=""})
 end
 
+-- Create a new rule. Options are added to the current configuration
+function jln_c_rule(rulename, options, disable_others, imported)
+  imported = imported or "c.flags"
+
+  rule(rulename)
+    on_load(function(target)
+      import(imported)
+      flags.setoptions(target, options, disable_others)
+    end)
+  rule_end()
+end
+
