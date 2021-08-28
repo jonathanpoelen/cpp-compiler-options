@@ -6,8 +6,18 @@
 --  -- Registers new command-line options and set default values
 --  jln_cxx_init_options({warnings='very_strict'} --[[, category=string|boolean]])
 --  
---  target("hello")
---    set_kind("binary")
+--  options = {}
+--  if is_mode('debug') then
+--    options.str_debug = 'on'
+--  end
+--  
+--  -- Create a new rule. Options are added to the current configuration
+--  jln_cxx_rule('jln_debug', options --[[, disable_others = false, imported='cpp.flags']])
+--  add_rules('jln_flags')
+--  
+--  target('hello')
+--    set_kind('binary')
+--    -- Custom configuration when jln_cxx_rule() is not enough
 --    on_load(function(target)
 --      import'cpp.flags'
 --      -- getoptions(values = {}, disable_others = false, print_compiler = false)
@@ -32,7 +42,7 @@
 --      print(values)
 --    end)
 --  
---    add_files("src/*.cpp")
+--    add_files('src/*.cpp')
 --  
 --  -- NOTE: for C, jln_ and jln_cxx_ prefix function become jln_c_
 --  ```
@@ -60,7 +70,7 @@
 --  microsoft_abi_compatibility_warning = off default on
 --  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 --  msvc_isystem_with_template_from_non_external = default off on
---  optimization = default 0 g 1 2 3 fast size
+--  optimization = default 0 g 1 2 3 fast size z
 --  pedantic = on default off as_error
 --  pie = default off on pic
 --  relro = default off on full
@@ -75,13 +85,15 @@
 --  suggestions = default off on
 --  warnings = on default off strict very_strict
 --  warnings_as_error = default off on basic
+--  warnings_covered_switch_default = on default off
+--  warnings_switch = on default off enum mandatory_default
 --  whole_program = default off on strip_all
 --  ```
 --  <!-- ./compiler-options.lua -->
 --  
 --  The value `default` does nothing.
 --  
---  If not specified, `conversion_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
+--  If not specified, `conversion_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix`, `warnings`, `warnings_covered_switch_default` and `warnings_switch` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 --  
 --  - `control_flow=allow_bugs`
 --    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -297,7 +309,7 @@ function tovalues(values, disable_others)
   end
 end
 
--- same as getoptions but with target as first parameter
+-- same as getoptions() and apply the options on a target
 function setoptions(target, values, disable_others, print_compiler)
   local options = getoptions(values, disable_others, print_compiler)
   for _,opt in ipairs(options.cxxflags) do target:add('cxxflags', opt, {force=true}) end
