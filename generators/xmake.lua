@@ -30,6 +30,7 @@ return {
     local comp_gcc = _.is_C and "'gcc'" or "'g++'"
     local comp_clang = _.is_C and "'clang'" or "'clang++'"
     local cxflags = _.is_C and "cflags" or "cxxflags"
+    local imported_filename = _.is_C and "c.flags" or "cpp.flags"
     _.cxflags_name = cxflags
 
     local extraopts = {
@@ -121,6 +122,19 @@ return {
     end
     _:print('end\n')
 
+    _:print('-- Create a new rule. Options are added to the current configuration')
+    _:print('function ' .. funcprefix .. 'rule(rulename, options, disable_others, imported)')
+    _:print('  imported = imported or "' .. imported_filename .. '"\n')
+    _:print([[
+  rule(rulename)
+    on_load(function(target)
+      import(imported)
+      flags.setoptions(target, options, disable_others)
+    end)
+  rule_end()
+end
+]])
+
     _._options_str = _:get_output()
     _._strs = {}
     _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
@@ -191,7 +205,7 @@ function tovalues(values, disable_others)
   end
 end
 
--- same as getoptions but with target as first parameter
+-- same as getoptions() and apply the options on a target
 function setoptions(target, values, disable_others, print_compiler)
   local options = getoptions(values, disable_others, print_compiler)
   for _,opt in ipairs(options.]] .. cxflags .. [[) do target:add(']] .. cxflags .. [[', opt, {force=true}) end

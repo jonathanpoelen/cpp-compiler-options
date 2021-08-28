@@ -18,7 +18,7 @@ $ `g++ main.cpp`
 
 > No output
 
-$ `g++ main.cpp @output/cpp/gcc/gcc-6.1-warnings`
+$ `g++ main.cpp @cpp-compiler-options/output/cpp/gcc/gcc-6.1-warnings`
 
 ```
 main.cpp: In function ‘int main()’:
@@ -192,8 +192,18 @@ includes'cpp'
 -- Registers new command-line options and set default values
 jln_cxx_init_options({warnings='very_strict'} --[[, category=string|boolean]])
 
-target("hello")
-  set_kind("binary")
+options = {}
+if is_mode('debug') then
+  options.str_debug = 'on'
+end
+
+-- Create a new rule. Options are added to the current configuration
+jln_cxx_rule('jln_debug', options --[[, disable_others = false, imported='cpp.flags']])
+add_rules('jln_flags')
+
+target('hello')
+  set_kind('binary')
+  -- Custom configuration when jln_cxx_rule() is not enough
   on_load(function(target)
     import'cpp.flags'
     -- getoptions(values = {}, disable_others = false, print_compiler = false)
@@ -218,7 +228,7 @@ target("hello")
     print(values)
   end)
 
-  add_files("src/*.cpp")
+  add_files('src/*.cpp')
 
 -- NOTE: for C, jln_ and jln_cxx_ prefix function become jln_c_
 ```
