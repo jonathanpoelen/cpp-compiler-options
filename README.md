@@ -65,7 +65,7 @@ lto = default off on fat thin
 microsoft_abi_compatibility_warning = off default on
 msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 msvc_isystem_with_template_from_non_external = default off on
-optimization = default 0 g 1 2 3 fast size
+optimization = default 0 g 1 2 3 fast size z
 pedantic = on default off as_error
 pie = default off on pic
 relro = default off on full
@@ -80,13 +80,15 @@ stl_fix = on default off
 suggestions = default off on
 warnings = on default off strict very_strict
 warnings_as_error = default off on basic
+warnings_covered_switch_default = on default off
+warnings_switch = on default off enum mandatory_default
 whole_program = default off on strip_all
 ```
 <!-- ./compiler-options.lua -->
 
 The value `default` does nothing.
 
-If not specified, `conversion_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix` and `warnings` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
+If not specified, `conversion_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix`, `warnings`, `warnings_covered_switch_default` and `warnings_switch` are `on` ; `microsoft_abi_compatibility_warning` and `shadow_warnings` are `off`.
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
