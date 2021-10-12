@@ -363,8 +363,10 @@ def jln_flags(options, compiler=None, version=None, linker=None):
                 flags += ('-Wno-inconsistent-missing-destructor-override', )
                 if not ( verless(9, 0) ) :
                   flags += ('-Wno-ctad-maybe-unsupported', )
-                  if not ( verless(11, 0) ) :
-                    flags += ('-Wno-suggest-destructor-override', )
+                  if not ( verless(10, 0) ) :
+                    flags += ('-Wno-c++20-compat', )
+                    if not ( verless(11, 0) ) :
+                      flags += ('-Wno-suggest-destructor-override', )
         if ( options.get('warnings', _jln_default_flags['warnings']) == 'strict' or options.get('warnings', _jln_default_flags['warnings']) == 'very_strict' ) :
           if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
             flags += ('-Wcast-align=strict', )
