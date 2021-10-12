@@ -200,6 +200,7 @@ end
 -- gcc and clang
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 -- https://clang.llvm.org/docs/DiagnosticsReference.html
+-- https://releases.llvm.org/10.0.0/tools/clang/docs/DiagnosticsReference.html
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
 return --[[printAST]] {
@@ -338,8 +339,12 @@ Or(gcc, clang_like) {
             vers(9) {
               cxx'-Wno-ctad-maybe-unsupported',
 
-              vers(11) {
-                cxx'-Wno-suggest-destructor-override',
+              vers(10) {
+                cxx'-Wno-c++20-compat',
+
+                vers(11) {
+                  cxx'-Wno-suggest-destructor-override',
+                }
               }
             }
           }
