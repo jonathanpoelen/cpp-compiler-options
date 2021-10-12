@@ -637,11 +637,17 @@ rule jln_flags ( properties * )
                   flags +=
                     <cxxflags>"-Wno-ctad-maybe-unsupported"
                   ;
-                  if ! (  $(version) < "11.00"  )
+                  if ! (  $(version) < "10.00"  )
                   {
                     flags +=
-                      <cxxflags>"-Wno-suggest-destructor-override"
+                      <cxxflags>"-Wno-c++20-compat"
                     ;
+                    if ! (  $(version) < "11.00"  )
+                    {
+                      flags +=
+                        <cxxflags>"-Wno-suggest-destructor-override"
+                      ;
+                    }
                   }
                 }
               }
