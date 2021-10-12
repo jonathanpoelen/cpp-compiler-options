@@ -12,7 +12,6 @@
 -Wno-mismatched-tags
 -Wno-newline-eof
 -Wno-padded
--Wno-suggest-destructor-override
 -Wno-switch
 -Wno-switch-enum
 -Wno-undefined-var-template

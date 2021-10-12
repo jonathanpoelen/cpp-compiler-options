@@ -133,8 +133,11 @@ foreach ___jln_flags : ___jln_custom_flags
                 jln_cpp_flags += ['-Wno-inconsistent-missing-destructor-override', ]
                 if (  not ( ___jln_compiler_version.version_compare('<9.0') ) )
                   jln_cpp_flags += ['-Wno-ctad-maybe-unsupported', ]
-                  if (  not ( ___jln_compiler_version.version_compare('<11.0') ) )
-                    jln_cpp_flags += ['-Wno-suggest-destructor-override', ]
+                  if (  not ( ___jln_compiler_version.version_compare('<10.0') ) )
+                    jln_cpp_flags += ['-Wno-c++20-compat', ]
+                    if (  not ( ___jln_compiler_version.version_compare('<11.0') ) )
+                      jln_cpp_flags += ['-Wno-suggest-destructor-override', ]
+                    endif
                   endif
                 endif
               endif

@@ -1,0 +1,3 @@
+-fsanitize=address
+-fsanitize-address-use-after-scope
+-fsanitize=undefined

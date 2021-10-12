@@ -498,8 +498,11 @@ function jln_getoptions(values, disable_others, print_compiler)
                 jln_buildoptions[#jln_buildoptions+1] = "-Wno-inconsistent-missing-destructor-override"
                 if not ( compversion < 900 ) then
                   jln_buildoptions[#jln_buildoptions+1] = "-Wno-ctad-maybe-unsupported"
-                  if not ( compversion < 1100 ) then
-                    jln_buildoptions[#jln_buildoptions+1] = "-Wno-suggest-destructor-override"
+                  if not ( compversion < 1000 ) then
+                    jln_buildoptions[#jln_buildoptions+1] = "-Wno-c++20-compat"
+                    if not ( compversion < 1100 ) then
+                      jln_buildoptions[#jln_buildoptions+1] = "-Wno-suggest-destructor-override"
+                    end
                   end
                 end
               end

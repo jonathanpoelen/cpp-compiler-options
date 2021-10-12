@@ -1,4 +1,5 @@
-/permissive-
+-pedantic
+-Wconversion
 -Weverything
 -Wno-c++20-compat
 -Wno-c++98-compat
@@ -12,9 +13,11 @@
 -Wno-mismatched-tags
 -Wno-newline-eof
 -Wno-padded
--Wno-suggest-destructor-override
+-Wno-shadow
+-Wno-shadow-field
 -Wno-switch
 -Wno-switch-enum
 -Wno-undefined-var-template
 -Wno-weak-vtables
-/Zc:__cplusplus
+-Wsign-compare
+-Wsign-conversion

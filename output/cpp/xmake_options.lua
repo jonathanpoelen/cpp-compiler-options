@@ -390,14 +390,24 @@ local _flag_names = {
   option("jln-ld", {showmenu=true, description="Path or name of the linker for jln functions", default=""})
 end
 
+
+local cached_flags = {}
+
+
 -- Create a new rule. Options are added to the current configuration
 function jln_cxx_rule(rulename, options, disable_others, imported)
   imported = imported or "cpp.flags"
 
   rule(rulename)
     on_load(function(target)
-      import(imported)
-      flags.setoptions(target, options, disable_others)
+      local cached = cached_flags[rulename]
+      if not cached then
+        import(imported)
+        cached = flags.getoptions(options, disable_others)
+        cached_flags[rulename] = cached
+      end
+      for _,opt in ipairs(cached.cxxflags) do target:add('cxxflags', opt, {force=true}) end
+      for _,opt in ipairs(cached.ldflags) do target:add('ldflags', opt, {force=true}) end
     end)
   rule_end()
 end
