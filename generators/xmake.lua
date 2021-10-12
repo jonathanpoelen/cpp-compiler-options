@@ -122,14 +122,21 @@ return {
     end
     _:print('end\n')
 
+    _:print('\nlocal cached_flags = {}\n\n')
     _:print('-- Create a new rule. Options are added to the current configuration')
     _:print('function ' .. funcprefix .. 'rule(rulename, options, disable_others, imported)')
     _:print('  imported = imported or "' .. imported_filename .. '"\n')
     _:print([[
   rule(rulename)
     on_load(function(target)
-      import(imported)
-      flags.setoptions(target, options, disable_others)
+      local cached = cached_flags[rulename]
+      if not cached then
+        import(imported)
+        cached = flags.getoptions(options, disable_others)
+        cached_flags[rulename] = cached
+      end
+      for _,opt in ipairs(cached.cxxflags) do target:add('cxxflags', opt, {force=true}) end
+      for _,opt in ipairs(cached.ldflags) do target:add('ldflags', opt, {force=true}) end
     end)
   rule_end()
 end
