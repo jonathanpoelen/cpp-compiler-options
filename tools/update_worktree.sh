@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # mkdir w
-# for d in bjam cmake meson premake5 scons ; do git worktree add w/$d ; done
+# for d in bjam cmake meson premake5 scons xmake ; do git worktree add w/$d ; done
 # empty branch:
 # git switch --orphan $d
 
