@@ -136,6 +136,8 @@ local _flag_names = {
   ["conversion_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["conversion"]="conversion", [""]=""},
   ["jln-coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-covered-switch-default-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
+  ["covered_switch_default_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["jln-cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["jln-debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["line_tables_only"]="line_tables_only", ["gdb"]="gdb", ["lldb"]="lldb", ["sce"]="sce", [""]=""},
@@ -150,22 +152,30 @@ local _flag_names = {
   ["exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-fix-compiler-error"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["fix_compiler_error"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-float-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["float_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-integer-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["integer_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
   ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
   ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
   ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
-  ["jln-microsoft-abi-compatibility-warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["microsoft_abi_compatibility_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-microsoft-abi-compatibility-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["microsoft_abi_compatibility_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
   ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-noexcept-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["noexcept_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
+  ["jln-other-sanitizers"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", ["memory"]="memory", [""]=""},
+  ["other_sanitizers"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", ["memory"]="memory", [""]=""},
   ["jln-pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
-  ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["pic"]="pic", [""]=""},
-  ["pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["pic"]="pic", [""]=""},
+  ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
+  ["pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
   ["jln-relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
   ["relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
   ["jln-reproducible-build-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -174,8 +184,6 @@ local _flag_names = {
   ["rtti"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-sanitizers-extra"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", [""]=""},
-  ["sanitizers_extra"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", [""]=""},
   ["jln-shadow-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["shadow_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["jln-stack-protector"] = {["default"]="", ["off"]="off", ["on"]="on", ["strong"]="strong", ["all"]="all", [""]=""},
@@ -186,14 +194,12 @@ local _flag_names = {
   ["stl_fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
+  ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
-  ["jln-warnings-covered-switch-default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
-  ["warnings_covered_switch_default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
-  ["jln-warnings-switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
-  ["warnings_switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
   ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
   ["whole_program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
 }
@@ -235,6 +241,7 @@ function tovalues(values, disable_others)
       ["control_flow"] = values["control_flow"] or values["jln-control-flow"] or (disable_others and "" or _flag_names["control_flow"][get_config("jln-control-flow")]),
       ["conversion_warnings"] = values["conversion_warnings"] or values["jln-conversion-warnings"] or (disable_others and "" or _flag_names["conversion_warnings"][get_config("jln-conversion-warnings")]),
       ["coverage"] = values["coverage"] or values["jln-coverage"] or (disable_others and "" or _flag_names["coverage"][get_config("jln-coverage")]),
+      ["covered_switch_default_warnings"] = values["covered_switch_default_warnings"] or values["jln-covered-switch-default-warnings"] or (disable_others and "" or _flag_names["covered_switch_default_warnings"][get_config("jln-covered-switch-default-warnings")]),
       ["cpu"] = values["cpu"] or values["jln-cpu"] or (disable_others and "" or _flag_names["cpu"][get_config("jln-cpu")]),
       ["debug"] = values["debug"] or values["jln-debug"] or (disable_others and "" or _flag_names["debug"][get_config("jln-debug")]),
       ["diagnostics_format"] = values["diagnostics_format"] or values["jln-diagnostics-format"] or (disable_others and "" or _flag_names["diagnostics_format"][get_config("jln-diagnostics-format")]),
@@ -242,28 +249,30 @@ function tovalues(values, disable_others)
       ["elide_type"] = values["elide_type"] or values["jln-elide-type"] or (disable_others and "" or _flag_names["elide_type"][get_config("jln-elide-type")]),
       ["exceptions"] = values["exceptions"] or values["jln-exceptions"] or (disable_others and "" or _flag_names["exceptions"][get_config("jln-exceptions")]),
       ["fix_compiler_error"] = values["fix_compiler_error"] or values["jln-fix-compiler-error"] or (disable_others and "" or _flag_names["fix_compiler_error"][get_config("jln-fix-compiler-error")]),
+      ["float_sanitizers"] = values["float_sanitizers"] or values["jln-float-sanitizers"] or (disable_others and "" or _flag_names["float_sanitizers"][get_config("jln-float-sanitizers")]),
+      ["integer_sanitizers"] = values["integer_sanitizers"] or values["jln-integer-sanitizers"] or (disable_others and "" or _flag_names["integer_sanitizers"][get_config("jln-integer-sanitizers")]),
       ["linker"] = values["linker"] or values["jln-linker"] or (disable_others and "" or _flag_names["linker"][get_config("jln-linker")]),
       ["lto"] = values["lto"] or values["jln-lto"] or (disable_others and "" or _flag_names["lto"][get_config("jln-lto")]),
-      ["microsoft_abi_compatibility_warning"] = values["microsoft_abi_compatibility_warning"] or values["jln-microsoft-abi-compatibility-warning"] or (disable_others and "" or _flag_names["microsoft_abi_compatibility_warning"][get_config("jln-microsoft-abi-compatibility-warning")]),
+      ["microsoft_abi_compatibility_warnings"] = values["microsoft_abi_compatibility_warnings"] or values["jln-microsoft-abi-compatibility-warnings"] or (disable_others and "" or _flag_names["microsoft_abi_compatibility_warnings"][get_config("jln-microsoft-abi-compatibility-warnings")]),
       ["msvc_isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_others and "" or _flag_names["msvc_isystem"][get_config("jln-msvc-isystem")]),
       ["msvc_isystem_with_template_from_non_external"] = values["msvc_isystem_with_template_from_non_external"] or values["jln-msvc-isystem-with-template-from-non-external"] or (disable_others and "" or _flag_names["msvc_isystem_with_template_from_non_external"][get_config("jln-msvc-isystem-with-template-from-non-external")]),
+      ["noexcept_warnings"] = values["noexcept_warnings"] or values["jln-noexcept-warnings"] or (disable_others and "" or _flag_names["noexcept_warnings"][get_config("jln-noexcept-warnings")]),
       ["optimization"] = values["optimization"] or values["jln-optimization"] or (disable_others and "" or _flag_names["optimization"][get_config("jln-optimization")]),
+      ["other_sanitizers"] = values["other_sanitizers"] or values["jln-other-sanitizers"] or (disable_others and "" or _flag_names["other_sanitizers"][get_config("jln-other-sanitizers")]),
       ["pedantic"] = values["pedantic"] or values["jln-pedantic"] or (disable_others and "" or _flag_names["pedantic"][get_config("jln-pedantic")]),
       ["pie"] = values["pie"] or values["jln-pie"] or (disable_others and "" or _flag_names["pie"][get_config("jln-pie")]),
       ["relro"] = values["relro"] or values["jln-relro"] or (disable_others and "" or _flag_names["relro"][get_config("jln-relro")]),
       ["reproducible_build_warnings"] = values["reproducible_build_warnings"] or values["jln-reproducible-build-warnings"] or (disable_others and "" or _flag_names["reproducible_build_warnings"][get_config("jln-reproducible-build-warnings")]),
       ["rtti"] = values["rtti"] or values["jln-rtti"] or (disable_others and "" or _flag_names["rtti"][get_config("jln-rtti")]),
       ["sanitizers"] = values["sanitizers"] or values["jln-sanitizers"] or (disable_others and "" or _flag_names["sanitizers"][get_config("jln-sanitizers")]),
-      ["sanitizers_extra"] = values["sanitizers_extra"] or values["jln-sanitizers-extra"] or (disable_others and "" or _flag_names["sanitizers_extra"][get_config("jln-sanitizers-extra")]),
       ["shadow_warnings"] = values["shadow_warnings"] or values["jln-shadow-warnings"] or (disable_others and "" or _flag_names["shadow_warnings"][get_config("jln-shadow-warnings")]),
       ["stack_protector"] = values["stack_protector"] or values["jln-stack-protector"] or (disable_others and "" or _flag_names["stack_protector"][get_config("jln-stack-protector")]),
       ["stl_debug"] = values["stl_debug"] or values["jln-stl-debug"] or (disable_others and "" or _flag_names["stl_debug"][get_config("jln-stl-debug")]),
       ["stl_fix"] = values["stl_fix"] or values["jln-stl-fix"] or (disable_others and "" or _flag_names["stl_fix"][get_config("jln-stl-fix")]),
       ["suggestions"] = values["suggestions"] or values["jln-suggestions"] or (disable_others and "" or _flag_names["suggestions"][get_config("jln-suggestions")]),
+      ["switch_warnings"] = values["switch_warnings"] or values["jln-switch-warnings"] or (disable_others and "" or _flag_names["switch_warnings"][get_config("jln-switch-warnings")]),
       ["warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "" or _flag_names["warnings"][get_config("jln-warnings")]),
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "" or _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")]),
-      ["warnings_covered_switch_default"] = values["warnings_covered_switch_default"] or values["jln-warnings-covered-switch-default"] or (disable_others and "" or _flag_names["warnings_covered_switch_default"][get_config("jln-warnings-covered-switch-default")]),
-      ["warnings_switch"] = values["warnings_switch"] or values["jln-warnings-switch"] or (disable_others and "" or _flag_names["warnings_switch"][get_config("jln-warnings-switch")]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "" or _flag_names["whole_program"][get_config("jln-whole-program")]),
       ["cxx"] = values["cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
       ["cxx_version"] = values["cxx_version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
@@ -275,6 +284,7 @@ function tovalues(values, disable_others)
       ["control_flow"] = _flag_names["control_flow"][get_config("jln-control-flow")],
       ["conversion_warnings"] = _flag_names["conversion_warnings"][get_config("jln-conversion-warnings")],
       ["coverage"] = _flag_names["coverage"][get_config("jln-coverage")],
+      ["covered_switch_default_warnings"] = _flag_names["covered_switch_default_warnings"][get_config("jln-covered-switch-default-warnings")],
       ["cpu"] = _flag_names["cpu"][get_config("jln-cpu")],
       ["debug"] = _flag_names["debug"][get_config("jln-debug")],
       ["diagnostics_format"] = _flag_names["diagnostics_format"][get_config("jln-diagnostics-format")],
@@ -282,28 +292,30 @@ function tovalues(values, disable_others)
       ["elide_type"] = _flag_names["elide_type"][get_config("jln-elide-type")],
       ["exceptions"] = _flag_names["exceptions"][get_config("jln-exceptions")],
       ["fix_compiler_error"] = _flag_names["fix_compiler_error"][get_config("jln-fix-compiler-error")],
+      ["float_sanitizers"] = _flag_names["float_sanitizers"][get_config("jln-float-sanitizers")],
+      ["integer_sanitizers"] = _flag_names["integer_sanitizers"][get_config("jln-integer-sanitizers")],
       ["linker"] = _flag_names["linker"][get_config("jln-linker")],
       ["lto"] = _flag_names["lto"][get_config("jln-lto")],
-      ["microsoft_abi_compatibility_warning"] = _flag_names["microsoft_abi_compatibility_warning"][get_config("jln-microsoft-abi-compatibility-warning")],
+      ["microsoft_abi_compatibility_warnings"] = _flag_names["microsoft_abi_compatibility_warnings"][get_config("jln-microsoft-abi-compatibility-warnings")],
       ["msvc_isystem"] = _flag_names["msvc_isystem"][get_config("jln-msvc-isystem")],
       ["msvc_isystem_with_template_from_non_external"] = _flag_names["msvc_isystem_with_template_from_non_external"][get_config("jln-msvc-isystem-with-template-from-non-external")],
+      ["noexcept_warnings"] = _flag_names["noexcept_warnings"][get_config("jln-noexcept-warnings")],
       ["optimization"] = _flag_names["optimization"][get_config("jln-optimization")],
+      ["other_sanitizers"] = _flag_names["other_sanitizers"][get_config("jln-other-sanitizers")],
       ["pedantic"] = _flag_names["pedantic"][get_config("jln-pedantic")],
       ["pie"] = _flag_names["pie"][get_config("jln-pie")],
       ["relro"] = _flag_names["relro"][get_config("jln-relro")],
       ["reproducible_build_warnings"] = _flag_names["reproducible_build_warnings"][get_config("jln-reproducible-build-warnings")],
       ["rtti"] = _flag_names["rtti"][get_config("jln-rtti")],
       ["sanitizers"] = _flag_names["sanitizers"][get_config("jln-sanitizers")],
-      ["sanitizers_extra"] = _flag_names["sanitizers_extra"][get_config("jln-sanitizers-extra")],
       ["shadow_warnings"] = _flag_names["shadow_warnings"][get_config("jln-shadow-warnings")],
       ["stack_protector"] = _flag_names["stack_protector"][get_config("jln-stack-protector")],
       ["stl_debug"] = _flag_names["stl_debug"][get_config("jln-stl-debug")],
       ["stl_fix"] = _flag_names["stl_fix"][get_config("jln-stl-fix")],
       ["suggestions"] = _flag_names["suggestions"][get_config("jln-suggestions")],
+      ["switch_warnings"] = _flag_names["switch_warnings"][get_config("jln-switch-warnings")],
       ["warnings"] = _flag_names["warnings"][get_config("jln-warnings")],
       ["warnings_as_error"] = _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")],
-      ["warnings_covered_switch_default"] = _flag_names["warnings_covered_switch_default"][get_config("jln-warnings-covered-switch-default")],
-      ["warnings_switch"] = _flag_names["warnings_switch"][get_config("jln-warnings-switch")],
       ["whole_program"] = _flag_names["whole_program"][get_config("jln-whole-program")],
       ["cxx"] = _get_extra("jln-cxx"),
       ["cxx_version"] = _get_extra("jln-cxx-version"),
@@ -453,14 +465,14 @@ function getoptions(values, disable_others, print_compiler)
           jln_cxflags[#jln_cxflags+1] = "-Wnon-virtual-dtor"
           jln_cxflags[#jln_cxflags+1] = "-Wold-style-cast"
           jln_cxflags[#jln_cxflags+1] = "-Woverloaded-virtual"
-          if not ( values["warnings_switch"] == "") then
-            if values["warnings_switch"] == "on" then
+          if not ( values["switch_warnings"] == "") then
+            if values["switch_warnings"] == "on" then
               jln_cxflags[#jln_cxflags+1] = "-Wswitch"
             else
-              if values["warnings_switch"] == "enum" then
+              if values["switch_warnings"] == "enum" then
                 jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
               else
-                if values["warnings_switch"] == "mandatory_default" then
+                if values["switch_warnings"] == "mandatory_default" then
                   jln_cxflags[#jln_cxflags+1] = "-Wswitch-default"
                 else
                   jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
@@ -517,14 +529,14 @@ function getoptions(values, disable_others, print_compiler)
             jln_cxflags[#jln_cxflags+1] = "-Wno-global-constructors"
             jln_cxflags[#jln_cxflags+1] = "-Wno-weak-vtables"
             jln_cxflags[#jln_cxflags+1] = "-Wno-exit-time-destructors"
-            if not ( values["warnings_switch"] == "") then
-              if values["warnings_switch"] == "on" then
+            if not ( values["switch_warnings"] == "") then
+              if values["switch_warnings"] == "on" then
                 jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
               else
-                if values["warnings_switch"] == "enum" then
+                if values["switch_warnings"] == "enum" then
                   jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
                 else
-                  if values["warnings_switch"] == "off" then
+                  if values["switch_warnings"] == "off" then
                     jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
                     jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
                   end
@@ -534,8 +546,8 @@ function getoptions(values, disable_others, print_compiler)
               jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
               jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
             end
-            if not ( values["warnings_covered_switch_default"] == "") then
-              if values["warnings_covered_switch_default"] == "off" then
+            if not ( values["covered_switch_default_warnings"] == "") then
+              if values["covered_switch_default_warnings"] == "off" then
                 jln_cxflags[#jln_cxflags+1] = "-Wno-covered-switch-default"
               end
             end
@@ -583,8 +595,8 @@ function getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["microsoft_abi_compatibility_warning"] == "") then
-      if values["microsoft_abi_compatibility_warning"] == "on" then
+    if not ( values["microsoft_abi_compatibility_warnings"] == "") then
+      if values["microsoft_abi_compatibility_warnings"] == "on" then
         if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
           jln_cxflags[#jln_cxflags+1] = "-Wmismatched-tags"
         end
@@ -601,10 +613,16 @@ function getoptions(values, disable_others, print_compiler)
         if values["warnings_as_error"] == "basic" then
           jln_cxflags[#jln_cxflags+1] = "-Werror=return-type"
           jln_cxflags[#jln_cxflags+1] = "-Werror=init-self"
-          if ( compiler == "gcc" and not ( compversion < 501 ) ) then
-            jln_cxflags[#jln_cxflags+1] = "-Werror=array-bounds"
-            jln_cxflags[#jln_cxflags+1] = "-Werror=logical-op"
-            jln_cxflags[#jln_cxflags+1] = "-Werror=logical-not-parentheses"
+          if compiler == "gcc" then
+            jln_cxflags[#jln_cxflags+1] = "-Werror=div-by-zero"
+            if not ( compversion < 501 ) then
+              jln_cxflags[#jln_cxflags+1] = "-Werror=array-bounds"
+              jln_cxflags[#jln_cxflags+1] = "-Werror=logical-op"
+              jln_cxflags[#jln_cxflags+1] = "-Werror=logical-not-parentheses"
+              if not ( compversion < 700 ) then
+                jln_cxflags[#jln_cxflags+1] = "-Werror=literal-suffix"
+              end
+            end
           else
             if ( compiler == "clang" or compiler == "clang-cl" ) then
               jln_cxflags[#jln_cxflags+1] = "-Werror=array-bounds"
@@ -613,8 +631,11 @@ function getoptions(values, disable_others, print_compiler)
                 jln_cxflags[#jln_cxflags+1] = "-Werror=logical-not-parentheses"
                 if not ( compversion < 306 ) then
                   jln_cxflags[#jln_cxflags+1] = "-Werror=delete-incomplete"
-                  if not ( compversion < 700 ) then
-                    jln_cxflags[#jln_cxflags+1] = "-Werror=dynamic-class-memaccess"
+                  if not ( compversion < 600 ) then
+                    jln_cxflags[#jln_cxflags+1] = "-Werror=user-defined-literals"
+                    if not ( compversion < 700 ) then
+                      jln_cxflags[#jln_cxflags+1] = "-Werror=dynamic-class-memaccess"
+                    end
                   end
                 end
               end
@@ -662,6 +683,13 @@ function getoptions(values, disable_others, print_compiler)
               if not ( compversion < 304 ) then
                 jln_cxflags[#jln_cxflags+1] = "-fsanitize=leak"
                 jln_ldflags[#jln_ldflags+1] = "-fsanitize=leak"
+              end
+              if not ( compversion < 600 ) then
+                if not ( values["stack_protector"] == "") then
+                  if not ( values["stack_protector"] == "off" ) then
+                    jln_cxflags[#jln_cxflags+1] = "-fsanitize-minimal-runtime"
+                  end
+                end
               end
             end
           else
@@ -993,27 +1021,42 @@ function getoptions(values, disable_others, print_compiler)
         jln_cxflags[#jln_cxflags+1] = "-D_FORTIFY_SOURCE=2"
         jln_cxflags[#jln_cxflags+1] = "-Wstack-protector"
         if values["stack_protector"] == "strong" then
-          if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-            jln_cxflags[#jln_cxflags+1] = "-fstack-protector-strong"
-            jln_ldflags[#jln_ldflags+1] = "-fstack-protector-strong"
+          if compiler == "gcc" then
+            if not ( compversion < 409 ) then
+              jln_cxflags[#jln_cxflags+1] = "-fstack-protector-strong"
+              jln_ldflags[#jln_ldflags+1] = "-fstack-protector-strong"
+              if not ( compversion < 800 ) then
+                jln_cxflags[#jln_cxflags+1] = "-fstack-clash-protection"
+                jln_ldflags[#jln_ldflags+1] = "-fstack-clash-protection"
+              end
+            end
           else
             if compiler == "clang" then
               jln_cxflags[#jln_cxflags+1] = "-fstack-protector-strong"
               jln_cxflags[#jln_cxflags+1] = "-fsanitize=safe-stack"
               jln_ldflags[#jln_ldflags+1] = "-fstack-protector-strong"
               jln_ldflags[#jln_ldflags+1] = "-fsanitize=safe-stack"
+              if not ( compversion < 1100 ) then
+                jln_cxflags[#jln_cxflags+1] = "-fstack-clash-protection"
+                jln_ldflags[#jln_ldflags+1] = "-fstack-clash-protection"
+              end
             end
           end
         else
           if values["stack_protector"] == "all" then
             jln_cxflags[#jln_cxflags+1] = "-fstack-protector-all"
             jln_ldflags[#jln_ldflags+1] = "-fstack-protector-all"
-            if compiler == "clang" then
-              jln_cxflags[#jln_cxflags+1] = "-fsanitize=safe-stack"
-              jln_ldflags[#jln_ldflags+1] = "-fsanitize=safe-stack"
-              if not ( compversion < 1100 ) then
-                jln_cxflags[#jln_cxflags+1] = "-fstack-clash-protection"
-                jln_ldflags[#jln_ldflags+1] = "-fstack-clash-protection"
+            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+              jln_cxflags[#jln_cxflags+1] = "-fstack-clash-protection"
+              jln_ldflags[#jln_ldflags+1] = "-fstack-clash-protection"
+            else
+              if compiler == "clang" then
+                jln_cxflags[#jln_cxflags+1] = "-fsanitize=safe-stack"
+                jln_ldflags[#jln_ldflags+1] = "-fsanitize=safe-stack"
+                if not ( compversion < 1100 ) then
+                  jln_cxflags[#jln_cxflags+1] = "-fstack-clash-protection"
+                  jln_ldflags[#jln_ldflags+1] = "-fstack-clash-protection"
+                end
               end
             end
           else
@@ -1047,8 +1090,24 @@ function getoptions(values, disable_others, print_compiler)
         if values["pie"] == "on" then
           jln_ldflags[#jln_ldflags+1] = "-pie"
         else
-          if values["pie"] == "pic" then
-            jln_cxflags[#jln_cxflags+1] = "-fPIC"
+          if values["pie"] == "static" then
+            jln_ldflags[#jln_ldflags+1] = "-static-pie"
+          else
+            if values["pie"] == "fpie" then
+              jln_cxflags[#jln_cxflags+1] = "-fpie"
+            else
+              if values["pie"] == "fpic" then
+                jln_cxflags[#jln_cxflags+1] = "-fpic"
+              else
+                if values["pie"] == "fPIE" then
+                  jln_cxflags[#jln_cxflags+1] = "-fPIE"
+                else
+                  if values["pie"] == "fPIC" then
+                    jln_cxflags[#jln_cxflags+1] = "-fPIC"
+                  end
+                end
+              end
+            end
           end
         end
       end
@@ -1139,15 +1198,56 @@ function getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["sanitizers_extra"] == "") then
-      if values["sanitizers_extra"] == "thread" then
+    if not ( values["other_sanitizers"] == "") then
+      if values["other_sanitizers"] == "thread" then
         jln_cxflags[#jln_cxflags+1] = "-fsanitize=thread"
       else
-        if values["sanitizers_extra"] == "pointer" then
-          if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-            jln_cxflags[#jln_cxflags+1] = "-fsanitize=pointer-compare"
-            jln_cxflags[#jln_cxflags+1] = "-fsanitize=pointer-subtract"
+        if values["other_sanitizers"] == "memory" then
+          if ( compiler == "clang" and not ( compversion < 500 ) ) then
+            jln_cxflags[#jln_cxflags+1] = "-fsanitize=memory"
           end
+        else
+          if values["other_sanitizers"] == "pointer" then
+            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+              jln_cxflags[#jln_cxflags+1] = "-fsanitize=pointer-compare"
+              jln_cxflags[#jln_cxflags+1] = "-fsanitize=pointer-subtract"
+            end
+          end
+        end
+      end
+    end
+    if not ( values["float_sanitizers"] == "") then
+      if ( ( compiler == "gcc" and not ( compversion < 500 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) ) then
+        if values["float_sanitizers"] == "on" then
+          jln_cxflags[#jln_cxflags+1] = "-fsanitize=float-divide-by-zero"
+          jln_cxflags[#jln_cxflags+1] = "-fsanitize=float-cast-overflow"
+        else
+          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=float-divide-by-zero"
+          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=float-cast-overflow"
+        end
+      end
+    end
+    if not ( values["integer_sanitizers"] == "") then
+      if values["integer_sanitizers"] == "on" then
+        if ( compiler == "gcc" and not ( compversion < 409 ) ) then
+          jln_cxflags[#jln_cxflags+1] = "-ftrapv"
+          jln_cxflags[#jln_cxflags+1] = "-fsanitize=undefined"
+        end
+        if ( compiler == "clang" and not ( compversion < 500 ) ) then
+          jln_cxflags[#jln_cxflags+1] = "-fsanitize=integer"
+        end
+      else
+        if ( compiler == "clang" and not ( compversion < 500 ) ) then
+          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=integer"
+        end
+      end
+    end
+    if not ( values["noexcept_warnings"] == "") then
+      if ( compiler == "gcc" and not ( compversion < 409 ) ) then
+        if values["noexcept_warnings"] == "on" then
+          jln_cxflags[#jln_cxflags+1] = "-Wnoexcept"
+        else
+          jln_cxflags[#jln_cxflags+1] = "-Wno-noexcept"
         end
       end
     end
@@ -1253,8 +1353,9 @@ function getoptions(values, disable_others, print_compiler)
               if values["optimization"] == "3" then
                 jln_cxflags[#jln_cxflags+1] = "/O2"
               else
-                if values["optimization"] == "size" then
+                if ( values["optimization"] == "size" or values["optimization"] == "z" ) then
                   jln_cxflags[#jln_cxflags+1] = "/O1"
+                  jln_cxflags[#jln_cxflags+1] = "/GL"
                   jln_cxflags[#jln_cxflags+1] = "/Gw"
                 else
                   if values["optimization"] == "fast" then
@@ -1316,6 +1417,10 @@ function getoptions(values, disable_others, print_compiler)
         jln_cxflags[#jln_cxflags+1] = "/sdl"
         if values["stack_protector"] == "strong" then
           jln_cxflags[#jln_cxflags+1] = "/RTC1"
+          if ( compiler == "msvc" and not ( compversion < 1607 ) ) then
+            jln_cxflags[#jln_cxflags+1] = "/guard:ehcont"
+            jln_ldflags[#jln_ldflags+1] = "/CETCOMPAT"
+          end
         else
           if values["stack_protector"] == "all" then
             jln_cxflags[#jln_cxflags+1] = "/RTC1"
@@ -1377,14 +1482,14 @@ function getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["warnings_switch"] == "") then
-        if values["warnings_switch"] == "on" then
+      if not ( values["switch_warnings"] == "") then
+        if values["switch_warnings"] == "on" then
           jln_cxflags[#jln_cxflags+1] = "/we4061"
         else
-          if values["warnings_switch"] == "enum" then
+          if values["switch_warnings"] == "enum" then
             jln_cxflags[#jln_cxflags+1] = "/we4062"
           else
-            if values["warnings_switch"] == "off" then
+            if values["switch_warnings"] == "off" then
               jln_cxflags[#jln_cxflags+1] = "/wd4061"
               jln_cxflags[#jln_cxflags+1] = "/wd4062"
             end
@@ -1480,6 +1585,11 @@ function getoptions(values, disable_others, print_compiler)
       else
         if values["warnings_as_error"] == "off" then
           jln_cxflags[#jln_cxflags+1] = "/WX-"
+        else
+          jln_cxflags[#jln_cxflags+1] = "/we4455"
+          jln_cxflags[#jln_cxflags+1] = "/we4150"
+          jln_cxflags[#jln_cxflags+1] = "/we4716"
+          jln_cxflags[#jln_cxflags+1] = "/we2124"
         end
       end
     end
@@ -1492,12 +1602,17 @@ function getoptions(values, disable_others, print_compiler)
       end
     end
     if not ( values["sanitizers"] == "") then
-      if values["sanitizers"] == "on" then
-        jln_cxflags[#jln_cxflags+1] = "/sdl"
+      if not ( compversion < 1609 ) then
+        jln_cxflags[#jln_cxflags+1] = "/fsanitize=address"
+        jln_cxflags[#jln_cxflags+1] = "/fsanitize-address-use-after-return"
       else
-        if not ( values["stack_protector"] == "") then
-          if not ( values["stack_protector"] == "off" ) then
-            jln_cxflags[#jln_cxflags+1] = "/sdl-"
+        if values["sanitizers"] == "on" then
+          jln_cxflags[#jln_cxflags+1] = "/sdl"
+        else
+          if not ( values["stack_protector"] == "") then
+            if not ( values["stack_protector"] == "off" ) then
+              jln_cxflags[#jln_cxflags+1] = "/sdl-"
+            end
           end
         end
       end
