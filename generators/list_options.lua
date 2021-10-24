@@ -9,12 +9,13 @@ end
 
 return {
   start=function(_, ...)
-    local show_profile, color
+    local show_profile, color, categorized
     local help = function()
-      print(_.generator_name .. ' [-h] [--profile] [--color]')
+      print(_.generator_name .. ' [-h] [--categorized] [--profile] [--color]')
       return false
     end
     local cli = {
+      ['--categorized']=function() categorized=true end,
       ['--profile']=function() show_profile=true end,
       ['--color']=function() color=true end,
       ['-h']=help,
@@ -28,6 +29,47 @@ return {
       if opt() == false then
         return false
       end
+    end
+
+    local push_opt_for_print, opt_for_print_end
+    if categorized then
+      local categorized_opts = {}
+      for k,infos in ipairs(_._opts_by_category) do
+        local i = #categorized_opts + 1
+        categorized_opts[i] = {infos[1], {}}
+        for k,optname in ipairs(infos[2]) do
+          categorized_opts[optname] = i
+        end
+      end
+      local other_cat = #categorized_opts + 1
+      categorized_opts[other_cat] = {'Other', {}}
+      
+      push_opt_for_print = function(optname, str)
+        local strings = categorized_opts[categorized_opts[optname] or other_cat][2]
+        strings[#strings+1] = str
+      end
+      
+      opt_for_print_end = function()
+        local strings = {}
+        local first = true
+        for k,infos in ipairs(categorized_opts) do
+          if #infos[2] ~= 0 then
+            if not first then
+              strings[#strings+1] = ''
+            end
+            strings[#strings+1] = color and ('\027[1m# ' .. infos[1] .. '\027[0m:\n')
+                                         or ('# ' .. infos[1] .. ':\n')
+            first = false
+            for k,str in ipairs(infos[2]) do
+              strings[#strings+1] = str
+            end
+          end
+        end
+        print(table.concat(strings, '\n'))
+      end
+    else
+      push_opt_for_print = function(optname, str) print(str) end
+      opt_for_print_end = function() end
     end
 
     local add_opt = function(optname, args)
@@ -59,15 +101,17 @@ return {
             and (c:sub(0,-2) .. ';7m' .. x .. '\027[0m')
             or (c .. x))
         end
-        print(str .. '\027[0m')
-        add_opt(optname, args)
+        push_opt_for_print(optname, str .. '\027[0m')
+        add_opt(optname, args, str .. '\027[0m')
       end
     else
       for optname, args, default_value, ordered_args in _:getoptions() do
-        print(optname .. ' = ' .. table.concat(ordered_args, ' '))
+        push_opt_for_print(optname, optname .. ' = ' .. table.concat(ordered_args, ' '))
         add_opt(optname, args)
       end
     end
+
+    opt_for_print_end()
 
     if show_profile then
       print('\n\nProfiles:')

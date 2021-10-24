@@ -1301,6 +1301,51 @@ Vbase = {
     whole_program={{'off', 'on', 'strip_all'},},
   },
 
+  _opts_by_category={
+    {'Warning', {
+      'conversion_warnings',
+      'covered_switch_default_warnings',
+      'fix_compiler_error',
+      'microsoft_abi_compatibility_warnings',
+      'noexcept_warnings',
+      'reproducible_build_warnings',
+      'shadow_warnings',
+      'suggestions',
+      'switch_warnings',
+      'warnings',
+      'warnings_as_error',
+    }},
+    {'Pedantic', {
+      'pedantic',
+      'stl_fix',
+    }},
+    {'Debug', {
+      'control_flow',
+      'debug',
+      'float_sanitizers',
+      'integer_sanitizers',
+      'optimization',
+      'other_sanitizers',
+      'sanitizers',
+      'stl_debug',
+    }},
+    {'Optimization', {
+      'cpu',
+      'linker',
+      'lto',
+      'optimization',
+      'whole_program',
+    }},
+    {'C++', {
+      'exceptions',
+      'rtti',
+    }},
+    {'Hardening', {
+      'relro',
+      'stack_protector',
+    }},
+  },
+
   _opts_build_type={
     debug={debug='on', stl_debug='on', control_flow='on', sanitizers='on'},
     release={cpu='native', linker='native', lto='on', optimization='2',},

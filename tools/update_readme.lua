@@ -37,7 +37,7 @@ while true do
   end
 end
 
-local options = io.popen('./compiler-options.lua generators/list_options.lua', 'r'):read('a')
+local options = io.popen('./compiler-options.lua generators/list_options.lua --categorized', 'r'):read('a')
 local notdefaults = {}
 for opt,v in options:gmatch('([-_%w]+) = ([-_%w]+)') do
   if v ~= 'default' then
@@ -55,6 +55,7 @@ for k,l in pairs(notdefaults) do
   if #l == 1 then
     stropt = l[1]
   else
+    table.sort(l)
     local last = table.remove(l)
     stropt = table.concat(l, '`, `') .. '` and `' .. last
   end
