@@ -20,6 +20,8 @@ local _flag_names = {
   ["conversion_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["conversion"]="conversion", [""]=""},
   ["jln-coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-covered-switch-default-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
+  ["covered_switch_default_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["jln-cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["jln-debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["line_tables_only"]="line_tables_only", ["gdb"]="gdb", ["lldb"]="lldb", ["sce"]="sce", [""]=""},
@@ -34,22 +36,30 @@ local _flag_names = {
   ["exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-fix-compiler-error"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["fix_compiler_error"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-float-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["float_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-integer-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["integer_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
   ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
   ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
   ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
-  ["jln-microsoft-abi-compatibility-warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["microsoft_abi_compatibility_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-microsoft-abi-compatibility-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["microsoft_abi_compatibility_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
   ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-noexcept-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["noexcept_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
+  ["jln-other-sanitizers"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", ["memory"]="memory", [""]=""},
+  ["other_sanitizers"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", ["memory"]="memory", [""]=""},
   ["jln-pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
-  ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["pic"]="pic", [""]=""},
-  ["pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["pic"]="pic", [""]=""},
+  ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
+  ["pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
   ["jln-relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
   ["relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
   ["jln-reproducible-build-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -58,8 +68,6 @@ local _flag_names = {
   ["rtti"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-sanitizers-extra"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", [""]=""},
-  ["sanitizers_extra"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", [""]=""},
   ["jln-shadow-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["shadow_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["jln-stack-protector"] = {["default"]="", ["off"]="off", ["on"]="on", ["strong"]="strong", ["all"]="all", [""]=""},
@@ -70,14 +78,12 @@ local _flag_names = {
   ["stl_fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
+  ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
-  ["jln-warnings-covered-switch-default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
-  ["warnings_covered_switch_default"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
-  ["jln-warnings-switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
-  ["warnings_switch"] = {["default"]="", ["on"]="on", ["off"]="off", ["enum"]="enum", ["mandatory_default"]="mandatory_default", [""]=""},
   ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
   ["whole_program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
 }
@@ -145,6 +151,14 @@ local _flag_names = {
            default=defaults["coverage"] or defaults["jln-coverage"] or "default",
            after_check=function(option) check_option("jln-coverage", "coverage") end,
          })
+  option("jln-covered-switch-default-warnings", {
+           showmenu=true,
+           category=category,
+           description="covered_switch_default_warnings",
+           values={"default", "on", "off"},
+           default=defaults["covered_switch_default_warnings"] or defaults["jln-covered-switch-default-warnings"] or "on",
+           after_check=function(option) check_option("jln-covered-switch-default-warnings", "covered_switch_default_warnings") end,
+         })
   option("jln-cpu", {
            showmenu=true,
            category=category,
@@ -201,6 +215,22 @@ local _flag_names = {
            default=defaults["fix_compiler_error"] or defaults["jln-fix-compiler-error"] or "on",
            after_check=function(option) check_option("jln-fix-compiler-error", "fix_compiler_error") end,
          })
+  option("jln-float-sanitizers", {
+           showmenu=true,
+           category=category,
+           description="float_sanitizers",
+           values={"default", "off", "on"},
+           default=defaults["float_sanitizers"] or defaults["jln-float-sanitizers"] or "default",
+           after_check=function(option) check_option("jln-float-sanitizers", "float_sanitizers") end,
+         })
+  option("jln-integer-sanitizers", {
+           showmenu=true,
+           category=category,
+           description="integer_sanitizers",
+           values={"default", "off", "on"},
+           default=defaults["integer_sanitizers"] or defaults["jln-integer-sanitizers"] or "default",
+           after_check=function(option) check_option("jln-integer-sanitizers", "integer_sanitizers") end,
+         })
   option("jln-linker", {
            showmenu=true,
            category=category,
@@ -217,13 +247,13 @@ local _flag_names = {
            default=defaults["lto"] or defaults["jln-lto"] or "default",
            after_check=function(option) check_option("jln-lto", "lto") end,
          })
-  option("jln-microsoft-abi-compatibility-warning", {
+  option("jln-microsoft-abi-compatibility-warnings", {
            showmenu=true,
            category=category,
-           description="microsoft_abi_compatibility_warning",
+           description="microsoft_abi_compatibility_warnings",
            values={"default", "off", "on"},
-           default=defaults["microsoft_abi_compatibility_warning"] or defaults["jln-microsoft-abi-compatibility-warning"] or "off",
-           after_check=function(option) check_option("jln-microsoft-abi-compatibility-warning", "microsoft_abi_compatibility_warning") end,
+           default=defaults["microsoft_abi_compatibility_warnings"] or defaults["jln-microsoft-abi-compatibility-warnings"] or "off",
+           after_check=function(option) check_option("jln-microsoft-abi-compatibility-warnings", "microsoft_abi_compatibility_warnings") end,
          })
   option("jln-msvc-isystem", {
            showmenu=true,
@@ -241,6 +271,14 @@ local _flag_names = {
            default=defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem-with-template-from-non-external", "msvc_isystem_with_template_from_non_external") end,
          })
+  option("jln-noexcept-warnings", {
+           showmenu=true,
+           category=category,
+           description="noexcept_warnings",
+           values={"default", "off", "on"},
+           default=defaults["noexcept_warnings"] or defaults["jln-noexcept-warnings"] or "default",
+           after_check=function(option) check_option("jln-noexcept-warnings", "noexcept_warnings") end,
+         })
   option("jln-optimization", {
            showmenu=true,
            category=category,
@@ -248,6 +286,14 @@ local _flag_names = {
            values={"default", "0", "g", "1", "2", "3", "fast", "size", "z"},
            default=defaults["optimization"] or defaults["jln-optimization"] or "default",
            after_check=function(option) check_option("jln-optimization", "optimization") end,
+         })
+  option("jln-other-sanitizers", {
+           showmenu=true,
+           category=category,
+           description="other_sanitizers",
+           values={"default", "off", "thread", "pointer", "memory"},
+           default=defaults["other_sanitizers"] or defaults["jln-other-sanitizers"] or "default",
+           after_check=function(option) check_option("jln-other-sanitizers", "other_sanitizers") end,
          })
   option("jln-pedantic", {
            showmenu=true,
@@ -261,7 +307,7 @@ local _flag_names = {
            showmenu=true,
            category=category,
            description="pie",
-           values={"default", "off", "on", "pic"},
+           values={"default", "off", "on", "static", "fpic", "fPIC", "fpie", "fPIE"},
            default=defaults["pie"] or defaults["jln-pie"] or "default",
            after_check=function(option) check_option("jln-pie", "pie") end,
          })
@@ -296,14 +342,6 @@ local _flag_names = {
            values={"default", "off", "on"},
            default=defaults["sanitizers"] or defaults["jln-sanitizers"] or "default",
            after_check=function(option) check_option("jln-sanitizers", "sanitizers") end,
-         })
-  option("jln-sanitizers-extra", {
-           showmenu=true,
-           category=category,
-           description="sanitizers_extra",
-           values={"default", "off", "thread", "pointer"},
-           default=defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default",
-           after_check=function(option) check_option("jln-sanitizers-extra", "sanitizers_extra") end,
          })
   option("jln-shadow-warnings", {
            showmenu=true,
@@ -345,6 +383,14 @@ local _flag_names = {
            default=defaults["suggestions"] or defaults["jln-suggestions"] or "default",
            after_check=function(option) check_option("jln-suggestions", "suggestions") end,
          })
+  option("jln-switch-warnings", {
+           showmenu=true,
+           category=category,
+           description="switch_warnings",
+           values={"default", "on", "off", "enum", "mandatory_default"},
+           default=defaults["switch_warnings"] or defaults["jln-switch-warnings"] or "on",
+           after_check=function(option) check_option("jln-switch-warnings", "switch_warnings") end,
+         })
   option("jln-warnings", {
            showmenu=true,
            category=category,
@@ -360,22 +406,6 @@ local _flag_names = {
            values={"default", "off", "on", "basic"},
            default=defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default",
            after_check=function(option) check_option("jln-warnings-as-error", "warnings_as_error") end,
-         })
-  option("jln-warnings-covered-switch-default", {
-           showmenu=true,
-           category=category,
-           description="warnings_covered_switch_default",
-           values={"default", "on", "off"},
-           default=defaults["warnings_covered_switch_default"] or defaults["jln-warnings-covered-switch-default"] or "on",
-           after_check=function(option) check_option("jln-warnings-covered-switch-default", "warnings_covered_switch_default") end,
-         })
-  option("jln-warnings-switch", {
-           showmenu=true,
-           category=category,
-           description="warnings_switch",
-           values={"default", "on", "off", "enum", "mandatory_default"},
-           default=defaults["warnings_switch"] or defaults["jln-warnings-switch"] or "on",
-           after_check=function(option) check_option("jln-warnings-switch", "warnings_switch") end,
          })
   option("jln-whole-program", {
            showmenu=true,

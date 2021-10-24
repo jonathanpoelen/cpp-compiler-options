@@ -8,6 +8,7 @@ _jln_c_default_flags = {
   'control_flow': 'default',
   'conversion_warnings': 'on',
   'coverage': 'default',
+  'covered_switch_default_warnings': 'on',
   'cpu': 'default',
   'debug': 'default',
   'diagnostics_format': 'default',
@@ -15,28 +16,30 @@ _jln_c_default_flags = {
   'elide_type': 'default',
   'exceptions': 'default',
   'fix_compiler_error': 'on',
+  'float_sanitizers': 'default',
+  'integer_sanitizers': 'default',
   'linker': 'default',
   'lto': 'default',
-  'microsoft_abi_compatibility_warning': 'off',
+  'microsoft_abi_compatibility_warnings': 'off',
   'msvc_isystem': 'default',
   'msvc_isystem_with_template_from_non_external': 'default',
+  'noexcept_warnings': 'default',
   'optimization': 'default',
+  'other_sanitizers': 'default',
   'pedantic': 'on',
   'pie': 'default',
   'relro': 'default',
   'reproducible_build_warnings': 'default',
   'rtti': 'default',
   'sanitizers': 'default',
-  'sanitizers_extra': 'default',
   'shadow_warnings': 'off',
   'stack_protector': 'default',
   'stl_debug': 'default',
   'stl_fix': 'on',
   'suggestions': 'default',
+  'switch_warnings': 'on',
   'warnings': 'on',
   'warnings_as_error': 'default',
-  'warnings_covered_switch_default': 'on',
-  'warnings_switch': 'on',
   'whole_program': 'default',
 }
 
@@ -45,6 +48,7 @@ _jln_c_var2opts = {
   'jln_control_flow': 'control_flow',
   'jln_conversion_warnings': 'conversion_warnings',
   'jln_coverage': 'coverage',
+  'jln_covered_switch_default_warnings': 'covered_switch_default_warnings',
   'jln_cpu': 'cpu',
   'jln_debug': 'debug',
   'jln_diagnostics_format': 'diagnostics_format',
@@ -52,28 +56,30 @@ _jln_c_var2opts = {
   'jln_elide_type': 'elide_type',
   'jln_exceptions': 'exceptions',
   'jln_fix_compiler_error': 'fix_compiler_error',
+  'jln_float_sanitizers': 'float_sanitizers',
+  'jln_integer_sanitizers': 'integer_sanitizers',
   'jln_linker': 'linker',
   'jln_lto': 'lto',
-  'jln_microsoft_abi_compatibility_warning': 'microsoft_abi_compatibility_warning',
+  'jln_microsoft_abi_compatibility_warnings': 'microsoft_abi_compatibility_warnings',
   'jln_msvc_isystem': 'msvc_isystem',
   'jln_msvc_isystem_with_template_from_non_external': 'msvc_isystem_with_template_from_non_external',
+  'jln_noexcept_warnings': 'noexcept_warnings',
   'jln_optimization': 'optimization',
+  'jln_other_sanitizers': 'other_sanitizers',
   'jln_pedantic': 'pedantic',
   'jln_pie': 'pie',
   'jln_relro': 'relro',
   'jln_reproducible_build_warnings': 'reproducible_build_warnings',
   'jln_rtti': 'rtti',
   'jln_sanitizers': 'sanitizers',
-  'jln_sanitizers_extra': 'sanitizers_extra',
   'jln_shadow_warnings': 'shadow_warnings',
   'jln_stack_protector': 'stack_protector',
   'jln_stl_debug': 'stl_debug',
   'jln_stl_fix': 'stl_fix',
   'jln_suggestions': 'suggestions',
+  'jln_switch_warnings': 'switch_warnings',
   'jln_warnings': 'warnings',
   'jln_warnings_as_error': 'warnings_as_error',
-  'jln_warnings_covered_switch_default': 'warnings_covered_switch_default',
-  'jln_warnings_switch': 'warnings_switch',
   'jln_whole_program': 'whole_program',
 }
 
@@ -82,6 +88,7 @@ _jln_c_opt2vars = {
   'control_flow': 'jln_control_flow',
   'conversion_warnings': 'jln_conversion_warnings',
   'coverage': 'jln_coverage',
+  'covered_switch_default_warnings': 'jln_covered_switch_default_warnings',
   'cpu': 'jln_cpu',
   'debug': 'jln_debug',
   'diagnostics_format': 'jln_diagnostics_format',
@@ -89,28 +96,30 @@ _jln_c_opt2vars = {
   'elide_type': 'jln_elide_type',
   'exceptions': 'jln_exceptions',
   'fix_compiler_error': 'jln_fix_compiler_error',
+  'float_sanitizers': 'jln_float_sanitizers',
+  'integer_sanitizers': 'jln_integer_sanitizers',
   'linker': 'jln_linker',
   'lto': 'jln_lto',
-  'microsoft_abi_compatibility_warning': 'jln_microsoft_abi_compatibility_warning',
+  'microsoft_abi_compatibility_warnings': 'jln_microsoft_abi_compatibility_warnings',
   'msvc_isystem': 'jln_msvc_isystem',
   'msvc_isystem_with_template_from_non_external': 'jln_msvc_isystem_with_template_from_non_external',
+  'noexcept_warnings': 'jln_noexcept_warnings',
   'optimization': 'jln_optimization',
+  'other_sanitizers': 'jln_other_sanitizers',
   'pedantic': 'jln_pedantic',
   'pie': 'jln_pie',
   'relro': 'jln_relro',
   'reproducible_build_warnings': 'jln_reproducible_build_warnings',
   'rtti': 'jln_rtti',
   'sanitizers': 'jln_sanitizers',
-  'sanitizers_extra': 'jln_sanitizers_extra',
   'shadow_warnings': 'jln_shadow_warnings',
   'stack_protector': 'jln_stack_protector',
   'stl_debug': 'jln_stl_debug',
   'stl_fix': 'jln_stl_fix',
   'suggestions': 'jln_suggestions',
+  'switch_warnings': 'jln_switch_warnings',
   'warnings': 'jln_warnings',
   'warnings_as_error': 'jln_warnings_as_error',
-  'warnings_covered_switch_default': 'jln_warnings_covered_switch_default',
-  'warnings_switch': 'jln_warnings_switch',
   'whole_program': 'jln_whole_program',
 }
 
@@ -127,6 +136,8 @@ def jln_c_add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on', 'sign', 'conversion')),
     EnumVariable('jln_coverage', '', default_values.get('coverage', _jln_default_flags['coverage']),
                  allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_covered_switch_default_warnings', '', default_values.get('covered_switch_default_warnings', _jln_default_flags['covered_switch_default_warnings']),
+                 allowed_values=('default', 'on', 'off')),
     EnumVariable('jln_cpu', '', default_values.get('cpu', _jln_default_flags['cpu']),
                  allowed_values=('default', 'generic', 'native')),
     EnumVariable('jln_debug', '', default_values.get('debug', _jln_default_flags['debug']),
@@ -141,22 +152,30 @@ def jln_c_add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_fix_compiler_error', '', default_values.get('fix_compiler_error', _jln_default_flags['fix_compiler_error']),
                  allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_float_sanitizers', '', default_values.get('float_sanitizers', _jln_default_flags['float_sanitizers']),
+                 allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_integer_sanitizers', '', default_values.get('integer_sanitizers', _jln_default_flags['integer_sanitizers']),
+                 allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_linker', '', default_values.get('linker', _jln_default_flags['linker']),
                  allowed_values=('default', 'bfd', 'gold', 'lld', 'native')),
     EnumVariable('jln_lto', '', default_values.get('lto', _jln_default_flags['lto']),
                  allowed_values=('default', 'off', 'on', 'fat', 'thin')),
-    EnumVariable('jln_microsoft_abi_compatibility_warning', '', default_values.get('microsoft_abi_compatibility_warning', _jln_default_flags['microsoft_abi_compatibility_warning']),
+    EnumVariable('jln_microsoft_abi_compatibility_warnings', '', default_values.get('microsoft_abi_compatibility_warnings', _jln_default_flags['microsoft_abi_compatibility_warnings']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_msvc_isystem', '', default_values.get('msvc_isystem', _jln_default_flags['msvc_isystem']),
                  allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag')),
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', '', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
                  allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_noexcept_warnings', '', default_values.get('noexcept_warnings', _jln_default_flags['noexcept_warnings']),
+                 allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_optimization', '', default_values.get('optimization', _jln_default_flags['optimization']),
                  allowed_values=('default', '0', 'g', '1', '2', '3', 'fast', 'size', 'z')),
+    EnumVariable('jln_other_sanitizers', '', default_values.get('other_sanitizers', _jln_default_flags['other_sanitizers']),
+                 allowed_values=('default', 'off', 'thread', 'pointer', 'memory')),
     EnumVariable('jln_pedantic', '', default_values.get('pedantic', _jln_default_flags['pedantic']),
                  allowed_values=('default', 'off', 'on', 'as_error')),
     EnumVariable('jln_pie', '', default_values.get('pie', _jln_default_flags['pie']),
-                 allowed_values=('default', 'off', 'on', 'pic')),
+                 allowed_values=('default', 'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE')),
     EnumVariable('jln_relro', '', default_values.get('relro', _jln_default_flags['relro']),
                  allowed_values=('default', 'off', 'on', 'full')),
     EnumVariable('jln_reproducible_build_warnings', '', default_values.get('reproducible_build_warnings', _jln_default_flags['reproducible_build_warnings']),
@@ -165,8 +184,6 @@ def jln_c_add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_sanitizers', '', default_values.get('sanitizers', _jln_default_flags['sanitizers']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_sanitizers_extra', '', default_values.get('sanitizers_extra', _jln_default_flags['sanitizers_extra']),
-                 allowed_values=('default', 'off', 'thread', 'pointer')),
     EnumVariable('jln_shadow_warnings', '', default_values.get('shadow_warnings', _jln_default_flags['shadow_warnings']),
                  allowed_values=('default', 'off', 'on', 'local', 'compatible_local', 'all')),
     EnumVariable('jln_stack_protector', '', default_values.get('stack_protector', _jln_default_flags['stack_protector']),
@@ -177,14 +194,12 @@ def jln_c_add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_suggestions', '', default_values.get('suggestions', _jln_default_flags['suggestions']),
                  allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_switch_warnings', '', default_values.get('switch_warnings', _jln_default_flags['switch_warnings']),
+                 allowed_values=('default', 'on', 'off', 'enum', 'mandatory_default')),
     EnumVariable('jln_warnings', '', default_values.get('warnings', _jln_default_flags['warnings']),
                  allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
     EnumVariable('jln_warnings_as_error', '', default_values.get('warnings_as_error', _jln_default_flags['warnings_as_error']),
                  allowed_values=('default', 'off', 'on', 'basic')),
-    EnumVariable('jln_warnings_covered_switch_default', '', default_values.get('warnings_covered_switch_default', _jln_default_flags['warnings_covered_switch_default']),
-                 allowed_values=('default', 'on', 'off')),
-    EnumVariable('jln_warnings_switch', '', default_values.get('warnings_switch', _jln_default_flags['warnings_switch']),
-                 allowed_values=('default', 'on', 'off', 'enum', 'mandatory_default')),
     EnumVariable('jln_whole_program', '', default_values.get('whole_program', _jln_default_flags['whole_program']),
                  allowed_values=('default', 'off', 'on', 'strip_all'))  )
 
@@ -230,14 +245,14 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
       else:
         if compiler == 'gcc' :
             flags += ('-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
-          if not ( options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'default') :
-            if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'on' :
+          if not ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'default') :
+            if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'on' :
               flags += ('-Wswitch', )
             else:
-              if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'enum' :
+              if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'enum' :
                 flags += ('-Wswitch-enum', )
               else:
-                if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'mandatory_default' :
+                if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'mandatory_default' :
                   flags += ('-Wswitch-default', )
                 else:
                   flags += ('-Wno-switch', )
@@ -256,19 +271,19 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         else:
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
               flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', )
-            if not ( options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'default') :
-              if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'on' :
+            if not ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'default') :
+              if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'on' :
                 flags += ('-Wno-switch-enum', )
               else:
-                if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'enum' :
+                if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'enum' :
                   flags += ('-Wswitch-enum', )
                 else:
-                  if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'off' :
+                  if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'off' :
                     flags += ('-Wno-switch', '-Wno-switch-enum', )
             else:
               flags += ('-Wno-switch', '-Wno-switch-enum', )
-            if not ( options.get('warnings_covered_switch_default', _jln_c_default_flags['warnings_covered_switch_default']) == 'default') :
-              if options.get('warnings_covered_switch_default', _jln_c_default_flags['warnings_covered_switch_default']) == 'off' :
+            if not ( options.get('covered_switch_default_warnings', _jln_c_default_flags['covered_switch_default_warnings']) == 'default') :
+              if options.get('covered_switch_default_warnings', _jln_c_default_flags['covered_switch_default_warnings']) == 'off' :
                 flags += ('-Wno-covered-switch-default', )
         if ( options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' or options.get('warnings', _jln_c_default_flags['warnings']) == 'very_strict' ) :
           if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
@@ -290,8 +305,10 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
       else:
         if options.get('warnings_as_error', _jln_c_default_flags['warnings_as_error']) == 'basic' :
           flags += ('-Werror=return-type', '-Werror=init-self', )
-          if ( compiler == 'gcc' and not ( verless(5, 1) ) ) :
-            flags += ('-Werror=array-bounds', '-Werror=logical-op', '-Werror=logical-not-parentheses', )
+          if compiler == 'gcc' :
+            flags += ('-Werror=div-by-zero', )
+            if not ( verless(5, 1) ) :
+              flags += ('-Werror=array-bounds', '-Werror=logical-op', '-Werror=logical-not-parentheses', )
           else:
             if ( compiler == 'clang' or compiler == 'clang-cl' ) :
               flags += ('-Werror=array-bounds', '-Werror=division-by-zero', )
@@ -321,6 +338,10 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
               if not ( verless(3, 4) ) :
                 flags += ('-fsanitize=leak', )
                 linkflags += ('-fsanitize=leak', )
+              if not ( verless(6, 0) ) :
+                if not ( options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'default') :
+                  if not ( options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'off' ) :
+                    flags += ('-fsanitize-minimal-runtime', )
           else:
             if compiler == 'gcc' :
               if not ( verless(4, 8) ) :
@@ -540,23 +561,34 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
       else:
         flags += ('-D_FORTIFY_SOURCE=2', '-Wstack-protector', )
         if options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'strong' :
-          if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
-            flags += ('-fstack-protector-strong', )
-            linkflags += ('-fstack-protector-strong', )
+          if compiler == 'gcc' :
+            if not ( verless(4, 9) ) :
+              flags += ('-fstack-protector-strong', )
+              linkflags += ('-fstack-protector-strong', )
+              if not ( verless(8, 0) ) :
+                flags += ('-fstack-clash-protection', )
+                linkflags += ('-fstack-clash-protection', )
           else:
             if compiler == 'clang' :
               flags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
               linkflags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
+              if not ( verless(11, 0) ) :
+                flags += ('-fstack-clash-protection', )
+                linkflags += ('-fstack-clash-protection', )
         else:
           if options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'all' :
             flags += ('-fstack-protector-all', )
             linkflags += ('-fstack-protector-all', )
-            if compiler == 'clang' :
-              flags += ('-fsanitize=safe-stack', )
-              linkflags += ('-fsanitize=safe-stack', )
-              if not ( verless(11, 0) ) :
-                flags += ('-fstack-clash-protection', )
-                linkflags += ('-fstack-clash-protection', )
+            if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
+              flags += ('-fstack-clash-protection', )
+              linkflags += ('-fstack-clash-protection', )
+            else:
+              if compiler == 'clang' :
+                flags += ('-fsanitize=safe-stack', )
+                linkflags += ('-fsanitize=safe-stack', )
+                if not ( verless(11, 0) ) :
+                  flags += ('-fstack-clash-protection', )
+                  linkflags += ('-fstack-clash-protection', )
           else:
             flags += ('-fstack-protector', )
             linkflags += ('-fstack-protector', )
@@ -579,8 +611,20 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         if options.get('pie', _jln_c_default_flags['pie']) == 'on' :
           linkflags += ('-pie', )
         else:
-          if options.get('pie', _jln_c_default_flags['pie']) == 'pic' :
-            flags += ('-fPIC', )
+          if options.get('pie', _jln_c_default_flags['pie']) == 'static' :
+            linkflags += ('-static-pie', )
+          else:
+            if options.get('pie', _jln_c_default_flags['pie']) == 'fpie' :
+              flags += ('-fpie', )
+            else:
+              if options.get('pie', _jln_c_default_flags['pie']) == 'fpic' :
+                flags += ('-fpic', )
+              else:
+                if options.get('pie', _jln_c_default_flags['pie']) == 'fPIE' :
+                  flags += ('-fPIE', )
+                else:
+                  if options.get('pie', _jln_c_default_flags['pie']) == 'fPIC' :
+                    flags += ('-fPIC', )
     if not ( options.get('shadow_warnings', _jln_c_default_flags['shadow_warnings']) == 'default') :
       if options.get('shadow_warnings', _jln_c_default_flags['shadow_warnings']) == 'off' :
         flags += ('-Wno-shadow', )
@@ -607,13 +651,32 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         flags += ('-fexceptions', )
       else:
         flags += ('-fno-exceptions', )
-    if not ( options.get('sanitizers_extra', _jln_c_default_flags['sanitizers_extra']) == 'default') :
-      if options.get('sanitizers_extra', _jln_c_default_flags['sanitizers_extra']) == 'thread' :
+    if not ( options.get('other_sanitizers', _jln_c_default_flags['other_sanitizers']) == 'default') :
+      if options.get('other_sanitizers', _jln_c_default_flags['other_sanitizers']) == 'thread' :
         flags += ('-fsanitize=thread', )
       else:
-        if options.get('sanitizers_extra', _jln_c_default_flags['sanitizers_extra']) == 'pointer' :
-          if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
-            flags += ('-fsanitize=pointer-compare', '-fsanitize=pointer-subtract', )
+        if options.get('other_sanitizers', _jln_c_default_flags['other_sanitizers']) == 'memory' :
+          if ( compiler == 'clang' and not ( verless(5, 0) ) ) :
+            flags += ('-fsanitize=memory', )
+        else:
+          if options.get('other_sanitizers', _jln_c_default_flags['other_sanitizers']) == 'pointer' :
+            if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
+              flags += ('-fsanitize=pointer-compare', '-fsanitize=pointer-subtract', )
+    if not ( options.get('float_sanitizers', _jln_c_default_flags['float_sanitizers']) == 'default') :
+      if ( ( compiler == 'gcc' and not ( verless(5, 0) ) ) or ( compiler == 'clang' and not ( verless(5, 0) ) ) ) :
+        if options.get('float_sanitizers', _jln_c_default_flags['float_sanitizers']) == 'on' :
+          flags += ('-fsanitize=float-divide-by-zero', '-fsanitize=float-cast-overflow', )
+        else:
+          flags += ('-fno-sanitize=float-divide-by-zero', '-fno-sanitize=float-cast-overflow', )
+    if not ( options.get('integer_sanitizers', _jln_c_default_flags['integer_sanitizers']) == 'default') :
+      if options.get('integer_sanitizers', _jln_c_default_flags['integer_sanitizers']) == 'on' :
+        if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
+          flags += ('-ftrapv', '-fsanitize=undefined', )
+        if ( compiler == 'clang' and not ( verless(5, 0) ) ) :
+          flags += ('-fsanitize=integer', )
+      else:
+        if ( compiler == 'clang' and not ( verless(5, 0) ) ) :
+          flags += ('-fno-sanitize=integer', )
   if linker == 'lld-link' :
     if not ( options.get('lto', _jln_c_default_flags['lto']) == 'default') :
       if options.get('lto', _jln_c_default_flags['lto']) == 'off' :
@@ -687,8 +750,8 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
               if options.get('optimization', _jln_c_default_flags['optimization']) == '3' :
                 flags += ('/O2', )
               else:
-                if options.get('optimization', _jln_c_default_flags['optimization']) == 'size' :
-                  flags += ('/O1', '/Gw', )
+                if ( options.get('optimization', _jln_c_default_flags['optimization']) == 'size' or options.get('optimization', _jln_c_default_flags['optimization']) == 'z' ) :
+                  flags += ('/O1', '/GL', '/Gw', )
                 else:
                   if options.get('optimization', _jln_c_default_flags['optimization']) == 'fast' :
                     flags += ('/O2', '/fp:fast', )
@@ -725,6 +788,9 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         flags += ('/GS', '/sdl', )
         if options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'strong' :
           flags += ('/RTC1', )
+          if ( compiler == 'msvc' and not ( verless(16, 7) ) ) :
+            flags += ('/guard:ehcont', )
+            linkflags += ('/CETCOMPAT', )
         else:
           if options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'all' :
             flags += ('/RTC1', '/RTCc', )
@@ -757,14 +823,14 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
             flags += ('/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
             if options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' :
               flags += ('/wd4583', '/wd4619', )
-      if not ( options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'default') :
-        if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'on' :
+      if not ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'default') :
+        if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'on' :
           flags += ('/we4061', )
         else:
-          if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'enum' :
+          if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'enum' :
             flags += ('/we4062', )
           else:
-            if options.get('warnings_switch', _jln_c_default_flags['warnings_switch']) == 'off' :
+            if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'off' :
               flags += ('/wd4061', '/wd4062', )
     else:
       if not ( options.get('warnings', _jln_c_default_flags['warnings']) == 'default') :
@@ -807,6 +873,8 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
       else:
         if options.get('warnings_as_error', _jln_c_default_flags['warnings_as_error']) == 'off' :
           flags += ('/WX-', )
+        else:
+          flags += ('/we4716', '/we2124', )
     if not ( options.get('lto', _jln_c_default_flags['lto']) == 'default') :
       if options.get('lto', _jln_c_default_flags['lto']) == 'off' :
         flags += ('/LTCG:OFF', )
@@ -814,10 +882,13 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
         flags += ('/GL', )
         linkflags += ('/LTCG', )
     if not ( options.get('sanitizers', _jln_c_default_flags['sanitizers']) == 'default') :
-      if options.get('sanitizers', _jln_c_default_flags['sanitizers']) == 'on' :
-        flags += ('/sdl', )
+      if not ( verless(16, 9) ) :
+        flags += ('/fsanitize=address', '/fsanitize-address-use-after-return', )
       else:
-        if not ( options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'default') :
-          if not ( options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'off' ) :
-            flags += ('/sdl-', )
+        if options.get('sanitizers', _jln_c_default_flags['sanitizers']) == 'on' :
+          flags += ('/sdl', )
+        else:
+          if not ( options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'default') :
+            if not ( options.get('stack_protector', _jln_c_default_flags['stack_protector']) == 'off' ) :
+              flags += ('/sdl-', )
   return {"flags": flags, "linkflags": linkflags}
