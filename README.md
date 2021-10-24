@@ -58,7 +58,7 @@ Supported options are (alphabetically in a category):
 
 <!-- ./compiler-options.lua generators/list_options.lua --color -->
 ```ini
-Warning:
+# Warning:
 
 conversion_warnings = on default off sign conversion
 covered_switch_default_warnings = on default off
@@ -72,12 +72,12 @@ switch_warnings = on default off enum mandatory_default
 warnings = on default off strict very_strict
 warnings_as_error = default off on basic
 
-Pedantic:
+# Pedantic:
 
 pedantic = on default off as_error
 stl_fix = on default off
 
-Debug:
+# Debug:
 
 control_flow = default off on branch return allow_bugs
 debug = default off on line_tables_only gdb lldb sce
@@ -87,7 +87,7 @@ other_sanitizers = default off thread pointer memory
 sanitizers = default off on
 stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
 
-Optimization:
+# Optimization:
 
 cpu = default generic native
 linker = default bfd gold lld native
@@ -95,17 +95,17 @@ lto = default off on fat thin
 optimization = default 0 g 1 2 3 fast size z
 whole_program = default off on strip_all
 
-C++:
+# C++:
 
 exceptions = default off on
 rtti = default off on
 
-Hardening:
+# Hardening:
 
 relro = default off on full
 stack_protector = default off on strong all
 
-Other:
+# Other:
 
 color = default auto never always
 coverage = default off on
