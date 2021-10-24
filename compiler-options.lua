@@ -197,12 +197,16 @@ end
 
 -- opt'build' ? -pipe Avoid temporary files, speeding up builds
 
--- gcc and clang
+-- gcc and clang:
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
+-- all warnings by version: https://github.com/pkolbus/compiler-warnings
+
+-- clang:
 -- https://clang.llvm.org/docs/DiagnosticsReference.html
 -- https://releases.llvm.org/10.0.0/tools/clang/docs/DiagnosticsReference.html
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
+
 return --[[printAST]] {
 
 -- https://clang.llvm.org/docs/UsersManual.html#id9
@@ -241,7 +245,7 @@ Or(gcc, clang_like) {
         c'-Wstrict-prototypes',
         c'-Wwrite-strings',
 
-        opt'warnings_switch' {
+        opt'switch_warnings' {
           lvl'on' { flag'-Wswitch' } / -- enabled by -Wall
           lvl'enum' { flag'-Wswitch-enum' } /
           lvl'mandatory_default' { flag'-Wswitch-default' } /
@@ -314,7 +318,7 @@ Or(gcc, clang_like) {
         cxx'-Wno-exit-time-destructors',
      -- cxx'-Qunused-arguments',
 
-        opt'warnings_switch' {
+        opt'switch_warnings' {
           lvl'on' { flag'-Wno-switch-enum' } /
           lvl'enum' { flag'-Wswitch-enum' } /
           lvl'off' {
@@ -326,7 +330,7 @@ Or(gcc, clang_like) {
           flag'-Wno-switch-enum',
         },
 
-        opt'warnings_covered_switch_default' {
+        opt'covered_switch_default_warnings' {
           lvl'off' { flag'-Wno-covered-switch-default', }
         },
 
@@ -377,7 +381,7 @@ Or(gcc, clang_like) {
     },
   },
 
-  opt'microsoft_abi_compatibility_warning' {
+  opt'microsoft_abi_compatibility_warnings' {
     lvl'on' {
       Or(gcc(10), clang_like) { cxx'-Wmismatched-tags' }
     } / {
@@ -391,10 +395,18 @@ Or(gcc, clang_like) {
       -- flag'-Werror=non-virtual-dtor',
       flag'-Werror=return-type',
       flag'-Werror=init-self',
-      gcc(5,1) {
-        flag'-Werror=array-bounds',
-        flag'-Werror=logical-op',
-        flag'-Werror=logical-not-parentheses',
+      gcc {
+        flag'-Werror=div-by-zero',
+
+        vers(5,1) {
+          flag'-Werror=array-bounds',
+          flag'-Werror=logical-op',
+          flag'-Werror=logical-not-parentheses',
+
+          vers(7) {
+            cxx'-Werror=literal-suffix',
+          }
+        }
       } /
       clang_like {
         flag'-Werror=array-bounds',
@@ -406,8 +418,12 @@ Or(gcc, clang_like) {
           vers(3,6) {
             cxx'-Werror=delete-incomplete',
 
-            vers(7) {
-              cxx'-Werror=dynamic-class-memaccess',
+            vers(6) {
+              cxx'-Werror=user-defined-literals',
+
+              vers(7) {
+                cxx'-Werror=dynamic-class-memaccess',
+              }
             }
           }
         }
@@ -451,6 +467,13 @@ Or(gcc, clang_like) {
         flag'-fno-optimize-sibling-calls',
         vers(3,4) {
           fl'-fsanitize=leak', -- requires the address sanitizer
+        },
+        vers(6) {
+          opt'stack_protector' {
+            -lvl'off' {
+              flag'-fsanitize-minimal-runtime',
+            }
+          }
         },
       }
     } /
@@ -600,7 +623,8 @@ Or(gcc, clang) {
 
   opt'optimization' {
     lvl'0' { fl'-O0' } /
-    lvl'g' { fl'-Og' } / {
+    lvl'g' { fl'-Og' } /
+    {
       flag'-DNDEBUG',
       link'-Wl,-O1',
       lvl'size' { fl'-Os' } /
@@ -670,16 +694,27 @@ Or(gcc, clang) {
       flag'-D_FORTIFY_SOURCE=2',
       flag'-Wstack-protector',
       lvl'strong' {
-        gcc(4,9) {
-          fl'-fstack-protector-strong',
+        gcc {
+          vers(4,9) {
+            fl'-fstack-protector-strong',
+            vers(8) {
+              fl'-fstack-clash-protection'
+            }
+          }
         } /
         clang {
           fl'-fstack-protector-strong',
           fl'-fsanitize=safe-stack',
+          vers(11) {
+            fl'-fstack-clash-protection'
+          }
         }
       } /
       lvl'all' {
         fl'-fstack-protector-all',
+        gcc(8) {
+          fl'-fstack-clash-protection'
+        } /
         clang {
           fl'-fsanitize=safe-stack',
           vers(11) {
@@ -706,7 +741,11 @@ Or(gcc, clang) {
   opt'pie' {
     lvl'off'{ link'-no-pic', } /
     lvl'on' { link'-pie', } /
-    lvl'pic'{ flag'-fPIC', },
+    lvl'static' { link'-static-pie', } /
+    lvl'fpie'{ flag'-fpie', } /
+    lvl'fpic'{ flag'-fpic', } /
+    lvl'fPIE'{ flag'-fPIE', } /
+    lvl'fPIC'{ flag'-fPIC', },
   },
 
   opt'stl_debug' {
@@ -777,8 +816,13 @@ Or(gcc, clang) {
     },
   },
 
-  opt'sanitizers_extra' {
+  opt'other_sanitizers' {
     lvl'thread' { flag'-fsanitize=thread', } /
+    lvl'memory' {
+      clang(5) {
+        flag'-fsanitize=memory',
+      }
+    } /
     lvl'pointer' {
       gcc(8) {
         -- By default the check is disabled at run time.
@@ -792,6 +836,41 @@ Or(gcc, clang) {
       }
     }
   },
+
+  opt'float_sanitizers' {
+    Or(gcc(5), clang(5)) {
+      lvl'on' {
+        flag'-fsanitize=float-divide-by-zero',
+        flag'-fsanitize=float-cast-overflow',
+      } / {
+        flag'-fno-sanitize=float-divide-by-zero',
+        flag'-fno-sanitize=float-cast-overflow',
+      },
+    },
+  },
+
+  opt'integer_sanitizers' {
+    lvl'on' {
+      gcc(4,9) {
+        flag'-ftrapv',
+        flag'-fsanitize=undefined',
+      },
+      clang(5) {
+        flag'-fsanitize=integer',
+      },
+    } / {
+      clang(5) {
+        flag'-fno-sanitize=integer',
+      },
+    },
+  },
+
+  opt'noexcept_warnings' {
+    gcc(4,9) {
+      lvl'on' { cxx'-Wnoexcept' } /
+      { cxx'-Wno-noexcept' }
+    }
+  }
 },
 
 lld_link {
@@ -860,14 +939,15 @@ Or(msvc, clang_cl) {
       flag'/Oi-',
       flag'/Oy-',
     } /
-    lvl'g' { flag'/Ob1' } / {
+    lvl'g' { flag'/Ob1' } /
+    {
       flag'/DNDEBUG',
       -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
       -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
       lvl'1' { flag'/O1', } /
       lvl'2' { flag'/O2', } /
       lvl'3' { flag'/O2', } /
-      lvl'size' { flag'/O1', flag'/Gw' } /
+      Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' } /
       lvl'fast' { flag'/O2', flag'/fp:fast' }
     }
   },
@@ -924,7 +1004,13 @@ Or(msvc, clang_cl) {
     {
       flag'/GS',
       flag'/sdl',
-      lvl'strong' { flag'/RTC1', } / -- /RTCsu
+      lvl'strong' {
+        flag'/RTC1', -- /RTCsu
+        msvc(16,7) {
+          flag'/guard:ehcont',
+          link'/CETCOMPAT',
+        },
+      } /
       lvl'all' { flag'/RTC1', flag'/RTCc', },
     },
   },
@@ -1006,7 +1092,7 @@ msvc {
       }
     },
 
-    opt'warnings_switch' {
+    opt'switch_warnings' {
       lvl'on' { flag'/we4061', } /
       lvl'enum' { flag'/we4062', } /
       lvl'off' { flag'/wd4061', flag'/wd4062' }
@@ -1098,7 +1184,14 @@ msvc {
 
   opt'warnings_as_error' {
     lvl'on' { fl'/WX' } /
-    lvl'off' { flag'/WX-' }
+    lvl'off' { flag'/WX-' } /
+    -- lvl'basic'
+    {
+      cxx'/we4455', -- Wliteral-suffix
+      cxx'/we4150', -- Wdelete-incomplete
+      flag'/we4716', -- Wreturn-type
+      flag'/we2124', -- Wdivision-by-zero
+    }
   },
 
   opt'lto' {
@@ -1112,12 +1205,17 @@ msvc {
   },
 
   opt'sanitizers' {
-    lvl'on' {
-      flag'/sdl',
-    } /
-    opt'stack_protector' {
-      -lvl'off' { flag'/sdl-' },
-    },
+    vers(16,9) {
+      flag'/fsanitize=address',
+      flag'/fsanitize-address-use-after-return'
+    } / {
+      lvl'on' {
+        flag'/sdl',
+      } /
+      opt'stack_protector' {
+        -lvl'off' { flag'/sdl-' },
+      },
+    }
   },
 },
 
@@ -1146,22 +1244,29 @@ end
 Vbase = {
   _incidental={
     color=true,
+    conversion_warnings=true,
+    covered_switch_default_warnings=true,
     diagnostics_format=true,
     diagnostics_show_template_tree=true,
     elide_type=true,
+    fix_compiler_error=true,
     linker=true,
+    microsoft_abi_compatibility_warnings=true,
+    noexcept_warnings=true,
     reproducible_build_warnings=true,
     shadow_warnings=true,
     suggestions=true,
+    switch_warnings=true,
     warnings=true,
-    conversion_warnings=true,
     warnings_as_error=true,
   },
 
   _opts={
     color=      {{'auto', 'never', 'always'},},
     control_flow={{'off', 'on', 'branch', 'return', 'allow_bugs'},},
+    conversion_warnings={{'off', 'on', 'sign', 'conversion'}, 'on'},
     coverage=   {{'off', 'on'},},
+    covered_switch_default_warnings={{'on', 'off'}, 'on'},
     cpu=        {{'generic', 'native'},},
     debug=      {{'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},},
     diagnostics_format={{'fixits', 'patch', 'print_source_range_info'},},
@@ -1169,28 +1274,29 @@ Vbase = {
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
     fix_compiler_error={{'off', 'on'}, 'on'},
+    float_sanitizers={{'off', 'on'}},
+    integer_sanitizers={{'off', 'on'}},
     linker=     {{'bfd', 'gold', 'lld', 'native'},},
     lto=        {{'off', 'on', 'fat', 'thin'},},
-    microsoft_abi_compatibility_warning={{'off', 'on'}, 'off'},
+    microsoft_abi_compatibility_warnings={{'off', 'on'}, 'off'},
     msvc_isystem={{'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},},
     msvc_isystem_with_template_from_non_external={{'off', 'on',},},
+    noexcept_warnings={{'off', 'on'},},
     optimization={{'0', 'g', '1', '2', '3', 'fast', 'size', 'z'},},
+    other_sanitizers={{'off', 'thread', 'pointer', 'memory'},},
     pedantic=   {{'off', 'on', 'as_error'}, 'on'},
-    pie=        {{'off', 'on', 'pic'},},
+    pie=        {{'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE'},},
     relro=      {{'off', 'on', 'full'},},
     reproducible_build_warnings={{'off', 'on'},},
     rtti=       {{'off', 'on'},},
+    sanitizers= {{'off', 'on'},},
     stl_debug=  {{'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception'},},
     stl_fix=    {{'off', 'on'}, 'on'},
-    sanitizers= {{'off', 'on'},},
-    sanitizers_extra={{'off', 'thread', 'pointer'},},
     shadow_warnings={{'off', 'on', 'local', 'compatible_local', 'all'}, 'off'},
     stack_protector={{'off', 'on', 'strong', 'all'},},
     suggestions={{'off', 'on'},},
+    switch_warnings={{'on', 'off', 'enum', 'mandatory_default'}, 'on'},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
-    warnings_switch={{'on', 'off', 'enum', 'mandatory_default'}, 'on'},
-    warnings_covered_switch_default={{'on', 'off'}, 'on'},
-    conversion_warnings={{'off', 'on', 'sign', 'conversion'}, 'on'},
     warnings_as_error={{'off', 'on', 'basic'},},
     whole_program={{'off', 'on', 'strip_all'},},
   },

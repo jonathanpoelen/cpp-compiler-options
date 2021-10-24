@@ -80,11 +80,11 @@ done
 sgen compiler | while read comp ; do
   compname=${comp%-[0-9]*}
   gencompopt 2 release                       $comp cpu=native lto optimization=2 linker=native
-  gencompopt 2 warnings                      $comp shadow_warnings=off microsoft_abi_compatibility_warning=off pedantic warnings
-  gencompopt 2 warnings_with_conversions     $comp shadow_warnings=off microsoft_abi_compatibility_warning=off pedantic warnings conversion_warnings
+  gencompopt 2 warnings                      $comp shadow_warnings=off microsoft_abi_compatibility_warnings=off pedantic warnings
+  gencompopt 2 warnings_with_conversions     $comp shadow_warnings=off microsoft_abi_compatibility_warnings=off pedantic warnings conversion_warnings
   gencompopt 1 stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
   gencompopt 1 stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
-  gencompopt 1 sanitizers-pointer            $comp sanitizers_extra=pointer
+  gencompopt 1 sanitizers-pointer            $comp other_sanitizers=pointer
   gencompopt 1 template_tree                 $comp elide_type=off diagnostics_show_template_tree=on
   for g in suggestions stl_debug debug sanitizers ; do
     gencompopt 2 $g $comp $g
