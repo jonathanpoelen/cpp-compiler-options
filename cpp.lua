@@ -140,6 +140,8 @@ local _jln_flag_names = {
   ["conversion_warnings"] = true,
   ["jln-coverage"] = true,
   ["coverage"] = true,
+  ["jln-covered-switch-default-warnings"] = true,
+  ["covered_switch_default_warnings"] = true,
   ["jln-cpu"] = true,
   ["cpu"] = true,
   ["jln-debug"] = true,
@@ -154,18 +156,26 @@ local _jln_flag_names = {
   ["exceptions"] = true,
   ["jln-fix-compiler-error"] = true,
   ["fix_compiler_error"] = true,
+  ["jln-float-sanitizers"] = true,
+  ["float_sanitizers"] = true,
+  ["jln-integer-sanitizers"] = true,
+  ["integer_sanitizers"] = true,
   ["jln-linker"] = true,
   ["linker"] = true,
   ["jln-lto"] = true,
   ["lto"] = true,
-  ["jln-microsoft-abi-compatibility-warning"] = true,
-  ["microsoft_abi_compatibility_warning"] = true,
+  ["jln-microsoft-abi-compatibility-warnings"] = true,
+  ["microsoft_abi_compatibility_warnings"] = true,
   ["jln-msvc-isystem"] = true,
   ["msvc_isystem"] = true,
   ["jln-msvc-isystem-with-template-from-non-external"] = true,
   ["msvc_isystem_with_template_from_non_external"] = true,
+  ["jln-noexcept-warnings"] = true,
+  ["noexcept_warnings"] = true,
   ["jln-optimization"] = true,
   ["optimization"] = true,
+  ["jln-other-sanitizers"] = true,
+  ["other_sanitizers"] = true,
   ["jln-pedantic"] = true,
   ["pedantic"] = true,
   ["jln-pie"] = true,
@@ -178,8 +188,6 @@ local _jln_flag_names = {
   ["rtti"] = true,
   ["jln-sanitizers"] = true,
   ["sanitizers"] = true,
-  ["jln-sanitizers-extra"] = true,
-  ["sanitizers_extra"] = true,
   ["jln-shadow-warnings"] = true,
   ["shadow_warnings"] = true,
   ["jln-stack-protector"] = true,
@@ -190,14 +198,12 @@ local _jln_flag_names = {
   ["stl_fix"] = true,
   ["jln-suggestions"] = true,
   ["suggestions"] = true,
+  ["jln-switch-warnings"] = true,
+  ["switch_warnings"] = true,
   ["jln-warnings"] = true,
   ["warnings"] = true,
   ["jln-warnings-as-error"] = true,
   ["warnings_as_error"] = true,
-  ["jln-warnings-covered-switch-default"] = true,
-  ["warnings_covered_switch_default"] = true,
-  ["jln-warnings-switch"] = true,
-  ["warnings_switch"] = true,
   ["jln-whole-program"] = true,
   ["whole_program"] = true,
 }
@@ -225,6 +231,8 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-conversion-warnings"] then _OPTIONS["jln-conversion-warnings"] = (defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on") end
   newoption{trigger="jln-coverage", allowed={{"default"}, {"off"}, {"on"}}, description="coverage"}
   if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or defaults["jln-coverage"] or "default") end
+  newoption{trigger="jln-covered-switch-default-warnings", allowed={{"default"}, {"on"}, {"off"}}, description="covered_switch_default_warnings"}
+  if not _OPTIONS["jln-covered-switch-default-warnings"] then _OPTIONS["jln-covered-switch-default-warnings"] = (defaults["covered_switch_default_warnings"] or defaults["jln-covered-switch-default-warnings"] or "on") end
   newoption{trigger="jln-cpu", allowed={{"default"}, {"generic"}, {"native"}}, description="cpu"}
   if not _OPTIONS["jln-cpu"] then _OPTIONS["jln-cpu"] = (defaults["cpu"] or defaults["jln-cpu"] or "default") end
   newoption{trigger="jln-debug", allowed={{"default"}, {"off"}, {"on"}, {"line_tables_only"}, {"gdb"}, {"lldb"}, {"sce"}}, description="debug"}
@@ -239,21 +247,29 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
   newoption{trigger="jln-fix-compiler-error", allowed={{"default"}, {"off"}, {"on"}}, description="fix_compiler_error"}
   if not _OPTIONS["jln-fix-compiler-error"] then _OPTIONS["jln-fix-compiler-error"] = (defaults["fix_compiler_error"] or defaults["jln-fix-compiler-error"] or "on") end
+  newoption{trigger="jln-float-sanitizers", allowed={{"default"}, {"off"}, {"on"}}, description="float_sanitizers"}
+  if not _OPTIONS["jln-float-sanitizers"] then _OPTIONS["jln-float-sanitizers"] = (defaults["float_sanitizers"] or defaults["jln-float-sanitizers"] or "default") end
+  newoption{trigger="jln-integer-sanitizers", allowed={{"default"}, {"off"}, {"on"}}, description="integer_sanitizers"}
+  if not _OPTIONS["jln-integer-sanitizers"] then _OPTIONS["jln-integer-sanitizers"] = (defaults["integer_sanitizers"] or defaults["jln-integer-sanitizers"] or "default") end
   newoption{trigger="jln-linker", allowed={{"default"}, {"bfd"}, {"gold"}, {"lld"}, {"native"}}, description="linker"}
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
   newoption{trigger="jln-lto", allowed={{"default"}, {"off"}, {"on"}, {"fat"}, {"thin"}}, description="lto"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
-  newoption{trigger="jln-microsoft-abi-compatibility-warning", allowed={{"default"}, {"off"}, {"on"}}, description="microsoft_abi_compatibility_warning"}
-  if not _OPTIONS["jln-microsoft-abi-compatibility-warning"] then _OPTIONS["jln-microsoft-abi-compatibility-warning"] = (defaults["microsoft_abi_compatibility_warning"] or defaults["jln-microsoft-abi-compatibility-warning"] or "off") end
+  newoption{trigger="jln-microsoft-abi-compatibility-warnings", allowed={{"default"}, {"off"}, {"on"}}, description="microsoft_abi_compatibility_warnings"}
+  if not _OPTIONS["jln-microsoft-abi-compatibility-warnings"] then _OPTIONS["jln-microsoft-abi-compatibility-warnings"] = (defaults["microsoft_abi_compatibility_warnings"] or defaults["jln-microsoft-abi-compatibility-warnings"] or "off") end
   newoption{trigger="jln-msvc-isystem", allowed={{"default"}, {"anglebrackets"}, {"include_and_caexcludepath"}, {"external_as_include_system_flag"}}, description="msvc_isystem"}
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
   newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{"default"}, {"off"}, {"on"}}, description="msvc_isystem_with_template_from_non_external"}
   if not _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] then _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] = (defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default") end
+  newoption{trigger="jln-noexcept-warnings", allowed={{"default"}, {"off"}, {"on"}}, description="noexcept_warnings"}
+  if not _OPTIONS["jln-noexcept-warnings"] then _OPTIONS["jln-noexcept-warnings"] = (defaults["noexcept_warnings"] or defaults["jln-noexcept-warnings"] or "default") end
   newoption{trigger="jln-optimization", allowed={{"default"}, {"0"}, {"g"}, {"1"}, {"2"}, {"3"}, {"fast"}, {"size"}, {"z"}}, description="optimization"}
   if not _OPTIONS["jln-optimization"] then _OPTIONS["jln-optimization"] = (defaults["optimization"] or defaults["jln-optimization"] or "default") end
+  newoption{trigger="jln-other-sanitizers", allowed={{"default"}, {"off"}, {"thread"}, {"pointer"}, {"memory"}}, description="other_sanitizers"}
+  if not _OPTIONS["jln-other-sanitizers"] then _OPTIONS["jln-other-sanitizers"] = (defaults["other_sanitizers"] or defaults["jln-other-sanitizers"] or "default") end
   newoption{trigger="jln-pedantic", allowed={{"default"}, {"off"}, {"on"}, {"as_error"}}, description="pedantic"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "on") end
-  newoption{trigger="jln-pie", allowed={{"default"}, {"off"}, {"on"}, {"pic"}}, description="pie"}
+  newoption{trigger="jln-pie", allowed={{"default"}, {"off"}, {"on"}, {"static"}, {"fpic"}, {"fPIC"}, {"fpie"}, {"fPIE"}}, description="pie"}
   if not _OPTIONS["jln-pie"] then _OPTIONS["jln-pie"] = (defaults["pie"] or defaults["jln-pie"] or "default") end
   newoption{trigger="jln-relro", allowed={{"default"}, {"off"}, {"on"}, {"full"}}, description="relro"}
   if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or defaults["jln-relro"] or "default") end
@@ -263,8 +279,6 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-rtti"] then _OPTIONS["jln-rtti"] = (defaults["rtti"] or defaults["jln-rtti"] or "default") end
   newoption{trigger="jln-sanitizers", allowed={{"default"}, {"off"}, {"on"}}, description="sanitizers"}
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
-  newoption{trigger="jln-sanitizers-extra", allowed={{"default"}, {"off"}, {"thread"}, {"pointer"}}, description="sanitizers_extra"}
-  if not _OPTIONS["jln-sanitizers-extra"] then _OPTIONS["jln-sanitizers-extra"] = (defaults["sanitizers_extra"] or defaults["jln-sanitizers-extra"] or "default") end
   newoption{trigger="jln-shadow-warnings", allowed={{"default"}, {"off"}, {"on"}, {"local"}, {"compatible_local"}, {"all"}}, description="shadow_warnings"}
   if not _OPTIONS["jln-shadow-warnings"] then _OPTIONS["jln-shadow-warnings"] = (defaults["shadow_warnings"] or defaults["jln-shadow-warnings"] or "off") end
   newoption{trigger="jln-stack-protector", allowed={{"default"}, {"off"}, {"on"}, {"strong"}, {"all"}}, description="stack_protector"}
@@ -275,14 +289,12 @@ function jln_newoptions(defaults)
   if not _OPTIONS["jln-stl-fix"] then _OPTIONS["jln-stl-fix"] = (defaults["stl_fix"] or defaults["jln-stl-fix"] or "on") end
   newoption{trigger="jln-suggestions", allowed={{"default"}, {"off"}, {"on"}}, description="suggestions"}
   if not _OPTIONS["jln-suggestions"] then _OPTIONS["jln-suggestions"] = (defaults["suggestions"] or defaults["jln-suggestions"] or "default") end
+  newoption{trigger="jln-switch-warnings", allowed={{"default"}, {"on"}, {"off"}, {"enum"}, {"mandatory_default"}}, description="switch_warnings"}
+  if not _OPTIONS["jln-switch-warnings"] then _OPTIONS["jln-switch-warnings"] = (defaults["switch_warnings"] or defaults["jln-switch-warnings"] or "on") end
   newoption{trigger="jln-warnings", allowed={{"default"}, {"off"}, {"on"}, {"strict"}, {"very_strict"}}, description="warnings"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "on") end
   newoption{trigger="jln-warnings-as-error", allowed={{"default"}, {"off"}, {"on"}, {"basic"}}, description="warnings_as_error"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
-  newoption{trigger="jln-warnings-covered-switch-default", allowed={{"default"}, {"on"}, {"off"}}, description="warnings_covered_switch_default"}
-  if not _OPTIONS["jln-warnings-covered-switch-default"] then _OPTIONS["jln-warnings-covered-switch-default"] = (defaults["warnings_covered_switch_default"] or defaults["jln-warnings-covered-switch-default"] or "on") end
-  newoption{trigger="jln-warnings-switch", allowed={{"default"}, {"on"}, {"off"}, {"enum"}, {"mandatory_default"}}, description="warnings_switch"}
-  if not _OPTIONS["jln-warnings-switch"] then _OPTIONS["jln-warnings-switch"] = (defaults["warnings_switch"] or defaults["jln-warnings-switch"] or "on") end
   newoption{trigger="jln-whole-program", allowed={{"default"}, {"off"}, {"on"}, {"strip_all"}}, description="whole_program"}
   if not _OPTIONS["jln-whole-program"] then _OPTIONS["jln-whole-program"] = (defaults["whole_program"] or defaults["jln-whole-program"] or "default") end
   newoption{trigger="jln-cxx", description="Path or name of the compiler for jln functions"}
@@ -330,6 +342,7 @@ function jln_tovalues(values, disable_others)
       ["control_flow"] = values["control_flow"] or values["jln-control-flow"] or (disable_others and "default" or _OPTIONS["jln-control-flow"]),
       ["conversion_warnings"] = values["conversion_warnings"] or values["jln-conversion-warnings"] or (disable_others and "default" or _OPTIONS["jln-conversion-warnings"]),
       ["coverage"] = values["coverage"] or values["jln-coverage"] or (disable_others and "default" or _OPTIONS["jln-coverage"]),
+      ["covered_switch_default_warnings"] = values["covered_switch_default_warnings"] or values["jln-covered-switch-default-warnings"] or (disable_others and "default" or _OPTIONS["jln-covered-switch-default-warnings"]),
       ["cpu"] = values["cpu"] or values["jln-cpu"] or (disable_others and "default" or _OPTIONS["jln-cpu"]),
       ["debug"] = values["debug"] or values["jln-debug"] or (disable_others and "default" or _OPTIONS["jln-debug"]),
       ["diagnostics_format"] = values["diagnostics_format"] or values["jln-diagnostics-format"] or (disable_others and "default" or _OPTIONS["jln-diagnostics-format"]),
@@ -337,28 +350,30 @@ function jln_tovalues(values, disable_others)
       ["elide_type"] = values["elide_type"] or values["jln-elide-type"] or (disable_others and "default" or _OPTIONS["jln-elide-type"]),
       ["exceptions"] = values["exceptions"] or values["jln-exceptions"] or (disable_others and "default" or _OPTIONS["jln-exceptions"]),
       ["fix_compiler_error"] = values["fix_compiler_error"] or values["jln-fix-compiler-error"] or (disable_others and "default" or _OPTIONS["jln-fix-compiler-error"]),
+      ["float_sanitizers"] = values["float_sanitizers"] or values["jln-float-sanitizers"] or (disable_others and "default" or _OPTIONS["jln-float-sanitizers"]),
+      ["integer_sanitizers"] = values["integer_sanitizers"] or values["jln-integer-sanitizers"] or (disable_others and "default" or _OPTIONS["jln-integer-sanitizers"]),
       ["linker"] = values["linker"] or values["jln-linker"] or (disable_others and "default" or _OPTIONS["jln-linker"]),
       ["lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"]),
-      ["microsoft_abi_compatibility_warning"] = values["microsoft_abi_compatibility_warning"] or values["jln-microsoft-abi-compatibility-warning"] or (disable_others and "default" or _OPTIONS["jln-microsoft-abi-compatibility-warning"]),
+      ["microsoft_abi_compatibility_warnings"] = values["microsoft_abi_compatibility_warnings"] or values["jln-microsoft-abi-compatibility-warnings"] or (disable_others and "default" or _OPTIONS["jln-microsoft-abi-compatibility-warnings"]),
       ["msvc_isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem"]),
       ["msvc_isystem_with_template_from_non_external"] = values["msvc_isystem_with_template_from_non_external"] or values["jln-msvc-isystem-with-template-from-non-external"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem-with-template-from-non-external"]),
+      ["noexcept_warnings"] = values["noexcept_warnings"] or values["jln-noexcept-warnings"] or (disable_others and "default" or _OPTIONS["jln-noexcept-warnings"]),
       ["optimization"] = values["optimization"] or values["jln-optimization"] or (disable_others and "default" or _OPTIONS["jln-optimization"]),
+      ["other_sanitizers"] = values["other_sanitizers"] or values["jln-other-sanitizers"] or (disable_others and "default" or _OPTIONS["jln-other-sanitizers"]),
       ["pedantic"] = values["pedantic"] or values["jln-pedantic"] or (disable_others and "default" or _OPTIONS["jln-pedantic"]),
       ["pie"] = values["pie"] or values["jln-pie"] or (disable_others and "default" or _OPTIONS["jln-pie"]),
       ["relro"] = values["relro"] or values["jln-relro"] or (disable_others and "default" or _OPTIONS["jln-relro"]),
       ["reproducible_build_warnings"] = values["reproducible_build_warnings"] or values["jln-reproducible-build-warnings"] or (disable_others and "default" or _OPTIONS["jln-reproducible-build-warnings"]),
       ["rtti"] = values["rtti"] or values["jln-rtti"] or (disable_others and "default" or _OPTIONS["jln-rtti"]),
       ["sanitizers"] = values["sanitizers"] or values["jln-sanitizers"] or (disable_others and "default" or _OPTIONS["jln-sanitizers"]),
-      ["sanitizers_extra"] = values["sanitizers_extra"] or values["jln-sanitizers-extra"] or (disable_others and "default" or _OPTIONS["jln-sanitizers-extra"]),
       ["shadow_warnings"] = values["shadow_warnings"] or values["jln-shadow-warnings"] or (disable_others and "default" or _OPTIONS["jln-shadow-warnings"]),
       ["stack_protector"] = values["stack_protector"] or values["jln-stack-protector"] or (disable_others and "default" or _OPTIONS["jln-stack-protector"]),
       ["stl_debug"] = values["stl_debug"] or values["jln-stl-debug"] or (disable_others and "default" or _OPTIONS["jln-stl-debug"]),
       ["stl_fix"] = values["stl_fix"] or values["jln-stl-fix"] or (disable_others and "default" or _OPTIONS["jln-stl-fix"]),
       ["suggestions"] = values["suggestions"] or values["jln-suggestions"] or (disable_others and "default" or _OPTIONS["jln-suggestions"]),
+      ["switch_warnings"] = values["switch_warnings"] or values["jln-switch-warnings"] or (disable_others and "default" or _OPTIONS["jln-switch-warnings"]),
       ["warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "default" or _OPTIONS["jln-warnings"]),
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "default" or _OPTIONS["jln-warnings-as-error"]),
-      ["warnings_covered_switch_default"] = values["warnings_covered_switch_default"] or values["jln-warnings-covered-switch-default"] or (disable_others and "default" or _OPTIONS["jln-warnings-covered-switch-default"]),
-      ["warnings_switch"] = values["warnings_switch"] or values["jln-warnings-switch"] or (disable_others and "default" or _OPTIONS["jln-warnings-switch"]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "default" or _OPTIONS["jln-whole-program"]),
       ["cxx"] = values["cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
       ["cxx_version"] = values["cxx_version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
@@ -370,6 +385,7 @@ function jln_tovalues(values, disable_others)
       ["control_flow"] = _OPTIONS["jln-control-flow"],
       ["conversion_warnings"] = _OPTIONS["jln-conversion-warnings"],
       ["coverage"] = _OPTIONS["jln-coverage"],
+      ["covered_switch_default_warnings"] = _OPTIONS["jln-covered-switch-default-warnings"],
       ["cpu"] = _OPTIONS["jln-cpu"],
       ["debug"] = _OPTIONS["jln-debug"],
       ["diagnostics_format"] = _OPTIONS["jln-diagnostics-format"],
@@ -377,28 +393,30 @@ function jln_tovalues(values, disable_others)
       ["elide_type"] = _OPTIONS["jln-elide-type"],
       ["exceptions"] = _OPTIONS["jln-exceptions"],
       ["fix_compiler_error"] = _OPTIONS["jln-fix-compiler-error"],
+      ["float_sanitizers"] = _OPTIONS["jln-float-sanitizers"],
+      ["integer_sanitizers"] = _OPTIONS["jln-integer-sanitizers"],
       ["linker"] = _OPTIONS["jln-linker"],
       ["lto"] = _OPTIONS["jln-lto"],
-      ["microsoft_abi_compatibility_warning"] = _OPTIONS["jln-microsoft-abi-compatibility-warning"],
+      ["microsoft_abi_compatibility_warnings"] = _OPTIONS["jln-microsoft-abi-compatibility-warnings"],
       ["msvc_isystem"] = _OPTIONS["jln-msvc-isystem"],
       ["msvc_isystem_with_template_from_non_external"] = _OPTIONS["jln-msvc-isystem-with-template-from-non-external"],
+      ["noexcept_warnings"] = _OPTIONS["jln-noexcept-warnings"],
       ["optimization"] = _OPTIONS["jln-optimization"],
+      ["other_sanitizers"] = _OPTIONS["jln-other-sanitizers"],
       ["pedantic"] = _OPTIONS["jln-pedantic"],
       ["pie"] = _OPTIONS["jln-pie"],
       ["relro"] = _OPTIONS["jln-relro"],
       ["reproducible_build_warnings"] = _OPTIONS["jln-reproducible-build-warnings"],
       ["rtti"] = _OPTIONS["jln-rtti"],
       ["sanitizers"] = _OPTIONS["jln-sanitizers"],
-      ["sanitizers_extra"] = _OPTIONS["jln-sanitizers-extra"],
       ["shadow_warnings"] = _OPTIONS["jln-shadow-warnings"],
       ["stack_protector"] = _OPTIONS["jln-stack-protector"],
       ["stl_debug"] = _OPTIONS["jln-stl-debug"],
       ["stl_fix"] = _OPTIONS["jln-stl-fix"],
       ["suggestions"] = _OPTIONS["jln-suggestions"],
+      ["switch_warnings"] = _OPTIONS["jln-switch-warnings"],
       ["warnings"] = _OPTIONS["jln-warnings"],
       ["warnings_as_error"] = _OPTIONS["jln-warnings-as-error"],
-      ["warnings_covered_switch_default"] = _OPTIONS["jln-warnings-covered-switch-default"],
-      ["warnings_switch"] = _OPTIONS["jln-warnings-switch"],
       ["whole_program"] = _OPTIONS["jln-whole-program"],
       ["cxx"] = _get_extra("jln-cxx"),
       ["cxx_version"] = _get_extra("jln-cxx-version"),
@@ -528,14 +546,14 @@ function jln_getoptions(values, disable_others, print_compiler)
           jln_buildoptions[#jln_buildoptions+1] = "-Wnon-virtual-dtor"
           jln_buildoptions[#jln_buildoptions+1] = "-Wold-style-cast"
           jln_buildoptions[#jln_buildoptions+1] = "-Woverloaded-virtual"
-          if not ( values["warnings_switch"] == "default") then
-            if values["warnings_switch"] == "on" then
+          if not ( values["switch_warnings"] == "default") then
+            if values["switch_warnings"] == "on" then
               jln_buildoptions[#jln_buildoptions+1] = "-Wswitch"
             else
-              if values["warnings_switch"] == "enum" then
+              if values["switch_warnings"] == "enum" then
                 jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-enum"
               else
-                if values["warnings_switch"] == "mandatory_default" then
+                if values["switch_warnings"] == "mandatory_default" then
                   jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-default"
                 else
                   jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch"
@@ -592,14 +610,14 @@ function jln_getoptions(values, disable_others, print_compiler)
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-global-constructors"
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-weak-vtables"
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-exit-time-destructors"
-            if not ( values["warnings_switch"] == "default") then
-              if values["warnings_switch"] == "on" then
+            if not ( values["switch_warnings"] == "default") then
+              if values["switch_warnings"] == "on" then
                 jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-enum"
               else
-                if values["warnings_switch"] == "enum" then
+                if values["switch_warnings"] == "enum" then
                   jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-enum"
                 else
-                  if values["warnings_switch"] == "off" then
+                  if values["switch_warnings"] == "off" then
                     jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch"
                     jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-enum"
                   end
@@ -609,8 +627,8 @@ function jln_getoptions(values, disable_others, print_compiler)
               jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch"
               jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch-enum"
             end
-            if not ( values["warnings_covered_switch_default"] == "default") then
-              if values["warnings_covered_switch_default"] == "off" then
+            if not ( values["covered_switch_default_warnings"] == "default") then
+              if values["covered_switch_default_warnings"] == "off" then
                 jln_buildoptions[#jln_buildoptions+1] = "-Wno-covered-switch-default"
               end
             end
@@ -658,8 +676,8 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["microsoft_abi_compatibility_warning"] == "default") then
-      if values["microsoft_abi_compatibility_warning"] == "on" then
+    if not ( values["microsoft_abi_compatibility_warnings"] == "default") then
+      if values["microsoft_abi_compatibility_warnings"] == "on" then
         if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
           jln_buildoptions[#jln_buildoptions+1] = "-Wmismatched-tags"
         end
@@ -676,10 +694,16 @@ function jln_getoptions(values, disable_others, print_compiler)
         if values["warnings_as_error"] == "basic" then
           jln_buildoptions[#jln_buildoptions+1] = "-Werror=return-type"
           jln_buildoptions[#jln_buildoptions+1] = "-Werror=init-self"
-          if ( compiler == "gcc" and not ( compversion < 501 ) ) then
-            jln_buildoptions[#jln_buildoptions+1] = "-Werror=array-bounds"
-            jln_buildoptions[#jln_buildoptions+1] = "-Werror=logical-op"
-            jln_buildoptions[#jln_buildoptions+1] = "-Werror=logical-not-parentheses"
+          if compiler == "gcc" then
+            jln_buildoptions[#jln_buildoptions+1] = "-Werror=div-by-zero"
+            if not ( compversion < 501 ) then
+              jln_buildoptions[#jln_buildoptions+1] = "-Werror=array-bounds"
+              jln_buildoptions[#jln_buildoptions+1] = "-Werror=logical-op"
+              jln_buildoptions[#jln_buildoptions+1] = "-Werror=logical-not-parentheses"
+              if not ( compversion < 700 ) then
+                jln_buildoptions[#jln_buildoptions+1] = "-Werror=literal-suffix"
+              end
+            end
           else
             if ( compiler == "clang" or compiler == "clang-cl" ) then
               jln_buildoptions[#jln_buildoptions+1] = "-Werror=array-bounds"
@@ -688,8 +712,11 @@ function jln_getoptions(values, disable_others, print_compiler)
                 jln_buildoptions[#jln_buildoptions+1] = "-Werror=logical-not-parentheses"
                 if not ( compversion < 306 ) then
                   jln_buildoptions[#jln_buildoptions+1] = "-Werror=delete-incomplete"
-                  if not ( compversion < 700 ) then
-                    jln_buildoptions[#jln_buildoptions+1] = "-Werror=dynamic-class-memaccess"
+                  if not ( compversion < 600 ) then
+                    jln_buildoptions[#jln_buildoptions+1] = "-Werror=user-defined-literals"
+                    if not ( compversion < 700 ) then
+                      jln_buildoptions[#jln_buildoptions+1] = "-Werror=dynamic-class-memaccess"
+                    end
                   end
                 end
               end
@@ -737,6 +764,13 @@ function jln_getoptions(values, disable_others, print_compiler)
               if not ( compversion < 304 ) then
                 jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=leak"
                 jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=leak"
+              end
+              if not ( compversion < 600 ) then
+                if not ( values["stack_protector"] == "default") then
+                  if not ( values["stack_protector"] == "off" ) then
+                    jln_buildoptions[#jln_buildoptions+1] = "-fsanitize-minimal-runtime"
+                  end
+                end
               end
             end
           else
@@ -1068,27 +1102,42 @@ function jln_getoptions(values, disable_others, print_compiler)
         jln_buildoptions[#jln_buildoptions+1] = "-D_FORTIFY_SOURCE=2"
         jln_buildoptions[#jln_buildoptions+1] = "-Wstack-protector"
         if values["stack_protector"] == "strong" then
-          if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-            jln_buildoptions[#jln_buildoptions+1] = "-fstack-protector-strong"
-            jln_linkoptions[#jln_linkoptions+1] = "-fstack-protector-strong"
+          if compiler == "gcc" then
+            if not ( compversion < 409 ) then
+              jln_buildoptions[#jln_buildoptions+1] = "-fstack-protector-strong"
+              jln_linkoptions[#jln_linkoptions+1] = "-fstack-protector-strong"
+              if not ( compversion < 800 ) then
+                jln_buildoptions[#jln_buildoptions+1] = "-fstack-clash-protection"
+                jln_linkoptions[#jln_linkoptions+1] = "-fstack-clash-protection"
+              end
+            end
           else
             if compiler == "clang" then
               jln_buildoptions[#jln_buildoptions+1] = "-fstack-protector-strong"
               jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=safe-stack"
               jln_linkoptions[#jln_linkoptions+1] = "-fstack-protector-strong"
               jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=safe-stack"
+              if not ( compversion < 1100 ) then
+                jln_buildoptions[#jln_buildoptions+1] = "-fstack-clash-protection"
+                jln_linkoptions[#jln_linkoptions+1] = "-fstack-clash-protection"
+              end
             end
           end
         else
           if values["stack_protector"] == "all" then
             jln_buildoptions[#jln_buildoptions+1] = "-fstack-protector-all"
             jln_linkoptions[#jln_linkoptions+1] = "-fstack-protector-all"
-            if compiler == "clang" then
-              jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=safe-stack"
-              jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=safe-stack"
-              if not ( compversion < 1100 ) then
-                jln_buildoptions[#jln_buildoptions+1] = "-fstack-clash-protection"
-                jln_linkoptions[#jln_linkoptions+1] = "-fstack-clash-protection"
+            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+              jln_buildoptions[#jln_buildoptions+1] = "-fstack-clash-protection"
+              jln_linkoptions[#jln_linkoptions+1] = "-fstack-clash-protection"
+            else
+              if compiler == "clang" then
+                jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=safe-stack"
+                jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=safe-stack"
+                if not ( compversion < 1100 ) then
+                  jln_buildoptions[#jln_buildoptions+1] = "-fstack-clash-protection"
+                  jln_linkoptions[#jln_linkoptions+1] = "-fstack-clash-protection"
+                end
               end
             end
           else
@@ -1122,8 +1171,24 @@ function jln_getoptions(values, disable_others, print_compiler)
         if values["pie"] == "on" then
           jln_linkoptions[#jln_linkoptions+1] = "-pie"
         else
-          if values["pie"] == "pic" then
-            jln_buildoptions[#jln_buildoptions+1] = "-fPIC"
+          if values["pie"] == "static" then
+            jln_linkoptions[#jln_linkoptions+1] = "-static-pie"
+          else
+            if values["pie"] == "fpie" then
+              jln_buildoptions[#jln_buildoptions+1] = "-fpie"
+            else
+              if values["pie"] == "fpic" then
+                jln_buildoptions[#jln_buildoptions+1] = "-fpic"
+              else
+                if values["pie"] == "fPIE" then
+                  jln_buildoptions[#jln_buildoptions+1] = "-fPIE"
+                else
+                  if values["pie"] == "fPIC" then
+                    jln_buildoptions[#jln_buildoptions+1] = "-fPIC"
+                  end
+                end
+              end
+            end
           end
         end
       end
@@ -1214,15 +1279,56 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["sanitizers_extra"] == "default") then
-      if values["sanitizers_extra"] == "thread" then
+    if not ( values["other_sanitizers"] == "default") then
+      if values["other_sanitizers"] == "thread" then
         jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=thread"
       else
-        if values["sanitizers_extra"] == "pointer" then
-          if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-            jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=pointer-compare"
-            jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=pointer-subtract"
+        if values["other_sanitizers"] == "memory" then
+          if ( compiler == "clang" and not ( compversion < 500 ) ) then
+            jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=memory"
           end
+        else
+          if values["other_sanitizers"] == "pointer" then
+            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+              jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=pointer-compare"
+              jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=pointer-subtract"
+            end
+          end
+        end
+      end
+    end
+    if not ( values["float_sanitizers"] == "default") then
+      if ( ( compiler == "gcc" and not ( compversion < 500 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) ) then
+        if values["float_sanitizers"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=float-divide-by-zero"
+          jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=float-cast-overflow"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-sanitize=float-divide-by-zero"
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-sanitize=float-cast-overflow"
+        end
+      end
+    end
+    if not ( values["integer_sanitizers"] == "default") then
+      if values["integer_sanitizers"] == "on" then
+        if ( compiler == "gcc" and not ( compversion < 409 ) ) then
+          jln_buildoptions[#jln_buildoptions+1] = "-ftrapv"
+          jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=undefined"
+        end
+        if ( compiler == "clang" and not ( compversion < 500 ) ) then
+          jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=integer"
+        end
+      else
+        if ( compiler == "clang" and not ( compversion < 500 ) ) then
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-sanitize=integer"
+        end
+      end
+    end
+    if not ( values["noexcept_warnings"] == "default") then
+      if ( compiler == "gcc" and not ( compversion < 409 ) ) then
+        if values["noexcept_warnings"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-Wnoexcept"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-Wno-noexcept"
         end
       end
     end
@@ -1328,8 +1434,9 @@ function jln_getoptions(values, disable_others, print_compiler)
               if values["optimization"] == "3" then
                 jln_buildoptions[#jln_buildoptions+1] = "/O2"
               else
-                if values["optimization"] == "size" then
+                if ( values["optimization"] == "size" or values["optimization"] == "z" ) then
                   jln_buildoptions[#jln_buildoptions+1] = "/O1"
+                  jln_buildoptions[#jln_buildoptions+1] = "/GL"
                   jln_buildoptions[#jln_buildoptions+1] = "/Gw"
                 else
                   if values["optimization"] == "fast" then
@@ -1391,6 +1498,10 @@ function jln_getoptions(values, disable_others, print_compiler)
         jln_buildoptions[#jln_buildoptions+1] = "/sdl"
         if values["stack_protector"] == "strong" then
           jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
+          if ( compiler == "msvc" and not ( compversion < 1607 ) ) then
+            jln_buildoptions[#jln_buildoptions+1] = "/guard:ehcont"
+            jln_linkoptions[#jln_linkoptions+1] = "/CETCOMPAT"
+          end
         else
           if values["stack_protector"] == "all" then
             jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
@@ -1452,14 +1563,14 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["warnings_switch"] == "default") then
-        if values["warnings_switch"] == "on" then
+      if not ( values["switch_warnings"] == "default") then
+        if values["switch_warnings"] == "on" then
           jln_buildoptions[#jln_buildoptions+1] = "/we4061"
         else
-          if values["warnings_switch"] == "enum" then
+          if values["switch_warnings"] == "enum" then
             jln_buildoptions[#jln_buildoptions+1] = "/we4062"
           else
-            if values["warnings_switch"] == "off" then
+            if values["switch_warnings"] == "off" then
               jln_buildoptions[#jln_buildoptions+1] = "/wd4061"
               jln_buildoptions[#jln_buildoptions+1] = "/wd4062"
             end
@@ -1555,6 +1666,11 @@ function jln_getoptions(values, disable_others, print_compiler)
       else
         if values["warnings_as_error"] == "off" then
           jln_buildoptions[#jln_buildoptions+1] = "/WX-"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "/we4455"
+          jln_buildoptions[#jln_buildoptions+1] = "/we4150"
+          jln_buildoptions[#jln_buildoptions+1] = "/we4716"
+          jln_buildoptions[#jln_buildoptions+1] = "/we2124"
         end
       end
     end
@@ -1567,12 +1683,17 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
     if not ( values["sanitizers"] == "default") then
-      if values["sanitizers"] == "on" then
-        jln_buildoptions[#jln_buildoptions+1] = "/sdl"
+      if not ( compversion < 1609 ) then
+        jln_buildoptions[#jln_buildoptions+1] = "/fsanitize=address"
+        jln_buildoptions[#jln_buildoptions+1] = "/fsanitize-address-use-after-return"
       else
-        if not ( values["stack_protector"] == "default") then
-          if not ( values["stack_protector"] == "off" ) then
-            jln_buildoptions[#jln_buildoptions+1] = "/sdl-"
+        if values["sanitizers"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "/sdl"
+        else
+          if not ( values["stack_protector"] == "default") then
+            if not ( values["stack_protector"] == "off" ) then
+              jln_buildoptions[#jln_buildoptions+1] = "/sdl-"
+            end
           end
         end
       end
