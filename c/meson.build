@@ -49,7 +49,7 @@
 #  reproducible_build_warnings = default off on
 #  shadow_warnings = off default on local compatible_local all
 #  suggestions = default off on
-#  switch_warnings = on default off enum mandatory_default
+#  switch_warnings = on default off exhaustive_enum mandatory_default
 #  warnings = on default off strict very_strict
 #  warnings_as_error = default off on basic
 #  
@@ -195,7 +195,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
             if (  (___jln_c_flags.get('switch_warnings', 'default') == 'on') )
               jln_c_c_flags += ['-Wswitch', ]
             else
-              if (  (___jln_c_flags.get('switch_warnings', 'default') == 'enum') )
+              if (  (___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum') )
                 jln_c_c_flags += ['-Wswitch-enum', ]
               else
                 if (  (___jln_c_flags.get('switch_warnings', 'default') == 'mandatory_default') )
@@ -232,7 +232,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
               if (  (___jln_c_flags.get('switch_warnings', 'default') == 'on') )
                 jln_c_c_flags += ['-Wno-switch-enum', ]
               else
-                if (  (___jln_c_flags.get('switch_warnings', 'default') == 'enum') )
+                if (  (___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum') )
                   jln_c_c_flags += ['-Wswitch-enum', ]
                 else
                   if (  (___jln_c_flags.get('switch_warnings', 'default') == 'off') )
@@ -1008,10 +1008,10 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
       if (  not ( (___jln_c_flags.get('switch_warnings', 'default') == 'default')) )
         if (  (___jln_c_flags.get('switch_warnings', 'default') == 'on') )
-          jln_c_c_flags += ['/we4061', ]
+          jln_c_c_flags += ['/w14061', ]
         else
-          if (  (___jln_c_flags.get('switch_warnings', 'default') == 'enum') )
-            jln_c_c_flags += ['/we4062', ]
+          if (  (___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum') )
+            jln_c_c_flags += ['/w14062', ]
           else
             if (  (___jln_c_flags.get('switch_warnings', 'default') == 'off') )
               jln_c_c_flags += ['/wd4061', '/wd4062', ]
