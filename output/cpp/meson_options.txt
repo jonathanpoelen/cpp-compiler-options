@@ -31,7 +31,7 @@ option('jln_stack_protector', type : 'combo', choices : ['default', 'off', 'on',
 option('jln_stl_debug', type : 'combo', choices : ['default', 'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception'], value : 'default')
 option('jln_stl_fix', type : 'combo', choices : ['default', 'off', 'on'], value : 'on')
 option('jln_suggestions', type : 'combo', choices : ['default', 'off', 'on'], value : 'default')
-option('jln_switch_warnings', type : 'combo', choices : ['default', 'on', 'off', 'enum', 'mandatory_default'], value : 'on')
+option('jln_switch_warnings', type : 'combo', choices : ['default', 'on', 'off', 'exhaustive_enum', 'mandatory_default'], value : 'on')
 option('jln_warnings', type : 'combo', choices : ['default', 'off', 'on', 'strict', 'very_strict'], value : 'on')
 option('jln_warnings_as_error', type : 'combo', choices : ['default', 'off', 'on', 'basic'], value : 'default')
 option('jln_whole_program', type : 'combo', choices : ['default', 'off', 'on', 'strip_all'], value : 'default')

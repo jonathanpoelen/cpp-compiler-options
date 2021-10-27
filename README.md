@@ -68,7 +68,7 @@ noexcept_warnings = default off on
 reproducible_build_warnings = default off on
 shadow_warnings = off default on local compatible_local all
 suggestions = default off on
-switch_warnings = on default off enum mandatory_default
+switch_warnings = on default off exhaustive_enum mandatory_default
 warnings = on default off strict very_strict
 warnings_as_error = default off on basic
 
@@ -516,6 +516,10 @@ Note: `-opt'name'` isn't allowed
 
 
 # ChangeLog
+
+## 2021-10-28
+
+- rename `switch_warnings=enum` to `switch_warnings=exhaustive_enum`
 
 ## 2021-10-24
 
