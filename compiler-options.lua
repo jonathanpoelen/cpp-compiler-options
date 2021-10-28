@@ -249,6 +249,10 @@ Or(gcc, clang_like) {
           lvl'on' { flag'-Wswitch' } / -- enabled by -Wall
           lvl'exhaustive_enum' { flag'-Wswitch-enum' } /
           lvl'mandatory_default' { flag'-Wswitch-default' } /
+          lvl'exhaustive_enum_and_mandatory_default' {
+            flag'-Wswitch-default',
+            flag'-Wswitch-enum',
+          } /
           { flag'-Wno-switch' }
         },
 
@@ -319,8 +323,12 @@ Or(gcc, clang_like) {
      -- cxx'-Qunused-arguments',
 
         opt'switch_warnings' {
-          lvl'on' { flag'-Wno-switch-enum' } /
-          lvl'exhaustive_enum' { flag'-Wswitch-enum' } /
+          Or(lvl'on', lvl'mandatory_default') {
+            flag'-Wno-switch-enum',
+          } /
+          Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
+            flag'-Wswitch-enum',
+          } /
           lvl'off' {
             flag'-Wno-switch',
             flag'-Wno-switch-enum',
@@ -1093,8 +1101,13 @@ msvc {
     },
 
     opt'switch_warnings' {
-      lvl'on' { flag'/w14061', } /
-      lvl'exhaustive_enum' { flag'/w14062', } /
+      Or(lvl'on', lvl'mandatory_default') {
+        flag'/w14062',
+      } /
+      Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
+        flag'/w14061',
+        flag'/w14062',
+      } /
       lvl'off' { flag'/wd4061', flag'/wd4062' }
     },
   } /
@@ -1295,7 +1308,7 @@ Vbase = {
     shadow_warnings={{'off', 'on', 'local', 'compatible_local', 'all'}, 'off'},
     stack_protector={{'off', 'on', 'strong', 'all'},},
     suggestions={{'off', 'on'},},
-    switch_warnings={{'on', 'off', 'exhaustive_enum', 'mandatory_default'}, 'on'},
+    switch_warnings={{'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default'}, 'on'},
     warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
     warnings_as_error={{'off', 'on', 'basic'},},
     whole_program={{'off', 'on', 'strip_all'},},
