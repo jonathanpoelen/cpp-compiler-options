@@ -40,7 +40,7 @@ feature <jln-stack-protector> : _ default off on strong all : incidental ;
 feature <jln-stl-debug> : _ default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix> : _ on default off : incidental ;
 feature <jln-suggestions> : _ default off on : propagated ;
-feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default : propagated ;
+feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
 feature <jln-warnings-as-error> : _ default off on basic : propagated ;
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
@@ -100,7 +100,7 @@ feature <jln-stack-protector-default> : default off on strong all : incidental ;
 feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
-feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default : incidental ;
+feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
@@ -161,7 +161,7 @@ constant jln_env_stack_protector : [ jln-get-env jln_stack_protector : default o
 constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception ] ;
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
 constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
-constant jln_env_switch_warnings : [ jln-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default ] ;
+constant jln_env_switch_warnings : [ jln-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_env_warnings_as_error : [ jln-get-env jln_warnings_as_error : default off on basic ] ;
 constant jln_env_whole_program : [ jln-get-env jln_whole_program : default off on strip-all ] ;
@@ -413,9 +413,19 @@ rule jln_flags ( properties * )
                 }
                 else
                 {
-                  flags +=
-                    <cxxflags>"-Wno-switch"
-                  ;
+                  if ( $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
+                  {
+                    flags +=
+                      <cxxflags>"-Wswitch-default"
+                      <cxxflags>"-Wswitch-enum"
+                    ;
+                  }
+                  else
+                  {
+                    flags +=
+                      <cxxflags>"-Wno-switch"
+                    ;
+                  }
                 }
               }
             }
@@ -500,7 +510,7 @@ rule jln_flags ( properties * )
               ;
             if ( $(x_switch_warnings) != "default" )
             {
-              if ( $(x_switch_warnings) = "on" )
+              if (  ( $(x_switch_warnings) = "on" ) || ( $(x_switch_warnings) = "mandatory-default" )  )
               {
                 flags +=
                   <cxxflags>"-Wno-switch-enum"
@@ -508,7 +518,7 @@ rule jln_flags ( properties * )
               }
               else
               {
-                if ( $(x_switch_warnings) = "exhaustive-enum" )
+                if (  ( $(x_switch_warnings) = "exhaustive-enum" ) || ( $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )  )
                 {
                   flags +=
                     <cxxflags>"-Wswitch-enum"
@@ -2343,17 +2353,18 @@ rule jln_flags ( properties * )
       }
       if ( $(x_switch_warnings) != "default" )
       {
-        if ( $(x_switch_warnings) = "on" )
+        if (  ( $(x_switch_warnings) = "on" ) || ( $(x_switch_warnings) = "mandatory-default" )  )
         {
           flags +=
-            <cxxflags>"/w14061"
+            <cxxflags>"/w14062"
           ;
         }
         else
         {
-          if ( $(x_switch_warnings) = "exhaustive-enum" )
+          if (  ( $(x_switch_warnings) = "exhaustive-enum" ) || ( $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )  )
           {
             flags +=
+              <cxxflags>"/w14061"
               <cxxflags>"/w14062"
             ;
           }

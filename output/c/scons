@@ -195,7 +195,7 @@ def jln_c_add_variables(vars, default_values={}):
     EnumVariable('jln_suggestions', '', default_values.get('suggestions', _jln_default_flags['suggestions']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_switch_warnings', '', default_values.get('switch_warnings', _jln_default_flags['switch_warnings']),
-                 allowed_values=('default', 'on', 'off', 'exhaustive_enum', 'mandatory_default')),
+                 allowed_values=('default', 'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default')),
     EnumVariable('jln_warnings', '', default_values.get('warnings', _jln_default_flags['warnings']),
                  allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
     EnumVariable('jln_warnings_as_error', '', default_values.get('warnings_as_error', _jln_default_flags['warnings_as_error']),
@@ -255,7 +255,10 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
                 if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'mandatory_default' :
                   flags += ('-Wswitch-default', )
                 else:
-                  flags += ('-Wno-switch', )
+                  if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'exhaustive_enum_and_mandatory_default' :
+                    flags += ('-Wswitch-default', '-Wswitch-enum', )
+                  else:
+                    flags += ('-Wno-switch', )
           if not ( verless(4, 7) ) :
             flags += ('-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', )
             if not ( verless(4, 8) ) :
@@ -272,10 +275,10 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
           if ( compiler == 'clang' or compiler == 'clang-cl' ) :
               flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', )
             if not ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'default') :
-              if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'on' :
+              if ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'on' or options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'mandatory_default' ) :
                 flags += ('-Wno-switch-enum', )
               else:
-                if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'exhaustive_enum' :
+                if ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'exhaustive_enum' or options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'exhaustive_enum_and_mandatory_default' ) :
                   flags += ('-Wswitch-enum', )
                 else:
                   if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'off' :
@@ -824,11 +827,11 @@ def jln_c_flags(options, compiler=None, version=None, linker=None):
             if options.get('warnings', _jln_c_default_flags['warnings']) == 'strict' :
               flags += ('/wd4583', '/wd4619', )
       if not ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'default') :
-        if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'on' :
-          flags += ('/w14061', )
+        if ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'on' or options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'mandatory_default' ) :
+          flags += ('/w14062', )
         else:
-          if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'exhaustive_enum' :
-            flags += ('/w14062', )
+          if ( options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'exhaustive_enum' or options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'exhaustive_enum_and_mandatory_default' ) :
+            flags += ('/w14061', '/w14062', )
           else:
             if options.get('switch_warnings', _jln_c_default_flags['switch_warnings']) == 'off' :
               flags += ('/wd4061', '/wd4062', )
