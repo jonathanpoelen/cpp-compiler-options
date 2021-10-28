@@ -64,7 +64,7 @@
 --  reproducible_build_warnings = default off on
 --  shadow_warnings = off default on local compatible_local all
 --  suggestions = default off on
---  switch_warnings = on default off exhaustive_enum mandatory_default
+--  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 --  warnings = on default off strict very_strict
 --  warnings_as_error = default off on basic
 --  
@@ -214,8 +214,8 @@ local _flag_names = {
   ["stl_fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", [""]=""},
-  ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", [""]=""},
+  ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
+  ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
@@ -495,7 +495,12 @@ function getoptions(values, disable_others, print_compiler)
                 if values["switch_warnings"] == "mandatory_default" then
                   jln_cxflags[#jln_cxflags+1] = "-Wswitch-default"
                 else
-                  jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
+                  if values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" then
+                    jln_cxflags[#jln_cxflags+1] = "-Wswitch-default"
+                    jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
+                  else
+                    jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
+                  end
                 end
               end
             end
@@ -550,10 +555,10 @@ function getoptions(values, disable_others, print_compiler)
             jln_cxflags[#jln_cxflags+1] = "-Wno-weak-vtables"
             jln_cxflags[#jln_cxflags+1] = "-Wno-exit-time-destructors"
             if not ( values["switch_warnings"] == "") then
-              if values["switch_warnings"] == "on" then
+              if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
                 jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
               else
-                if values["switch_warnings"] == "exhaustive_enum" then
+                if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
                   jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
                 else
                   if values["switch_warnings"] == "off" then
@@ -1503,10 +1508,11 @@ function getoptions(values, disable_others, print_compiler)
         end
       end
       if not ( values["switch_warnings"] == "") then
-        if values["switch_warnings"] == "on" then
-          jln_cxflags[#jln_cxflags+1] = "/w14061"
+        if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
+          jln_cxflags[#jln_cxflags+1] = "/w14062"
         else
-          if values["switch_warnings"] == "exhaustive_enum" then
+          if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
+            jln_cxflags[#jln_cxflags+1] = "/w14061"
             jln_cxflags[#jln_cxflags+1] = "/w14062"
           else
             if values["switch_warnings"] == "off" then
