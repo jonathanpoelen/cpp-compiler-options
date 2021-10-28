@@ -33,7 +33,7 @@
 #  reproducible_build_warnings = default off on
 #  shadow_warnings = off default on local compatible_local all
 #  suggestions = default off on
-#  switch_warnings = on default off exhaustive_enum mandatory_default
+#  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 #  warnings = on default off strict very_strict
 #  warnings_as_error = default off on basic
 #  
@@ -147,7 +147,7 @@ feature <jln-stack-protector> : _ default off on strong all : incidental ;
 feature <jln-stl-debug> : _ default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix> : _ on default off : incidental ;
 feature <jln-suggestions> : _ default off on : propagated ;
-feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default : propagated ;
+feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
 feature <jln-warnings-as-error> : _ default off on basic : propagated ;
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
@@ -207,7 +207,7 @@ feature <jln-stack-protector-default> : default off on strong all : incidental ;
 feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
-feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default : incidental ;
+feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
@@ -268,7 +268,7 @@ constant jln_c_env_stack_protector : [ jln_c-get-env jln_stack_protector : defau
 constant jln_c_env_stl_debug : [ jln_c-get-env jln_stl_debug : default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception ] ;
 constant jln_c_env_stl_fix : [ jln_c-get-env jln_stl_fix : on default off ] ;
 constant jln_c_env_suggestions : [ jln_c-get-env jln_suggestions : default off on ] ;
-constant jln_c_env_switch_warnings : [ jln_c-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default ] ;
+constant jln_c_env_switch_warnings : [ jln_c-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
 constant jln_c_env_warnings : [ jln_c-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_c_env_warnings_as_error : [ jln_c-get-env jln_warnings_as_error : default off on basic ] ;
 constant jln_c_env_whole_program : [ jln_c-get-env jln_whole_program : default off on strip-all ] ;
@@ -523,9 +523,19 @@ rule jln_c_flags ( properties * )
                 }
                 else
                 {
-                  flags +=
-                    <cflags>"-Wno-switch"
-                  ;
+                  if ( $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
+                  {
+                    flags +=
+                      <cflags>"-Wswitch-default"
+                      <cflags>"-Wswitch-enum"
+                    ;
+                  }
+                  else
+                  {
+                    flags +=
+                      <cflags>"-Wno-switch"
+                    ;
+                  }
                 }
               }
             }
@@ -590,7 +600,7 @@ rule jln_c_flags ( properties * )
               ;
             if ( $(x_switch_warnings) != "default" )
             {
-              if ( $(x_switch_warnings) = "on" )
+              if (  ( $(x_switch_warnings) = "on" ) || ( $(x_switch_warnings) = "mandatory-default" )  )
               {
                 flags +=
                   <cflags>"-Wno-switch-enum"
@@ -598,7 +608,7 @@ rule jln_c_flags ( properties * )
               }
               else
               {
-                if ( $(x_switch_warnings) = "exhaustive-enum" )
+                if (  ( $(x_switch_warnings) = "exhaustive-enum" ) || ( $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )  )
                 {
                   flags +=
                     <cflags>"-Wswitch-enum"
@@ -2224,17 +2234,18 @@ rule jln_c_flags ( properties * )
       }
       if ( $(x_switch_warnings) != "default" )
       {
-        if ( $(x_switch_warnings) = "on" )
+        if (  ( $(x_switch_warnings) = "on" ) || ( $(x_switch_warnings) = "mandatory-default" )  )
         {
           flags +=
-            <cflags>"/w14061"
+            <cflags>"/w14062"
           ;
         }
         else
         {
-          if ( $(x_switch_warnings) = "exhaustive-enum" )
+          if (  ( $(x_switch_warnings) = "exhaustive-enum" ) || ( $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )  )
           {
             flags +=
+              <cflags>"/w14061"
               <cflags>"/w14062"
             ;
           }
