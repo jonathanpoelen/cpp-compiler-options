@@ -136,7 +136,7 @@ endfunction()
       names[#names+1] = name
       _:write(';' .. name)
     end
-    if _._opts['auto_profile'] then
+    if _._opts.auto_profile then
       error('"auto_profile" option is reserved')
     end
     _:write(';AUTO_PROFILE')

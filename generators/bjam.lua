@@ -12,7 +12,7 @@ return {
   -- warnings_as_error=true,
   -- optimization=true,
   -- debug=true,
-    msvc_isystem={force_system_flag=true},
+    msvc_isystem={external_as_include_system_flag=true},
   },
 
   tobjamoption=function(_, optname)

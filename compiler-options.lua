@@ -1283,6 +1283,7 @@ function unpack_table_iterator(t)
 end
 
 Vbase = {
+  -- options that do not change the ABI (useful for bjam)
   _incidental={
     color=true,
     conversion_warnings=true,
@@ -1708,8 +1709,22 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
   insert_missing_function(V)
 
   for k,mem in pairs(V.ignore) do
-    if not Vbase._opts[k] then
+    local opt = Vbase._opts[k]
+    if not opt then
       error('Unknown ' .. k .. ' in ignore table')
+    end
+
+    -- true or table {value=true}
+    if mem and mem ~= true then
+      local kopts = {}
+      for i,value in ipairs(opt) do
+        kopts[value] = true
+      end
+      for value,ok in pairs(mem) do
+        if not kopts[value] then
+          error('Unknown ' .. k .. '.' .. value .. ' in ignore table')
+        end
+      end
     end
   end
 
