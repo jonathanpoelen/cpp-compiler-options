@@ -48,8 +48,6 @@ main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninit
 4. [How to add options?](#how-to-add-options)
     1. [Update the options tree](#update-the-options-tree)
         1. [if_mt](#if_mt)
-5. [ChangeLog](#changelog)
-    1. [2021-10-24](#2021-10-24)
 <!-- /toc -->
 
 # Options
@@ -513,27 +511,3 @@ lvl'on' { xxx } / { yyy } -- equivalent to `{ lvl'on' { xxx }, -lvl'on' { yyy } 
 ```
 
 Note: `-opt'name'` isn't allowed
-
-
-# ChangeLog
-
-## 2021-10-29
-
-- add `switch_warnings=exhaustive_enum_and_mandatory_default`
-
-## 2021-10-28
-
-- rename `switch_warnings=enum` to `switch_warnings=exhaustive_enum`
-
-## 2021-10-24
-
-- rename `microsoft_abi_compatibility_warning` to `microsoft_abi_compatibility_warnings`
-- rename `warnings_covered_switch_default` to `covered_switch_default_warnings`
-- rename `sanitizers_extra` to `other_sanitizers`
-- rename `warnings_switch` to `switch_warnings`
-- rename `pie=pic` to `pie=fpic`
-- add `memory` value with `other_sanitizers`
-- add `static`, `fPIC`, `fpie` and `fPIE` values with `pie`
-- add `float_sanitizers` (`on`, `off`)
-- add `integer_sanitizers` (`on`, `off`)
-- add `noexcept_warnings` (`on`, `off`)

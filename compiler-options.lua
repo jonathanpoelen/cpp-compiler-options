@@ -976,7 +976,7 @@ Or(msvc, clang_cl) {
 
   opt'pedantic' {
     -lvl'off' {
-      flag'/permissive-', -- implies /Zc:rvaluecast, /Zc:strictstrings, /Zc:ternary, /Zc:twoPhase
+      flag'/permissive-', -- implies /Zc:rvalueCast, /Zc:strictStrings, /Zc:ternary, /Zc:twoPhase
       cxx'/Zc:__cplusplus',
       -- cxx'/Zc:throwingNew',
     }
@@ -1028,6 +1028,34 @@ Or(msvc, clang_cl) {
 -- https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-c4000-c5999?view=vs-2019
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=vs-2019
 msvc {
+  opt'msvc_bigobj' {
+    flag'/bigobj',
+  },
+
+  opt'msvc_conformance' {
+    Or(lvl'all', lvl'all_without_throwing_new') {
+      flag'/Zc:inline',
+      flag'/Zc:referenceBinding',
+      lvl'all' {
+        flag'/Zc:throwingNew',
+      },
+      vers(15,6) {
+        flag'/Zc:externConstexpr',
+        vers(16,8) {
+          flag'/Zc:lambda',
+          vers(16,5) {
+            flag'/Zc:preprocessor',
+          },
+        }
+      }
+    }
+  },
+
+  opt'msvc_crt_secure_no_warnings' {
+    lvl'on' { flag'/D_CRT_SECURE_NO_WARNINGS=1' } /
+    lvl'off' { flag'/U_CRT_SECURE_NO_WARNINGS' }
+  },
+
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
   -- vers(19,14)
   opt'msvc_isystem' {
@@ -1287,13 +1315,16 @@ Vbase = {
     elide_type= {{'off', 'on'},},
     exceptions= {{'off', 'on'},},
     fix_compiler_error={{'off', 'on'}, 'on'},
-    float_sanitizers={{'off', 'on'}},
+    float_sanitizers=  {{'off', 'on'}},
     integer_sanitizers={{'off', 'on'}},
     linker=     {{'bfd', 'gold', 'lld', 'native'},},
     lto=        {{'off', 'on', 'fat', 'thin'},},
     microsoft_abi_compatibility_warnings={{'off', 'on'}, 'off'},
+    msvc_bigobj={{'on'},'on'},
     msvc_isystem={{'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},},
     msvc_isystem_with_template_from_non_external={{'off', 'on',},},
+    msvc_conformance={{'all', 'all_without_throwing_new'}, 'all'},
+    msvc_crt_secure_no_warnings={{'off', 'on'}, 'on'},
     noexcept_warnings={{'off', 'on'},},
     optimization={{'0', 'g', '1', '2', '3', 'fast', 'size', 'z'},},
     other_sanitizers={{'off', 'thread', 'pointer', 'memory'},},
@@ -1320,6 +1351,7 @@ Vbase = {
       'covered_switch_default_warnings',
       'fix_compiler_error',
       'microsoft_abi_compatibility_warnings',
+      'msvc_crt_secure_no_warnings',
       'noexcept_warnings',
       'reproducible_build_warnings',
       'shadow_warnings',
@@ -1331,6 +1363,7 @@ Vbase = {
     {'Pedantic', {
       'pedantic',
       'stl_fix',
+      'msvc_conformance',
     }},
     {'Debug', {
       'control_flow',
@@ -1357,6 +1390,9 @@ Vbase = {
       'relro',
       'stack_protector',
     }},
+    {'Other', {
+      'msvc_bigobj',
+    }}
   },
 
   _opts_build_type={
