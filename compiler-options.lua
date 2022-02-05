@@ -339,7 +339,8 @@ Or(gcc, clang_like) {
         },
 
         opt'covered_switch_default_warnings' {
-          lvl'off' { flag'-Wno-covered-switch-default', }
+          lvl'off' { flag'-Wno-covered-switch-default', } /
+          flag'-Wcovered-switch-default'
         },
 
         vers(3,9) {
@@ -390,10 +391,9 @@ Or(gcc, clang_like) {
   },
 
   opt'microsoft_abi_compatibility_warnings' {
-    lvl'on' {
-      Or(gcc(10), clang_like) { cxx'-Wmismatched-tags' }
-    } / {
-      Or(gcc(10), clang_like) { cxx'-Wno-mismatched-tags' }
+    Or(gcc(10), clang_like) {
+      lvl'on' { cxx'-Wmismatched-tags' } /
+      { cxx'-Wno-mismatched-tags' }
     }
   },
 
@@ -1282,68 +1282,269 @@ function unpack_table_iterator(t)
   end
 end
 
-Vbase = {
-  -- options that do not change the ABI (useful for bjam)
-  _incidental={
-    color=true,
-    conversion_warnings=true,
-    covered_switch_default_warnings=true,
-    diagnostics_format=true,
-    diagnostics_show_template_tree=true,
-    elide_type=true,
-    fix_compiler_error=true,
-    linker=true,
-    microsoft_abi_compatibility_warnings=true,
-    noexcept_warnings=true,
-    reproducible_build_warnings=true,
-    shadow_warnings=true,
-    suggestions=true,
-    switch_warnings=true,
-    warnings=true,
-    warnings_as_error=true,
-  },
+function table_iterator(t)
+  local i = 0
+  return function()
+    i = i + 1
+    return t[i]
+  end
+end
 
-  _opts={
-    color=      {{'auto', 'never', 'always'},},
-    control_flow={{'off', 'on', 'branch', 'return', 'allow_bugs'},},
-    conversion_warnings={{'off', 'on', 'sign', 'conversion'}, 'on'},
-    coverage=   {{'off', 'on'},},
-    covered_switch_default_warnings={{'on', 'off'}, 'on'},
-    cpu=        {{'generic', 'native'},},
-    debug=      {{'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},},
-    diagnostics_format={{'fixits', 'patch', 'print_source_range_info'},},
-    diagnostics_show_template_tree={{'off', 'on'},},
-    elide_type= {{'off', 'on'},},
-    exceptions= {{'off', 'on'},},
-    fix_compiler_error={{'off', 'on'}, 'on'},
-    float_sanitizers=  {{'off', 'on'}},
-    integer_sanitizers={{'off', 'on'}},
-    linker=     {{'bfd', 'gold', 'lld', 'native'},},
-    lto=        {{'off', 'on', 'fat', 'thin'},},
-    microsoft_abi_compatibility_warnings={{'off', 'on'}, 'off'},
-    msvc_bigobj={{'on'},'on'},
-    msvc_isystem={{'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},},
-    msvc_isystem_with_template_from_non_external={{'off', 'on',},},
-    msvc_conformance={{'all', 'all_without_throwing_new'}, 'all'},
-    msvc_crt_secure_no_warnings={{'off', 'on'}, 'on'},
-    noexcept_warnings={{'off', 'on'},},
-    optimization={{'0', 'g', '1', '2', '3', 'fast', 'size', 'z'},},
-    other_sanitizers={{'off', 'thread', 'pointer', 'memory'},},
-    pedantic=   {{'off', 'on', 'as_error'}, 'on'},
-    pie=        {{'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE'},},
-    relro=      {{'off', 'on', 'full'},},
-    reproducible_build_warnings={{'off', 'on'},},
-    rtti=       {{'off', 'on'},},
-    sanitizers= {{'off', 'on'},},
-    stl_debug=  {{'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception'},},
-    stl_fix=    {{'off', 'on'}, 'on'},
-    shadow_warnings={{'off', 'on', 'local', 'compatible_local', 'all'}, 'off'},
-    stack_protector={{'off', 'on', 'strong', 'all'},},
-    suggestions={{'off', 'on'},},
-    switch_warnings={{'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default'}, 'on'},
-    warnings=   {{'off', 'on', 'strict', 'very_strict'}, 'on'},
-    warnings_as_error={{'off', 'on', 'basic'},},
-    whole_program={{'off', 'on', 'strip_all'},},
+Vbase = {
+  --[[
+    {
+      optname={
+        values=table[string],
+        default=string | nil,
+        description=string | nil,
+        incidental=bool,
+        unavailable=string | nil
+      }
+    }
+    incidental: options that do not change the ABI (useful for bjam)
+    unavailable: language for which this option is not available (c or cpp)
+  ]]
+  _koptions={
+    color={
+      values={'auto', 'never', 'always'},
+      incidental=true,
+    },
+
+    control_flow={
+      values={'off', 'on', 'branch', 'return', 'allow_bugs'},
+      description='insert extra runtime security checks to detect attempts to compromise your code',
+    },
+
+    conversion_warnings={
+      values={'off', 'on', 'sign', 'conversion'},
+      default='on',
+      description='warn for implicit conversions that may alter a value',
+      incidental=true,
+    },
+
+    coverage={
+      values={'off', 'on'},
+    },
+
+    covered_switch_default_warnings={
+      values={'on', 'off'},
+      default='on',
+      description='warning for default label in switch which covers all enumeration values',
+      incidental=true,
+    },
+
+    cpu={
+      values={'generic', 'native'},
+    },
+
+    debug={
+      values={'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},
+      description='produce debugging information in the operating system\'s',
+    },
+
+    diagnostics_format={
+      values={'fixits', 'patch', 'print_source_range_info'},
+      description='emit fix-it hints in a machine-parseable format',
+      incidental=true,
+    },
+
+    diagnostics_show_template_tree={
+      values={'off', 'on'},
+      description='enables printing a tree-like structure showing the common and differing parts of the types',
+      incidental=true,
+      unavailable='c',
+    },
+
+    elide_type={
+      values={'off', 'on'},
+      description='prints diagnostics showing common parts of template types as "[...]"',
+      incidental=true,
+      unavailable='c',
+    },
+
+    exceptions={
+      values={'off', 'on'},
+      description='enable C++ exception',
+    },
+
+    fix_compiler_error={
+      values={'off', 'on'},
+      default='on',
+      description='transforms some warnings into errors to comply with the standard',
+      incidental=true,
+    },
+
+    float_sanitizers={
+      values={'off', 'on'},
+    },
+
+    integer_sanitizers={
+      values={'off', 'on'},
+    },
+
+    linker={
+      values={'bfd', 'gold', 'lld', 'native'},
+      description='configure linker',
+      incidental=true,
+    },
+
+    lto={
+      values={'off', 'on', 'fat', 'thin'},
+      description='enable Link Time Optimization',
+    },
+
+    microsoft_abi_compatibility_warnings={
+      values={'off', 'on'},
+      default='off',
+      description='In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys',
+      incidental=true,
+      unavailable='c',
+    },
+
+    msvc_bigobj={
+      values={'on'},
+      default='on',
+      description='increases that addressable sections capacity',
+    },
+
+    msvc_isystem={
+      values={'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},
+      description='warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)',
+      incidental=true,
+    },
+
+    msvc_isystem_with_template_from_non_external={
+      values={'off', 'on'},
+      description='warnings concerning template in an external header (requires msvc_isystem)',
+      incidental=true,
+      unavailable='c',
+    },
+
+    msvc_conformance={
+      values={'all', 'all_without_throwing_new'},
+      default='all',
+      description='standard conformance options',
+    },
+
+    msvc_crt_secure_no_warnings={
+      values={'off', 'on'},
+      default='on',
+      description='disable CRT warnings',
+      incidental=true,
+    },
+
+    noexcept_warnings={
+      values={'off', 'on'},
+      description='Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception.',
+      incidental=true,
+      unavailable='c',
+    },
+
+    optimization={
+      values={'0', 'g', '1', '2', '3', 'fast', 'size', 'z'},
+      description=[[optimization level
+- 0: not optimize
+- g: enable debugging experience
+- 1: optimize
+- 2: optimize even more
+- 3: optimize yet more
+- fast: enables all optimization=3 and disregard strict standards compliance
+- size: optimize for size
+- z: optimize for size aggressively (/!\ possible slow compilation)
+]],
+    },
+
+    other_sanitizers={
+      values={'off', 'thread', 'pointer', 'memory'},
+      description='enable other sanitizers',
+    },
+
+    pedantic={
+      values={'off', 'on', 'as_error'},
+      default='on',
+      description='issue all the warnings demanded by strict ISO C and ISO C++',
+    },
+
+    pie={
+      values={'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE'},
+      description='controls position-independent code generation',
+    },
+
+    relro={
+      values={'off', 'on', 'full'},
+      description='specifies a memory segment that should be made read-only after relocation, if supported.',
+    },
+
+    reproducible_build_warnings={
+      values={'off', 'on'},
+      description='warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations',
+      incidental=true,
+    },
+
+    rtti={
+      values={'off', 'on'},
+      description='disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid")',
+      unavailable='c',
+    },
+
+    sanitizers={
+      values={'off', 'on'},
+      description='enable sanitizers (asan, ubsan, etc)',
+    },
+
+    stl_debug={
+      values={'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception'},
+      description='controls the debug level of the STL',
+      unavailable='c',
+    },
+
+    stl_fix={
+      values={'off', 'on'},
+      default='on',
+      description='enable /DNOMINMAX with msvc',
+    },
+
+    shadow_warnings={
+      values={'off', 'on', 'local', 'compatible_local', 'all'},
+      default='off',
+      incidental=true,
+    },
+
+    stack_protector={
+      values={'off', 'on', 'strong', 'all'},
+      description='emit extra code to check for buffer overflows, such as stack smashing attacks',
+    },
+
+    suggestions={
+      values={'off', 'on'},
+      description='warn for cases where adding an attribute may be beneficial',
+      incidental=true,
+    },
+
+    switch_warnings={
+      values={'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default'},
+      default='on',
+      description='warnings concerning the switch keyword',
+      incidental=true,
+    },
+
+    warnings={
+      values={'off', 'on', 'strict', 'very_strict'},
+      default='on',
+      description='warning level',
+      incidental=true,
+    },
+
+    warnings_as_error={
+      values={'off', 'on', 'basic'},
+      description='make all or some warnings into errors',
+      -- incidental=true,
+    },
+
+    whole_program={
+      values={'off', 'on', 'strip_all'},
+      description='Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.',
+    },
   },
 
   _opts_by_category={
@@ -1388,6 +1589,7 @@ Vbase = {
       'rtti',
     }},
     {'Hardening', {
+      'control_flow',
       'relro',
       'stack_protector',
     }},
@@ -1405,6 +1607,7 @@ Vbase = {
 
   indent = '',
   if_prefix = '',
+  -- table of optname=true or {optname={optvalue=true}}
   ignore={},
 
   start=noop, -- function(_) end,
@@ -1543,7 +1746,15 @@ Vbase = {
   end,
 
   _computed_options = nil,
-  -- iterator: optname,args,default_value,ordered_args
+  -- iterator of option:
+  -- {
+  --   name=string,
+  --   values=table[string],
+  --   ordered_values=table[string],
+  --   default=string,
+  --   description=string | nil,
+  --   incidental=bool,
+  -- }
   getoptions=function(_)
     local computed_options = _.__computed_options
 
@@ -1551,42 +1762,52 @@ Vbase = {
       computed_options = {}
       _._computed_options = computed_options
       local ignore = _.ignore
+      local lang = _.is_C and 'c' or 'cpp'
 
-      for i,k in ipairs(create_ordered_keys(_._opts)) do
+      for i,k in ipairs(create_ordered_keys(_._koptions)) do
         local filter = ignore[k]
-        if filter ~= true then
-          local v = _._opts[k]
+        local option = _._koptions[k]
+        if filter ~= true and lang ~= option.unavailable then
           if filter then
-            local newargs = {}
-            for j,arg in ipairs(v[1]) do
-              if not filter[arg] then
-                newargs[#newargs+1] = arg
+            local newvalues = {}
+            for j,value in ipairs(option.values) do
+              if not filter[value] then
+                newvalues[#newvalues+1] = value
               end
             end
-            v = {newargs, filter[v[2]] or v[2]}
+            option = {
+              values=newvalues,
+              default=filter[option.default] or option.default,
+              description=option.description,
+              incidental=option.incidental,
+            }
           end
 
-          local ordered_args = v[1]
-          local default_value = v[2] or 'default'
-          if default_value ~= v[1][1] then
-            ordered_args = {default_value}
-            for i,arg in pairs(v[1]) do
-              if arg ~= default_value then
-                ordered_args[#ordered_args + 1] = arg
+          option.name = k
+          default_value = option.default or 'default'
+          option.default = default_value
+
+          local ordered_values = option.values
+          if default_value ~= ordered_values[1] then
+            ordered_values = {default_value}
+            for i,value in pairs(option.values) do
+              if value ~= default_value then
+                ordered_values[#ordered_values + 1] = value
               end
             end
           end
-          computed_options[#computed_options + 1] = {k, v[1], default_value, ordered_args}
+          option.ordered_values = ordered_values
+          computed_options[#computed_options + 1] = option
         end
       end
-      -- nil value for iterator
-      computed_options[#computed_options + 1] = {nil,nil,nil,nil}
     end
 
-    return unpack_table_iterator(computed_options)
+    return table_iterator(computed_options)
   end,
 
   _computed_build_types = nil,
+
+  -- iterator of (catname, option_names)
   getbuildtype=function(_)
     local computed_build_types = _._computed_build_types
     if not computed_build_types then
@@ -1600,37 +1821,47 @@ Vbase = {
         end
         computed_build_types[#computed_build_types + 1] = {k, values}
       end
-      computed_build_types[#computed_build_types + 1] = {nil,nil}
+      computed_build_types[#computed_build_types + 1] = {nil, nil}
     end
 
     return unpack_table_iterator(computed_build_types)
   end,
 }
 
-local opts_krev = {}
-for k,args in pairs(Vbase._opts) do
-  local u = {}
-  for _, v in pairs(args[1]) do
-    u[v] = true
+-- post treatment of _koptions:
+--   check not 'default' value
+--   add kvalues, a dict[value]=true
+for optname,option in pairs(Vbase._koptions) do
+  local kvalues = {}
+  for _, v in ipairs(option.values) do
+    kvalues[v] = true
   end
-  if u['default'] then
-    error('_opts[' .. k .. '] integrity error: "default" value is used')
+  if kvalues['default'] then
+    error('Vbase._koptions[' .. optname .. '] integrity error: "default" value is used')
   end
-  table.insert(args[1], 1, 'default')
-  opts_krev[k] = u
-  opts_krev[k]['default'] = true
+  table.insert(option.values, 1, 'default')
+  option.kvalues = kvalues
+  kvalues.default = true
 end
-Vbase._opts_krev = opts_krev
 
 -- check values of Vbase._opts_build_type
-for name,opts in pairs(Vbase._opts_build_type) do
-  for k,v in pairs(opts) do
-    local u = opts_krev[k]
-    if not u then
-      error('_opts_build_type['.. name .. '][' .. k .. ']: unknown option')
+for name,options in pairs(Vbase._opts_build_type) do
+  for optname,v in pairs(options) do
+    local opt = Vbase._koptions[optname]
+    if not opt then
+      error('Vbase._opts_build_type['.. name .. ']: unknown option ' .. optname)
     end
-    if not u[v] then
-      error('_opts_build_type['.. name .. '][' .. k .. '] = ' .. v .. ': unknown value')
+    if not opt.kvalues[v] then
+      error('Vbase._opts_build_type['.. name .. ']: unknown value ' .. optname .. '.' .. v)
+    end
+  end
+end
+
+-- check _opts_by_category
+for _,cat in pairs(Vbase._opts_by_category) do
+  for _,optname in ipairs(cat[2]) do
+    if not Vbase._koptions[optname] then
+      error('Vbase._opts_by_category: unknown option ' .. optname)
     end
   end
 end
@@ -1649,7 +1880,7 @@ function evalflags(t, v, curropt)
   if t._if then
     local opt = t._if.opt
     if opt then
-      if not v._opts[opt] then
+      if not v._koptions[opt] then
         error('Unknown "' .. opt .. '" option')
       end
       if v.ignore[opt] ~= true then
@@ -1679,9 +1910,11 @@ function evalflags(t, v, curropt)
       end
       v:stopcond(curropt)
     end
+
   elseif t.cxx or t.link then
     if t.cxx  then v:cxx(t.cxx, curropt) end
     if t.link then v:link(t.link, curropt) end
+
   elseif t.act then
     local r = v:act(t.act[1], t.act[2], curropt)
     if r == false or r == nil then
@@ -1689,6 +1922,7 @@ function evalflags(t, v, curropt)
     elseif r ~= true then
       error('Error with Action ' .. t.act[1] .. ': ' .. r)
     end
+
   else
     for k,x in pairs(t) do
       evalflags(x, v, curropt)
@@ -1708,26 +1942,27 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
   local V = require(generator_name:gsub('.lua$', ''))
   insert_missing_function(V)
 
+  -- check values of ignore
   for k,mem in pairs(V.ignore) do
-    local opt = Vbase._opts[k]
+    local opt = Vbase._koptions[k]
     if not opt then
       error('Unknown ' .. k .. ' in ignore table')
     end
 
-    -- true or table {value=true}
     if mem and mem ~= true then
-      local kopts = {}
-      for i,value in ipairs(opt) do
-        kopts[value] = true
-      end
+      local kval = opt.kvalues
       for value,ok in pairs(mem) do
-        if not kopts[value] then
+        if value == 'default' then
+          error('value ' .. k .. '.' .. value .. ' is reserved')
+        end
+        if not kval[value] then
           error('Unknown ' .. k .. '.' .. value .. ' in ignore table')
         end
       end
     end
   end
 
+  -- add ignore from cli
   for name,x in pairs(ignore_options) do
     local y = V.ignore[name]
     if x == true then
@@ -1829,25 +2064,25 @@ cli={
 
   d={arg=true, function(value)
     for optname,optvalue in value:gmatch('([_%w]+)=([_%w]*)') do
-      local optkv = Vbase._opts_krev[optname]
-      check_optname(optkv, optname)
+      local option = Vbase._koptions[optname]
+      check_optname(option, optname)
 
       if optvalue == '' or optvalue == 'default' then
-        Vbase._opts[optname][2] = nil
+        option.default = nil
       else
-        check_optvalue(optkv[optvalue], optname, optvalue)
-        Vbase._opts[optname][2] = optvalue
+        check_optvalue(option.kvalues[optvalue], optname, optvalue)
+        option.default = optvalue
       end
     end
   end},
 
   f={arg=true, function(value)
     for optname,optvalue in value:gmatch('([_%w]+)=?([_%w]*)') do
-      local optkv = Vbase._opts_krev[optname]
-      check_optname(optkv, optname)
+      local option = Vbase._koptions[optname]
+      check_optname(option, optname)
 
       if optvalue ~= '' then
-        check_optvalue(optkv[optvalue], optname, optvalue)
+        check_optvalue(option.kvalues[optvalue], optname, optvalue)
         local t = ignore_options[optname]
         if t then
           -- optname takes priority over optname=xxx
@@ -1865,7 +2100,7 @@ cli={
     if value:sub(1,1) ~= '-' then
       local select_options = ignore_options
       ignore_options = {}
-      for optname in pairs(Vbase._opts) do
+      for optname in pairs(Vbase._koptions) do
         local v = select_options[optname]
         if not v then
           ignore_options[optname] = true

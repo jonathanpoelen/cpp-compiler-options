@@ -37,13 +37,13 @@ else
 endif
 ___]] .. prefixfunc .. [[_flags = {
 ]])
-    for optname,args,default_value,ordered_args in _:getoptions() do
-      local name = _:tobuildoption(optname)
-      option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(args, "', '") .. "'], value : '" .. default_value .. "')"
-      if optname == 'warnings' then
-        _:write("  '" .. optname .. "': ___" .. prefixfunc .. "_warnings,\n")
+    for option in _:getoptions() do
+      local name = _:tobuildoption(option.name)
+      option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(option.values, "', '") .. "'], value : '" .. option.default .. "')"
+      if option.name == 'warnings' then
+        _:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_warnings,\n")
       else
-        _:write("  '" .. optname .. "': ___" .. prefixfunc .. "_default_flags.get('" .. optname .. "', get_option('" .. name .. "')),\n")
+        _:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_default_flags.get('" .. option.name .. "', get_option('" .. name .. "')),\n")
       end
     end
 

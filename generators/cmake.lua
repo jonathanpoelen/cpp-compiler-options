@@ -23,8 +23,8 @@ return {
 
     _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
-    for optname,args in _:getoptions() do
-      _:print('set(_JLN_' .. optname:upper() .. '_VALUES '.. table.concat(args, ' ') .. ')')
+    for option in _:getoptions() do
+      _:print('set(_JLN_' .. option.name:upper() .. '_VALUES '.. table.concat(option.values, ' ') .. ')')
     end
     _:print[[
 set(_JLN_VERBOSE_VALUES on off)
@@ -33,17 +33,17 @@ set(_JLN_DISABLE_OTHERS_VALUES on off)
 
 ]]
 
-    for optname,args in _:getoptions() do
-      local opt = _:tocmakeoption(optname)
+    for option in _:getoptions() do
+      local opt = _:tocmakeoption(option.name)
       _:print('set(' .. opt .. ' "${' .. opt .. '}" CACHE STRING "")')
       _:print('set_property(CACHE ' .. opt .. ' PROPERTY STRINGS "'
-              .. table.concat(args, '" "') .. '")')
+              .. table.concat(option.values, '" "') .. '")')
       _:print('if(NOT("${' .. opt .. '}" STREQUAL ""))')
       _:print('  string(TOLOWER "${' .. opt .. '}" ' .. opt .. ')')
-      _:print('  if(NOT(("' .. table.concat(args, '" STREQUAL ' .. opt .. ') OR ("')
+      _:print('  if(NOT(("' .. table.concat(option.values, '" STREQUAL ' .. opt .. ') OR ("')
               .. '" STREQUAL ' .. opt .. ')))')
       _:print('    message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for '
-              .. opt .. ', expected: ' .. table.concat(args, ', ') .. '")')
+              .. opt .. ', expected: ' .. table.concat(option.values, ', ') .. '")')
       _:print('  endif()')
       _:print('endif()')
     end
@@ -131,12 +131,12 @@ endfunction()
     _:print('function('.. prefixfunc .. '_init_flags)')
     _:write('  '.. prefixfunc .. '_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE')
     local names = {}
-    for optname in _:getoptions() do
-      local name = optname:upper()
+    for option in _:getoptions() do
+      local name = option.name:upper()
       names[#names+1] = name
       _:write(';' .. name)
     end
-    if _._opts.auto_profile then
+    if _._koptions.auto_profile then
       error('"auto_profile" option is reserved')
     end
     _:write(';AUTO_PROFILE')
@@ -177,14 +177,14 @@ endfunction()
     end
     _:print('  endif()\n')
 
-    for optname,args,default_value in _:getoptions() do
-      local localname = optname:upper()
+    for option in _:getoptions() do
+      local localname = option.name:upper()
       local cmake_opt = 'JLN_DEFAULT_FLAG_' .. localname;
-      local opt = _:tocmakeoption(optname)
+      local opt = _:tocmakeoption(option.name)
       _:print('  if(DEFINED ' .. cmake_opt .. ')')
       _:print('    set(' .. opt .. '_D ${' .. cmake_opt .. '} CACHE STRING "private" FORCE)')
       _:print('  elseif("${' .. opt .. '}" STREQUAL "")')
-      _:print('    set(' .. opt .. '_D "' .. default_value .. '" CACHE STRING "private" FORCE)')
+      _:print('    set(' .. opt .. '_D "' .. option.default .. '" CACHE STRING "private" FORCE)')
       _:print('  else()')
       _:print('    set(' .. opt .. '_D "${' .. opt .. '}" CACHE STRING "private" FORCE)')
       _:print('  endif()\n')
@@ -192,9 +192,9 @@ endfunction()
 
     _:print('  if("${JLN_VERBOSE_D}" STREQUAL "on" OR "${JLN_VERBOSE_D}" STREQUAL "1")')
     _:print('    message(STATUS "' .. _:tocmakeoption('auto_profile') .. ' = ${JLN_AUTO_PROFILE_D}\t[off, on]")')
-    for optname,args in _:getoptions() do
-      local opt = _:tocmakeoption(optname)
-      _:print('    message(STATUS "' .. opt .. ' = ${' .. opt .. '_D}\t[' .. table.concat(args, ', ') .. ']")')
+    for option in _:getoptions() do
+      local opt = _:tocmakeoption(option.name)
+      _:print('    message(STATUS "' .. opt .. ' = ${' .. opt .. '_D}\t[' .. table.concat(option.values, ', ') .. ']")')
     end
     _:print('  endif()\n')
     _:print('  set(JLN_' .. compiler_type .. '_IS_INITIALIZED 1 CACHE BOOL "private" FORCE)\n')
@@ -266,18 +266,18 @@ endif()
     _:print('  set(CXX_FLAGS "")')
     _:print('  set(LINK_LINK "")')
     _:write('  '.. prefixfunc .. '_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;' .. cvar .. ';LINK_VAR')
-    for optname in _:getoptions() do
-       _:write(';' .. optname:upper())
+    for option in _:getoptions() do
+       _:write(';' .. option.name:upper())
     end
     _:print('" ${ARGN})\n')
 
-    for optname,args,default_value in _:getoptions() do
-      local opt = _:tocmakeoption(optname)
-      local localname = optname:upper()
+    for option in _:getoptions() do
+      local opt = _:tocmakeoption(option.name)
+      local localname = option.name:upper()
       local cmake_opt = 'JLN_FLAGS_' .. localname;
       _:print('  if(NOT DEFINED ' .. cmake_opt .. ')')
       _:print('    if(JLN_FLAGS_DISABLE_OTHERS)')
-      _:print('      set(' .. cmake_opt .. ' "' .. default_value .. '")')
+      _:print('      set(' .. cmake_opt .. ' "' .. option.default .. '")')
       _:print('    else()')
       _:print('      set(' .. cmake_opt .. ' "${' .. opt .. '_D}")')
       _:print('    endif()')

@@ -15,10 +15,11 @@ return {
     msvc_isystem={external_as_include_system_flag=true},
   },
 
-  tobjamoption=function(_, optname)
+  tobjamoption=function(_, option)
+    local optname = option.name
     local norm = optname:gsub('_', '-')
     local opt = _.optprefix .. norm
-    local iopt = not _._incidental[optname] and _.optprefix .. norm .. '-incidental'
+    local iopt = not option.incidental and _.optprefix .. norm .. '-incidental'
     local env = _.optenvprefix .. optname
     return opt, iopt, env
   end,
@@ -78,25 +79,25 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     local defaults = ''
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
 
-    for optname,args,default_value,ordered_args in _:getoptions() do
-      local opt, iopt, env = _:tobjamoption(optname)
-      local defaultjoined = jamlvl(table.concat(ordered_args, ' '))
+    for option in _:getoptions() do
+      local opt, iopt, env = _:tobjamoption(option)
+      local defaultjoined = jamlvl(table.concat(option.ordered_values, ' '))
 
       _:print('feature <' .. opt .. '> : _ ' .. defaultjoined .. (iopt and ' : incidental ;' or ' : propagated ;'))
 
       defaults = defaults .. 'feature <' .. opt .. '-default> : ' .. defaultjoined .. ' : incidental ;\n'
-      constants = constants .. 'constant '.. prefixfunc .. '_env_' .. optname .. ' : [ '.. prefixfunc .. '-get-env ' .. env .. ' : ' .. defaultjoined .. ' ] ;\n'
+      constants = constants .. 'constant '.. prefixfunc .. '_env_' .. option.name .. ' : [ '.. prefixfunc .. '-get-env ' .. env .. ' : ' .. defaultjoined .. ' ] ;\n'
       if iopt then
         relevants = relevants .. '\n      <relevant>' .. opt
         incidentals = incidentals .. 'feature <' .. iopt .. '> : _ ' .. defaultjoined .. ' : incidental ;\n'
         for i,opt in pairs({opt, iopt}) do
           toolsetflags = toolsetflags .. '  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;\n'
         end
-        locals = locals .. '  local x_' .. optname .. ' = [ '.. prefixfunc .. '-get-value2 $(ps) : '
-                 .. opt .. ' : ' .. iopt .. ' : $('.. prefixfunc .. '_env_' .. optname .. ') ] ;\n'
+        locals = locals .. '  local x_' .. option.name .. ' = [ '.. prefixfunc .. '-get-value2 $(ps) : '
+                 .. opt .. ' : ' .. iopt .. ' : $('.. prefixfunc .. '_env_' .. option.name .. ') ] ;\n'
       else
-        locals = locals .. '  local x_' .. optname .. ' = [ '.. prefixfunc .. '-get-value $(ps) : '
-                 .. opt .. ' : $('.. prefixfunc .. '_env_' .. optname .. ') ] ;\n'
+        locals = locals .. '  local x_' .. option.name .. ' = [ '.. prefixfunc .. '-get-value $(ps) : '
+                 .. opt .. ' : $('.. prefixfunc .. '_env_' .. option.name .. ') ] ;\n'
       end
     end
 

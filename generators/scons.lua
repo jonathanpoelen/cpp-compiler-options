@@ -28,15 +28,16 @@ return {
     _.prefixfunc = prefixfunc
 
     local enums, flags, var2opts, opt2vars = {}, {}, {}, {}
-    for optname,args,default_value in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local name = optprefix .. optname
-      flags[#flags+1] = "  '" .. optname .. "': '" .. default_value .. "',\n"
+      flags[#flags+1] = "  '" .. optname .. "': '" .. option.default .. "',\n"
       var2opts[#var2opts+1] = "  '" .. name .. "': '" .. optname .. "',\n"
       opt2vars[#opt2vars+1] = "  '" .. optname .. "': '" .. name .. "',\n"
       enums[#enums+1] = "    EnumVariable('" .. name .. "', '', default_values.get('"
         .. optname .. "', _jln_default_flags['" .. optname
         .. "']),\n                 allowed_values=('"
-        .. table.concat(args, "', '") .. "'))"
+        .. table.concat(option.values, "', '") .. "'))"
     end
 
     _:write([[

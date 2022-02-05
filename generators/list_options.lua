@@ -7,6 +7,10 @@ local without_space_or_error = function(_, s)
   end
 end
 
+local is_available = function(_, optname)
+  return _._koptions[optname].unavailable ~= (_.is_C and 'c' or 'cpp')
+end
+
 return {
   start=function(_, ...)
     local show_profile, color, categorized
@@ -43,12 +47,12 @@ return {
       end
       local other_cat = #categorized_opts + 1
       categorized_opts[other_cat] = {'Other', {}}
-      
+
       push_opt_for_print = function(optname, str)
         local strings = categorized_opts[categorized_opts[optname] or other_cat][2]
         strings[#strings+1] = str
       end
-      
+
       opt_for_print_end = function()
         local strings = {}
         local first = true
@@ -89,9 +93,9 @@ return {
       color_map[0] = '\027[34m'
       color_map[1] = '\027[35m'
       local color_size = 2
-      for optname, args, default_value, ordered_args in _:getoptions() do
-        local str, ic = optname .. ' \027[37m=', 0
-        for i,x in ipairs(ordered_args) do
+      for option in _:getoptions() do
+        local str, ic = option.name .. ' \027[37m=', 0
+        for i,x in ipairs(option.ordered_values) do
           local c = color_map[x]
           if not c then
             c = color_map[ic % color_size]
@@ -101,13 +105,14 @@ return {
             and (c:sub(0,-2) .. ';7m' .. x .. '\027[0m')
             or (c .. x))
         end
-        push_opt_for_print(optname, str .. '\027[0m')
-        add_opt(optname, args, str .. '\027[0m')
+        push_opt_for_print(option.name, str .. '\027[0m')
+        add_opt(option.name, option.values, str .. '\027[0m')
       end
     else
-      for optname, args, default_value, ordered_args in _:getoptions() do
-        push_opt_for_print(optname, optname .. ' = ' .. table.concat(ordered_args, ' '))
-        add_opt(optname, args)
+      for option in _:getoptions() do
+        push_opt_for_print(option.name, option.name .. ' = '
+                           .. table.concat(option.ordered_values, ' '))
+        add_opt(option.name, option.values)
       end
     end
 
@@ -128,7 +133,9 @@ return {
   startoptcond=function(_, optname)
     local known = knwon_opts[optname]
     if not known then
-      errors[#errors+1] = '_opts[' .. optname .. ']: unknown key'
+      if is_available(_, optname) then
+        errors[#errors+1] = '_koptions[' .. optname .. ']: unknown key'
+      end
     else
       known[2] = true
     end
@@ -138,9 +145,11 @@ return {
     if x.lvl then
       local known = knwon_opts[optname]
       if not known then
-        errors[#errors+1] = '_opts[' .. optname .. ']: unknown key'
+        if is_available(_, optname) then
+          errors[#errors+1] = '_koptions[' .. optname .. ']: unknown key'
+        end
       elseif not known[1][x.lvl] then
-        errors[#errors+1] = '_opts[' .. optname .. ']: unknown value: ' .. x.lvl
+        errors[#errors+1] = '_koptions[' .. optname .. ']: unknown value: ' .. x.lvl
       else
         known[2] = true
       end
@@ -159,7 +168,7 @@ return {
   stop=function(_)
     for k,opts in pairs(knwon_opts) do
       if not opts[2] then
-        errors[#errors+1] = '_opts[' .. k .. ']: not used in the tree'
+        errors[#errors+1] = '_koptions[' .. k .. ']: not used in the tree'
       end
     end
     if #errors ~= 0 then

@@ -138,9 +138,9 @@ return {
 
     local opts = {}
 
-    for k,args,default_value in _:getoptions() do
-      if default_value ~= 'default' then
-        opts[k] = default_value
+    for option in _:getoptions() do
+      if option.default ~= 'default' then
+        opts[option.name] = option.default
       end
     end
 
@@ -169,8 +169,8 @@ return {
       print(table.concat(lines, '\n'))
       lines={}
       print('\nOptions:')
-      for k,args in _:getoptions() do
-        lines[#lines+1] = '  ' .. k .. ' = ' .. table.concat(args, ', ')
+      for option in _:getoptions() do
+        lines[#lines+1] = '  ' .. option.name .. ' = ' .. table.concat(option.values, ', ')
       end
       print(table.concat(lines, '\n'))
       return 0
@@ -199,8 +199,8 @@ return {
           else name = name:gsub('-', '_')
           end
 
-          local opt_args = _._opts_krev[name]
-          if not opt_args then
+          local option = _._koptions[name]
+          if not option then
             error('Unknown `' .. name .. '` option')
           end
 
@@ -208,7 +208,7 @@ return {
             lvl = 'on'
           end
 
-          if not opt_args[lvl] or lvl == 'default' then
+          if not option.kvalues[lvl] or lvl == 'default' then
             error('Unknown value `' .. lvl .. '` in ' .. name)
           end
 

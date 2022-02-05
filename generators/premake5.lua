@@ -44,7 +44,8 @@ return {
     _:print('}\n')
 
     _:print('local _' .. prefixfunc .. '_flag_names = {')
-    for optname in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local opt = _:tostroption(optname)
       _:print('  ["' .. opt .. '"] = true,')
       if opt ~= optname then
@@ -69,10 +70,11 @@ end]])
     _:print('  else')
     _:print('    defaults = {}')
     _:print('  end')
-    for optname,args,default in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local opt = _:tostroption(optname)
-      _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(args, '"}, {"') .. '"}}, description="' .. optname .. '"}')
-      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. default .. '") end')
+      _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(option.values, '"}, {"') .. '"}}, description="' .. optname .. '"}')
+      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. option.default .. '") end')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
@@ -120,7 +122,8 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
   if values then
     _]] .. prefixfunc .. [[_check_flag_names(values)
     return {]])
-    for optname,args in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local opt = _:tostroption(optname)
       local isnotsamename = (opt ~= optname)
       _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
@@ -137,7 +140,8 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
     _:print([[}
   else
     return {]])
-    for optname,args,default in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = _OPTIONS["' .. opt .. '"],')
     end

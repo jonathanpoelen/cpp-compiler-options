@@ -49,16 +49,16 @@ return {
     _:print('}\n')
 
     _:print('local _flag_names = {')
-    for optname,args in _:getoptions() do
-      local opt = _:tostroption(optname)
+    for option in _:getoptions() do
+      local opt = _:tostroption(option.name)
       local list = {}
-      for _,arg in ipairs(args) do
+      for _,arg in ipairs(option.values) do
         list[#list+1] = '["' .. arg .. '"]="' .. todefault(arg) .. '", '
       end
       local allowed = table.concat(list)
       _:print('  ["' .. opt .. '"] = {' .. allowed .. '[""]=""},')
-      if opt ~= optname then
-        _:print('  ["' .. optname .. '"] = {' .. allowed .. '[""]=""},')
+      if opt ~= option.name then
+        _:print('  ["' .. option.name .. '"] = {' .. allowed .. '[""]=""},')
       end
     end
     _:print('}\n')
@@ -100,16 +100,17 @@ return {
           or category
           or nil
     ]])
-    for optname,args,default in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local opt = _:tostroption(optname)
       _:print('  option("' .. opt .. '", {')
       _:print('           showmenu=true,')
       _:print('           category=category,')
       _:print('           description="' .. optname .. '",')
-      _:print('           values={"' .. table.concat(args, '", "') .. '"},')
+      _:print('           values={"' .. table.concat(option.values, '", "') .. '"},')
       _:print('           default=defaults["' .. optname .. '"] '
               .. (opt ~= optname and 'or defaults["' .. opt .. '"] ' or '')
-              .. 'or "' .. default .. '",')
+              .. 'or "' .. option.default .. '",')
       _:print('           after_check=function(option) check_option("'
               .. opt .. '", "' .. optname .. '") end,')
       _:print('         })')
@@ -180,7 +181,8 @@ function tovalues(values, disable_others)
   if values then
     _check_flags(values)
     return {]])
-    for optname,args,default in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local opt = _:tostroption(optname)
       local isnotsamename = (opt ~= optname)
       _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
@@ -198,7 +200,8 @@ function tovalues(values, disable_others)
     _:print([[}
   else
     return {]])
-    for optname,args,default in _:getoptions() do
+    for option in _:getoptions() do
+      local optname = option.name
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = _flag_names["' .. optname
               .. '"][get_config("' .. opt .. '")],')
