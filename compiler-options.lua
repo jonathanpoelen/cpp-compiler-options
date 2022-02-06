@@ -1290,11 +1290,44 @@ function table_iterator(t)
   end
 end
 
+local escaped_table = {
+  ['"']='\\"',
+  ["'"]="\\'",
+  ['\\']='\\\\',
+}
+function escape(c) return escaped_table[c] end
+function quotable(str, q)
+  if str then
+    if q == '' then
+      return str
+    end
+    q = q and '[' .. q .. ']' or '[\\\"\']'
+    return str:gsub(q, escape)
+  end
+  return ''
+end
+
+function quotable_desc(option, newline, q)
+  if #option.value_descriptions ~= 0 then
+    newline = (newline or '\\n')
+    local str = ''
+    local desc
+    for i,name in ipairs(option.values) do
+      desc = option.value_descriptions[i]
+      if desc then
+        str = str .. newline .. ' - ' .. name .. ': ' .. desc
+      end
+    end
+    return quotable((option.description or '') .. str, q)
+  end
+  return quotable(option.description, q)
+end
+
 Vbase = {
   --[[
     {
       optname={
-        values=table[string],
+        values=table[string | table[string(name), string(description)] ],
         default=string | nil,
         description=string | nil,
         incidental=bool,
@@ -1441,17 +1474,17 @@ Vbase = {
     },
 
     optimization={
-      values={'0', 'g', '1', '2', '3', 'fast', 'size', 'z'},
-      description=[[optimization level
-- 0: not optimize
-- g: enable debugging experience
-- 1: optimize
-- 2: optimize even more
-- 3: optimize yet more
-- fast: enables all optimization=3 and disregard strict standards compliance
-- size: optimize for size
-- z: optimize for size aggressively (/!\ possible slow compilation)
-]],
+      values={
+        {'0', 'not optimize'},
+        {'g', 'enable debugging experience'},
+        {'1', 'optimize'},
+        {'2', 'optimize even more'},
+        {'3', 'optimize yet more'},
+        {'fast', 'enables all optimization=3 and disregard strict standards compliance'},
+        {'size', 'optimize for size'},
+        {'z', 'optimize for size aggressively (/!\\ possible slow compilation)'}
+      },
+      description='optimization level',
     },
 
     other_sanitizers={
@@ -1605,7 +1638,7 @@ Vbase = {
     minimum_size_release={cpu='native', linker='native', lto='on', optimization='size',},
   },
 
-  indent = '',
+  indent = '  ',
   if_prefix = '',
   -- table of optname=true or {optname={optvalue=true}}
   ignore={},
@@ -1684,16 +1717,15 @@ Vbase = {
 
     _.startoptcond=function(_, optname)
       _:_vcond_printflags()
-      _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
+      _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen
+              .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
       if #_._vcondkeyword.openblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.openblock)
       end
     end
 
     _.startcond=function(_, x, optname)
-      _.indent = _.indent:sub(1, #_.indent-2)
       _:_vcond_printflags()
-      _.indent = _.indent .. '  '
       _:write(_.indent .. _.if_prefix .. _._vcondkeyword._if .. _._vcondkeyword.ifopen)
       _.if_prefix = ''
       _:_vcond(x, optname)
@@ -1705,6 +1737,8 @@ Vbase = {
 
     _.elsecond=function(_)
       _:_vcond_printflags()
+      local oldindent = _.indent
+      _.indent = oldindent:sub(1, #oldindent-2)
       if #_._vcondkeyword.closeblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.closeblock)
       end
@@ -1712,10 +1746,12 @@ Vbase = {
       if #_._vcondkeyword.openblock ~= 0 then
         _:print(_.indent .. _._vcondkeyword.openblock)
       end
+      _.indent = oldindent
     end
 
     _.stopcond=function(_)
       _:_vcond_printflags()
+      _.indent = _.indent:sub(1, #_.indent-2)
       if #_._vcondkeyword.endif ~= 0 then
         _:print(_.indent .. _._vcondkeyword.endif)
       end
@@ -1753,6 +1789,7 @@ Vbase = {
   --   ordered_values=table[string],
   --   default=string,
   --   description=string | nil,
+  --   value_descriptions=table[string]
   --   incidental=bool,
   -- }
   getoptions=function(_)
@@ -1779,6 +1816,7 @@ Vbase = {
               values=newvalues,
               default=filter[option.default] or option.default,
               description=option.description,
+              value_descriptions=option.value_descriptions,
               incidental=option.incidental,
             }
           end
@@ -1830,16 +1868,24 @@ Vbase = {
 
 -- post treatment of _koptions:
 --   check not 'default' value
---   add kvalues, a dict[value]=true
+--   add kvalues (dict[value]=true)
+--   add value_descriptions (dict[i]=description)
 for optname,option in pairs(Vbase._koptions) do
   local kvalues = {}
-  for _, v in ipairs(option.values) do
+  local value_descriptions = {}
+  for k,v in ipairs(option.values) do
+    if type(v) == 'table' then
+      value_descriptions[k+1] = v[2]
+      v = v[1]
+      option.values[k] = v
+    end
     kvalues[v] = true
   end
   if kvalues['default'] then
     error('Vbase._koptions[' .. optname .. '] integrity error: "default" value is used')
   end
   table.insert(option.values, 1, 'default')
+  option.value_descriptions = value_descriptions
   option.kvalues = kvalues
   kvalues.default = true
 end
@@ -1870,9 +1916,7 @@ end
 function evalflagselse(t, v, curropt)
   if t._else then
     v:elsecond(curropt)
-    v.indent = v.indent .. '  '
     evalflags(t._else, v, curropt)
-    v.indent = v.indent:sub(1, #v.indent-2)
   end
 end
 
@@ -1885,10 +1929,9 @@ function evalflags(t, v, curropt)
       end
       if v.ignore[opt] ~= true then
         local r = v:startoptcond(opt)
+        v.indent = v.indent .. '  '
         if r ~= false then
-          v.indent = v.indent .. '  '
           evalflags(t._t, v, opt)
-          v.indent = v.indent:sub(1, #v.indent-2)
           v:stopopt(opt)
         end
         if r ~= true then
@@ -1900,10 +1943,9 @@ function evalflags(t, v, curropt)
       end
     else
       local r = v:startcond(t._if, curropt)
+      v.indent = v.indent .. '  '
       if r ~= false and t._t then
-        v.indent = v.indent .. '  '
         evalflags(t._t, v, curropt)
-        v.indent = v.indent:sub(1, #v.indent-2)
       end
       if r ~= true then
         evalflagselse(t, v, curropt)

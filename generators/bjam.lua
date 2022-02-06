@@ -46,7 +46,7 @@ return {
   end,
 
   _vcond_toflags=function(_, cxx, links)
-    return _.indent .. '  flags +=\n' .. cxx .. links .. _.indent .. '  ;\n'
+    return _.indent .. 'flags +=\n' .. cxx .. links .. _.indent .. ';\n'
   end,
 
   start=function(_, optprefix, optenvprefix)
@@ -83,15 +83,24 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
       local opt, iopt, env = _:tobjamoption(option)
       local defaultjoined = jamlvl(table.concat(option.ordered_values, ' '))
 
-      _:print('feature <' .. opt .. '> : _ ' .. defaultjoined .. (iopt and ' : incidental ;' or ' : propagated ;'))
+      if option.description then
+        _:print('# ' .. quotable_desc(option, '\n# ', ''))
+      end
+      _:print('feature <' .. opt .. '> : _ ' .. defaultjoined
+              .. (iopt and ' : incidental ;' or ' : propagated ;'))
 
-      defaults = defaults .. 'feature <' .. opt .. '-default> : ' .. defaultjoined .. ' : incidental ;\n'
-      constants = constants .. 'constant '.. prefixfunc .. '_env_' .. option.name .. ' : [ '.. prefixfunc .. '-get-env ' .. env .. ' : ' .. defaultjoined .. ' ] ;\n'
+      defaults = defaults .. 'feature <' .. opt .. '-default> : '
+                 .. defaultjoined .. ' : incidental ;\n'
+      constants = constants .. 'constant '.. prefixfunc .. '_env_'
+                  .. option.name .. ' : [ '.. prefixfunc .. '-get-env ' .. env
+                  .. ' : ' .. defaultjoined .. ' ] ;\n'
       if iopt then
         relevants = relevants .. '\n      <relevant>' .. opt
-        incidentals = incidentals .. 'feature <' .. iopt .. '> : _ ' .. defaultjoined .. ' : incidental ;\n'
+        incidentals = incidentals .. 'feature <' .. iopt .. '> : _ '
+                      .. defaultjoined .. ' : incidental ;\n'
         for i,opt in pairs({opt, iopt}) do
-          toolsetflags = toolsetflags .. '  toolset.flags ' .. opt .. ' ' .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;\n'
+          toolsetflags = toolsetflags .. '  toolset.flags ' .. opt .. ' '
+                         .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;\n'
         end
         locals = locals .. '  local x_' .. option.name .. ' = [ '.. prefixfunc .. '-get-value2 $(ps) : '
                  .. opt .. ' : ' .. iopt .. ' : $('.. prefixfunc .. '_env_' .. option.name .. ') ] ;\n'

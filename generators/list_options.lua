@@ -13,15 +13,16 @@ end
 
 return {
   start=function(_, ...)
-    local show_profile, color, categorized
+    local show_profile, color, categorized, verbose
     local help = function()
-      print(_.generator_name .. ' [-h] [--categorized] [--profile] [--color]')
+      print(_.generator_name .. ' [-h] [-v] [--categorized] [--profile] [--color]')
       return false
     end
     local cli = {
       ['--categorized']=function() categorized=true end,
       ['--profile']=function() show_profile=true end,
       ['--color']=function() color=true end,
+      ['-v']=function() verbose=true end,
       ['-h']=help,
       ['--help']=help,
     }
@@ -48,9 +49,12 @@ return {
       local other_cat = #categorized_opts + 1
       categorized_opts[other_cat] = {'Other', {}}
 
-      push_opt_for_print = function(optname, str)
-        local strings = categorized_opts[categorized_opts[optname] or other_cat][2]
+      push_opt_for_print = function(option, str, desc)
+        local strings = categorized_opts[categorized_opts[option.name] or other_cat][2]
         strings[#strings+1] = str
+        if verbose and desc then
+          strings[#strings+1] = '  ' .. desc
+        end
       end
 
       opt_for_print_end = function()
@@ -72,16 +76,17 @@ return {
         print(table.concat(strings, '\n'))
       end
     else
-      push_opt_for_print = function(optname, str) print(str) end
+      push_opt_for_print = function(option, str, desc)
+        print(str)
+        if verbose and desc then
+          print('  ' .. desc)
+        end
+      end
       opt_for_print_end = function() end
     end
 
-    local add_opt = function(optname, args)
-      local t = {}
-      for k,v in pairs(args) do
-        t[v] = true
-      end
-      knwon_opts[optname] = {t}
+    local add_opt = function(option)
+      knwon_opts[option.name] = {option.kvalues}
     end
 
     if color then
@@ -105,14 +110,16 @@ return {
             and (c:sub(0,-2) .. ';7m' .. x .. '\027[0m')
             or (c .. x))
         end
-        push_opt_for_print(option.name, str .. '\027[0m')
-        add_opt(option.name, option.values, str .. '\027[0m')
+        push_opt_for_print(option, str .. '\027[0m',
+                           option.description and ('\027[37m' .. option.description .. '\027[0m'))
+        add_opt(option)
       end
     else
       for option in _:getoptions() do
-        push_opt_for_print(option.name, option.name .. ' = '
-                           .. table.concat(option.ordered_values, ' '))
-        add_opt(option.name, option.values)
+        push_opt_for_print(option, option.name .. ' = '
+                           .. table.concat(option.ordered_values, ' '),
+                           option.description)
+        add_opt(option)
       end
     end
 

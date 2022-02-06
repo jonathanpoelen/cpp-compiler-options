@@ -25,16 +25,19 @@ return {
     local optprefix = optprefix and optprefix:gsub('-', '_') or ''
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
     local prefixenv = _.is_C and 'CC' or 'CXX'
-    _.prefixfunc = prefixfunc
 
-    local enums, flags, var2opts, opt2vars = {}, {}, {}, {}
+    local enums, flags, var2opts, opt2vars, xvalues = {}, {}, {}, {}, {}
     for option in _:getoptions() do
       local optname = option.name
       local name = optprefix .. optname
       flags[#flags+1] = "  '" .. optname .. "': '" .. option.default .. "',\n"
       var2opts[#var2opts+1] = "  '" .. name .. "': '" .. optname .. "',\n"
       opt2vars[#opt2vars+1] = "  '" .. optname .. "': '" .. name .. "',\n"
-      enums[#enums+1] = "    EnumVariable('" .. name .. "', '', default_values.get('"
+      xvalues[#xvalues+1] = "  x_" .. optname .. " = options.get('" .. optname
+                            .. "', _" .. prefixfunc
+                            .. "_default_flags['" .. optname .. "'])"
+      enums[#enums+1] = "    EnumVariable('" .. name .. "', '"
+        .. quotable_desc(option) .. "', default_values.get('"
         .. optname .. "', _jln_default_flags['" .. optname
         .. "']),\n                 allowed_values=('"
         .. table.concat(option.values, "', '") .. "'))"
@@ -110,9 +113,11 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=No
   flags=[]
   linkflags=[]
 ]])
+    _:write(table.concat(xvalues, '\n'))
+    _:write('\n\n')
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return  "options.get('" .. optname .. "', _" .. _.prefixfunc .. "_default_flags['" .. optname .. "']) == '" .. lvl .. "'" end,
+  _vcond_lvl=function(_, lvl, optname) return  "x_" .. optname .. " == '" .. lvl .. "'" end,
   _vcond_verless=function(_, major, minor) return "verless(" .. major .. ', ' .. minor .. ")" end,
   _vcond_compiler=function(_, compiler) return "compiler == '" .. compiler .. "'" end,
   _vcond_linker=function(_, linker) return "linker == '" .. linker .. "'" end,
@@ -127,11 +132,12 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=No
   end,
 
   _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. '  flags += (' .. cxx .. ')\n' or '')
-        .. (#links ~= 0 and _.indent .. '  linkflags += (' .. links .. ')\n' or '')
+    return (#cxx ~= 0 and _.indent .. 'flags += (' .. cxx .. ')\n' or '')
+        .. (#links ~= 0 and _.indent .. 'linkflags += (' .. links .. ')\n' or '')
   end,
 
   stop=function(_, filebase)
-    return _:get_output() .. '  return {"flags": flags, "linkflags": linkflags}\n'
+    _:write('  return {"flags": flags, "linkflags": linkflags}\n')
+    return _:get_output()
   end
 }

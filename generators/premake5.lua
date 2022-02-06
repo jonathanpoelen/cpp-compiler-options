@@ -73,7 +73,16 @@ end]])
     for option in _:getoptions() do
       local optname = option.name
       local opt = _:tostroption(optname)
-      _:print('  newoption{trigger="' .. opt .. '", allowed={{"' ..  table.concat(option.values, '"}, {"') .. '"}}, description="' .. optname .. '"}')
+      local values = {}
+      for i,v in ipairs(option.values) do
+        local desc = option.value_descriptions[i]
+        if desc then
+          values[#values+1] = "{'" .. v .. "', '".. quotable(desc) .. "'}"
+        else
+          values[#values+1] = "{'" .. v .. "'}"
+        end
+      end
+      _:print('\n  newoption{trigger="' .. opt .. '", allowed={' ..  table.concat(values, ', ') .. '}, description="' .. quotable(option.description) .. '"}')
       _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. option.default .. '") end')
     end
     for i,extra in ipairs(extraopts) do

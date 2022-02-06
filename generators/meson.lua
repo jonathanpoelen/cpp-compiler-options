@@ -39,7 +39,9 @@ ___]] .. prefixfunc .. [[_flags = {
 ]])
     for option in _:getoptions() do
       local name = _:tobuildoption(option.name)
-      option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['" .. table.concat(option.values, "', '") .. "'], value : '" .. option.default .. "')"
+      option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['"
+        .. table.concat(option.values, "', '") .. "'], value : '" .. option.default
+        .. "', description : '" .. quotable_desc(option) .. "')"
       if option.name == 'warnings' then
         _:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_warnings,\n")
       else
@@ -83,8 +85,8 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
   end,
 
   _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. '  ' .. _.prefixfunc .. '_' .. _.clang .. '_flags += [' .. cxx .. ']\n' or '')
-        .. (#links ~= 0 and _.indent .. '  ' .. _.prefixfunc .. '_link_flags += [' .. links .. ']\n' or '')
+    return (#cxx ~= 0 and _.indent .. _.prefixfunc .. '_' .. _.clang .. '_flags += [' .. cxx .. ']\n' or '')
+        .. (#links ~= 0 and _.indent .. _.prefixfunc .. '_link_flags += [' .. links .. ']\n' or '')
   end,
 
   stop=function(_, filebase)

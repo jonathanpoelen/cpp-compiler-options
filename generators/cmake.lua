@@ -35,7 +35,8 @@ set(_JLN_DISABLE_OTHERS_VALUES on off)
 
     for option in _:getoptions() do
       local opt = _:tocmakeoption(option.name)
-      _:print('set(' .. opt .. ' "${' .. opt .. '}" CACHE STRING "")')
+      _:print('set(' .. opt .. ' "${' .. opt .. '}" CACHE STRING "'
+              .. quotable_desc(option, '\\n', '"') .. '")')
       _:print('set_property(CACHE ' .. opt .. ' PROPERTY STRINGS "'
               .. table.concat(option.values, '" "') .. '")')
       _:print('if(NOT("${' .. opt .. '}" STREQUAL ""))')
@@ -319,8 +320,8 @@ endif()
   end,
 
   _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. '  list(APPEND CXX_FLAGS ' .. cxx .. ')\n' or '')
-        .. (#links ~= 0 and _.indent .. '  list(APPEND LINK_FLAGS ' .. links .. ')\n' or '')
+    return (#cxx ~= 0 and _.indent .. 'list(APPEND CXX_FLAGS ' .. cxx .. ')\n' or '')
+        .. (#links ~= 0 and _.indent .. 'list(APPEND LINK_FLAGS ' .. links .. ')\n' or '')
   end,
 
   stop=function(_)

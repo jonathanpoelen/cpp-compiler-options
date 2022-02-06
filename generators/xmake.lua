@@ -106,7 +106,7 @@ return {
       _:print('  option("' .. opt .. '", {')
       _:print('           showmenu=true,')
       _:print('           category=category,')
-      _:print('           description="' .. optname .. '",')
+      _:print('           description="' .. quotable_desc(option) .. '",')
       _:print('           values={"' .. table.concat(option.values, '", "') .. '"},')
       _:print('           default=defaults["' .. optname .. '"] '
               .. (opt ~= optname and 'or defaults["' .. opt .. '"] ' or '')
