@@ -1799,7 +1799,7 @@ Vbase = {
       computed_options = {}
       _._computed_options = computed_options
       local ignore = _.ignore
-      local lang = _.is_C and 'c' or 'cpp'
+      local lang = _.lang
 
       for i,k in ipairs(create_ordered_keys(_._koptions)) do
         local filter = ignore[k]
@@ -2022,6 +2022,7 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
   end
 
   V.is_C = is_C
+  V.lang = is_C and 'c' or 'cpp'
   V.generator_name = generator_name
   local r = V:start(...)
   if r == false then

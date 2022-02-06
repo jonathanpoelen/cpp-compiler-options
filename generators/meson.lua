@@ -49,15 +49,14 @@ ___]] .. prefixfunc .. [[_flags = {
       end
     end
 
-    local clang = _.is_C and 'c' or 'cpp'
-    _.clang = clang
+    local lang = _.lang
 
     _:print([[}
 
-]] .. prefixfunc .. [[_custom_]] .. clang .. [[_flags = []
+]] .. prefixfunc .. [[_custom_]] .. lang .. [[_flags = []
 ]] .. prefixfunc .. [[_custom_link_flags = []
 
-___]] .. prefixfunc .. [[_compiler = meson.get_compiler(']] .. clang .. [[')
+___]] .. prefixfunc .. [[_compiler = meson.get_compiler(']] .. lang .. [[')
 ___]] .. prefixfunc .. [[_compiler_id = ___]] .. prefixfunc .. [[_compiler.get_id()
 ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.version()
 ___]] .. prefixfunc .. [[_linker_id = ___]] .. prefixfunc .. [[_compiler.get_linker_id()
@@ -65,7 +64,7 @@ ___]] .. prefixfunc .. [[_linker_id = ___]] .. prefixfunc .. [[_compiler.get_lin
 ___]] .. prefixfunc .. [[_custom_flags = get_variable(']] .. prefixfunc .. [[_custom_flags', []) + [___]] .. prefixfunc .. [[_flags]
 
 foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
-  ]] .. prefixfunc .. [[_]] .. clang .. [[_flags = []
+  ]] .. prefixfunc .. [[_]] .. lang .. [[_flags = []
   ]] .. prefixfunc .. [[_link_flags = []
 
 ]])
@@ -85,7 +84,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
   end,
 
   _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. _.prefixfunc .. '_' .. _.clang .. '_flags += [' .. cxx .. ']\n' or '')
+    return (#cxx ~= 0 and _.indent .. _.prefixfunc .. '_' .. _.lang .. '_flags += [' .. cxx .. ']\n' or '')
         .. (#links ~= 0 and _.indent .. _.prefixfunc .. '_link_flags += [' .. links .. ']\n' or '')
   end,
 
@@ -93,7 +92,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
     local meson_options = table.concat(_._option_strs, '\n') .. '\n'
     local meson_build = _:get_output() .. [[
 
-  ]] .. _.prefixfunc .. [[_custom_]] .. _.clang .. [[_flags += []] .. _.prefixfunc .. [[_]] .. _.clang .. [[_flags]
+  ]] .. _.prefixfunc .. [[_custom_]] .. _.lang .. [[_flags += []] .. _.prefixfunc .. [[_]] .. _.lang .. [[_flags]
   ]] .. _.prefixfunc .. [[_custom_link_flags += []] .. _.prefixfunc .. [[_link_flags]
 endforeach
 ]]

@@ -8,7 +8,7 @@ local without_space_or_error = function(_, s)
 end
 
 local is_available = function(_, optname)
-  return _._koptions[optname].unavailable ~= (_.is_C and 'c' or 'cpp')
+  return _._koptions[optname].unavailable ~= _.lang
 end
 
 return {
