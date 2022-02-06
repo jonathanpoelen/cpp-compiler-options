@@ -44,7 +44,7 @@
 #  conversion_warnings = on default off sign conversion
 #  covered_switch_default_warnings = on default off
 #  fix_compiler_error = on default off
-#  microsoft_abi_compatibility_warnings = off default on
+#  msvc_crt_secure_no_warnings = on default off
 #  noexcept_warnings = default off on
 #  reproducible_build_warnings = default off on
 #  shadow_warnings = off default on local compatible_local all
@@ -52,15 +52,16 @@
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 #  warnings = on default off strict very_strict
 #  warnings_as_error = default off on basic
+#  windows_abi_compatibility_warnings = off default on
 #  
 #  # Pedantic:
 #  
+#  msvc_conformance = all default all_without_throwing_new
 #  pedantic = on default off as_error
 #  stl_fix = on default off
 #  
 #  # Debug:
 #  
-#  control_flow = default off on branch return allow_bugs
 #  debug = default off on line_tables_only gdb lldb sce
 #  float_sanitizers = default off on
 #  integer_sanitizers = default off on
@@ -83,8 +84,13 @@
 #  
 #  # Hardening:
 #  
+#  control_flow = default off on branch return allow_bugs
 #  relro = default off on full
 #  stack_protector = default off on strong all
+#  
+#  # Other:
+#  
+#  windows_bigobj = on default
 #  
 #  # Other:
 #  
@@ -101,7 +107,7 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix`, `switch_warnings` and `warnings` are `on` ; `microsoft_abi_compatibility_warnings` and `shadow_warnings` are `off`.
+#  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` are `all` ; `shadow_warnings` and `windows_abi_compatibility_warnings` are `off`.
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -138,35 +144,31 @@ ___jln_c_flags = {
   'cpu': ___jln_c_default_flags.get('cpu', get_option('jln_cpu')),
   'debug': ___jln_c_default_flags.get('debug', get_option('jln_debug')),
   'diagnostics_format': ___jln_c_default_flags.get('diagnostics_format', get_option('jln_diagnostics_format')),
-  'diagnostics_show_template_tree': ___jln_c_default_flags.get('diagnostics_show_template_tree', get_option('jln_diagnostics_show_template_tree')),
-  'elide_type': ___jln_c_default_flags.get('elide_type', get_option('jln_elide_type')),
   'exceptions': ___jln_c_default_flags.get('exceptions', get_option('jln_exceptions')),
   'fix_compiler_error': ___jln_c_default_flags.get('fix_compiler_error', get_option('jln_fix_compiler_error')),
   'float_sanitizers': ___jln_c_default_flags.get('float_sanitizers', get_option('jln_float_sanitizers')),
   'integer_sanitizers': ___jln_c_default_flags.get('integer_sanitizers', get_option('jln_integer_sanitizers')),
   'linker': ___jln_c_default_flags.get('linker', get_option('jln_linker')),
   'lto': ___jln_c_default_flags.get('lto', get_option('jln_lto')),
-  'microsoft_abi_compatibility_warnings': ___jln_c_default_flags.get('microsoft_abi_compatibility_warnings', get_option('jln_microsoft_abi_compatibility_warnings')),
+  'msvc_conformance': ___jln_c_default_flags.get('msvc_conformance', get_option('jln_msvc_conformance')),
+  'msvc_crt_secure_no_warnings': ___jln_c_default_flags.get('msvc_crt_secure_no_warnings', get_option('jln_msvc_crt_secure_no_warnings')),
   'msvc_isystem': ___jln_c_default_flags.get('msvc_isystem', get_option('jln_msvc_isystem')),
-  'msvc_isystem_with_template_from_non_external': ___jln_c_default_flags.get('msvc_isystem_with_template_from_non_external', get_option('jln_msvc_isystem_with_template_from_non_external')),
-  'noexcept_warnings': ___jln_c_default_flags.get('noexcept_warnings', get_option('jln_noexcept_warnings')),
   'optimization': ___jln_c_default_flags.get('optimization', get_option('jln_optimization')),
   'other_sanitizers': ___jln_c_default_flags.get('other_sanitizers', get_option('jln_other_sanitizers')),
   'pedantic': ___jln_c_default_flags.get('pedantic', get_option('jln_pedantic')),
   'pie': ___jln_c_default_flags.get('pie', get_option('jln_pie')),
   'relro': ___jln_c_default_flags.get('relro', get_option('jln_relro')),
   'reproducible_build_warnings': ___jln_c_default_flags.get('reproducible_build_warnings', get_option('jln_reproducible_build_warnings')),
-  'rtti': ___jln_c_default_flags.get('rtti', get_option('jln_rtti')),
   'sanitizers': ___jln_c_default_flags.get('sanitizers', get_option('jln_sanitizers')),
   'shadow_warnings': ___jln_c_default_flags.get('shadow_warnings', get_option('jln_shadow_warnings')),
   'stack_protector': ___jln_c_default_flags.get('stack_protector', get_option('jln_stack_protector')),
-  'stl_debug': ___jln_c_default_flags.get('stl_debug', get_option('jln_stl_debug')),
   'stl_fix': ___jln_c_default_flags.get('stl_fix', get_option('jln_stl_fix')),
   'suggestions': ___jln_c_default_flags.get('suggestions', get_option('jln_suggestions')),
   'switch_warnings': ___jln_c_default_flags.get('switch_warnings', get_option('jln_switch_warnings')),
   'warnings': ___jln_c_warnings,
   'warnings_as_error': ___jln_c_default_flags.get('warnings_as_error', get_option('jln_warnings_as_error')),
   'whole_program': ___jln_c_default_flags.get('whole_program', get_option('jln_whole_program')),
+  'windows_bigobj': ___jln_c_default_flags.get('windows_bigobj', get_option('jln_windows_bigobj')),
 }
 
 jln_c_custom_c_flags = []
@@ -190,7 +192,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         jln_c_c_flags += ['-w', ]
       else
         if (  (___jln_c_compiler_id == 'gcc') )
-            jln_c_c_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
+          jln_c_c_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
           if (  not ( (___jln_c_flags.get('switch_warnings', 'default') == 'default')) )
             if (  (___jln_c_flags.get('switch_warnings', 'default') == 'on') )
               jln_c_c_flags += ['-Wswitch', ]
@@ -231,7 +233,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           endif
         else
           if (  ( (___jln_c_compiler_id == 'clang') or (___jln_c_compiler_id == 'clang-cl') ) )
-              jln_c_c_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', ]
+            jln_c_c_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', ]
             if (  not ( (___jln_c_flags.get('switch_warnings', 'default') == 'default')) )
               if (  ( (___jln_c_flags.get('switch_warnings', 'default') == 'on') or (___jln_c_flags.get('switch_warnings', 'default') == 'mandatory_default') ) )
                 jln_c_c_flags += ['-Wno-switch-enum', ]
@@ -250,6 +252,8 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
             if (  not ( (___jln_c_flags.get('covered_switch_default_warnings', 'default') == 'default')) )
               if (  (___jln_c_flags.get('covered_switch_default_warnings', 'default') == 'off') )
                 jln_c_c_flags += ['-Wno-covered-switch-default', ]
+              else
+                jln_c_c_flags += ['-Wcovered-switch-default', ]
               endif
             endif
           endif
@@ -697,7 +701,12 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           jln_c_link_flags += ['-Wl,-z,relro', ]
         else
           if (  (___jln_c_flags.get('relro', 'default') == 'full') )
-            jln_c_link_flags += ['-Wl,-z,relro,-z,now', ]
+            jln_c_link_flags += ['-Wl,-z,relro,-z,now,-z,noexecstack', ]
+            if (  not ( (___jln_c_flags.get('linker', 'default') == 'default')) )
+              if (  not ( ( (___jln_c_flags.get('linker', 'default') == 'gold') or ( (___jln_c_compiler_id == 'gcc') and not ( not ( ___jln_c_compiler_version.version_compare('<9.0') ) ) ) or ( (___jln_c_flags.get('linker', 'default') == 'native') and (___jln_c_compiler_id == 'gcc') ) ) ) )
+                jln_c_link_flags += ['-Wl,-z,separate-code', ]
+              endif
+            endif
           endif
         endif
       endif
@@ -974,6 +983,35 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     endif
   endif
   if (  (___jln_c_compiler_id == 'msvc') )
+    if (  not ( (___jln_c_flags.get('windows_bigobj', 'default') == 'default')) )
+      jln_c_c_flags += ['/bigobj', ]
+    endif
+    if (  not ( (___jln_c_flags.get('msvc_conformance', 'default') == 'default')) )
+      if (  ( (___jln_c_flags.get('msvc_conformance', 'default') == 'all') or (___jln_c_flags.get('msvc_conformance', 'default') == 'all_without_throwing_new') ) )
+        jln_c_c_flags += ['/Zc:inline', '/Zc:referenceBinding', ]
+        if (  (___jln_c_flags.get('msvc_conformance', 'default') == 'all') )
+          jln_c_c_flags += ['/Zc:throwingNew', ]
+        endif
+        if (  not ( ___jln_c_compiler_version.version_compare('<15.6') ) )
+          jln_c_c_flags += ['/Zc:externConstexpr', ]
+          if (  not ( ___jln_c_compiler_version.version_compare('<16.8') ) )
+            jln_c_c_flags += ['/Zc:lambda', ]
+            if (  not ( ___jln_c_compiler_version.version_compare('<16.5') ) )
+              jln_c_c_flags += ['/Zc:preprocessor', ]
+            endif
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_c_flags.get('msvc_crt_secure_no_warnings', 'default') == 'default')) )
+      if (  (___jln_c_flags.get('msvc_crt_secure_no_warnings', 'default') == 'on') )
+        jln_c_c_flags += ['/D_CRT_SECURE_NO_WARNINGS=1', ]
+      else
+        if (  (___jln_c_flags.get('msvc_crt_secure_no_warnings', 'default') == 'off') )
+          jln_c_c_flags += ['/U_CRT_SECURE_NO_WARNINGS', ]
+        endif
+      endif
+    endif
     if (  not ( (___jln_c_flags.get('msvc_isystem', 'default') == 'default')) )
       if (  (___jln_c_flags.get('msvc_isystem', 'default') == 'external_as_include_system_flag') )
         # unimplementable
@@ -1106,6 +1144,8 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         endif
       endif
     endif
+  endif
+  if (  (host_machine.system() == 'windows' and ___jln_c_compiler_id == 'gcc') )
   endif
 
   jln_c_custom_c_flags += [jln_c_c_flags]

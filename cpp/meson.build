@@ -44,7 +44,7 @@
 #  conversion_warnings = on default off sign conversion
 #  covered_switch_default_warnings = on default off
 #  fix_compiler_error = on default off
-#  microsoft_abi_compatibility_warnings = off default on
+#  msvc_crt_secure_no_warnings = on default off
 #  noexcept_warnings = default off on
 #  reproducible_build_warnings = default off on
 #  shadow_warnings = off default on local compatible_local all
@@ -52,15 +52,16 @@
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 #  warnings = on default off strict very_strict
 #  warnings_as_error = default off on basic
+#  windows_abi_compatibility_warnings = off default on
 #  
 #  # Pedantic:
 #  
+#  msvc_conformance = all default all_without_throwing_new
 #  pedantic = on default off as_error
 #  stl_fix = on default off
 #  
 #  # Debug:
 #  
-#  control_flow = default off on branch return allow_bugs
 #  debug = default off on line_tables_only gdb lldb sce
 #  float_sanitizers = default off on
 #  integer_sanitizers = default off on
@@ -83,8 +84,13 @@
 #  
 #  # Hardening:
 #  
+#  control_flow = default off on branch return allow_bugs
 #  relro = default off on full
 #  stack_protector = default off on strong all
+#  
+#  # Other:
+#  
+#  windows_bigobj = on default
 #  
 #  # Other:
 #  
@@ -101,7 +107,7 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix`, `switch_warnings` and `warnings` are `on` ; `microsoft_abi_compatibility_warnings` and `shadow_warnings` are `off`.
+#  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` are `all` ; `shadow_warnings` and `windows_abi_compatibility_warnings` are `off`.
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -146,7 +152,8 @@ ___jln_flags = {
   'integer_sanitizers': ___jln_default_flags.get('integer_sanitizers', get_option('jln_integer_sanitizers')),
   'linker': ___jln_default_flags.get('linker', get_option('jln_linker')),
   'lto': ___jln_default_flags.get('lto', get_option('jln_lto')),
-  'microsoft_abi_compatibility_warnings': ___jln_default_flags.get('microsoft_abi_compatibility_warnings', get_option('jln_microsoft_abi_compatibility_warnings')),
+  'msvc_conformance': ___jln_default_flags.get('msvc_conformance', get_option('jln_msvc_conformance')),
+  'msvc_crt_secure_no_warnings': ___jln_default_flags.get('msvc_crt_secure_no_warnings', get_option('jln_msvc_crt_secure_no_warnings')),
   'msvc_isystem': ___jln_default_flags.get('msvc_isystem', get_option('jln_msvc_isystem')),
   'msvc_isystem_with_template_from_non_external': ___jln_default_flags.get('msvc_isystem_with_template_from_non_external', get_option('jln_msvc_isystem_with_template_from_non_external')),
   'noexcept_warnings': ___jln_default_flags.get('noexcept_warnings', get_option('jln_noexcept_warnings')),
@@ -167,6 +174,8 @@ ___jln_flags = {
   'warnings': ___jln_warnings,
   'warnings_as_error': ___jln_default_flags.get('warnings_as_error', get_option('jln_warnings_as_error')),
   'whole_program': ___jln_default_flags.get('whole_program', get_option('jln_whole_program')),
+  'windows_abi_compatibility_warnings': ___jln_default_flags.get('windows_abi_compatibility_warnings', get_option('jln_windows_abi_compatibility_warnings')),
+  'windows_bigobj': ___jln_default_flags.get('windows_bigobj', get_option('jln_windows_bigobj')),
 }
 
 jln_custom_cpp_flags = []
@@ -190,7 +199,7 @@ foreach ___jln_flags : ___jln_custom_flags
         jln_cpp_flags += ['-w', ]
       else
         if (  (___jln_compiler_id == 'gcc') )
-            jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
+          jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
           if (  not ( (___jln_flags.get('switch_warnings', 'default') == 'default')) )
             if (  (___jln_flags.get('switch_warnings', 'default') == 'on') )
               jln_cpp_flags += ['-Wswitch', ]
@@ -236,7 +245,7 @@ foreach ___jln_flags : ___jln_custom_flags
           endif
         else
           if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
-              jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', ]
+            jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', ]
             if (  not ( (___jln_flags.get('switch_warnings', 'default') == 'default')) )
               if (  ( (___jln_flags.get('switch_warnings', 'default') == 'on') or (___jln_flags.get('switch_warnings', 'default') == 'mandatory_default') ) )
                 jln_cpp_flags += ['-Wno-switch-enum', ]
@@ -255,6 +264,8 @@ foreach ___jln_flags : ___jln_custom_flags
             if (  not ( (___jln_flags.get('covered_switch_default_warnings', 'default') == 'default')) )
               if (  (___jln_flags.get('covered_switch_default_warnings', 'default') == 'off') )
                 jln_cpp_flags += ['-Wno-covered-switch-default', ]
+              else
+                jln_cpp_flags += ['-Wcovered-switch-default', ]
               endif
             endif
             if (  not ( ___jln_compiler_version.version_compare('<3.9') ) )
@@ -296,13 +307,11 @@ foreach ___jln_flags : ___jln_custom_flags
         endif
       endif
     endif
-    if (  not ( (___jln_flags.get('microsoft_abi_compatibility_warnings', 'default') == 'default')) )
-      if (  (___jln_flags.get('microsoft_abi_compatibility_warnings', 'default') == 'on') )
-        if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+    if (  not ( (___jln_flags.get('windows_abi_compatibility_warnings', 'default') == 'default')) )
+      if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+        if (  (___jln_flags.get('windows_abi_compatibility_warnings', 'default') == 'on') )
           jln_cpp_flags += ['-Wmismatched-tags', ]
-        endif
-      else
-        if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+        else
           jln_cpp_flags += ['-Wno-mismatched-tags', ]
         endif
       endif
@@ -749,7 +758,12 @@ foreach ___jln_flags : ___jln_custom_flags
           jln_link_flags += ['-Wl,-z,relro', ]
         else
           if (  (___jln_flags.get('relro', 'default') == 'full') )
-            jln_link_flags += ['-Wl,-z,relro,-z,now', ]
+            jln_link_flags += ['-Wl,-z,relro,-z,now,-z,noexecstack', ]
+            if (  not ( (___jln_flags.get('linker', 'default') == 'default')) )
+              if (  not ( ( (___jln_flags.get('linker', 'default') == 'gold') or ( (___jln_compiler_id == 'gcc') and not ( not ( ___jln_compiler_version.version_compare('<9.0') ) ) ) or ( (___jln_flags.get('linker', 'default') == 'native') and (___jln_compiler_id == 'gcc') ) ) ) )
+                jln_link_flags += ['-Wl,-z,separate-code', ]
+              endif
+            endif
           endif
         endif
       endif
@@ -1084,6 +1098,35 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
   endif
   if (  (___jln_compiler_id == 'msvc') )
+    if (  not ( (___jln_flags.get('windows_bigobj', 'default') == 'default')) )
+      jln_cpp_flags += ['/bigobj', ]
+    endif
+    if (  not ( (___jln_flags.get('msvc_conformance', 'default') == 'default')) )
+      if (  ( (___jln_flags.get('msvc_conformance', 'default') == 'all') or (___jln_flags.get('msvc_conformance', 'default') == 'all_without_throwing_new') ) )
+        jln_cpp_flags += ['/Zc:inline', '/Zc:referenceBinding', ]
+        if (  (___jln_flags.get('msvc_conformance', 'default') == 'all') )
+          jln_cpp_flags += ['/Zc:throwingNew', ]
+        endif
+        if (  not ( ___jln_compiler_version.version_compare('<15.6') ) )
+          jln_cpp_flags += ['/Zc:externConstexpr', ]
+          if (  not ( ___jln_compiler_version.version_compare('<16.8') ) )
+            jln_cpp_flags += ['/Zc:lambda', ]
+            if (  not ( ___jln_compiler_version.version_compare('<16.5') ) )
+              jln_cpp_flags += ['/Zc:preprocessor', ]
+            endif
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('msvc_crt_secure_no_warnings', 'default') == 'default')) )
+      if (  (___jln_flags.get('msvc_crt_secure_no_warnings', 'default') == 'on') )
+        jln_cpp_flags += ['/D_CRT_SECURE_NO_WARNINGS=1', ]
+      else
+        if (  (___jln_flags.get('msvc_crt_secure_no_warnings', 'default') == 'off') )
+          jln_cpp_flags += ['/U_CRT_SECURE_NO_WARNINGS', ]
+        endif
+      endif
+    endif
     if (  not ( (___jln_flags.get('msvc_isystem', 'default') == 'default')) )
       if (  (___jln_flags.get('msvc_isystem', 'default') == 'external_as_include_system_flag') )
         # unimplementable
@@ -1215,6 +1258,11 @@ foreach ___jln_flags : ___jln_custom_flags
           endif
         endif
       endif
+    endif
+  endif
+  if (  (host_machine.system() == 'windows' and ___jln_compiler_id == 'gcc') )
+    if (  not ( (___jln_flags.get('windows_bigobj', 'default') == 'default')) )
+      jln_cpp_flags += ['-Wa,-mbig-obj', ]
     endif
   endif
 
