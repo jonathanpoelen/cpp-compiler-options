@@ -42,10 +42,12 @@ local _flag_names = {
   ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
   ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
   ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
-  ["jln-microsoft-abi-compatibility-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["microsoft_abi_compatibility_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
-  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
+  ["jln-msvc-conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
+  ["msvc_conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
+  ["jln-msvc-crt-secure-no-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["msvc_crt_secure_no_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
+  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-noexcept-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -84,6 +86,10 @@ local _flag_names = {
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
   ["whole_program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
+  ["jln-windows-abi-compatibility-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["windows_abi_compatibility_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-windows-bigobj"] = {["default"]="", ["on"]="on", [""]=""},
+  ["windows_bigobj"] = {["default"]="", ["on"]="on", [""]=""},
 }
 
 
@@ -135,7 +141,8 @@ function tovalues(values, disable_others)
       ["integer_sanitizers"] = values["integer_sanitizers"] or values["jln-integer-sanitizers"] or (disable_others and "" or _flag_names["integer_sanitizers"][get_config("jln-integer-sanitizers")]),
       ["linker"] = values["linker"] or values["jln-linker"] or (disable_others and "" or _flag_names["linker"][get_config("jln-linker")]),
       ["lto"] = values["lto"] or values["jln-lto"] or (disable_others and "" or _flag_names["lto"][get_config("jln-lto")]),
-      ["microsoft_abi_compatibility_warnings"] = values["microsoft_abi_compatibility_warnings"] or values["jln-microsoft-abi-compatibility-warnings"] or (disable_others and "" or _flag_names["microsoft_abi_compatibility_warnings"][get_config("jln-microsoft-abi-compatibility-warnings")]),
+      ["msvc_conformance"] = values["msvc_conformance"] or values["jln-msvc-conformance"] or (disable_others and "" or _flag_names["msvc_conformance"][get_config("jln-msvc-conformance")]),
+      ["msvc_crt_secure_no_warnings"] = values["msvc_crt_secure_no_warnings"] or values["jln-msvc-crt-secure-no-warnings"] or (disable_others and "" or _flag_names["msvc_crt_secure_no_warnings"][get_config("jln-msvc-crt-secure-no-warnings")]),
       ["msvc_isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_others and "" or _flag_names["msvc_isystem"][get_config("jln-msvc-isystem")]),
       ["msvc_isystem_with_template_from_non_external"] = values["msvc_isystem_with_template_from_non_external"] or values["jln-msvc-isystem-with-template-from-non-external"] or (disable_others and "" or _flag_names["msvc_isystem_with_template_from_non_external"][get_config("jln-msvc-isystem-with-template-from-non-external")]),
       ["noexcept_warnings"] = values["noexcept_warnings"] or values["jln-noexcept-warnings"] or (disable_others and "" or _flag_names["noexcept_warnings"][get_config("jln-noexcept-warnings")]),
@@ -156,6 +163,8 @@ function tovalues(values, disable_others)
       ["warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "" or _flag_names["warnings"][get_config("jln-warnings")]),
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "" or _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "" or _flag_names["whole_program"][get_config("jln-whole-program")]),
+      ["windows_abi_compatibility_warnings"] = values["windows_abi_compatibility_warnings"] or values["jln-windows-abi-compatibility-warnings"] or (disable_others and "" or _flag_names["windows_abi_compatibility_warnings"][get_config("jln-windows-abi-compatibility-warnings")]),
+      ["windows_bigobj"] = values["windows_bigobj"] or values["jln-windows-bigobj"] or (disable_others and "" or _flag_names["windows_bigobj"][get_config("jln-windows-bigobj")]),
       ["cxx"] = values["cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
       ["cxx_version"] = values["cxx_version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
       ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
@@ -178,7 +187,8 @@ function tovalues(values, disable_others)
       ["integer_sanitizers"] = _flag_names["integer_sanitizers"][get_config("jln-integer-sanitizers")],
       ["linker"] = _flag_names["linker"][get_config("jln-linker")],
       ["lto"] = _flag_names["lto"][get_config("jln-lto")],
-      ["microsoft_abi_compatibility_warnings"] = _flag_names["microsoft_abi_compatibility_warnings"][get_config("jln-microsoft-abi-compatibility-warnings")],
+      ["msvc_conformance"] = _flag_names["msvc_conformance"][get_config("jln-msvc-conformance")],
+      ["msvc_crt_secure_no_warnings"] = _flag_names["msvc_crt_secure_no_warnings"][get_config("jln-msvc-crt-secure-no-warnings")],
       ["msvc_isystem"] = _flag_names["msvc_isystem"][get_config("jln-msvc-isystem")],
       ["msvc_isystem_with_template_from_non_external"] = _flag_names["msvc_isystem_with_template_from_non_external"][get_config("jln-msvc-isystem-with-template-from-non-external")],
       ["noexcept_warnings"] = _flag_names["noexcept_warnings"][get_config("jln-noexcept-warnings")],
@@ -199,6 +209,8 @@ function tovalues(values, disable_others)
       ["warnings"] = _flag_names["warnings"][get_config("jln-warnings")],
       ["warnings_as_error"] = _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")],
       ["whole_program"] = _flag_names["whole_program"][get_config("jln-whole-program")],
+      ["windows_abi_compatibility_warnings"] = _flag_names["windows_abi_compatibility_warnings"][get_config("jln-windows-abi-compatibility-warnings")],
+      ["windows_bigobj"] = _flag_names["windows_bigobj"][get_config("jln-windows-bigobj")],
       ["cxx"] = _get_extra("jln-cxx"),
       ["cxx_version"] = _get_extra("jln-cxx-version"),
       ["ld"] = _get_extra("jln-ld"),
@@ -436,6 +448,8 @@ function getoptions(values, disable_others, print_compiler)
             if not ( values["covered_switch_default_warnings"] == "") then
               if values["covered_switch_default_warnings"] == "off" then
                 jln_cxflags[#jln_cxflags+1] = "-Wno-covered-switch-default"
+              else
+                jln_cxflags[#jln_cxflags+1] = "-Wcovered-switch-default"
               end
             end
             if not ( compversion < 309 ) then
@@ -482,13 +496,11 @@ function getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["microsoft_abi_compatibility_warnings"] == "") then
-      if values["microsoft_abi_compatibility_warnings"] == "on" then
-        if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
+    if not ( values["windows_abi_compatibility_warnings"] == "") then
+      if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
+        if values["windows_abi_compatibility_warnings"] == "on" then
           jln_cxflags[#jln_cxflags+1] = "-Wmismatched-tags"
-        end
-      else
-        if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
+        else
           jln_cxflags[#jln_cxflags+1] = "-Wno-mismatched-tags"
         end
       end
@@ -965,7 +977,12 @@ function getoptions(values, disable_others, print_compiler)
           jln_ldflags[#jln_ldflags+1] = "-Wl,-z,relro"
         else
           if values["relro"] == "full" then
-            jln_ldflags[#jln_ldflags+1] = "-Wl,-z,relro,-z,now"
+            jln_ldflags[#jln_ldflags+1] = "-Wl,-z,relro,-z,now,-z,noexecstack"
+            if not ( values["linker"] == "") then
+              if not ( ( values["linker"] == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900 ) ) ) or ( values["linker"] == "native" and compiler == "gcc" ) ) ) then
+                jln_ldflags[#jln_ldflags+1] = "-Wl,-z,separate-code"
+              end
+            end
           end
         end
       end
@@ -1318,6 +1335,36 @@ function getoptions(values, disable_others, print_compiler)
     end
   end
   if compiler == "msvc" then
+    if not ( values["windows_bigobj"] == "") then
+      jln_cxflags[#jln_cxflags+1] = "/bigobj"
+    end
+    if not ( values["msvc_conformance"] == "") then
+      if ( values["msvc_conformance"] == "all" or values["msvc_conformance"] == "all_without_throwing_new" ) then
+        jln_cxflags[#jln_cxflags+1] = "/Zc:inline"
+        jln_cxflags[#jln_cxflags+1] = "/Zc:referenceBinding"
+        if values["msvc_conformance"] == "all" then
+          jln_cxflags[#jln_cxflags+1] = "/Zc:throwingNew"
+        end
+        if not ( compversion < 1506 ) then
+          jln_cxflags[#jln_cxflags+1] = "/Zc:externConstexpr"
+          if not ( compversion < 1608 ) then
+            jln_cxflags[#jln_cxflags+1] = "/Zc:lambda"
+            if not ( compversion < 1605 ) then
+              jln_cxflags[#jln_cxflags+1] = "/Zc:preprocessor"
+            end
+          end
+        end
+      end
+    end
+    if not ( values["msvc_crt_secure_no_warnings"] == "") then
+      if values["msvc_crt_secure_no_warnings"] == "on" then
+        jln_cxflags[#jln_cxflags+1] = "/D_CRT_SECURE_NO_WARNINGS=1"
+      else
+        if values["msvc_crt_secure_no_warnings"] == "off" then
+          jln_cxflags[#jln_cxflags+1] = "/U_CRT_SECURE_NO_WARNINGS"
+        end
+      end
+    end
     if not ( values["msvc_isystem"] == "") then
       if values["msvc_isystem"] == "external_as_include_system_flag" then
         -- unimplementable
@@ -1504,6 +1551,11 @@ function getoptions(values, disable_others, print_compiler)
           end
         end
       end
+    end
+  end
+  if is_plat("mingw") then
+    if not ( values["windows_bigobj"] == "") then
+      jln_cxflags[#jln_cxflags+1] = "-Wa,-mbig-obj"
     end
   end
   return {cxxflags=jln_cxflags, ldflags=jln_ldflags}
