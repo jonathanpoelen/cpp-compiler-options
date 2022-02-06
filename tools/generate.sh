@@ -23,13 +23,13 @@ OUTPUT_DIR="$TMPDIR/$OUTPUT_DIR_NAME"
 OUTPUT_PROJECT="$OUTPUT_DIR_NAME"
 
 # configure temporary paths
-if [ -z "$LUA_BIN" ]; then
-  LUA_BIN=$(which luajit 2>/dev/null||:)
-  if [ -z "$LUA_BIN" ]; then
-    LUA_BIN=lua
+if [ -z "$LUA" ]; then
+  LUA=$(which luajit 2>/dev/null||:)
+  if [ -z "$LUA" ]; then
+    LUA=lua
   else
     for f in compiler-options.lua generators/* ; do
-      $LUA_BIN -b "$f" "$TMPDIR/$f"
+      $LUA -b "$f" "$TMPDIR/$f"
     done
     cd "$TMPDIR"
     OUTPUT_DIR="$OUTPUT_DIR_NAME"
@@ -39,7 +39,7 @@ fi
 
 sgen ()
 {
-  $LUA_BIN ./compiler-options.lua generators/$1.lua
+  $LUA ./compiler-options.lua generators/$1.lua
 }
 
 gen ()
@@ -48,7 +48,7 @@ gen ()
   local out="-o$OUTPUT_DIR/$2"
   local f=generators/$3.lua
   shift 3
-  $LUA_BIN ./compiler-options.lua $extra_arg "$out" $f "$@"
+  $LUA ./compiler-options.lua $extra_arg "$out" $f "$@"
 }
 
 OPT_COMP_GEN=('' -c)
@@ -63,7 +63,7 @@ gencompopt ()
   shift 2
   for ((i=0; $i<$lang; ++i)) ; do
     local out="$OUTPUT_DIR/${DIR_COMP_GEN[$i]}/$compname/$compiler-$cat"
-    $LUA_BIN ./compiler-options.lua ${OPT_COMP_GEN[$i]} generators/compiler.lua "$@" | sort -u > "$out"
+    $LUA ./compiler-options.lua ${OPT_COMP_GEN[$i]} generators/compiler.lua "$@" | sort -u > "$out"
   done
 }
 
@@ -80,8 +80,8 @@ done
 sgen compiler | while read comp ; do
   compname=${comp%-[0-9]*}
   gencompopt 2 release                       $comp cpu=native lto optimization=2 linker=native
-  gencompopt 2 warnings                      $comp shadow_warnings=off microsoft_abi_compatibility_warnings=off pedantic warnings
-  gencompopt 2 warnings_with_conversions     $comp shadow_warnings=off microsoft_abi_compatibility_warnings=off pedantic warnings conversion_warnings
+  gencompopt 2 warnings                      $comp shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings
+  gencompopt 2 warnings_with_conversions     $comp shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings conversion_warnings
   gencompopt 1 stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
   gencompopt 1 stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
   gencompopt 1 sanitizers-pointer            $comp other_sanitizers=pointer
@@ -93,7 +93,7 @@ done
 
 echo -e "\n"Duplicated and removed:
 for d in ${DIR_COMP_GEN[@]} ; do
-  $LUA_BIN "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/$d/" "$OUTPUT_DIR"/$d/*/*
+  $LUA "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/$d/" "$OUTPUT_DIR"/$d/*/*
 done
 
 echo -e "\n"Empty and removed:

@@ -61,7 +61,7 @@ Supported options are (alphabetically in a category):
 conversion_warnings = on default off sign conversion
 covered_switch_default_warnings = on default off
 fix_compiler_error = on default off
-microsoft_abi_compatibility_warnings = off default on
+msvc_crt_secure_no_warnings = on default off
 noexcept_warnings = default off on
 reproducible_build_warnings = default off on
 shadow_warnings = off default on local compatible_local all
@@ -69,15 +69,16 @@ suggestions = default off on
 switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 warnings = on default off strict very_strict
 warnings_as_error = default off on basic
+windows_abi_compatibility_warnings = off default on
 
 # Pedantic:
 
+msvc_conformance = all default all_without_throwing_new
 pedantic = on default off as_error
 stl_fix = on default off
 
 # Debug:
 
-control_flow = default off on branch return allow_bugs
 debug = default off on line_tables_only gdb lldb sce
 float_sanitizers = default off on
 integer_sanitizers = default off on
@@ -100,8 +101,13 @@ rtti = default off on
 
 # Hardening:
 
+control_flow = default off on branch return allow_bugs
 relro = default off on full
 stack_protector = default off on strong all
+
+# Other:
+
+windows_bigobj = on default
 
 # Other:
 
@@ -118,7 +124,7 @@ pie = default off on static fpic fPIC fpie fPIE
 
 The value `default` does nothing.
 
-If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix`, `switch_warnings` and `warnings` are `on` ; `microsoft_abi_compatibility_warnings` and `shadow_warnings` are `off`.
+If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` are `all` ; `shadow_warnings` and `windows_abi_compatibility_warnings` are `off`.
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -454,9 +460,7 @@ Edit `compiler-options.lua` file.
 
 The variable `G` contains the options tree.
 
-`_incidental` of `Vbase` contains the options that do not impact the executable.
-
-`_opts` of `Vbase` contains the options, their values and the default value (`'default'` if unspecified). `opt_name = {{values...} [,default_value]},`.
+`_koptions` of `Vbase` contains the list of available options.
 
 ## Update the options tree
 
@@ -470,9 +474,9 @@ link'libname' -- alias of link'-llibname'
 fl'xxx' -- is a alias of {flag'xxx',link'xxx'}
 ```
 
-The following functions return the metatable `if_mt`.
+The following functions return the metatable `if_mt`:
 
-- `gcc`, `clang`, `clang_cl`, `clang_like`, `msvc` and `vers`
+- `gcc`, `clang`, `clang_cl`, `clang_like`, `msvc`, `mingw` and `vers`
 
 ```lua
 gcc { ... } -- for gcc only.

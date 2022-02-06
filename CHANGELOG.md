@@ -1,10 +1,11 @@
 # ChangeLog
 
-## 2022-02-04
+## 2022-02-06
 
-- add `msvc_bigobj` (`on`)
-- add `msvc_conformance` (`all`, `all_without_throwing_new`)
-- add `msvc_crt_secure_no_warnings` (`on`, `off`)
+- rename `microsoft_abi_compatibility_warnings` to `windows_abi_compatibility_warnings`
+- add `windows_bigobj` (`on`), default is `on`
+- add `msvc_conformance` (`all`, `all_without_throwing_new`), default is `all`
+- add `msvc_crt_secure_no_warnings` (`on`, `off`), default is `on`
 
 ## 2021-10-29
 
