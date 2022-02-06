@@ -1646,9 +1646,7 @@ Vbase = {
       'relro',
       'stack_protector',
     }},
-    {'Other', {
-      'windows_bigobj',
-    }}
+    -- other categories are automatically put in Other
   },
 
   _opts_build_type={
