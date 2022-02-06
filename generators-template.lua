@@ -80,6 +80,7 @@ return {
   _vcond_lvl=function(_, lvl, optname) return lvl .. 'in option[' .. optname .. ']' end,
   _vcond_verless=function(_, major, minor) return 'version < ' .. major .. '.' minor end,
   _vcond_compiler=function(_, compiler) return 'compiler == ' .. compiler end,
+  _vcond_platform=function(_, platform) return 'platform == ' .. platform end,
   _vcond_linker=function(_, linker) return 'linker == ' .. linker end,
   _vcond_toflags=function(_, cxxflags, ldflags) return cxxflags .. ' ' .. ldflags end,
   -- optional:

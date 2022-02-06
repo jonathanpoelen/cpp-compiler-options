@@ -177,11 +177,20 @@ return {
     end
 
     -- list options
-    local major, minor
+    local major, minor, platform
     do
       local t, version = {}
       compiler, version = compiler:match('([^%d]+)(.*)')
-      compiler = compiler:gsub('^g%+%+','gcc'):gsub('^clang%+%+', 'clang'):gsub('-$','')
+      compiler = compiler:gsub('g%+%+','gcc'):gsub('clang%+%+', 'clang')
+      if compiler:find('^mingw') then
+        platform = 'mingw'
+        if compiler:find('^mingw%-gcc') or compiler:find('^mingw%-clang') then
+          compiler = compiler:sub(7)
+        else
+          compiler = 'gcc' .. compiler:sub(7)
+        end
+      end
+      compiler = compiler:gsub('-$','')
       version:gsub('[%w_]+', function(x) t[#t+1]=x end)
       major = t[1] and tonumber(t[1]) or 999
       minor = t[2] and tonumber(t[2]) or 999
@@ -261,6 +270,7 @@ return {
         elseif v.version then return major > v.version[1]
                                   or (major == v.version[1] and minor >= v.version[2])
         elseif v.compiler then return compiler == v.compiler
+        elseif v.platform then return platform == v.platform
         elseif v.linker or v.linker_version then return false
         end
 

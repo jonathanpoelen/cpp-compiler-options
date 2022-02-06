@@ -337,6 +337,7 @@ function getoptions(values, disable_others, print_compiler)
   _vcond_lvl=function(_, lvl, optname) return 'values["' .. optname .. '"] == "' .. todefault(lvl) .. '"' end,
   _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
   _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
+  _vcond_platform=function(_, platform) return 'is_plat("' .. platform .. '")' end,
   _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 
   cxx=function(_, x) return _.indent .. 'jln_cxflags[#jln_cxflags+1] = "' .. x .. '"\n' end,

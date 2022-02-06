@@ -136,6 +136,10 @@ function Compiler(name)
   end
 end
 
+function Platform(name)
+  return If({platform=name})
+end
+
 function Linker(name)
   return function(x)
     local r = If({linker=name})
@@ -173,6 +177,8 @@ local clang = Compiler('clang')
 local clang_cl = Compiler('clang-cl')
 local msvc = Compiler('msvc')
 local clang_like = ToolGroup(clang, clang_cl)
+
+local mingw = Platform('mingw')
 
 -- local msvc_linker = Linker('msvc')
 local lld_link = Linker('lld-link')
@@ -1268,6 +1274,12 @@ msvc {
   },
 },
 
+mingw {
+  opt'msvc_bigobj' {
+    cxx'-Wa,-mbig-obj',
+  },
+},
+
 }
 end -- MakeAST
 
@@ -1714,6 +1726,7 @@ Vbase = {
                                      ' '.._._vcond_verless(_, v.version[1], v.version[2])..
                                      ' '.._._vcondkeyword.close)
       elseif v.compiler then _:write(' '.._:_vcond_compiler(v.compiler))
+      elseif v.platform then _:write(' '.._:_vcond_platform(v.platform))
       elseif v.linker   then _:write(' '.._:_vcond_linker(v.linker))
       else error('Unknown cond ', ipairs(v))
       end

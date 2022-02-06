@@ -91,7 +91,7 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=No
   compiler = compiler or _]] .. prefixfunc .. [[_default_env[']] .. prefixenv .. [[']
 
   _compiler = None
-  for comp in ('clang', 'g++', 'gcc', 'msvc'):
+  for comp in ('clang', 'g++', 'gcc', 'msvc', 'mingw'):
     if compiler.find(comp) != -1:
       _compiler = comp
       break
@@ -100,6 +100,10 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=No
     return {}
 
   compiler = _]] .. prefixfunc .. [[_map_compiler.get(_compiler, _compiler)
+  platform = None
+  if compiler == 'mingw':
+    compiler = 'gcc'
+    platform = 'mingw'
   version = version or _]] .. prefixfunc .. [[_default_env[']] .. prefixenv .. [[VERSION']
   version = version.split(".")
   version[0] = int(version[0])
@@ -120,6 +124,7 @@ def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=No
   _vcond_lvl=function(_, lvl, optname) return  "x_" .. optname .. " == '" .. lvl .. "'" end,
   _vcond_verless=function(_, major, minor) return "verless(" .. major .. ', ' .. minor .. ")" end,
   _vcond_compiler=function(_, compiler) return "compiler == '" .. compiler .. "'" end,
+  _vcond_platform=function(_, platform) return "platform == '" .. platform .. "'" end,
   _vcond_linker=function(_, linker) return "linker == '" .. linker .. "'" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,

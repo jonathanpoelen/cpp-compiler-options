@@ -230,12 +230,15 @@ endif()
       -- linker
       ld64='JLN_LD64_'.. compiler_type .. '_LINKER',
       ['lld-link']='JLN_LLD_LINK_'.. compiler_type .. '_LINKER',
+      -- platform
+      mingw='MINGW',
     }
     local vcond_tool = function(_, toolname)
       return tool_ids[toolname] or error('Unknown ' .. toolname .. ' tool')
     end
 
     _._vcond_compiler = vcond_tool
+    _._vcond_platform = vcond_tool
     _._vcond_linker = vcond_tool
 
     _:print('# '.. prefixfunc .. '_target_interface(')

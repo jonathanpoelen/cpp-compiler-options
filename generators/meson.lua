@@ -51,6 +51,11 @@ ___]] .. prefixfunc .. [[_flags = {
 
     local lang = _.lang
 
+    _.platforms = {
+      mingw="(host_machine.system() == 'windows' and ___"
+            .. _.prefixfunc .. "_compiler_id == 'gcc')",
+    }
+
     _:print([[}
 
 ]] .. prefixfunc .. [[_custom_]] .. lang .. [[_flags = []
@@ -73,6 +78,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
   _vcond_lvl=function(_, lvl, optname) return  "(___" .. _.prefixfunc .. "_flags.get('" .. optname .. "', 'default') == '" .. lvl .. "')" end,
   _vcond_verless=function(_, major, minor) return "___" .. _.prefixfunc .. "_compiler_version.version_compare('<" .. major .. '.' .. minor .. "')" end,
   _vcond_compiler=function(_, compiler) return "(___" .. _.prefixfunc .. "_compiler_id == '" .. compiler .. "')" end,
+  _vcond_platform=function(_, platform) return _.platforms[platform] end,
   _vcond_linker=function(_, linker) return "(___" .. _.prefixfunc .. "_linker_id == '" .. linker .. "')" end,
 
   cxx=function(_, x) return "'" .. x .. "', " end,

@@ -7,6 +7,10 @@ local jamlvl=function(lvl)
   return lvl:gsub('_', '-')
 end
 
+local jamplatforms = {
+  mingw='MINGW',
+}
+
 return {
   ignore={
   -- warnings_as_error=true,
@@ -35,6 +39,7 @@ return {
     return '$(version) < "' .. normnum(major) .. '.' .. normnum(minor) .. '"'
   end,
   _vcond_compiler=function(_, compiler) return '$(toolset) = "' .. compiler .. '"' end,
+  _vcond_platform=function(_, platform) return '[ os.name ] = ' .. jamplatforms[platform] end,
   _vcond_linker=function(_, linker) return '$(linker) = "' .. linker .. '"' end,
 
   cxx=function(_, x) return _.indent .. '  <' .. _.prefixflag .. 'flags>"' .. x .. '"\n' end,
@@ -58,7 +63,7 @@ return {
 
     _:print([[# File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
-# jam reference: https://boostorg.github.io/build/manual/develop/index.html
+# jam reference: https://www.boost.org/build/doc/html/index.html
 
 import feature : feature ;
 import modules ;

@@ -265,6 +265,7 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
   _vcond_lvl=function(_, lvl, optname) return 'values["' .. optname .. '"] == "' .. lvl .. '"' end,
   _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
   _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
+  _vcond_platform=function(_, platform) return 'os.target() == "' .. platform .. '"' end,
   _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 
   cxx=function(_, x) return _.indent .. 'jln_buildoptions[#jln_buildoptions+1] = "' .. x .. '"\n' end,
