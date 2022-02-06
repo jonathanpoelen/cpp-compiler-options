@@ -396,7 +396,7 @@ Or(gcc, clang_like) {
     },
   },
 
-  opt'microsoft_abi_compatibility_warnings' {
+  opt'windows_abi_compatibility_warnings' {
     Or(gcc(10), clang_like) {
       lvl'on' { cxx'-Wmismatched-tags' } /
       { cxx'-Wno-mismatched-tags' }
@@ -1042,7 +1042,7 @@ Or(msvc, clang_cl) {
 -- https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-c4000-c5999?view=vs-2019
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=vs-2019
 msvc {
-  opt'msvc_bigobj' {
+  opt'windows_bigobj' {
     flag'/bigobj',
   },
 
@@ -1275,7 +1275,7 @@ msvc {
 },
 
 mingw {
-  opt'msvc_bigobj' {
+  opt'windows_bigobj' {
     cxx'-Wa,-mbig-obj',
   },
 },
@@ -1446,20 +1446,6 @@ Vbase = {
       description='enable Link Time Optimization',
     },
 
-    microsoft_abi_compatibility_warnings={
-      values={'off', 'on'},
-      default='off',
-      description='In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys',
-      incidental=true,
-      unavailable='c',
-    },
-
-    msvc_bigobj={
-      values={'on'},
-      default='on',
-      description='increases that addressable sections capacity',
-    },
-
     msvc_isystem={
       values={'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},
       description='warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)',
@@ -1598,6 +1584,20 @@ Vbase = {
       values={'off', 'on', 'strip_all'},
       description='Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.',
     },
+
+    windows_abi_compatibility_warnings={
+      values={'off', 'on'},
+      default='off',
+      description='In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys',
+      incidental=true,
+      unavailable='c',
+    },
+
+    windows_bigobj={
+      values={'on'},
+      default='on',
+      description='increases that addressable sections capacity',
+    },
   },
 
   _opts_by_category={
@@ -1605,7 +1605,7 @@ Vbase = {
       'conversion_warnings',
       'covered_switch_default_warnings',
       'fix_compiler_error',
-      'microsoft_abi_compatibility_warnings',
+      'windows_abi_compatibility_warnings',
       'msvc_crt_secure_no_warnings',
       'noexcept_warnings',
       'reproducible_build_warnings',
@@ -1647,7 +1647,7 @@ Vbase = {
       'stack_protector',
     }},
     {'Other', {
-      'msvc_bigobj',
+      'windows_bigobj',
     }}
   },
 
