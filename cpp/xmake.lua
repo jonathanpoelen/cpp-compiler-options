@@ -44,10 +44,12 @@ local _flag_names = {
   ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
   ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
   ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["fat"]="fat", ["thin"]="thin", [""]=""},
-  ["jln-microsoft-abi-compatibility-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["microsoft_abi_compatibility_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
-  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["external_as_include_system_flag"]="external_as_include_system_flag", [""]=""},
+  ["jln-msvc-conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
+  ["msvc_conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
+  ["jln-msvc-crt-secure-no-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["msvc_crt_secure_no_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
+  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-noexcept-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -86,6 +88,10 @@ local _flag_names = {
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
   ["whole_program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
+  ["jln-windows-abi-compatibility-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["windows_abi_compatibility_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-windows-bigobj"] = {["default"]="", ["on"]="on", [""]=""},
+  ["windows_bigobj"] = {["default"]="", ["on"]="on", [""]=""},
 }
 
 
@@ -122,7 +128,7 @@ local _flag_names = {
   option("jln-color", {
            showmenu=true,
            category=category,
-           description="color",
+           description="",
            values={"default", "auto", "never", "always"},
            default=defaults["color"] or defaults["jln-color"] or "default",
            after_check=function(option) check_option("jln-color", "color") end,
@@ -130,7 +136,7 @@ local _flag_names = {
   option("jln-control-flow", {
            showmenu=true,
            category=category,
-           description="control_flow",
+           description="insert extra runtime security checks to detect attempts to compromise your code",
            values={"default", "off", "on", "branch", "return", "allow_bugs"},
            default=defaults["control_flow"] or defaults["jln-control-flow"] or "default",
            after_check=function(option) check_option("jln-control-flow", "control_flow") end,
@@ -138,7 +144,7 @@ local _flag_names = {
   option("jln-conversion-warnings", {
            showmenu=true,
            category=category,
-           description="conversion_warnings",
+           description="warn for implicit conversions that may alter a value",
            values={"default", "off", "on", "sign", "conversion"},
            default=defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on",
            after_check=function(option) check_option("jln-conversion-warnings", "conversion_warnings") end,
@@ -146,7 +152,7 @@ local _flag_names = {
   option("jln-coverage", {
            showmenu=true,
            category=category,
-           description="coverage",
+           description="",
            values={"default", "off", "on"},
            default=defaults["coverage"] or defaults["jln-coverage"] or "default",
            after_check=function(option) check_option("jln-coverage", "coverage") end,
@@ -154,7 +160,7 @@ local _flag_names = {
   option("jln-covered-switch-default-warnings", {
            showmenu=true,
            category=category,
-           description="covered_switch_default_warnings",
+           description="warning for default label in switch which covers all enumeration values",
            values={"default", "on", "off"},
            default=defaults["covered_switch_default_warnings"] or defaults["jln-covered-switch-default-warnings"] or "on",
            after_check=function(option) check_option("jln-covered-switch-default-warnings", "covered_switch_default_warnings") end,
@@ -162,7 +168,7 @@ local _flag_names = {
   option("jln-cpu", {
            showmenu=true,
            category=category,
-           description="cpu",
+           description="",
            values={"default", "generic", "native"},
            default=defaults["cpu"] or defaults["jln-cpu"] or "default",
            after_check=function(option) check_option("jln-cpu", "cpu") end,
@@ -170,7 +176,7 @@ local _flag_names = {
   option("jln-debug", {
            showmenu=true,
            category=category,
-           description="debug",
+           description="produce debugging information in the operating system\'s",
            values={"default", "off", "on", "line_tables_only", "gdb", "lldb", "sce"},
            default=defaults["debug"] or defaults["jln-debug"] or "default",
            after_check=function(option) check_option("jln-debug", "debug") end,
@@ -178,7 +184,7 @@ local _flag_names = {
   option("jln-diagnostics-format", {
            showmenu=true,
            category=category,
-           description="diagnostics_format",
+           description="emit fix-it hints in a machine-parseable format",
            values={"default", "fixits", "patch", "print_source_range_info"},
            default=defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "default",
            after_check=function(option) check_option("jln-diagnostics-format", "diagnostics_format") end,
@@ -186,7 +192,7 @@ local _flag_names = {
   option("jln-diagnostics-show-template-tree", {
            showmenu=true,
            category=category,
-           description="diagnostics_show_template_tree",
+           description="enables printing a tree-like structure showing the common and differing parts of the types",
            values={"default", "off", "on"},
            default=defaults["diagnostics_show_template_tree"] or defaults["jln-diagnostics-show-template-tree"] or "default",
            after_check=function(option) check_option("jln-diagnostics-show-template-tree", "diagnostics_show_template_tree") end,
@@ -194,7 +200,7 @@ local _flag_names = {
   option("jln-elide-type", {
            showmenu=true,
            category=category,
-           description="elide_type",
+           description="prints diagnostics showing common parts of template types as \"[...]\"",
            values={"default", "off", "on"},
            default=defaults["elide_type"] or defaults["jln-elide-type"] or "default",
            after_check=function(option) check_option("jln-elide-type", "elide_type") end,
@@ -202,7 +208,7 @@ local _flag_names = {
   option("jln-exceptions", {
            showmenu=true,
            category=category,
-           description="exceptions",
+           description="enable C++ exception",
            values={"default", "off", "on"},
            default=defaults["exceptions"] or defaults["jln-exceptions"] or "default",
            after_check=function(option) check_option("jln-exceptions", "exceptions") end,
@@ -210,7 +216,7 @@ local _flag_names = {
   option("jln-fix-compiler-error", {
            showmenu=true,
            category=category,
-           description="fix_compiler_error",
+           description="transforms some warnings into errors to comply with the standard",
            values={"default", "off", "on"},
            default=defaults["fix_compiler_error"] or defaults["jln-fix-compiler-error"] or "on",
            after_check=function(option) check_option("jln-fix-compiler-error", "fix_compiler_error") end,
@@ -218,7 +224,7 @@ local _flag_names = {
   option("jln-float-sanitizers", {
            showmenu=true,
            category=category,
-           description="float_sanitizers",
+           description="",
            values={"default", "off", "on"},
            default=defaults["float_sanitizers"] or defaults["jln-float-sanitizers"] or "default",
            after_check=function(option) check_option("jln-float-sanitizers", "float_sanitizers") end,
@@ -226,7 +232,7 @@ local _flag_names = {
   option("jln-integer-sanitizers", {
            showmenu=true,
            category=category,
-           description="integer_sanitizers",
+           description="",
            values={"default", "off", "on"},
            default=defaults["integer_sanitizers"] or defaults["jln-integer-sanitizers"] or "default",
            after_check=function(option) check_option("jln-integer-sanitizers", "integer_sanitizers") end,
@@ -234,7 +240,7 @@ local _flag_names = {
   option("jln-linker", {
            showmenu=true,
            category=category,
-           description="linker",
+           description="configure linker",
            values={"default", "bfd", "gold", "lld", "native"},
            default=defaults["linker"] or defaults["jln-linker"] or "default",
            after_check=function(option) check_option("jln-linker", "linker") end,
@@ -242,31 +248,39 @@ local _flag_names = {
   option("jln-lto", {
            showmenu=true,
            category=category,
-           description="lto",
+           description="enable Link Time Optimization",
            values={"default", "off", "on", "fat", "thin"},
            default=defaults["lto"] or defaults["jln-lto"] or "default",
            after_check=function(option) check_option("jln-lto", "lto") end,
          })
-  option("jln-microsoft-abi-compatibility-warnings", {
+  option("jln-msvc-conformance", {
            showmenu=true,
            category=category,
-           description="microsoft_abi_compatibility_warnings",
+           description="standard conformance options",
+           values={"default", "all", "all_without_throwing_new"},
+           default=defaults["msvc_conformance"] or defaults["jln-msvc-conformance"] or "all",
+           after_check=function(option) check_option("jln-msvc-conformance", "msvc_conformance") end,
+         })
+  option("jln-msvc-crt-secure-no-warnings", {
+           showmenu=true,
+           category=category,
+           description="disable CRT warnings",
            values={"default", "off", "on"},
-           default=defaults["microsoft_abi_compatibility_warnings"] or defaults["jln-microsoft-abi-compatibility-warnings"] or "off",
-           after_check=function(option) check_option("jln-microsoft-abi-compatibility-warnings", "microsoft_abi_compatibility_warnings") end,
+           default=defaults["msvc_crt_secure_no_warnings"] or defaults["jln-msvc-crt-secure-no-warnings"] or "on",
+           after_check=function(option) check_option("jln-msvc-crt-secure-no-warnings", "msvc_crt_secure_no_warnings") end,
          })
   option("jln-msvc-isystem", {
            showmenu=true,
            category=category,
-           description="msvc_isystem",
-           values={"default", "anglebrackets", "include_and_caexcludepath", "external_as_include_system_flag"},
+           description="warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)",
+           values={"default", "anglebrackets", "include_and_caexcludepath"},
            default=defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem", "msvc_isystem") end,
          })
   option("jln-msvc-isystem-with-template-from-non-external", {
            showmenu=true,
            category=category,
-           description="msvc_isystem_with_template_from_non_external",
+           description="warnings concerning template in an external header (requires msvc_isystem)",
            values={"default", "off", "on"},
            default=defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem-with-template-from-non-external", "msvc_isystem_with_template_from_non_external") end,
@@ -274,7 +288,7 @@ local _flag_names = {
   option("jln-noexcept-warnings", {
            showmenu=true,
            category=category,
-           description="noexcept_warnings",
+           description="Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception.",
            values={"default", "off", "on"},
            default=defaults["noexcept_warnings"] or defaults["jln-noexcept-warnings"] or "default",
            after_check=function(option) check_option("jln-noexcept-warnings", "noexcept_warnings") end,
@@ -282,7 +296,7 @@ local _flag_names = {
   option("jln-optimization", {
            showmenu=true,
            category=category,
-           description="optimization",
+           description="optimization level\\n - 0: not optimize\\n - g: enable debugging experience\\n - 1: optimize\\n - 2: optimize even more\\n - 3: optimize yet more\\n - fast: enables all optimization=3 and disregard strict standards compliance\\n - size: optimize for size\\n - z: optimize for size aggressively (/!\\ possible slow compilation)",
            values={"default", "0", "g", "1", "2", "3", "fast", "size", "z"},
            default=defaults["optimization"] or defaults["jln-optimization"] or "default",
            after_check=function(option) check_option("jln-optimization", "optimization") end,
@@ -290,7 +304,7 @@ local _flag_names = {
   option("jln-other-sanitizers", {
            showmenu=true,
            category=category,
-           description="other_sanitizers",
+           description="enable other sanitizers",
            values={"default", "off", "thread", "pointer", "memory"},
            default=defaults["other_sanitizers"] or defaults["jln-other-sanitizers"] or "default",
            after_check=function(option) check_option("jln-other-sanitizers", "other_sanitizers") end,
@@ -298,7 +312,7 @@ local _flag_names = {
   option("jln-pedantic", {
            showmenu=true,
            category=category,
-           description="pedantic",
+           description="issue all the warnings demanded by strict ISO C and ISO C++",
            values={"default", "off", "on", "as_error"},
            default=defaults["pedantic"] or defaults["jln-pedantic"] or "on",
            after_check=function(option) check_option("jln-pedantic", "pedantic") end,
@@ -306,7 +320,7 @@ local _flag_names = {
   option("jln-pie", {
            showmenu=true,
            category=category,
-           description="pie",
+           description="controls position-independent code generation",
            values={"default", "off", "on", "static", "fpic", "fPIC", "fpie", "fPIE"},
            default=defaults["pie"] or defaults["jln-pie"] or "default",
            after_check=function(option) check_option("jln-pie", "pie") end,
@@ -314,7 +328,7 @@ local _flag_names = {
   option("jln-relro", {
            showmenu=true,
            category=category,
-           description="relro",
+           description="specifies a memory segment that should be made read-only after relocation, if supported.",
            values={"default", "off", "on", "full"},
            default=defaults["relro"] or defaults["jln-relro"] or "default",
            after_check=function(option) check_option("jln-relro", "relro") end,
@@ -322,7 +336,7 @@ local _flag_names = {
   option("jln-reproducible-build-warnings", {
            showmenu=true,
            category=category,
-           description="reproducible_build_warnings",
+           description="warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations",
            values={"default", "off", "on"},
            default=defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "default",
            after_check=function(option) check_option("jln-reproducible-build-warnings", "reproducible_build_warnings") end,
@@ -330,7 +344,7 @@ local _flag_names = {
   option("jln-rtti", {
            showmenu=true,
            category=category,
-           description="rtti",
+           description="disable generation of information about every class with virtual functions for use by the C++ run-time type identification features (\"dynamic_cast\" and \"typeid\")",
            values={"default", "off", "on"},
            default=defaults["rtti"] or defaults["jln-rtti"] or "default",
            after_check=function(option) check_option("jln-rtti", "rtti") end,
@@ -338,7 +352,7 @@ local _flag_names = {
   option("jln-sanitizers", {
            showmenu=true,
            category=category,
-           description="sanitizers",
+           description="enable sanitizers (asan, ubsan, etc)",
            values={"default", "off", "on"},
            default=defaults["sanitizers"] or defaults["jln-sanitizers"] or "default",
            after_check=function(option) check_option("jln-sanitizers", "sanitizers") end,
@@ -346,7 +360,7 @@ local _flag_names = {
   option("jln-shadow-warnings", {
            showmenu=true,
            category=category,
-           description="shadow_warnings",
+           description="",
            values={"default", "off", "on", "local", "compatible_local", "all"},
            default=defaults["shadow_warnings"] or defaults["jln-shadow-warnings"] or "off",
            after_check=function(option) check_option("jln-shadow-warnings", "shadow_warnings") end,
@@ -354,7 +368,7 @@ local _flag_names = {
   option("jln-stack-protector", {
            showmenu=true,
            category=category,
-           description="stack_protector",
+           description="emit extra code to check for buffer overflows, such as stack smashing attacks",
            values={"default", "off", "on", "strong", "all"},
            default=defaults["stack_protector"] or defaults["jln-stack-protector"] or "default",
            after_check=function(option) check_option("jln-stack-protector", "stack_protector") end,
@@ -362,7 +376,7 @@ local _flag_names = {
   option("jln-stl-debug", {
            showmenu=true,
            category=category,
-           description="stl_debug",
+           description="controls the debug level of the STL",
            values={"default", "off", "on", "allow_broken_abi", "allow_broken_abi_and_bugs", "assert_as_exception"},
            default=defaults["stl_debug"] or defaults["jln-stl-debug"] or "default",
            after_check=function(option) check_option("jln-stl-debug", "stl_debug") end,
@@ -370,7 +384,7 @@ local _flag_names = {
   option("jln-stl-fix", {
            showmenu=true,
            category=category,
-           description="stl_fix",
+           description="enable /DNOMINMAX with msvc",
            values={"default", "off", "on"},
            default=defaults["stl_fix"] or defaults["jln-stl-fix"] or "on",
            after_check=function(option) check_option("jln-stl-fix", "stl_fix") end,
@@ -378,7 +392,7 @@ local _flag_names = {
   option("jln-suggestions", {
            showmenu=true,
            category=category,
-           description="suggestions",
+           description="warn for cases where adding an attribute may be beneficial",
            values={"default", "off", "on"},
            default=defaults["suggestions"] or defaults["jln-suggestions"] or "default",
            after_check=function(option) check_option("jln-suggestions", "suggestions") end,
@@ -386,7 +400,7 @@ local _flag_names = {
   option("jln-switch-warnings", {
            showmenu=true,
            category=category,
-           description="switch_warnings",
+           description="warnings concerning the switch keyword",
            values={"default", "on", "off", "exhaustive_enum", "mandatory_default", "exhaustive_enum_and_mandatory_default"},
            default=defaults["switch_warnings"] or defaults["jln-switch-warnings"] or "on",
            after_check=function(option) check_option("jln-switch-warnings", "switch_warnings") end,
@@ -394,7 +408,7 @@ local _flag_names = {
   option("jln-warnings", {
            showmenu=true,
            category=category,
-           description="warnings",
+           description="warning level",
            values={"default", "off", "on", "strict", "very_strict"},
            default=defaults["warnings"] or defaults["jln-warnings"] or "on",
            after_check=function(option) check_option("jln-warnings", "warnings") end,
@@ -402,7 +416,7 @@ local _flag_names = {
   option("jln-warnings-as-error", {
            showmenu=true,
            category=category,
-           description="warnings_as_error",
+           description="make all or some warnings into errors",
            values={"default", "off", "on", "basic"},
            default=defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default",
            after_check=function(option) check_option("jln-warnings-as-error", "warnings_as_error") end,
@@ -410,10 +424,26 @@ local _flag_names = {
   option("jln-whole-program", {
            showmenu=true,
            category=category,
-           description="whole_program",
+           description="Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.",
            values={"default", "off", "on", "strip_all"},
            default=defaults["whole_program"] or defaults["jln-whole-program"] or "default",
            after_check=function(option) check_option("jln-whole-program", "whole_program") end,
+         })
+  option("jln-windows-abi-compatibility-warnings", {
+           showmenu=true,
+           category=category,
+           description="In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys",
+           values={"default", "off", "on"},
+           default=defaults["windows_abi_compatibility_warnings"] or defaults["jln-windows-abi-compatibility-warnings"] or "off",
+           after_check=function(option) check_option("jln-windows-abi-compatibility-warnings", "windows_abi_compatibility_warnings") end,
+         })
+  option("jln-windows-bigobj", {
+           showmenu=true,
+           category=category,
+           description="increases that addressable sections capacity",
+           values={"default", "on"},
+           default=defaults["windows_bigobj"] or defaults["jln-windows-bigobj"] or "on",
+           after_check=function(option) check_option("jln-windows-bigobj", "windows_bigobj") end,
          })
   option("jln-cxx", {showmenu=true, description="Path or name of the compiler for jln functions", default=""})
   option("jln-cxx-version", {showmenu=true, description="Force the compiler version for jln functions", default=""})
