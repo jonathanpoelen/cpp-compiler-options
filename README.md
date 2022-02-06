@@ -63,7 +63,7 @@ Supported options are (alphabetically in a category):
 conversion_warnings = on default off sign conversion
 covered_switch_default_warnings = on default off
 fix_compiler_error = on default off
-microsoft_abi_compatibility_warnings = off default on
+msvc_crt_secure_no_warnings = on default off
 noexcept_warnings = default off on
 reproducible_build_warnings = default off on
 shadow_warnings = off default on local compatible_local all
@@ -71,15 +71,16 @@ suggestions = default off on
 switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 warnings = on default off strict very_strict
 warnings_as_error = default off on basic
+windows_abi_compatibility_warnings = off default on
 
 # Pedantic:
 
+msvc_conformance = all default all_without_throwing_new
 pedantic = on default off as_error
 stl_fix = on default off
 
 # Debug:
 
-control_flow = default off on branch return allow_bugs
 debug = default off on line_tables_only gdb lldb sce
 float_sanitizers = default off on
 integer_sanitizers = default off on
@@ -102,8 +103,13 @@ rtti = default off on
 
 # Hardening:
 
+control_flow = default off on branch return allow_bugs
 relro = default off on full
 stack_protector = default off on strong all
+
+# Other:
+
+windows_bigobj = on default
 
 # Other:
 
@@ -120,7 +126,7 @@ pie = default off on static fpic fPIC fpie fPIE
 
 The value `default` does nothing.
 
-If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `pedantic`, `stl_fix`, `switch_warnings` and `warnings` are `on` ; `microsoft_abi_compatibility_warnings` and `shadow_warnings` are `off`.
+If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` are `all` ; `shadow_warnings` and `windows_abi_compatibility_warnings` are `off`.
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
