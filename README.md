@@ -109,10 +109,6 @@ stack_protector = default off on strong all
 
 # Other:
 
-windows_bigobj = on default
-
-# Other:
-
 color = default auto never always
 coverage = default off on
 diagnostics_format = default fixits patch print_source_range_info
@@ -121,6 +117,7 @@ elide_type = default off on
 msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 msvc_isystem_with_template_from_non_external = default off on
 pie = default off on static fpic fPIC fpie fPIE
+windows_bigobj = on default
 ```
 <!-- ./compiler-options.lua -->
 
