@@ -1054,9 +1054,9 @@ msvc {
         flag'/Zc:throwingNew',
       },
       vers(15,6) {
-        flag'/Zc:externConstexpr',
+        cxx'/Zc:externConstexpr',
         vers(16,8) {
-          flag'/Zc:lambda',
+          cxx'/Zc:lambda',
           vers(16,5) {
             flag'/Zc:preprocessor',
           },
@@ -1276,7 +1276,7 @@ msvc {
 
 mingw {
   opt'windows_bigobj' {
-    cxx'-Wa,-mbig-obj',
+    flag'-Wa,-mbig-obj',
   },
 },
 
