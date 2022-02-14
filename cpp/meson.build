@@ -190,13 +190,13 @@ foreach ___jln_flags : ___jln_custom_flags
   jln_link_flags = []
 
 
-  if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+  if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') ) )
     if (  not ( (___jln_flags.get('warnings', 'default') == 'default')) )
       if (  (___jln_flags.get('warnings', 'default') == 'off') )
         jln_cpp_flags += ['-w', ]
       else
         if (  (___jln_compiler_id == 'gcc') )
-          jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Winvalid-pch', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
+          jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winvalid-pch', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
           if (  not ( (___jln_flags.get('switch_warnings', 'default') == 'default')) )
             if (  (___jln_flags.get('switch_warnings', 'default') == 'on') )
               jln_cpp_flags += ['-Wswitch', ]
@@ -241,7 +241,7 @@ foreach ___jln_flags : ___jln_custom_flags
             endif
           endif
         else
-          if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+          if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') ) )
             jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', ]
             if (  not ( (___jln_flags.get('switch_warnings', 'default') == 'default')) )
               if (  ( (___jln_flags.get('switch_warnings', 'default') == 'on') or (___jln_flags.get('switch_warnings', 'default') == 'mandatory_default') ) )
@@ -289,23 +289,8 @@ foreach ___jln_flags : ___jln_custom_flags
         endif
       endif
     endif
-    if (  not ( (___jln_flags.get('conversion_warnings', 'default') == 'default')) )
-      if (  (___jln_flags.get('conversion_warnings', 'default') == 'on') )
-        jln_cpp_flags += ['-Wconversion', '-Wsign-compare', '-Wsign-conversion', ]
-      else
-        if (  (___jln_flags.get('conversion_warnings', 'default') == 'conversion') )
-          jln_cpp_flags += ['-Wconversion', ]
-        else
-          if (  (___jln_flags.get('conversion_warnings', 'default') == 'sign') )
-            jln_cpp_flags += ['-Wsign-compare', '-Wsign-conversion', ]
-          else
-            jln_cpp_flags += ['-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', ]
-          endif
-        endif
-      endif
-    endif
     if (  not ( (___jln_flags.get('windows_abi_compatibility_warnings', 'default') == 'default')) )
-      if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+      if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<10.0') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') ) )
         if (  (___jln_flags.get('windows_abi_compatibility_warnings', 'default') == 'on') )
           jln_cpp_flags += ['-Wmismatched-tags', ]
         else
@@ -328,7 +313,7 @@ foreach ___jln_flags : ___jln_custom_flags
               endif
             endif
           else
-            if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+            if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') ) )
               jln_cpp_flags += ['-Werror=array-bounds', '-Werror=division-by-zero', ]
               if (  not ( ___jln_compiler_version.version_compare('<3.4') ) )
                 jln_cpp_flags += ['-Werror=logical-not-parentheses', ]
@@ -434,7 +419,7 @@ foreach ___jln_flags : ___jln_custom_flags
       endif
     endif
     if (  not ( (___jln_flags.get('color', 'default') == 'default')) )
-      if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<4.9') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+      if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<4.9') ) ) or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') ) )
         if (  (___jln_flags.get('color', 'default') == 'auto') )
           jln_cpp_flags += ['-fdiagnostics-color=auto', ]
         else
@@ -459,7 +444,7 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
     if (  not ( (___jln_flags.get('diagnostics_format', 'default') == 'default')) )
       if (  (___jln_flags.get('diagnostics_format', 'default') == 'fixits') )
-        if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<7.0') ) ) or ( (___jln_compiler_id == 'clang') and not ( ___jln_compiler_version.version_compare('<5.0') ) ) or ( (___jln_compiler_id == 'clang-cl') and not ( ___jln_compiler_version.version_compare('<5.0') ) ) ) )
+        if (  ( ( (___jln_compiler_id == 'gcc') and not ( ___jln_compiler_version.version_compare('<7.0') ) ) or ( (___jln_compiler_id == 'clang') and not ( ___jln_compiler_version.version_compare('<5.0') ) ) or ( (___jln_compiler_id == 'clang-cl') and not ( ___jln_compiler_version.version_compare('<5.0') ) ) or ( (___jln_compiler_id == 'icx') and not ( ___jln_compiler_version.version_compare('<5.0') ) ) ) )
           jln_cpp_flags += ['-fdiagnostics-parseable-fixits', ]
         endif
       else
@@ -488,8 +473,25 @@ foreach ___jln_flags : ___jln_custom_flags
         endif
         jln_cpp_flags += ['-Werror=write-strings', ]
       else
-        if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+        if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') ) )
           jln_cpp_flags += ['-Wno-error=c++11-narrowing', '-Wno-reserved-user-defined-literal', ]
+        endif
+      endif
+    endif
+  endif
+  if (  ( (___jln_compiler_id == 'gcc') or (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') or (___jln_compiler_id == 'intel') ) )
+    if (  not ( (___jln_flags.get('conversion_warnings', 'default') == 'default')) )
+      if (  (___jln_flags.get('conversion_warnings', 'default') == 'on') )
+        jln_cpp_flags += ['-Wconversion', '-Wsign-compare', '-Wsign-conversion', ]
+      else
+        if (  (___jln_flags.get('conversion_warnings', 'default') == 'conversion') )
+          jln_cpp_flags += ['-Wconversion', ]
+        else
+          if (  (___jln_flags.get('conversion_warnings', 'default') == 'sign') )
+            jln_cpp_flags += ['-Wsign-compare', '-Wsign-conversion', ]
+          else
+            jln_cpp_flags += ['-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', ]
+          endif
         endif
       endif
     endif
@@ -607,7 +609,7 @@ foreach ___jln_flags : ___jln_custom_flags
             jln_link_flags += ['-Os', ]
           else
             if (  (___jln_flags.get('optimization', 'default') == 'z') )
-              if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') ) )
+              if (  ( (___jln_compiler_id == 'clang') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'icx') ) )
                 jln_cpp_flags += ['-Oz', ]
                 jln_link_flags += ['-Oz', ]
               else
@@ -956,102 +958,12 @@ foreach ___jln_flags : ___jln_custom_flags
       endif
     endif
   endif
-  if (  ( (___jln_compiler_id == 'msvc') or (___jln_compiler_id == 'clang-cl') ) )
-    if (  not ( (___jln_flags.get('stl_fix', 'default') == 'default')) )
-      if (  (___jln_flags.get('stl_fix', 'default') == 'on') )
-        jln_cpp_flags += ['/DNOMINMAX', ]
-      endif
-    endif
-    if (  not ( (___jln_flags.get('debug', 'default') == 'default')) )
-      if (  (___jln_flags.get('debug', 'default') == 'off') )
-        jln_cpp_flags += ['/DEBUG:NONE', ]
-      else
-        jln_cpp_flags += ['/RTC1', '/Od', ]
-        if (  (___jln_flags.get('debug', 'default') == 'on') )
-          jln_cpp_flags += ['/DEBUG', ]
-        else
-          if (  (___jln_flags.get('debug', 'default') == 'line_tables_only') )
-            jln_cpp_flags += ['/DEBUG:FASTLINK', ]
-          endif
-        endif
-        if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
-          if (  (___jln_flags.get('optimization', 'default') == 'g') )
-            jln_cpp_flags += ['/Zi', ]
-          else
-            if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
-              if (  (___jln_flags.get('whole_program', 'default') == 'off') )
-                jln_cpp_flags += ['/ZI', ]
-              else
-                jln_cpp_flags += ['/Zi', ]
-              endif
-            else
-              jln_cpp_flags += ['/ZI', ]
-            endif
-          endif
-        else
-          if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
-            if (  (___jln_flags.get('whole_program', 'default') == 'off') )
-              jln_cpp_flags += ['/ZI', ]
-            else
-              jln_cpp_flags += ['/Zi', ]
-            endif
-          else
-            jln_cpp_flags += ['/ZI', ]
-          endif
-        endif
-      endif
-    endif
+  if (  ( (___jln_compiler_id == 'msvc') or (___jln_compiler_id == 'clang-cl') or (___jln_compiler_id == 'intel-cl') ) )
     if (  not ( (___jln_flags.get('exceptions', 'default') == 'default')) )
       if (  (___jln_flags.get('exceptions', 'default') == 'on') )
         jln_cpp_flags += ['/EHsc', '/D_HAS_EXCEPTIONS=1', ]
       else
         jln_cpp_flags += ['/EHs-', '/D_HAS_EXCEPTIONS=0', ]
-      endif
-    endif
-    if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
-      if (  (___jln_flags.get('optimization', 'default') == '0') )
-        jln_cpp_flags += ['/Ob0', '/Od', '/Oi-', '/Oy-', ]
-      else
-        if (  (___jln_flags.get('optimization', 'default') == 'g') )
-          jln_cpp_flags += ['/Ob1', ]
-        else
-          jln_cpp_flags += ['/DNDEBUG', ]
-          if (  (___jln_flags.get('optimization', 'default') == '1') )
-            jln_cpp_flags += ['/O1', ]
-          else
-            if (  (___jln_flags.get('optimization', 'default') == '2') )
-              jln_cpp_flags += ['/O2', ]
-            else
-              if (  (___jln_flags.get('optimization', 'default') == '3') )
-                jln_cpp_flags += ['/O2', ]
-              else
-                if (  ( (___jln_flags.get('optimization', 'default') == 'size') or (___jln_flags.get('optimization', 'default') == 'z') ) )
-                  jln_cpp_flags += ['/O1', '/GL', '/Gw', ]
-                else
-                  if (  (___jln_flags.get('optimization', 'default') == 'fast') )
-                    jln_cpp_flags += ['/O2', '/fp:fast', ]
-                  endif
-                endif
-              endif
-            endif
-          endif
-        endif
-      endif
-    endif
-    if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
-      if (  (___jln_flags.get('whole_program', 'default') == 'off') )
-        jln_cpp_flags += ['/GL-', ]
-      else
-        jln_cpp_flags += ['/GL', '/Gw', ]
-        jln_link_flags += ['/LTCG', ]
-        if (  (___jln_flags.get('whole_program', 'default') == 'strip_all') )
-          jln_link_flags += ['/OPT:REF', ]
-        endif
-      endif
-    endif
-    if (  not ( (___jln_flags.get('pedantic', 'default') == 'default')) )
-      if (  not ( (___jln_flags.get('pedantic', 'default') == 'off') ) )
-        jln_cpp_flags += ['/permissive-', '/Zc:__cplusplus', ]
       endif
     endif
     if (  not ( (___jln_flags.get('rtti', 'default') == 'default')) )
@@ -1068,27 +980,119 @@ foreach ___jln_flags : ___jln_custom_flags
         jln_cpp_flags += ['/D_DEBUG', '/D_HAS_ITERATOR_DEBUGGING=1', ]
       endif
     endif
-    if (  not ( (___jln_flags.get('control_flow', 'default') == 'default')) )
-      if (  (___jln_flags.get('control_flow', 'default') == 'off') )
-        jln_cpp_flags += ['/guard:cf-', ]
-      else
-        jln_cpp_flags += ['/guard:cf', ]
+    if (  ( (___jln_compiler_id == 'msvc') or (___jln_compiler_id == 'clang-cl') ) )
+      if (  not ( (___jln_flags.get('stl_fix', 'default') == 'default')) )
+        if (  (___jln_flags.get('stl_fix', 'default') == 'on') )
+          jln_cpp_flags += ['/DNOMINMAX', ]
+        endif
       endif
-    endif
-    if (  not ( (___jln_flags.get('stack_protector', 'default') == 'default')) )
-      if (  (___jln_flags.get('stack_protector', 'default') == 'off') )
-        jln_cpp_flags += ['/GS-', ]
-      else
-        jln_cpp_flags += ['/GS', '/sdl', ]
-        if (  (___jln_flags.get('stack_protector', 'default') == 'strong') )
-          jln_cpp_flags += ['/RTC1', ]
-          if (  ( (___jln_compiler_id == 'msvc') and not ( ___jln_compiler_version.version_compare('<16.7') ) ) )
-            jln_cpp_flags += ['/guard:ehcont', ]
-            jln_link_flags += ['/CETCOMPAT', ]
-          endif
+      if (  not ( (___jln_flags.get('debug', 'default') == 'default')) )
+        if (  (___jln_flags.get('debug', 'default') == 'off') )
+          jln_cpp_flags += ['/DEBUG:NONE', ]
         else
-          if (  (___jln_flags.get('stack_protector', 'default') == 'all') )
-            jln_cpp_flags += ['/RTC1', '/RTCc', ]
+          jln_cpp_flags += ['/RTC1', '/Od', ]
+          if (  (___jln_flags.get('debug', 'default') == 'on') )
+            jln_cpp_flags += ['/DEBUG', ]
+          else
+            if (  (___jln_flags.get('debug', 'default') == 'line_tables_only') )
+              jln_cpp_flags += ['/DEBUG:FASTLINK', ]
+            endif
+          endif
+          if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
+            if (  (___jln_flags.get('optimization', 'default') == 'g') )
+              jln_cpp_flags += ['/Zi', ]
+            else
+              if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
+                if (  (___jln_flags.get('whole_program', 'default') == 'off') )
+                  jln_cpp_flags += ['/ZI', ]
+                else
+                  jln_cpp_flags += ['/Zi', ]
+                endif
+              else
+                jln_cpp_flags += ['/ZI', ]
+              endif
+            endif
+          else
+            if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
+              if (  (___jln_flags.get('whole_program', 'default') == 'off') )
+                jln_cpp_flags += ['/ZI', ]
+              else
+                jln_cpp_flags += ['/Zi', ]
+              endif
+            else
+              jln_cpp_flags += ['/ZI', ]
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
+        if (  (___jln_flags.get('optimization', 'default') == '0') )
+          jln_cpp_flags += ['/Ob0', '/Od', '/Oi-', '/Oy-', ]
+        else
+          if (  (___jln_flags.get('optimization', 'default') == 'g') )
+            jln_cpp_flags += ['/Ob1', ]
+          else
+            jln_cpp_flags += ['/DNDEBUG', ]
+            if (  (___jln_flags.get('optimization', 'default') == '1') )
+              jln_cpp_flags += ['/O1', ]
+            else
+              if (  (___jln_flags.get('optimization', 'default') == '2') )
+                jln_cpp_flags += ['/O2', ]
+              else
+                if (  (___jln_flags.get('optimization', 'default') == '3') )
+                  jln_cpp_flags += ['/O2', ]
+                else
+                  if (  ( (___jln_flags.get('optimization', 'default') == 'size') or (___jln_flags.get('optimization', 'default') == 'z') ) )
+                    jln_cpp_flags += ['/O1', '/GL', '/Gw', ]
+                  else
+                    if (  (___jln_flags.get('optimization', 'default') == 'fast') )
+                      jln_cpp_flags += ['/O2', '/fp:fast', ]
+                    endif
+                  endif
+                endif
+              endif
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('control_flow', 'default') == 'default')) )
+        if (  (___jln_flags.get('control_flow', 'default') == 'off') )
+          jln_cpp_flags += ['/guard:cf-', ]
+        else
+          jln_cpp_flags += ['/guard:cf', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
+        if (  (___jln_flags.get('whole_program', 'default') == 'off') )
+          jln_cpp_flags += ['/GL-', ]
+        else
+          jln_cpp_flags += ['/GL', '/Gw', ]
+          jln_link_flags += ['/LTCG', ]
+          if (  (___jln_flags.get('whole_program', 'default') == 'strip_all') )
+            jln_link_flags += ['/OPT:REF', ]
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('pedantic', 'default') == 'default')) )
+        if (  not ( (___jln_flags.get('pedantic', 'default') == 'off') ) )
+          jln_cpp_flags += ['/permissive-', '/Zc:__cplusplus', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('stack_protector', 'default') == 'default')) )
+        if (  (___jln_flags.get('stack_protector', 'default') == 'off') )
+          jln_cpp_flags += ['/GS-', ]
+        else
+          jln_cpp_flags += ['/GS', '/sdl', ]
+          if (  (___jln_flags.get('stack_protector', 'default') == 'strong') )
+            jln_cpp_flags += ['/RTC1', ]
+            if (  ( (___jln_compiler_id == 'msvc') and not ( ___jln_compiler_version.version_compare('<16.7') ) ) )
+              jln_cpp_flags += ['/guard:ehcont', ]
+              jln_link_flags += ['/CETCOMPAT', ]
+            endif
+          else
+            if (  (___jln_flags.get('stack_protector', 'default') == 'all') )
+              jln_cpp_flags += ['/RTC1', '/RTCc', ]
+            endif
           endif
         endif
       endif
@@ -1253,6 +1257,392 @@ foreach ___jln_flags : ___jln_custom_flags
               jln_cpp_flags += ['/sdl-', ]
             endif
           endif
+        endif
+      endif
+    endif
+  endif
+  if (  (___jln_compiler_id == 'intel-cl') )
+    if (  not ( (___jln_flags.get('warnings', 'default') == 'default')) )
+      if (  (___jln_flags.get('warnings', 'default') == 'off') )
+        jln_cpp_flags += ['/w', ]
+      else
+        jln_cpp_flags += ['/W2', '/Qdiag-disable:1418,2259', ]
+      endif
+    endif
+    if (  not ( (___jln_flags.get('warnings_as_error', 'default') == 'default')) )
+      if (  (___jln_flags.get('warnings_as_error', 'default') == 'on') )
+        jln_cpp_flags += ['/WX', ]
+      else
+        if (  (___jln_flags.get('warnings_as_error', 'default') == 'basic') )
+          jln_cpp_flags += ['/Qdiag-error:1079,39,109', ]
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('windows_bigobj', 'default') == 'default')) )
+      jln_cpp_flags += ['/bigobj', ]
+    endif
+    if (  not ( (___jln_flags.get('msvc_conformance', 'default') == 'default')) )
+      if (  ( (___jln_flags.get('msvc_conformance', 'default') == 'all') or (___jln_flags.get('msvc_conformance', 'default') == 'all_without_throwing_new') ) )
+        jln_cpp_flags += ['/Zc:inline', '/Zc:strictStrings', ]
+        if (  (___jln_flags.get('msvc_conformance', 'default') == 'all') )
+          jln_cpp_flags += ['/Zc:throwingNew', ]
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('debug', 'default') == 'default')) )
+      if (  (___jln_flags.get('debug', 'default') == 'off') )
+        jln_cpp_flags += ['/debug:NONE', ]
+      else
+        jln_cpp_flags += ['/RTC1', '/Od', ]
+        if (  (___jln_flags.get('debug', 'default') == 'on') )
+          jln_cpp_flags += ['/debug:full', ]
+        else
+          if (  (___jln_flags.get('debug', 'default') == 'line_tables_only') )
+            jln_cpp_flags += ['/debug:minimal', ]
+          endif
+        endif
+        if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
+          if (  (___jln_flags.get('optimization', 'default') == 'g') )
+            jln_cpp_flags += ['/Zi', ]
+          else
+            if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
+              if (  (___jln_flags.get('whole_program', 'default') == 'off') )
+                jln_cpp_flags += ['/ZI', ]
+              else
+                jln_cpp_flags += ['/Zi', ]
+              endif
+            else
+              jln_cpp_flags += ['/ZI', ]
+            endif
+          endif
+        else
+          if (  not ( (___jln_flags.get('whole_program', 'default') == 'default')) )
+            if (  (___jln_flags.get('whole_program', 'default') == 'off') )
+              jln_cpp_flags += ['/ZI', ]
+            else
+              jln_cpp_flags += ['/Zi', ]
+            endif
+          else
+            jln_cpp_flags += ['/ZI', ]
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
+      if (  (___jln_flags.get('optimization', 'default') == '0') )
+        jln_cpp_flags += ['/Ob0', '/Od', '/Oi-', '/Oy-', ]
+      else
+        if (  (___jln_flags.get('optimization', 'default') == 'g') )
+          jln_cpp_flags += ['/Ob1', ]
+        else
+          jln_cpp_flags += ['/DNDEBUG', '/GF', ]
+          if (  (___jln_flags.get('optimization', 'default') == '1') )
+            jln_cpp_flags += ['/O1', ]
+          else
+            if (  (___jln_flags.get('optimization', 'default') == '2') )
+              jln_cpp_flags += ['/O2', ]
+            else
+              if (  (___jln_flags.get('optimization', 'default') == '3') )
+                jln_cpp_flags += ['/O2', ]
+              else
+                if (  (___jln_flags.get('optimization', 'default') == 'z') )
+                  jln_cpp_flags += ['/O3', ]
+                else
+                  if (  (___jln_flags.get('optimization', 'default') == 'size') )
+                    jln_cpp_flags += ['/Os', ]
+                  else
+                    if (  (___jln_flags.get('optimization', 'default') == 'fast') )
+                      jln_cpp_flags += ['/fast', ]
+                    endif
+                  endif
+                endif
+              endif
+            endif
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('stack_protector', 'default') == 'default')) )
+      if (  (___jln_flags.get('stack_protector', 'default') == 'off') )
+        jln_cpp_flags += ['/GS-', ]
+      else
+        jln_cpp_flags += ['/GS', ]
+        if (  (___jln_flags.get('stack_protector', 'default') == 'strong') )
+          jln_cpp_flags += ['/RTC1', ]
+        else
+          if (  (___jln_flags.get('stack_protector', 'default') == 'all') )
+            jln_cpp_flags += ['/RTC1', '/RTCc', ]
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('sanitizers', 'default') == 'default')) )
+      if (  (___jln_flags.get('sanitizers', 'default') == 'on') )
+        jln_cpp_flags += ['/Qtrapuv', ]
+      endif
+    endif
+    if (  not ( (___jln_flags.get('float_sanitizers', 'default') == 'default')) )
+      if (  (___jln_flags.get('float_sanitizers', 'default') == 'on') )
+        jln_cpp_flags += ['/Qfp-stack-check', '/Qfp-trap:common', ]
+      endif
+    endif
+    if (  not ( (___jln_flags.get('control_flow', 'default') == 'default')) )
+      if (  (___jln_flags.get('control_flow', 'default') == 'off') )
+        jln_cpp_flags += ['/guard:cf-', '/mconditional-branch=keep', ]
+      else
+        jln_cpp_flags += ['/guard:cf', ]
+        if (  (___jln_flags.get('control_flow', 'default') == 'branch') )
+          jln_cpp_flags += ['/mconditional-branch:all-fix', '/Qcf-protection:branch', ]
+        else
+          if (  (___jln_flags.get('control_flow', 'default') == 'on') )
+            jln_cpp_flags += ['/mconditional-branch:all-fix', '/Qcf-protection:full', ]
+          endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_flags.get('cpu', 'default') == 'default')) )
+      if (  (___jln_flags.get('cpu', 'default') == 'generic') )
+        jln_cpp_flags += ['/Qtune:generic', ]
+        jln_link_flags += ['/Qtune:generic', ]
+      else
+        jln_cpp_flags += ['/QxHost', ]
+        jln_link_flags += ['/QxHost', ]
+      endif
+    endif
+  else
+    if (  (___jln_compiler_id == 'intel') )
+      if (  not ( (___jln_flags.get('warnings', 'default') == 'default')) )
+        if (  (___jln_flags.get('warnings', 'default') == 'off') )
+          jln_cpp_flags += ['-w', ]
+        else
+          jln_cpp_flags += ['-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wparentheses', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wdeprecated', '-Wnon-virtual-dtor', '-Woverloaded-virtual', ]
+          if (  not ( (___jln_flags.get('switch_warnings', 'default') == 'default')) )
+            if (  ( (___jln_flags.get('switch_warnings', 'default') == 'on') or (___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum') ) )
+              jln_cpp_flags += ['-Wswitch-enum', ]
+            else
+              if (  (___jln_flags.get('switch_warnings', 'default') == 'mandatory_default') )
+                jln_cpp_flags += ['-Wswitch-default', ]
+              else
+                if (  (___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default') )
+                  jln_cpp_flags += ['-Wswitch', ]
+                else
+                  jln_cpp_flags += ['-Wno-switch', ]
+                endif
+              endif
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('warnings_as_error', 'default') == 'default')) )
+        if (  (___jln_flags.get('warnings_as_error', 'default') == 'on') )
+          jln_cpp_flags += ['-Werror', ]
+        else
+          if (  (___jln_flags.get('warnings_as_error', 'default') == 'basic') )
+            jln_cpp_flags += ['-diag-error=1079,39,109', ]
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('pedantic', 'default') == 'default')) )
+        if (  (___jln_flags.get('pedantic', 'default') == 'off') )
+          jln_cpp_flags += ['-fgnu-keywords', ]
+        else
+          jln_cpp_flags += ['-fno-gnu-keywords', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('shadow_warnings', 'default') == 'default')) )
+        if (  (___jln_flags.get('shadow_warnings', 'default') == 'off') )
+          jln_cpp_flags += ['-Wno-shadow', ]
+        else
+          if (  ( (___jln_flags.get('shadow_warnings', 'default') == 'on') or (___jln_flags.get('shadow_warnings', 'default') == 'all') ) )
+            jln_cpp_flags += ['-Wshadow', ]
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('stl_debug', 'default') == 'default')) )
+        if (  not ( (___jln_flags.get('stl_debug', 'default') == 'off') ) )
+          if (  ( (___jln_flags.get('stl_debug', 'default') == 'allow_broken_abi') or (___jln_flags.get('stl_debug', 'default') == 'allow_broken_abi_and_bugs') ) )
+            jln_cpp_flags += ['-D_GLIBCXX_DEBUG', ]
+          else
+            jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', ]
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('debug', 'default') == 'default')) )
+        if (  (___jln_flags.get('debug', 'default') == 'off') )
+          jln_cpp_flags += ['-g0', ]
+        else
+          jln_cpp_flags += ['-g', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('optimization', 'default') == 'default')) )
+        if (  (___jln_flags.get('optimization', 'default') == '0') )
+          jln_cpp_flags += ['-O0', ]
+        else
+          if (  (___jln_flags.get('optimization', 'default') == 'g') )
+            jln_cpp_flags += ['-O1', ]
+          else
+            jln_cpp_flags += ['-DNDEBUG', ]
+            if (  (___jln_flags.get('optimization', 'default') == '1') )
+              jln_cpp_flags += ['-O1', ]
+            else
+              if (  (___jln_flags.get('optimization', 'default') == '2') )
+                jln_cpp_flags += ['-O2', ]
+              else
+                if (  (___jln_flags.get('optimization', 'default') == '3') )
+                  jln_cpp_flags += ['-O3', ]
+                else
+                  if (  (___jln_flags.get('optimization', 'default') == 'z') )
+                    jln_cpp_flags += ['-fast', ]
+                  else
+                    if (  (___jln_flags.get('optimization', 'default') == 'size') )
+                      jln_cpp_flags += ['-Os', ]
+                    else
+                      if (  (___jln_flags.get('optimization', 'default') == 'fast') )
+                        jln_cpp_flags += ['-Ofast', ]
+                      endif
+                    endif
+                  endif
+                endif
+              endif
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('stack_protector', 'default') == 'default')) )
+        if (  (___jln_flags.get('stack_protector', 'default') == 'off') )
+          jln_cpp_flags += ['-fno-protector-strong', '-U_FORTIFY_SOURCE', ]
+          jln_link_flags += ['-fno-protector-strong', ]
+        else
+          jln_cpp_flags += ['-D_FORTIFY_SOURCE=2', ]
+          if (  (___jln_flags.get('stack_protector', 'default') == 'strong') )
+            jln_cpp_flags += ['-fstack-protector-strong', ]
+            jln_link_flags += ['-fstack-protector-strong', ]
+          else
+            if (  (___jln_flags.get('stack_protector', 'default') == 'all') )
+              jln_cpp_flags += ['-fstack-protector-all', ]
+              jln_link_flags += ['-fstack-protector-all', ]
+            else
+              jln_cpp_flags += ['-fstack-protector', ]
+              jln_link_flags += ['-fstack-protector', ]
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('relro', 'default') == 'default')) )
+        if (  (___jln_flags.get('relro', 'default') == 'off') )
+          jln_link_flags += ['-Xlinker-znorelro', ]
+        else
+          if (  (___jln_flags.get('relro', 'default') == 'on') )
+            jln_link_flags += ['-Xlinker-zrelro', ]
+          else
+            if (  (___jln_flags.get('relro', 'default') == 'full') )
+              jln_link_flags += ['-Xlinker-zrelro', '-Xlinker-znow', '-Xlinker-znoexecstack', ]
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('pie', 'default') == 'default')) )
+        if (  (___jln_flags.get('pie', 'default') == 'off') )
+          jln_link_flags += ['-no-pic', ]
+        else
+          if (  (___jln_flags.get('pie', 'default') == 'on') )
+            jln_link_flags += ['-pie', ]
+          else
+            if (  (___jln_flags.get('pie', 'default') == 'fpie') )
+              jln_cpp_flags += ['-fpie', ]
+            else
+              if (  (___jln_flags.get('pie', 'default') == 'fpic') )
+                jln_cpp_flags += ['-fpic', ]
+              else
+                if (  (___jln_flags.get('pie', 'default') == 'fPIE') )
+                  jln_cpp_flags += ['-fPIE', ]
+                else
+                  if (  (___jln_flags.get('pie', 'default') == 'fPIC') )
+                    jln_cpp_flags += ['-fPIC', ]
+                  endif
+                endif
+              endif
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('sanitizers', 'default') == 'default')) )
+        if (  (___jln_flags.get('sanitizers', 'default') == 'on') )
+          jln_cpp_flags += ['-ftrapuv', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('integer_sanitizers', 'default') == 'default')) )
+        if (  (___jln_flags.get('integer_sanitizers', 'default') == 'on') )
+          jln_cpp_flags += ['-funsigned-bitfields', ]
+        else
+          jln_cpp_flags += ['-fno-unsigned-bitfields', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('float_sanitizers', 'default') == 'default')) )
+        if (  (___jln_flags.get('float_sanitizers', 'default') == 'on') )
+          jln_cpp_flags += ['-fp-stack-check', '-fp-trap=common', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('linker', 'default') == 'default')) )
+        if (  (___jln_flags.get('linker', 'default') == 'bfd') )
+          jln_link_flags += ['-fuse-ld=bfd', ]
+        else
+          if (  (___jln_flags.get('linker', 'default') == 'gold') )
+            jln_link_flags += ['-fuse-ld=gold', ]
+          else
+            jln_link_flags += ['-fuse-ld=ld', ]
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('lto', 'default') == 'default')) )
+        if (  (___jln_flags.get('lto', 'default') == 'off') )
+          jln_cpp_flags += ['-no-ipo', ]
+          jln_link_flags += ['-no-ipo', ]
+        else
+          jln_cpp_flags += ['-ipo', ]
+          jln_link_flags += ['-ipo', ]
+          if (  (___jln_flags.get('lto', 'default') == 'fat') )
+            if (  host_machine.system() == 'linux' )
+              jln_cpp_flags += ['-ffat-lto-objects', ]
+              jln_link_flags += ['-ffat-lto-objects', ]
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('control_flow', 'default') == 'default')) )
+        if (  (___jln_flags.get('control_flow', 'default') == 'off') )
+          jln_cpp_flags += ['-mconditional-branch=keep', '-fcf-protection=none', ]
+        else
+          if (  (___jln_flags.get('control_flow', 'default') == 'branch') )
+            jln_cpp_flags += ['-mconditional-branch=all-fix', '-fcf-protection=branch', ]
+          else
+            if (  (___jln_flags.get('control_flow', 'default') == 'on') )
+              jln_cpp_flags += ['-mconditional-branch=all-fix', '-fcf-protection=full', ]
+            endif
+          endif
+        endif
+      endif
+      if (  not ( (___jln_flags.get('exceptions', 'default') == 'default')) )
+        if (  (___jln_flags.get('exceptions', 'default') == 'on') )
+          jln_cpp_flags += ['-fexceptions', ]
+        else
+          jln_cpp_flags += ['-fno-exceptions', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('rtti', 'default') == 'default')) )
+        if (  (___jln_flags.get('rtti', 'default') == 'on') )
+          jln_cpp_flags += ['-frtti', ]
+        else
+          jln_cpp_flags += ['-fno-rtti', ]
+        endif
+      endif
+      if (  not ( (___jln_flags.get('cpu', 'default') == 'default')) )
+        if (  (___jln_flags.get('cpu', 'default') == 'generic') )
+          jln_cpp_flags += ['-mtune=generic', ]
+          jln_link_flags += ['-mtune=generic', ]
+        else
+          jln_cpp_flags += ['-xHost', ]
+          jln_link_flags += ['-xHost', ]
         endif
       endif
     endif
