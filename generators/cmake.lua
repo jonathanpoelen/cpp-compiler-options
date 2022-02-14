@@ -60,6 +60,7 @@ set(_JLN_DISABLE_OTHERS_VALUES on off)
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
     local cvar = _.is_C and 'C_VAR' or 'CXX_VAR'
     _.cvar = cvar
+    _.compiler_type = compiler_type
 
     _:print[[
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
@@ -202,6 +203,8 @@ endfunction()
     _:print('endfunction()\n')
 
     _:print([[
+set(JLN_]].. compiler_type .. [[_COMPILER_VERSION ${CMAKE_]].. compiler_type .. [[_COMPILER_VERSION})
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(JLN_GCC_]].. compiler_type .. [[_COMPILER 1)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -212,6 +215,17 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   endif()
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
   set(JLN_ICX_]].. compiler_type .. [[_COMPILER 1)
+  set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
+  # extract clang version
+  file(WRITE "${CMAKE_BINARY_DIR}/jln_null.c" "")
+  execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -x c "${CMAKE_BINARY_DIR}/jln_null.c" -dM -E 
+    OUTPUT_VARIABLE JLN_ICX_MACROS_OUTPUT
+  )
+  file(REMOVE "${CMAKE_BINARY_DIR}/jln_null.c")
+  string(REGEX MATCH "__clang_major__ ([0-9]+)\n#define __clang_minor__ ([0-9]+)\n#define __clang_patchlevel__ ([0-9]+)"
+         JLN_ICX_CLANG_VERSION "${JLN_ICX_MACROS_OUTPUT}")
+  set(JLN_]].. compiler_type .. [[_COMPILER_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   if (CMAKE_HOST_WIN32)
     set(JLN_ICL_]].. compiler_type .. [[_COMPILER 1)
@@ -302,7 +316,7 @@ endif()
   end,
 
   _vcond_lvl=function(_, lvl, optname) return 'JLN_FLAGS_' .. optname:upper() .. ' STREQUAL "' .. lvl .. '"' end,
-  _vcond_verless=function(_, major, minor) return 'CMAKE_CXX_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
+  _vcond_verless=function(_, major, minor) return 'JLN_' .. _.compiler_type .. '_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
 
   cxx=function(_, x) return ' "' .. x .. '"' end,
   link=function(_, x) return ' "' .. x .. '"' end,
