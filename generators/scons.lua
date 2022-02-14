@@ -86,12 +86,12 @@ def ]] .. prefixfunc .. [[_variables_to_options(vars):
     .. [[:args.get(v.key, v.default) for v in vars.options}
 
 _]] .. prefixfunc .. [[_default_env = Environment()
-_]] .. prefixfunc .. [[_map_compiler = {"g++": "gcc", "mingw": "gcc", "clang++": "clang"}
+_]] .. prefixfunc .. [[_map_compiler = {"g++": "gcc", "mingw": "gcc", "clang++": "clang", "icpc": "icc", "icpx": "icx", "dpcpp": "icx"}
 def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=None):
   compiler = compiler or _]] .. prefixfunc .. [[_default_env[']] .. prefixenv .. [[']
 
   _compiler = None
-  for comp in ('clang', 'g++', 'gcc', 'msvc', 'mingw'):
+  for comp in ('clang', 'g++', 'gcc', 'msvc', 'mingw', 'icc', 'icpc', 'icl', 'icx', 'icpx', 'dpcpp'):
     if compiler.find(comp) != -1:
       _compiler = comp
       break

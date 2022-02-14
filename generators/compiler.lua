@@ -181,13 +181,29 @@ return {
     do
       local t, version = {}
       compiler, version = compiler:match('([^%d]+)(.*)')
-      compiler = compiler:gsub('g%+%+','gcc'):gsub('clang%+%+', 'clang')
+      compiler = compiler:gsub('g%+%+', 'gcc')
+                         :gsub('clang%+%+', 'clang')
+                         :gsub('icpc', 'icc')
+                         :gsub('icpx', 'icx')
+                         :gsub('dpcpp', 'icx')
       if compiler:find('^mingw') then
         platform = 'mingw'
         if compiler:find('^mingw%-gcc') or compiler:find('^mingw%-clang') then
           compiler = compiler:sub(7)
         else
           compiler = 'gcc' .. compiler:sub(7)
+        end
+      elseif compiler:find('^icl') then
+        platform = 'windows'
+      elseif compiler:find('^icp?[cx]') then
+        platform = 'linux'
+        for _,plat in ipairs({'-windows','-linux','-macos'}) do
+          local i = compiler:find(plat, 3, true)
+          if i then
+            platform = plat:sub(2)
+            compiler = compiler:sub(0, i-1) .. compiler:sub(i + #plat)
+            break
+          end
         end
       end
       compiler = compiler:gsub('-$','')

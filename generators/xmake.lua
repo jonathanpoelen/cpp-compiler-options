@@ -2,6 +2,13 @@ local todefault = function(x)
   return x == 'default' and '' or x
 end
 
+local platform_table = {
+  macos='macosx',
+}
+local toplatform = function(plat)
+  return platform_table[plat] or plat
+end
+
 return {
   ignore = {
     -- msvc_isystem=true,
@@ -27,8 +34,6 @@ return {
 
     local funcprefix = (_.is_C and 'jln_c_' or 'jln_cxx_')
     local compprefix = (_.is_C and 'cc' or 'cxx')
-    local comp_gcc = _.is_C and "'gcc'" or "'g++'"
-    local comp_clang = _.is_C and "'clang'" or "'clang++'"
     local cxflags = _.is_C and "cflags" or "cxxflags"
     local imported_filename = _.is_C and "c.flags" or "cpp.flags"
     _.cxflags_name = cxflags
@@ -229,6 +234,12 @@ local _compiler_by_toolname = {
   gxx='gcc',
   clang='clang',
   clangxx='clang',
+  icc='icc',
+  icpc='icc',
+  icl='icl',
+  icx='icx',
+  icpx='icx',
+  dpcpp='icx',
 }
 
 local _comp_cache = {}
@@ -337,7 +348,7 @@ function getoptions(values, disable_others, print_compiler)
   _vcond_lvl=function(_, lvl, optname) return 'values["' .. optname .. '"] == "' .. todefault(lvl) .. '"' end,
   _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
   _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
-  _vcond_platform=function(_, platform) return 'is_plat("' .. platform .. '")' end,
+  _vcond_platform=function(_, platform) return 'is_plat("' .. toplatform(platform) .. '")' end,
   _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 
   cxx=function(_, x) return _.indent .. 'jln_cxflags[#jln_cxflags+1] = "' .. x .. '"\n' end,

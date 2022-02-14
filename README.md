@@ -473,7 +473,9 @@ fl'xxx' -- is a alias of {flag'xxx',link'xxx'}
 
 The following functions return the metatable `if_mt`:
 
-- `gcc`, `clang`, `clang_cl`, `clang_like`, `msvc`, `mingw` and `vers`
+- `gcc`, `clang`, `clang_cl`, `clang_like`, `msvc`, `mingw`, `icc`, `icx`
+- `linux`, `windows`, `macos`
+- `vers`
 
 ```lua
 gcc { ... } -- for gcc only.
@@ -495,8 +497,8 @@ opt'warnings' { -- if warnings is enabled (not `warnings=default`)
 - `Or`, `And`
 
 ```lua
-Or(gcc(), clang(), msvc()) { ... }
-And(gcc(), lvl'off') { ... }
+Or(gcc, clang, msvc) { ... }
+And(gcc, lvl'off') { ... }
 ```
 
 
@@ -509,6 +511,12 @@ And(gcc(), lvl'off') { ... }
 -gcc(5,3) { ... } -- < gcc-5.3
 opt'warnings' { -lvl'on' { ... } } -- neither warnings=on nor warnings=default
 lvl'on' { xxx } / { yyy } -- equivalent to `{ lvl'on' { xxx }, -lvl'on' { yyy } }`
+```
+
+For a negative form in an Or or an And, it is necessary to make a call without parameter:
+
+```lua
+And(icc, -windows()) -- And(icc, -windows) not working
 ```
 
 Note: `-opt'name'` isn't allowed

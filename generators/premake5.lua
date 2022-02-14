@@ -27,6 +27,8 @@ return {
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
     local comp_gcc = _.is_C and "'gcc'" or "'g++'"
     local comp_clang = _.is_C and "'clang'" or "'clang++'"
+    local comp_icc = _.is_C and "'icc'" or "'icp'"
+    local comp_icx = _.is_C and "'icx'" or "'icpx'"
 
     local extraopts = {
       {compprefix, 'Path or name of the compiler for jln functions'},
@@ -214,6 +216,11 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
                    compiler:find('MinGW', 1, true) or
                    compiler:find('mingw', 1, true)
                   ) and 'gcc') or
+                 (compiler:find('icp?c', 1, true) and 'icc') or
+                 (compiler:find('icl', 1, true) and 'icl') or
+                 ((compiler:find('ico?x', 1, true) or
+                   compiler:find('dpcpp', 1, true)
+                  ) and 'icx') or
                  nil
     end
 

@@ -9,6 +9,16 @@ end
 
 local jamplatforms = {
   mingw='MINGW',
+  windows='NT',
+  linux='LINUX',
+  macos='MACOSX',
+}
+
+local jamcompilers = {
+  icc="intel' && $(original_version) = 'linux",
+  icl="intel' && $(original_version) = 'windows",
+  icx='intel',
+  dpcpp='intel',
 }
 
 return {
@@ -38,7 +48,7 @@ return {
   _vcond_verless=function(_, major, minor)
     return '$(version) < "' .. normnum(major) .. '.' .. normnum(minor) .. '"'
   end,
-  _vcond_compiler=function(_, compiler) return '$(toolset) = "' .. compiler .. '"' end,
+  _vcond_compiler=function(_, compiler) return '$(toolset) = "' .. (jamcompilers[compiler] or compiler) .. '"' end,
   _vcond_platform=function(_, platform) return '[ os.name ] = ' .. jamplatforms[platform] end,
   _vcond_linker=function(_, linker) return '$(linker) = "' .. linker .. '"' end,
 
@@ -165,12 +175,9 @@ rule ]] .. prefixfunc .. [[-get-normalized-compiler-version ( toolset : version 
   {
     local version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
     if ! $(version) {
-      # if $(toolset) = gcc {
-      #   version = [ SHELL "$(toolset) -dumpfullversion" ] ;
-      # }
-      # else {
+      if $(toolset) != intel {
         version = [ MATCH ".*(\\d+\\.\\d+\\.\\d+).*" : [ SHELL "$(toolset) --version" ] ] ;
-      # }
+      }
     }
     local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
     local major = [ MATCH "(..)$" : [ string.join 00 $(match[1]) ] ] ;
@@ -217,8 +224,9 @@ rule ]] .. prefixfunc .. [[_flags ( properties * )
 {
   local ps = [ property-set.create $(properties) ] ;
   local toolset = [ $(ps).get <toolset> ] ;
+  local original_version = [ $(ps).get <toolset-$(toolset):version> ] ;
   local version = [ ]] .. prefixfunc .. [[-get-normalized-compiler-version $(toolset)
-                  : [ $(ps).get <toolset-$(toolset):version> ] ] ;
+                  : $(original_version) ] ;
   local linker = [ $(ps).get <linker> ] ;
 
   local flags = ;

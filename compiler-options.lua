@@ -137,7 +137,10 @@ function Compiler(name)
 end
 
 function Platform(name)
-  return If({platform=name})
+  return function(x)
+    local r = If({platform=name})
+    return x and r(x) or r
+  end
 end
 
 function Linker(name)
@@ -149,7 +152,7 @@ end
 
 local unpack = table.unpack or unpack
 
-function ToolGroup(...)
+function CompilerGroup(...)
   local tools = {...}
   return function(x, y)
     if type(x) == 'number' then
@@ -172,13 +175,19 @@ function vers(major, minor) return If({version={major, minor or 0}}) end
 function lvl(x) return If({lvl=x}) end
 function opt(x) return If({opt=x}) end
 
+local windows = Platform('windows')
+local linux = Platform('linux')
+local macos = Platform('macos')
+local mingw = Platform('mingw')
+
 local gcc = Compiler('gcc')
 local clang = Compiler('clang')
 local clang_cl = Compiler('clang-cl')
 local msvc = Compiler('msvc')
-local clang_like = ToolGroup(clang, clang_cl)
-
-local mingw = Platform('mingw')
+local icc = Compiler('icc')
+local icl = Compiler('icl')
+local icx = Compiler('icx')
+local clang_like = CompilerGroup(clang, clang_cl, icx)
 
 -- local msvc_linker = Linker('msvc')
 local lld_link = Linker('lld-link')
@@ -213,6 +222,15 @@ end
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
 
+-- icc/icl:
+-- icc (linux) -diag-enable warn -diag-dump
+-- icl (windows) /Qdiag-enable:warn -Qdiag-dump
+-- https://www.intel.com/content/www/us/en/develop/documentation/cpp-compiler-developer-guide-and-reference/top/compiler-reference/compiler-options/alphabetical-list-of-compiler-options.html
+-- https://www.intel.com/content/www/us/en/develop/documentation/cpp-compiler-developer-guide-and-reference/top/compiler-reference/compiler-options/deprecated-and-removed-compiler-options.html
+
+-- icx
+-- icx -qnextgen-diag
+
 return --[[printAST]] {
 
 -- https://clang.llvm.org/docs/UsersManual.html#id9
@@ -223,6 +241,7 @@ Or(gcc, clang_like) {
     } / {
       gcc {
         flag'-Wall',
+     -- flag'-Weffc++',
         flag'-Wextra',
         flag'-Wcast-align',
         flag'-Wcast-qual',
@@ -230,14 +249,13 @@ Or(gcc, clang_like) {
         flag'-Wfloat-equal',
         flag'-Wformat-security',
         flag'-Wformat=2',
+     -- flag'-Winline',
+        flag'-Winvalid-pch',
         flag'-Wmissing-include-dirs',
-     -- flag'-Weffc++',
         flag'-Wpacked',
         flag'-Wredundant-decls',
         flag'-Wundef',
         flag'-Wunused-macros',
-     -- flag'-Winline',
-        flag'-Winvalid-pch',
         flag'-Wpointer-arith',
         cxx'-Wmissing-declarations',
         cxx'-Wnon-virtual-dtor',
@@ -373,26 +391,6 @@ Or(gcc, clang_like) {
       Or(lvl'strict', lvl'very_strict') {
         gcc(8) { flag'-Wcast-align=strict', }
       }
-    },
-  },
-
-  opt'conversion_warnings' {
-    lvl'on' {
-      flag'-Wconversion',
-      flag'-Wsign-compare',
-      flag'-Wsign-conversion',
-    } /
-    lvl'conversion'{
-      flag'-Wconversion',
-    } /
-    lvl'sign'{
-      flag'-Wsign-compare',
-      flag'-Wsign-conversion',
-    } /
-    {
-      flag'-Wno-conversion',
-      flag'-Wno-sign-compare',
-      flag'-Wno-sign-conversion',
     },
   },
 
@@ -573,6 +571,28 @@ Or(gcc, clang_like) {
     }
   },
 
+},
+
+Or(gcc, clang_like, icc) {
+  opt'conversion_warnings' {
+    lvl'on' {
+      flag'-Wconversion',
+      flag'-Wsign-compare',
+      flag'-Wsign-conversion',
+    } /
+    lvl'conversion'{
+      flag'-Wconversion',
+    } /
+    lvl'sign'{
+      flag'-Wsign-compare',
+      flag'-Wsign-conversion',
+    } /
+    {
+      flag'-Wno-conversion',
+      flag'-Wno-sign-compare',
+      flag'-Wno-sign-conversion',
+    },
+  },
 },
 
 Or(gcc, clang) {
@@ -916,34 +936,7 @@ lld_link {
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically?view=vs-2019
 -- https://clang.llvm.org/docs/UsersManual.html#id9
 -- or clang --driver-mode=cl -help
-Or(msvc, clang_cl) {
-  opt'stl_fix' {
-    lvl'on' { flag'/DNOMINMAX', },
-  },
-
-  opt'debug' {
-    lvl'off' { flag'/DEBUG:NONE' } / {
-      flag'/RTC1',
-      flag'/Od',
-      lvl'on' { flag'/DEBUG' } / -- /DEBUG:FULL
-      lvl'line_tables_only' { flag'/DEBUG:FASTLINK' },
-
-      opt'optimization' {
-        lvl'g' { flag'/Zi' } /
-        -- /ZI cannot be used with /GL
-        opt'whole_program' {
-          lvl'off' { flag'/ZI' } / flag'/Zi'
-        } /
-        flag'/ZI'
-      } /
-      -- /ZI cannot be used with /GL
-      opt'whole_program' {
-        lvl'off' { flag'/ZI' } / flag'/Zi'
-      } /
-      flag'/ZI',
-    }
-  },
-
+Or(msvc, clang_cl, icl) {
   opt'exceptions'{
     lvl'on' {
       flag'/EHsc',
@@ -951,48 +944,6 @@ Or(msvc, clang_cl) {
     } / {
       flag'/EHs-',
       flag'/D_HAS_EXCEPTIONS=0',
-    }
-  },
-
-  opt'optimization' {
-    lvl'0' {
-      flag'/Ob0',
-      flag'/Od',
-      flag'/Oi-',
-      flag'/Oy-',
-    } /
-    lvl'g' { flag'/Ob1' } /
-    {
-      flag'/DNDEBUG',
-      -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
-      -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-      lvl'1' { flag'/O1', } /
-      lvl'2' { flag'/O2', } /
-      lvl'3' { flag'/O2', } /
-      Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' } /
-      lvl'fast' { flag'/O2', flag'/fp:fast' }
-    }
-  },
-
-  opt'whole_program' {
-    lvl'off' {
-      flag'/GL-'
-    } /
-    {
-      flag'/GL',
-      flag'/Gw',
-      link'/LTCG',
-      lvl'strip_all'{
-        link'/OPT:REF',
-      },
-    }
-  },
-
-  opt'pedantic' {
-    -lvl'off' {
-      flag'/permissive-', -- implies /Zc:rvalueCast, /Zc:strictStrings, /Zc:ternary, /Zc:twoPhase
-      cxx'/Zc:__cplusplus',
-      -- cxx'/Zc:throwingNew',
     }
   },
 
@@ -1012,30 +963,101 @@ Or(msvc, clang_cl) {
     }
   },
 
-  opt'control_flow' {
-    lvl'off' {
-      flag'/guard:cf-',
-    } /
-    flag'/guard:cf',
-  },
-
-  opt'stack_protector' {
-    lvl'off' {
-      flag'/GS-',
-    } /
-    {
-      flag'/GS',
-      flag'/sdl',
-      lvl'strong' {
-        flag'/RTC1', -- /RTCsu
-        msvc(16,7) {
-          flag'/guard:ehcont',
-          link'/CETCOMPAT',
-        },
-      } /
-      lvl'all' { flag'/RTC1', flag'/RTCc', },
+  Or(msvc, clang_cl) {
+    opt'stl_fix' {
+      lvl'on' { flag'/DNOMINMAX', },
     },
-  },
+
+    opt'debug' {
+      lvl'off' { flag'/DEBUG:NONE' } / {
+        flag'/RTC1',
+        flag'/Od',
+        lvl'on' { flag'/DEBUG' } / -- /DEBUG:FULL
+        lvl'line_tables_only' { flag'/DEBUG:FASTLINK' },
+
+        opt'optimization' {
+          lvl'g' { flag'/Zi' } /
+          -- /ZI cannot be used with /GL
+          opt'whole_program' {
+            lvl'off' { flag'/ZI' } / flag'/Zi'
+          } /
+          flag'/ZI'
+        } /
+        -- /ZI cannot be used with /GL
+        opt'whole_program' {
+          lvl'off' { flag'/ZI' } / flag'/Zi'
+        } /
+        flag'/ZI',
+      }
+    },
+
+    opt'optimization' {
+      lvl'0' {
+        flag'/Ob0',
+        flag'/Od',
+        flag'/Oi-',
+        flag'/Oy-',
+      } /
+      lvl'g' { flag'/Ob1' } /
+      {
+        flag'/DNDEBUG',
+        -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
+        -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
+        lvl'1' { flag'/O1', } /
+        lvl'2' { flag'/O2', } /
+        lvl'3' { flag'/O2', } /
+        Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' } /
+        lvl'fast' { flag'/O2', flag'/fp:fast' }
+      }
+    },
+
+    opt'control_flow' {
+      lvl'off' {
+        flag'/guard:cf-',
+      } /
+      flag'/guard:cf',
+    },
+
+    opt'whole_program' {
+      lvl'off' {
+        flag'/GL-'
+      } /
+      {
+        flag'/GL',
+        flag'/Gw',
+        link'/LTCG',
+        lvl'strip_all'{
+          link'/OPT:REF',
+        },
+      }
+    },
+
+    opt'pedantic' {
+      -lvl'off' {
+        flag'/permissive-', -- implies /Zc:rvalueCast, /Zc:strictStrings, /Zc:ternary, /Zc:twoPhase
+        cxx'/Zc:__cplusplus',
+        -- cxx'/Zc:throwingNew',
+      }
+    },
+
+    opt'stack_protector' {
+      lvl'off' {
+        flag'/GS-',
+      } /
+      {
+        flag'/GS',
+        flag'/sdl',
+        lvl'strong' {
+          flag'/RTC1', -- /RTCsu
+          msvc(16,7) {
+            flag'/guard:ehcont',
+            link'/CETCOMPAT',
+          },
+        } /
+        lvl'all' { flag'/RTC1', flag'/RTCc', },
+      },
+    },
+  }
 },
 
 -- warnings:
@@ -1272,6 +1294,337 @@ msvc {
       },
     }
   },
+},
+
+icl {
+  opt'warnings' {
+    lvl'off' {
+      flag'/w'
+    } / {
+      flag'/W2',
+      flag'/Qdiag-disable:1418,2259', -- external function definition with no prior declaration
+                                      -- "type" to "type" may lose significant bits
+    }
+  },
+
+  opt'warnings_as_error' {
+    lvl'on' {
+      flag'/WX',
+    } /
+    lvl'basic' {
+      flag'/Qdiag-error:1079,39,109' -- return-type, div-by-zero, array-bounds
+    }
+  },
+
+  opt'windows_bigobj' {
+    flag'/bigobj',
+  },
+
+  opt'msvc_conformance' {
+    Or(lvl'all', lvl'all_without_throwing_new') {
+      flag'/Zc:inline',
+      flag'/Zc:strictStrings',
+      lvl'all' {
+        flag'/Zc:throwingNew',
+      },
+    }
+  },
+
+  opt'debug' {
+    lvl'off' { flag'/debug:NONE' } / {
+      flag'/RTC1',
+      flag'/Od',
+      lvl'on' { flag'/debug:full' } /
+      lvl'line_tables_only' { flag'/debug:minimal' },
+
+      opt'optimization' {
+        lvl'g' { flag'/Zi' } /
+        -- /ZI cannot be used with /GL
+        opt'whole_program' {
+          lvl'off' { flag'/ZI' } / flag'/Zi'
+        } /
+        flag'/ZI'
+      } /
+      -- /ZI cannot be used with /GL
+      opt'whole_program' {
+        lvl'off' { flag'/ZI' } / flag'/Zi'
+      } /
+      flag'/ZI',
+    }
+  },
+
+  opt'optimization' {
+    lvl'0' {
+      flag'/Ob0',
+      flag'/Od',
+      flag'/Oi-',
+      flag'/Oy-',
+    } /
+    lvl'g' { flag'/Ob1' } /
+    {
+      flag'/DNDEBUG',
+      flag'/GF',
+      lvl'1' { flag'/O1', } /
+      lvl'2' { flag'/O2', } /
+      lvl'3' { flag'/O2', } /
+      lvl'z' { flag'/O3', } /
+      lvl'size' { flag'/Os', } /
+      lvl'fast' { flag'/fast' }
+    }
+  },
+
+  opt'stack_protector' {
+    lvl'off' {
+      flag'/GS-',
+    } /
+    {
+      flag'/GS',
+      lvl'strong' {
+        flag'/RTC1', -- /RTCsu
+      } /
+      lvl'all' { flag'/RTC1', flag'/RTCc', },
+    },
+  },
+
+  opt'sanitizers' {
+    lvl'on' { flag'/Qtrapuv' }
+  },
+
+  opt'float_sanitizers' {
+    lvl'on' {
+      flag'/Qfp-stack-check',
+      flag'/Qfp-trap:common',
+    -- flag'/Qfp-trap=all',
+    }
+  },
+
+  opt'control_flow' {
+    lvl'off' {
+      flag'/guard:cf-',
+      flag'/mconditional-branch=keep',
+    } / {
+      flag'/guard:cf',
+      lvl'branch' {
+        flag'/mconditional-branch:all-fix',
+        flag'/Qcf-protection:branch',
+      } /
+      lvl'on' {
+        flag'/mconditional-branch:all-fix',
+        flag'/Qcf-protection:full',
+      }
+    }
+  },
+
+  opt'cpu' {
+    lvl'generic' { fl'/Qtune:generic' } / fl'/QxHost',
+  },
+
+} /
+
+icc {
+  opt'warnings' {
+    lvl'off' {
+      flag'-w'
+    } / {
+      flag'-Wall',
+      flag'-Warray-bounds',
+      flag'-Wcast-qual',
+      flag'-Wchar-subscripts',
+      flag'-Wdisabled-optimization',
+      flag'-Wenum-compare',
+      flag'-Wextra',
+      flag'-Wfloat-equal',
+      flag'-Wformat-security',
+      flag'-Wformat=2',
+      flag'-Winit-self',
+    -- flag'-Winline',
+      flag'-Winvalid-pch',
+      flag'-Wmaybe-uninitialized',
+      flag'-Wmissing-include-dirs',
+      flag'-Wnarrowing',
+      flag'-Wnonnull',
+      flag'-Wparentheses',
+      flag'-Wpointer-sign',
+      flag'-Wreorder',
+      flag'-Wsequence-point',
+      flag'-Wtrigraphs',
+      flag'-Wundef',
+      flag'-Wunused-function',
+      flag'-Wunused-but-set-variable',
+      flag'-Wunused-variable',
+      flag'-Wpointer-arith',
+      cxx'-Wdeprecated',
+      cxx'-Wnon-virtual-dtor',
+      cxx'-Woverloaded-virtual',
+      c'-Wold-style-definition',
+      c'-Wstrict-prototypes',
+      c'-Wwrite-strings',
+
+      opt'switch_warnings' {
+        Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' } /
+        lvl'mandatory_default' { flag'-Wswitch-default' } /
+        lvl'exhaustive_enum_and_mandatory_default' {
+          flag'-Wswitch',
+      } /
+        { flag'-Wno-switch' }
+      },
+    }
+  },
+
+  opt'warnings_as_error' {
+    lvl'on' {
+      flag'-Werror',
+    } /
+    lvl'basic' {
+      flag'-diag-error=1079,39,109' -- return-type, div-by-zero, array-bounds
+    }
+    -- flag'-Wno-error', does not work
+  },
+
+  -- opt'pedantic' -- -pedantic does not work ???
+  opt'pedantic' {
+    lvl'off' {
+      flag'-fgnu-keywords',
+    } / {
+      flag'-fno-gnu-keywords',
+    }
+  },
+
+  opt'shadow_warnings' {
+    lvl'off' {
+      flag'-Wno-shadow',
+    } /
+    Or(lvl'on', lvl'all') {
+      flag'-Wshadow'
+    }
+  },
+
+  opt'stl_debug' {
+    -lvl'off' {
+      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
+        cxx'-D_GLIBCXX_DEBUG',
+      }
+      / cxx'-D_GLIBCXX_ASSERTIONS',
+    },
+  },
+
+  opt'debug' {
+    lvl'off' { flag '-g0' } /
+    flag'-g',
+  },
+
+  opt'optimization' {
+    lvl'0' { flag'-O0', } /
+    lvl'g' { flag'-O1', } /
+    {
+      flag'-DNDEBUG',
+      lvl'1' { flag'-O1', } /
+      lvl'2' { flag'-O2', } /
+      lvl'3' { flag'-O3', } /
+      lvl'z' { flag'-fast', } /
+      lvl'size' { flag'-Os', } /
+      lvl'fast' { flag'-Ofast' }
+    }
+  },
+
+  opt'stack_protector' {
+    lvl'off' {
+      fl'-fno-protector-strong',
+      flag'-U_FORTIFY_SOURCE'
+    } /
+    {
+      flag'-D_FORTIFY_SOURCE=2',
+      lvl'strong' {
+        fl'-fstack-protector-strong',
+      } /
+      lvl'all' {
+        fl'-fstack-protector-all',
+      } /
+      fl'-fstack-protector',
+    },
+  },
+
+  opt'relro' {
+    lvl'off' { link'-Xlinker-znorelro', } /
+    lvl'on'  { link'-Xlinker-zrelro', } /
+    lvl'full'{
+      link'-Xlinker-zrelro',
+      link'-Xlinker-znow',
+      link'-Xlinker-znoexecstack',
+    },
+  },
+
+  opt'pie' {
+    lvl'off'{ link'-no-pic', } /
+    lvl'on' { link'-pie', } /
+    lvl'fpie'{ flag'-fpie', } /
+    lvl'fpic'{ flag'-fpic', } /
+    lvl'fPIE'{ flag'-fPIE', } /
+    lvl'fPIC'{ flag'-fPIC', },
+  },
+
+  opt'sanitizers' {
+    lvl'on' { flag'-ftrapuv' }
+  },
+
+  opt'integer_sanitizers' {
+    lvl'on' { flag'-funsigned-bitfields' }
+    / flag'-fno-unsigned-bitfields'
+  },
+
+  opt'float_sanitizers' {
+    lvl'on' {
+      flag'-fp-stack-check',
+      flag'-fp-trap=common',
+    -- flag'-fp-trap=all',
+    }
+  },
+
+  opt'linker' {
+    lvl'bfd' { link'-fuse-ld=bfd' } /
+    lvl'gold' { link'-fuse-ld=gold' }
+    / { link'-fuse-ld=ld' }
+  },
+
+  opt'lto' {
+    lvl'off' { fl'-no-ipo', } / {
+      fl'-ipo',
+      lvl'fat' {
+        linux {
+          fl'-ffat-lto-objects',
+        }
+      }
+    }
+  },
+
+  opt'control_flow' {
+    lvl'off' {
+      flag'-mconditional-branch=keep',
+      flag'-fcf-protection=none',
+    } / {
+      lvl'branch' {
+        flag'-mconditional-branch=all-fix',
+        flag'-fcf-protection=branch',
+      } /
+      lvl'on' {
+        flag'-mconditional-branch=all-fix',
+        flag'-fcf-protection=full',
+      }
+    }
+  },
+
+  opt'exceptions' {
+    lvl'on' { flag'-fexceptions', } / flag'-fno-exceptions',
+  },
+
+  opt'rtti' {
+    lvl'on' { cxx'-frtti' } / cxx'-fno-rtti',
+  },
+
+  opt'cpu' {
+    lvl'generic' { fl'-mtune=generic' } / fl'-xHost',
+  },
+
 },
 
 mingw {

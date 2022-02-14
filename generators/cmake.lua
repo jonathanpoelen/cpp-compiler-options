@@ -210,8 +210,14 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   else()
     set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
   endif()
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(JLN_MSVC_]].. compiler_type .. [[_COMPILER 1)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
+  set(JLN_ICX_]].. compiler_type .. [[_COMPILER 1)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+  if (CMAKE_HOST_WIN32)
+    set(JLN_ICL_]].. compiler_type .. [[_COMPILER 1)
+  else()
+    set(JLN_ICC_]].. compiler_type .. [[_COMPILER 1)
+  endif()
 endif()
 
 if(CMAKE_HOST_APPLE)
@@ -227,11 +233,17 @@ endif()
       msvc='JLN_MSVC_'.. compiler_type .. '_COMPILER',
       clang='JLN_CLANG_'.. compiler_type .. '_COMPILER',
       ['clang-cl']='JLN_CLANG_CL_'.. compiler_type .. '_COMPILER',
+      icl='JLN_ICL_'.. compiler_type .. '_COMPILER',
+      icc='JLN_ICC_'.. compiler_type .. '_COMPILER',
+      icx='JLN_ICX_'.. compiler_type .. '_COMPILER',
       -- linker
       ld64='JLN_LD64_'.. compiler_type .. '_LINKER',
       ['lld-link']='JLN_LLD_LINK_'.. compiler_type .. '_LINKER',
       -- platform
       mingw='MINGW',
+      windows='CMAKE_HOST_WIN32',
+      linux='CMAKE_HOST_UNIX',
+      macos='CMAKE_HOST_APPLE',
     }
     local vcond_tool = function(_, toolname)
       return tool_ids[toolname] or error('Unknown ' .. toolname .. ' tool')
