@@ -250,12 +250,9 @@ rule jln_c-get-normalized-compiler-version ( toolset : version )
   {
     local version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
     if ! $(version) {
-      # if $(toolset) = gcc {
-      #   version = [ SHELL "$(toolset) -dumpfullversion" ] ;
-      # }
-      # else {
+      if $(toolset) != intel {
         version = [ MATCH ".*(\\d+\\.\\d+\\.\\d+).*" : [ SHELL "$(toolset) --version" ] ] ;
-      # }
+      }
     }
     local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
     local major = [ MATCH "(..)$" : [ string.join 00 $(match[1]) ] ] ;
@@ -302,8 +299,9 @@ rule jln_c_flags ( properties * )
 {
   local ps = [ property-set.create $(properties) ] ;
   local toolset = [ $(ps).get <toolset> ] ;
+  local original_version = [ $(ps).get <toolset-$(toolset):version> ] ;
   local version = [ jln_c-get-normalized-compiler-version $(toolset)
-                  : [ $(ps).get <toolset-$(toolset):version> ] ] ;
+                  : $(original_version) ] ;
   local linker = [ $(ps).get <linker> ] ;
 
   local flags = ;
@@ -367,7 +365,7 @@ rule jln_c_flags ( properties * )
   local x_whole_program = [ jln_c-get-value2 $(ps) : jln-whole-program : jln-whole-program-incidental : $(jln_c_env_whole_program) ] ;
   local x_windows_bigobj = [ jln_c-get-value2 $(ps) : jln-windows-bigobj : jln-windows-bigobj-incidental : $(jln_c_env_windows_bigobj) ] ;
 
-  if (  $(toolset) = "gcc" || $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+  if (  $(toolset) = "gcc" || $(toolset) = "clang" || $(toolset) = "clang-cl" || $(toolset) = "intel"  )
   {
     if ( $(x_warnings) != "default" )
     {
@@ -390,12 +388,12 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wfloat-equal"
             <cflags>"-Wformat-security"
             <cflags>"-Wformat=2"
+            <cflags>"-Winvalid-pch"
             <cflags>"-Wmissing-include-dirs"
             <cflags>"-Wpacked"
             <cflags>"-Wredundant-decls"
             <cflags>"-Wundef"
             <cflags>"-Wunused-macros"
-            <cflags>"-Winvalid-pch"
             <cflags>"-Wpointer-arith"
             <cflags>"-Wbad-function-cast"
             <cflags>"-Winit-self"
@@ -496,7 +494,7 @@ rule jln_c_flags ( properties * )
         }
         else
         {
-          if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+          if (  $(toolset) = "clang" || $(toolset) = "clang-cl" || $(toolset) = "intel"  )
           {
             flags +=
               <cflags>"-Weverything"
@@ -569,44 +567,6 @@ rule jln_c_flags ( properties * )
         }
       }
     }
-    if ( $(x_conversion_warnings) != "default" )
-    {
-      if ( $(x_conversion_warnings) = "on" )
-      {
-        flags +=
-          <cflags>"-Wconversion"
-          <cflags>"-Wsign-compare"
-          <cflags>"-Wsign-conversion"
-        ;
-      }
-      else
-      {
-        if ( $(x_conversion_warnings) = "conversion" )
-        {
-          flags +=
-            <cflags>"-Wconversion"
-          ;
-        }
-        else
-        {
-          if ( $(x_conversion_warnings) = "sign" )
-          {
-            flags +=
-              <cflags>"-Wsign-compare"
-              <cflags>"-Wsign-conversion"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cflags>"-Wno-conversion"
-              <cflags>"-Wno-sign-compare"
-              <cflags>"-Wno-sign-conversion"
-            ;
-          }
-        }
-      }
-    }
     if ( $(x_warnings_as_error) != "default" )
     {
       if ( $(x_warnings_as_error) = "on" )
@@ -639,7 +599,7 @@ rule jln_c_flags ( properties * )
           }
           else
           {
-            if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+            if (  $(toolset) = "clang" || $(toolset) = "clang-cl" || $(toolset) = "intel"  )
             {
               flags +=
                 <cflags>"-Werror=array-bounds"
@@ -837,7 +797,7 @@ rule jln_c_flags ( properties * )
     }
     if ( $(x_color) != "default" )
     {
-      if (  (  $(toolset) = "gcc" && ! (  $(version) < "04.09"  )  ) || $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+      if (  (  $(toolset) = "gcc" && ! (  $(version) < "04.09"  )  ) || $(toolset) = "clang" || $(toolset) = "clang-cl" || $(toolset) = "intel"  )
       {
         if ( $(x_color) = "auto" )
         {
@@ -887,7 +847,7 @@ rule jln_c_flags ( properties * )
     {
       if ( $(x_diagnostics_format) = "fixits" )
       {
-        if (  (  $(toolset) = "gcc" && ! (  $(version) < "07.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "05.00"  )  ) || (  $(toolset) = "clang-cl" && ! (  $(version) < "05.00"  )  )  )
+        if (  (  $(toolset) = "gcc" && ! (  $(version) < "07.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "05.00"  )  ) || (  $(toolset) = "clang-cl" && ! (  $(version) < "05.00"  )  ) || (  $(toolset) = "intel" && ! (  $(version) < "05.00"  )  )  )
         {
           flags +=
             <cflags>"-fdiagnostics-parseable-fixits"
@@ -929,12 +889,53 @@ rule jln_c_flags ( properties * )
       }
       else
       {
-        if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+        if (  $(toolset) = "clang" || $(toolset) = "clang-cl" || $(toolset) = "intel"  )
         {
           flags +=
             <cflags>"-Wno-error=c++11-narrowing"
             <cflags>"-Wno-reserved-user-defined-literal"
           ;
+        }
+      }
+    }
+  }
+  if (  $(toolset) = "gcc" || $(toolset) = "clang" || $(toolset) = "clang-cl" || $(toolset) = "intel" || $(toolset) = "intel' && $(original_version) = 'linux"  )
+  {
+    if ( $(x_conversion_warnings) != "default" )
+    {
+      if ( $(x_conversion_warnings) = "on" )
+      {
+        flags +=
+          <cflags>"-Wconversion"
+          <cflags>"-Wsign-compare"
+          <cflags>"-Wsign-conversion"
+        ;
+      }
+      else
+      {
+        if ( $(x_conversion_warnings) = "conversion" )
+        {
+          flags +=
+            <cflags>"-Wconversion"
+          ;
+        }
+        else
+        {
+          if ( $(x_conversion_warnings) = "sign" )
+          {
+            flags +=
+              <cflags>"-Wsign-compare"
+              <cflags>"-Wsign-conversion"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"-Wno-conversion"
+              <cflags>"-Wno-sign-compare"
+              <cflags>"-Wno-sign-conversion"
+            ;
+          }
         }
       }
     }
@@ -1174,7 +1175,7 @@ rule jln_c_flags ( properties * )
           {
             if ( $(x_optimization) = "z" )
             {
-              if (  $(toolset) = "clang" || $(toolset) = "clang-cl"  )
+              if (  $(toolset) = "clang" || $(toolset) = "clang-cl" || $(toolset) = "intel"  )
               {
                 flags +=
                   <cflags>"-Oz"
@@ -1754,105 +1755,8 @@ rule jln_c_flags ( properties * )
       }
     }
   }
-  if (  $(toolset) = "msvc" || $(toolset) = "clang-cl"  )
+  if (  $(toolset) = "msvc" || $(toolset) = "clang-cl" || $(toolset) = "intel' && $(original_version) = 'windows"  )
   {
-    if ( $(x_stl_fix) != "default" )
-    {
-      if ( $(x_stl_fix) = "on" )
-      {
-        flags +=
-          <cflags>"/DNOMINMAX"
-        ;
-      }
-    }
-    if ( $(x_debug) != "default" )
-    {
-      if ( $(x_debug) = "off" )
-      {
-        flags +=
-          <cflags>"/DEBUG:NONE"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cflags>"/RTC1"
-          <cflags>"/Od"
-        ;
-        if ( $(x_debug) = "on" )
-        {
-          flags +=
-            <cflags>"/DEBUG"
-          ;
-        }
-        else
-        {
-          if ( $(x_debug) = "line-tables-only" )
-          {
-            flags +=
-              <cflags>"/DEBUG:FASTLINK"
-            ;
-          }
-        }
-        if ( $(x_optimization) != "default" )
-        {
-          if ( $(x_optimization) = "g" )
-          {
-            flags +=
-              <cflags>"/Zi"
-            ;
-          }
-          else
-          {
-            if ( $(x_whole_program) != "default" )
-            {
-              if ( $(x_whole_program) = "off" )
-              {
-                flags +=
-                  <cflags>"/ZI"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <cflags>"/Zi"
-                ;
-              }
-            }
-            else
-            {
-              flags +=
-                <cflags>"/ZI"
-              ;
-            }
-          }
-        }
-        else
-        {
-          if ( $(x_whole_program) != "default" )
-          {
-            if ( $(x_whole_program) = "off" )
-            {
-              flags +=
-                <cflags>"/ZI"
-              ;
-            }
-            else
-            {
-              flags +=
-                <cflags>"/Zi"
-              ;
-            }
-          }
-          else
-          {
-            flags +=
-              <cflags>"/ZI"
-            ;
-          }
-        }
-      }
-    }
     if ( $(x_exceptions) != "default" )
     {
       if ( $(x_exceptions) = "on" )
@@ -1867,110 +1771,6 @@ rule jln_c_flags ( properties * )
         flags +=
           <cflags>"/EHs-"
           <cflags>"/D_HAS_EXCEPTIONS=0"
-        ;
-      }
-    }
-    if ( $(x_optimization) != "default" )
-    {
-      if ( $(x_optimization) = "0" )
-      {
-        flags +=
-          <cflags>"/Ob0"
-          <cflags>"/Od"
-          <cflags>"/Oi-"
-          <cflags>"/Oy-"
-        ;
-      }
-      else
-      {
-        if ( $(x_optimization) = "g" )
-        {
-          flags +=
-            <cflags>"/Ob1"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cflags>"/DNDEBUG"
-          ;
-          if ( $(x_optimization) = "1" )
-          {
-            flags +=
-              <cflags>"/O1"
-            ;
-          }
-          else
-          {
-            if ( $(x_optimization) = "2" )
-            {
-              flags +=
-                <cflags>"/O2"
-              ;
-            }
-            else
-            {
-              if ( $(x_optimization) = "3" )
-              {
-                flags +=
-                  <cflags>"/O2"
-                ;
-              }
-              else
-              {
-                if (  ( $(x_optimization) = "size" ) || ( $(x_optimization) = "z" )  )
-                {
-                  flags +=
-                    <cflags>"/O1"
-                    <cflags>"/GL"
-                    <cflags>"/Gw"
-                  ;
-                }
-                else
-                {
-                  if ( $(x_optimization) = "fast" )
-                  {
-                    flags +=
-                      <cflags>"/O2"
-                      <cflags>"/fp:fast"
-                    ;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    if ( $(x_whole_program) != "default" )
-    {
-      if ( $(x_whole_program) = "off" )
-      {
-        flags +=
-          <cflags>"/GL-"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cflags>"/GL"
-          <cflags>"/Gw"
-          <linkflags>"/LTCG"
-        ;
-        if ( $(x_whole_program) = "strip-all" )
-        {
-          flags +=
-            <linkflags>"/OPT:REF"
-          ;
-        }
-      }
-    }
-    if ( $(x_pedantic) != "default" )
-    {
-      if ! (  ( $(x_pedantic) = "off" )  )
-      {
-        flags +=
-          <cflags>"/permissive-"
         ;
       }
     }
@@ -2005,56 +1805,260 @@ rule jln_c_flags ( properties * )
         ;
       }
     }
-    if ( $(x_control_flow) != "default" )
+    if (  $(toolset) = "msvc" || $(toolset) = "clang-cl"  )
     {
-      if ( $(x_control_flow) = "off" )
+      if ( $(x_stl_fix) != "default" )
       {
-        flags +=
-          <cflags>"/guard:cf-"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cflags>"/guard:cf"
-        ;
-      }
-    }
-    if ( $(x_stack_protector) != "default" )
-    {
-      if ( $(x_stack_protector) = "off" )
-      {
-        flags +=
-          <cflags>"/GS-"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cflags>"/GS"
-          <cflags>"/sdl"
-        ;
-        if ( $(x_stack_protector) = "strong" )
+        if ( $(x_stl_fix) = "on" )
         {
           flags +=
-            <cflags>"/RTC1"
+            <cflags>"/DNOMINMAX"
           ;
-          if (  $(toolset) = "msvc" && ! (  $(version) < "16.07"  )  )
-          {
-            flags +=
-              <cflags>"/guard:ehcont"
-              <linkflags>"/CETCOMPAT"
-            ;
-          }
+        }
+      }
+      if ( $(x_debug) != "default" )
+      {
+        if ( $(x_debug) = "off" )
+        {
+          flags +=
+            <cflags>"/DEBUG:NONE"
+          ;
         }
         else
         {
-          if ( $(x_stack_protector) = "all" )
+          flags +=
+            <cflags>"/RTC1"
+            <cflags>"/Od"
+          ;
+          if ( $(x_debug) = "on" )
+          {
+            flags +=
+              <cflags>"/DEBUG"
+            ;
+          }
+          else
+          {
+            if ( $(x_debug) = "line-tables-only" )
+            {
+              flags +=
+                <cflags>"/DEBUG:FASTLINK"
+              ;
+            }
+          }
+          if ( $(x_optimization) != "default" )
+          {
+            if ( $(x_optimization) = "g" )
+            {
+              flags +=
+                <cflags>"/Zi"
+              ;
+            }
+            else
+            {
+              if ( $(x_whole_program) != "default" )
+              {
+                if ( $(x_whole_program) = "off" )
+                {
+                  flags +=
+                    <cflags>"/ZI"
+                  ;
+                }
+                else
+                {
+                  flags +=
+                    <cflags>"/Zi"
+                  ;
+                }
+              }
+              else
+              {
+                flags +=
+                  <cflags>"/ZI"
+                ;
+              }
+            }
+          }
+          else
+          {
+            if ( $(x_whole_program) != "default" )
+            {
+              if ( $(x_whole_program) = "off" )
+              {
+                flags +=
+                  <cflags>"/ZI"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cflags>"/Zi"
+                ;
+              }
+            }
+            else
+            {
+              flags +=
+                <cflags>"/ZI"
+              ;
+            }
+          }
+        }
+      }
+      if ( $(x_optimization) != "default" )
+      {
+        if ( $(x_optimization) = "0" )
+        {
+          flags +=
+            <cflags>"/Ob0"
+            <cflags>"/Od"
+            <cflags>"/Oi-"
+            <cflags>"/Oy-"
+          ;
+        }
+        else
+        {
+          if ( $(x_optimization) = "g" )
+          {
+            flags +=
+              <cflags>"/Ob1"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"/DNDEBUG"
+            ;
+            if ( $(x_optimization) = "1" )
+            {
+              flags +=
+                <cflags>"/O1"
+              ;
+            }
+            else
+            {
+              if ( $(x_optimization) = "2" )
+              {
+                flags +=
+                  <cflags>"/O2"
+                ;
+              }
+              else
+              {
+                if ( $(x_optimization) = "3" )
+                {
+                  flags +=
+                    <cflags>"/O2"
+                  ;
+                }
+                else
+                {
+                  if (  ( $(x_optimization) = "size" ) || ( $(x_optimization) = "z" )  )
+                  {
+                    flags +=
+                      <cflags>"/O1"
+                      <cflags>"/GL"
+                      <cflags>"/Gw"
+                    ;
+                  }
+                  else
+                  {
+                    if ( $(x_optimization) = "fast" )
+                    {
+                      flags +=
+                        <cflags>"/O2"
+                        <cflags>"/fp:fast"
+                      ;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if ( $(x_control_flow) != "default" )
+      {
+        if ( $(x_control_flow) = "off" )
+        {
+          flags +=
+            <cflags>"/guard:cf-"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"/guard:cf"
+          ;
+        }
+      }
+      if ( $(x_whole_program) != "default" )
+      {
+        if ( $(x_whole_program) = "off" )
+        {
+          flags +=
+            <cflags>"/GL-"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"/GL"
+            <cflags>"/Gw"
+            <linkflags>"/LTCG"
+          ;
+          if ( $(x_whole_program) = "strip-all" )
+          {
+            flags +=
+              <linkflags>"/OPT:REF"
+            ;
+          }
+        }
+      }
+      if ( $(x_pedantic) != "default" )
+      {
+        if ! (  ( $(x_pedantic) = "off" )  )
+        {
+          flags +=
+            <cflags>"/permissive-"
+          ;
+        }
+      }
+      if ( $(x_stack_protector) != "default" )
+      {
+        if ( $(x_stack_protector) = "off" )
+        {
+          flags +=
+            <cflags>"/GS-"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"/GS"
+            <cflags>"/sdl"
+          ;
+          if ( $(x_stack_protector) = "strong" )
           {
             flags +=
               <cflags>"/RTC1"
-              <cflags>"/RTCc"
             ;
+            if (  $(toolset) = "msvc" && ! (  $(version) < "16.07"  )  )
+            {
+              flags +=
+                <cflags>"/guard:ehcont"
+                <linkflags>"/CETCOMPAT"
+              ;
+            }
+          }
+          else
+          {
+            if ( $(x_stack_protector) = "all" )
+            {
+              flags +=
+                <cflags>"/RTC1"
+                <cflags>"/RTCc"
+              ;
+            }
           }
         }
       }
@@ -2084,14 +2088,8 @@ rule jln_c_flags ( properties * )
         }
         if ! (  $(version) < "15.06"  )
         {
-          flags +=
-            <cflags>"/Zc:externConstexpr"
-          ;
           if ! (  $(version) < "16.08"  )
           {
-            flags +=
-              <cflags>"/Zc:lambda"
-            ;
             if ! (  $(version) < "16.05"  )
             {
               flags +=
@@ -2453,8 +2451,834 @@ rule jln_c_flags ( properties * )
       }
     }
   }
+  if $(toolset) = "intel' && $(original_version) = 'windows"
+  {
+    if ( $(x_warnings) != "default" )
+    {
+      if ( $(x_warnings) = "off" )
+      {
+        flags +=
+          <cflags>"/w"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cflags>"/W2"
+          <cflags>"/Qdiag-disable:1418,2259"
+        ;
+      }
+    }
+    if ( $(x_warnings_as_error) != "default" )
+    {
+      if ( $(x_warnings_as_error) = "on" )
+      {
+        flags +=
+          <cflags>"/WX"
+        ;
+      }
+      else
+      {
+        if ( $(x_warnings_as_error) = "basic" )
+        {
+          flags +=
+            <cflags>"/Qdiag-error:1079,39,109"
+          ;
+        }
+      }
+    }
+    if ( $(x_windows_bigobj) != "default" )
+    {
+      flags +=
+        <cflags>"/bigobj"
+      ;
+    }
+    if ( $(x_msvc_conformance) != "default" )
+    {
+      if (  ( $(x_msvc_conformance) = "all" ) || ( $(x_msvc_conformance) = "all-without-throwing-new" )  )
+      {
+        flags +=
+          <cflags>"/Zc:inline"
+          <cflags>"/Zc:strictStrings"
+        ;
+        if ( $(x_msvc_conformance) = "all" )
+        {
+          flags +=
+            <cflags>"/Zc:throwingNew"
+          ;
+        }
+      }
+    }
+    if ( $(x_debug) != "default" )
+    {
+      if ( $(x_debug) = "off" )
+      {
+        flags +=
+          <cflags>"/debug:NONE"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cflags>"/RTC1"
+          <cflags>"/Od"
+        ;
+        if ( $(x_debug) = "on" )
+        {
+          flags +=
+            <cflags>"/debug:full"
+          ;
+        }
+        else
+        {
+          if ( $(x_debug) = "line-tables-only" )
+          {
+            flags +=
+              <cflags>"/debug:minimal"
+            ;
+          }
+        }
+        if ( $(x_optimization) != "default" )
+        {
+          if ( $(x_optimization) = "g" )
+          {
+            flags +=
+              <cflags>"/Zi"
+            ;
+          }
+          else
+          {
+            if ( $(x_whole_program) != "default" )
+            {
+              if ( $(x_whole_program) = "off" )
+              {
+                flags +=
+                  <cflags>"/ZI"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cflags>"/Zi"
+                ;
+              }
+            }
+            else
+            {
+              flags +=
+                <cflags>"/ZI"
+              ;
+            }
+          }
+        }
+        else
+        {
+          if ( $(x_whole_program) != "default" )
+          {
+            if ( $(x_whole_program) = "off" )
+            {
+              flags +=
+                <cflags>"/ZI"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cflags>"/Zi"
+              ;
+            }
+          }
+          else
+          {
+            flags +=
+              <cflags>"/ZI"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_optimization) != "default" )
+    {
+      if ( $(x_optimization) = "0" )
+      {
+        flags +=
+          <cflags>"/Ob0"
+          <cflags>"/Od"
+          <cflags>"/Oi-"
+          <cflags>"/Oy-"
+        ;
+      }
+      else
+      {
+        if ( $(x_optimization) = "g" )
+        {
+          flags +=
+            <cflags>"/Ob1"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"/DNDEBUG"
+            <cflags>"/GF"
+          ;
+          if ( $(x_optimization) = "1" )
+          {
+            flags +=
+              <cflags>"/O1"
+            ;
+          }
+          else
+          {
+            if ( $(x_optimization) = "2" )
+            {
+              flags +=
+                <cflags>"/O2"
+              ;
+            }
+            else
+            {
+              if ( $(x_optimization) = "3" )
+              {
+                flags +=
+                  <cflags>"/O2"
+                ;
+              }
+              else
+              {
+                if ( $(x_optimization) = "z" )
+                {
+                  flags +=
+                    <cflags>"/O3"
+                  ;
+                }
+                else
+                {
+                  if ( $(x_optimization) = "size" )
+                  {
+                    flags +=
+                      <cflags>"/Os"
+                    ;
+                  }
+                  else
+                  {
+                    if ( $(x_optimization) = "fast" )
+                    {
+                      flags +=
+                        <cflags>"/fast"
+                      ;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if ( $(x_stack_protector) != "default" )
+    {
+      if ( $(x_stack_protector) = "off" )
+      {
+        flags +=
+          <cflags>"/GS-"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cflags>"/GS"
+        ;
+        if ( $(x_stack_protector) = "strong" )
+        {
+          flags +=
+            <cflags>"/RTC1"
+          ;
+        }
+        else
+        {
+          if ( $(x_stack_protector) = "all" )
+          {
+            flags +=
+              <cflags>"/RTC1"
+              <cflags>"/RTCc"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_sanitizers) != "default" )
+    {
+      if ( $(x_sanitizers) = "on" )
+      {
+        flags +=
+          <cflags>"/Qtrapuv"
+        ;
+      }
+    }
+    if ( $(x_float_sanitizers) != "default" )
+    {
+      if ( $(x_float_sanitizers) = "on" )
+      {
+        flags +=
+          <cflags>"/Qfp-stack-check"
+          <cflags>"/Qfp-trap:common"
+        ;
+      }
+    }
+    if ( $(x_control_flow) != "default" )
+    {
+      if ( $(x_control_flow) = "off" )
+      {
+        flags +=
+          <cflags>"/guard:cf-"
+          <cflags>"/mconditional-branch=keep"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cflags>"/guard:cf"
+        ;
+        if ( $(x_control_flow) = "branch" )
+        {
+          flags +=
+            <cflags>"/mconditional-branch:all-fix"
+            <cflags>"/Qcf-protection:branch"
+          ;
+        }
+        else
+        {
+          if ( $(x_control_flow) = "on" )
+          {
+            flags +=
+              <cflags>"/mconditional-branch:all-fix"
+              <cflags>"/Qcf-protection:full"
+            ;
+          }
+        }
+      }
+    }
+    if ( $(x_cpu) != "default" )
+    {
+      if ( $(x_cpu) = "generic" )
+      {
+        flags +=
+          <cflags>"/Qtune:generic"
+          <linkflags>"/Qtune:generic"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cflags>"/QxHost"
+          <linkflags>"/QxHost"
+        ;
+      }
+    }
+  }
+  else
+  {
+    if $(toolset) = "intel' && $(original_version) = 'linux"
+    {
+      if ( $(x_warnings) != "default" )
+      {
+        if ( $(x_warnings) = "off" )
+        {
+          flags +=
+            <cflags>"-w"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-Wall"
+            <cflags>"-Warray-bounds"
+            <cflags>"-Wcast-qual"
+            <cflags>"-Wchar-subscripts"
+            <cflags>"-Wdisabled-optimization"
+            <cflags>"-Wenum-compare"
+            <cflags>"-Wextra"
+            <cflags>"-Wfloat-equal"
+            <cflags>"-Wformat-security"
+            <cflags>"-Wformat=2"
+            <cflags>"-Winit-self"
+            <cflags>"-Winvalid-pch"
+            <cflags>"-Wmaybe-uninitialized"
+            <cflags>"-Wmissing-include-dirs"
+            <cflags>"-Wnarrowing"
+            <cflags>"-Wnonnull"
+            <cflags>"-Wparentheses"
+            <cflags>"-Wpointer-sign"
+            <cflags>"-Wreorder"
+            <cflags>"-Wsequence-point"
+            <cflags>"-Wtrigraphs"
+            <cflags>"-Wundef"
+            <cflags>"-Wunused-function"
+            <cflags>"-Wunused-but-set-variable"
+            <cflags>"-Wunused-variable"
+            <cflags>"-Wpointer-arith"
+            <cflags>"-Wold-style-definition"
+            <cflags>"-Wstrict-prototypes"
+            <cflags>"-Wwrite-strings"
+          ;
+          if ( $(x_switch_warnings) != "default" )
+          {
+            if (  ( $(x_switch_warnings) = "on" ) || ( $(x_switch_warnings) = "exhaustive-enum" )  )
+            {
+              flags +=
+                <cflags>"-Wswitch-enum"
+              ;
+            }
+            else
+            {
+              if ( $(x_switch_warnings) = "mandatory-default" )
+              {
+                flags +=
+                  <cflags>"-Wswitch-default"
+                ;
+              }
+              else
+              {
+                if ( $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
+                {
+                  flags +=
+                    <cflags>"-Wswitch"
+                  ;
+                }
+                else
+                {
+                  flags +=
+                    <cflags>"-Wno-switch"
+                  ;
+                }
+              }
+            }
+          }
+        }
+      }
+      if ( $(x_warnings_as_error) != "default" )
+      {
+        if ( $(x_warnings_as_error) = "on" )
+        {
+          flags +=
+            <cflags>"-Werror"
+          ;
+        }
+        else
+        {
+          if ( $(x_warnings_as_error) = "basic" )
+          {
+            flags +=
+              <cflags>"-diag-error=1079,39,109"
+            ;
+          }
+        }
+      }
+      if ( $(x_pedantic) != "default" )
+      {
+        if ( $(x_pedantic) = "off" )
+        {
+          flags +=
+            <cflags>"-fgnu-keywords"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-fno-gnu-keywords"
+          ;
+        }
+      }
+      if ( $(x_shadow_warnings) != "default" )
+      {
+        if ( $(x_shadow_warnings) = "off" )
+        {
+          flags +=
+            <cflags>"-Wno-shadow"
+          ;
+        }
+        else
+        {
+          if (  ( $(x_shadow_warnings) = "on" ) || ( $(x_shadow_warnings) = "all" )  )
+          {
+            flags +=
+              <cflags>"-Wshadow"
+            ;
+          }
+        }
+      }
+      if ( $(x_debug) != "default" )
+      {
+        if ( $(x_debug) = "off" )
+        {
+          flags +=
+            <cflags>"-g0"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-g"
+          ;
+        }
+      }
+      if ( $(x_optimization) != "default" )
+      {
+        if ( $(x_optimization) = "0" )
+        {
+          flags +=
+            <cflags>"-O0"
+          ;
+        }
+        else
+        {
+          if ( $(x_optimization) = "g" )
+          {
+            flags +=
+              <cflags>"-O1"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"-DNDEBUG"
+            ;
+            if ( $(x_optimization) = "1" )
+            {
+              flags +=
+                <cflags>"-O1"
+              ;
+            }
+            else
+            {
+              if ( $(x_optimization) = "2" )
+              {
+                flags +=
+                  <cflags>"-O2"
+                ;
+              }
+              else
+              {
+                if ( $(x_optimization) = "3" )
+                {
+                  flags +=
+                    <cflags>"-O3"
+                  ;
+                }
+                else
+                {
+                  if ( $(x_optimization) = "z" )
+                  {
+                    flags +=
+                      <cflags>"-fast"
+                    ;
+                  }
+                  else
+                  {
+                    if ( $(x_optimization) = "size" )
+                    {
+                      flags +=
+                        <cflags>"-Os"
+                      ;
+                    }
+                    else
+                    {
+                      if ( $(x_optimization) = "fast" )
+                      {
+                        flags +=
+                          <cflags>"-Ofast"
+                        ;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if ( $(x_stack_protector) != "default" )
+      {
+        if ( $(x_stack_protector) = "off" )
+        {
+          flags +=
+            <cflags>"-fno-protector-strong"
+            <cflags>"-U_FORTIFY_SOURCE"
+            <linkflags>"-fno-protector-strong"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-D_FORTIFY_SOURCE=2"
+          ;
+          if ( $(x_stack_protector) = "strong" )
+          {
+            flags +=
+              <cflags>"-fstack-protector-strong"
+              <linkflags>"-fstack-protector-strong"
+            ;
+          }
+          else
+          {
+            if ( $(x_stack_protector) = "all" )
+            {
+              flags +=
+                <cflags>"-fstack-protector-all"
+                <linkflags>"-fstack-protector-all"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cflags>"-fstack-protector"
+                <linkflags>"-fstack-protector"
+              ;
+            }
+          }
+        }
+      }
+      if ( $(x_relro) != "default" )
+      {
+        if ( $(x_relro) = "off" )
+        {
+          flags +=
+            <linkflags>"-Xlinker-znorelro"
+          ;
+        }
+        else
+        {
+          if ( $(x_relro) = "on" )
+          {
+            flags +=
+              <linkflags>"-Xlinker-zrelro"
+            ;
+          }
+          else
+          {
+            if ( $(x_relro) = "full" )
+            {
+              flags +=
+                <linkflags>"-Xlinker-zrelro"
+                <linkflags>"-Xlinker-znow"
+                <linkflags>"-Xlinker-znoexecstack"
+              ;
+            }
+          }
+        }
+      }
+      if ( $(x_pie) != "default" )
+      {
+        if ( $(x_pie) = "off" )
+        {
+          flags +=
+            <linkflags>"-no-pic"
+          ;
+        }
+        else
+        {
+          if ( $(x_pie) = "on" )
+          {
+            flags +=
+              <linkflags>"-pie"
+            ;
+          }
+          else
+          {
+            if ( $(x_pie) = "fpie" )
+            {
+              flags +=
+                <cflags>"-fpie"
+              ;
+            }
+            else
+            {
+              if ( $(x_pie) = "fpic" )
+              {
+                flags +=
+                  <cflags>"-fpic"
+                ;
+              }
+              else
+              {
+                if ( $(x_pie) = "fPIE" )
+                {
+                  flags +=
+                    <cflags>"-fPIE"
+                  ;
+                }
+                else
+                {
+                  if ( $(x_pie) = "fPIC" )
+                  {
+                    flags +=
+                      <cflags>"-fPIC"
+                    ;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if ( $(x_sanitizers) != "default" )
+      {
+        if ( $(x_sanitizers) = "on" )
+        {
+          flags +=
+            <cflags>"-ftrapuv"
+          ;
+        }
+      }
+      if ( $(x_integer_sanitizers) != "default" )
+      {
+        if ( $(x_integer_sanitizers) = "on" )
+        {
+          flags +=
+            <cflags>"-funsigned-bitfields"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-fno-unsigned-bitfields"
+          ;
+        }
+      }
+      if ( $(x_float_sanitizers) != "default" )
+      {
+        if ( $(x_float_sanitizers) = "on" )
+        {
+          flags +=
+            <cflags>"-fp-stack-check"
+            <cflags>"-fp-trap=common"
+          ;
+        }
+      }
+      if ( $(x_linker) != "default" )
+      {
+        if ( $(x_linker) = "bfd" )
+        {
+          flags +=
+            <linkflags>"-fuse-ld=bfd"
+          ;
+        }
+        else
+        {
+          if ( $(x_linker) = "gold" )
+          {
+            flags +=
+              <linkflags>"-fuse-ld=gold"
+            ;
+          }
+          else
+          {
+            flags +=
+              <linkflags>"-fuse-ld=ld"
+            ;
+          }
+        }
+      }
+      if ( $(x_lto) != "default" )
+      {
+        if ( $(x_lto) = "off" )
+        {
+          flags +=
+            <cflags>"-no-ipo"
+            <linkflags>"-no-ipo"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-ipo"
+            <linkflags>"-ipo"
+          ;
+          if ( $(x_lto) = "fat" )
+          {
+            if [ os.name ] = LINUX
+            {
+              flags +=
+                <cflags>"-ffat-lto-objects"
+                <linkflags>"-ffat-lto-objects"
+              ;
+            }
+          }
+        }
+      }
+      if ( $(x_control_flow) != "default" )
+      {
+        if ( $(x_control_flow) = "off" )
+        {
+          flags +=
+            <cflags>"-mconditional-branch=keep"
+            <cflags>"-fcf-protection=none"
+          ;
+        }
+        else
+        {
+          if ( $(x_control_flow) = "branch" )
+          {
+            flags +=
+              <cflags>"-mconditional-branch=all-fix"
+              <cflags>"-fcf-protection=branch"
+            ;
+          }
+          else
+          {
+            if ( $(x_control_flow) = "on" )
+            {
+              flags +=
+                <cflags>"-mconditional-branch=all-fix"
+                <cflags>"-fcf-protection=full"
+              ;
+            }
+          }
+        }
+      }
+      if ( $(x_exceptions) != "default" )
+      {
+        if ( $(x_exceptions) = "on" )
+        {
+          flags +=
+            <cflags>"-fexceptions"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-fno-exceptions"
+          ;
+        }
+      }
+      if ( $(x_cpu) != "default" )
+      {
+        if ( $(x_cpu) = "generic" )
+        {
+          flags +=
+            <cflags>"-mtune=generic"
+            <linkflags>"-mtune=generic"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cflags>"-xHost"
+            <linkflags>"-xHost"
+          ;
+        }
+      }
+    }
+  }
   if [ os.name ] = MINGW
   {
+    if ( $(x_windows_bigobj) != "default" )
+    {
+      flags +=
+        <cflags>"-Wa,-mbig-obj"
+      ;
+    }
   }
   return $(flags) ;
 }

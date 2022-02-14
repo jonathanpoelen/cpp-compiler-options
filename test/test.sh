@@ -106,7 +106,7 @@ if [ -z "$1" ] || [ "$1" = xmake ]; then
   test_success 'xmake b -rvD --dry-run | grep -Em1 Wconversion'
   test_failure 'xmake b -rvD --dry-run | grep -Em1 fsanitize'
   test_failure 'xmake f --jln-warnings=off >/dev/null ; xmake b -rvD --dry-run | grep -Em1 Wall'
-  test_siccess 'xmake f --jln-sanitizers=on >/dev/null ; xmake b -rvD --dry-run | grep -Em1 fsanitize'
+  test_success 'xmake f --jln-sanitizers=on >/dev/null ; xmake b -rvD --dry-run | grep -Em1 fsanitize'
 fi
 
 if [ -z "$1" ] || [ "$1" = meson ]; then

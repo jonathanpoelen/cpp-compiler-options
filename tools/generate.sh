@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# -ge 1 ] ; then
+if (( $# > 1 )) ; then
   set $1
 fi
 
@@ -12,10 +12,10 @@ OUTPUT_DIR_NAME=output
 TMPDIR="${TMPDIR:-/tmp}/cpp-comp-options"
 PROJECT_PATH=$(realpath $(dirname "$0"))/..
 
-if [ -d "$TMPDIR/$OUTPUT_DIR_NAME" ] ; then
+if [[ -d "$TMPDIR/$OUTPUT_DIR_NAME" ]] ; then
   rm -r -- "$TMPDIR/$OUTPUT_DIR_NAME"/../output
 fi
-mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"/{c,cpp}/{clang,gcc,msvc,clang-cl}
+mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"/{c,cpp}/{clang,gcc,msvc,clang-cl,icc,icl}
 
 cd -- "$PROJECT_PATH"
 
@@ -23,9 +23,9 @@ OUTPUT_DIR="$TMPDIR/$OUTPUT_DIR_NAME"
 OUTPUT_PROJECT="$OUTPUT_DIR_NAME"
 
 # configure temporary paths
-if [ -z "$LUA" ]; then
+if [[ -z "$LUA" ]]; then
   LUA=$(which luajit 2>/dev/null||:)
-  if [ -z "$LUA" ]; then
+  if [[ -z "$LUA" ]]; then
     LUA=lua
   else
     for f in compiler-options.lua generators/* ; do
@@ -78,6 +78,10 @@ for ((i=0; $i<2; ++i)) ; do
 done
 
 sgen compiler | while read comp ; do
+  # icx is a clang, ignored
+  if [[ $comp =~ ^icx ]]; then
+    continue
+  fi
   compname=${comp%-[0-9]*}
   gencompopt 2 release                       $comp cpu=native lto optimization=2 linker=native
   gencompopt 2 warnings                      $comp shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings
@@ -99,7 +103,7 @@ done
 echo -e "\n"Empty and removed:
 find "$OUTPUT_DIR" -size 0 -delete -print
 
-if [ -d "$OUTPUT_PROJECT" ]; then
+if [[ -d "$OUTPUT_PROJECT" ]]; then
   rm -r -- "$OUTPUT_PROJECT"/../output/
 fi
 mv -- "$OUTPUT_DIR" "$OUTPUT_PROJECT"

@@ -1,0 +1,7 @@
+/D_DEBUG
+/D_HAS_ITERATOR_DEBUGGING=1
+/Od
+/Qtrapuv
+/RTC1
+/ZI
+/debug:full
