@@ -1,5 +1,10 @@
 # ChangeLog
 
+## 2022-02-14
+
+- add icc, icl and icx compilers
+- fix C compiler version checking with CMake
+
 ## 2022-02-06
 
 - rename `microsoft_abi_compatibility_warnings` to `windows_abi_compatibility_warnings`
