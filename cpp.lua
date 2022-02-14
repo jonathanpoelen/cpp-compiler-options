@@ -556,6 +556,11 @@ function jln_getoptions(values, disable_others, print_compiler)
                    compiler:find('MinGW', 1, true) or
                    compiler:find('mingw', 1, true)
                   ) and 'gcc') or
+                 (compiler:find('icp?c', 1, true) and 'icc') or
+                 (compiler:find('icl', 1, true) and 'icl') or
+                 ((compiler:find('ico?x', 1, true) or
+                   compiler:find('dpcpp', 1, true)
+                  ) and 'icx') or
                  nil
     end
 
@@ -602,7 +607,7 @@ function jln_getoptions(values, disable_others, print_compiler)
 
   local jln_buildoptions, jln_linkoptions = {}, {}
 
-  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" ) then
+  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
     if not ( values["warnings"] == "default") then
       if values["warnings"] == "off" then
         jln_buildoptions[#jln_buildoptions+1] = "-w"
@@ -616,12 +621,12 @@ function jln_getoptions(values, disable_others, print_compiler)
           jln_buildoptions[#jln_buildoptions+1] = "-Wfloat-equal"
           jln_buildoptions[#jln_buildoptions+1] = "-Wformat-security"
           jln_buildoptions[#jln_buildoptions+1] = "-Wformat=2"
+          jln_buildoptions[#jln_buildoptions+1] = "-Winvalid-pch"
           jln_buildoptions[#jln_buildoptions+1] = "-Wmissing-include-dirs"
           jln_buildoptions[#jln_buildoptions+1] = "-Wpacked"
           jln_buildoptions[#jln_buildoptions+1] = "-Wredundant-decls"
           jln_buildoptions[#jln_buildoptions+1] = "-Wundef"
           jln_buildoptions[#jln_buildoptions+1] = "-Wunused-macros"
-          jln_buildoptions[#jln_buildoptions+1] = "-Winvalid-pch"
           jln_buildoptions[#jln_buildoptions+1] = "-Wpointer-arith"
           jln_buildoptions[#jln_buildoptions+1] = "-Wmissing-declarations"
           jln_buildoptions[#jln_buildoptions+1] = "-Wnon-virtual-dtor"
@@ -685,7 +690,7 @@ function jln_getoptions(values, disable_others, print_compiler)
             end
           end
         else
-          if ( compiler == "clang" or compiler == "clang-cl" ) then
+          if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
             jln_buildoptions[#jln_buildoptions+1] = "-Weverything"
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-documentation"
             jln_buildoptions[#jln_buildoptions+1] = "-Wno-documentation-unknown-command"
@@ -744,28 +749,8 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["conversion_warnings"] == "default") then
-      if values["conversion_warnings"] == "on" then
-        jln_buildoptions[#jln_buildoptions+1] = "-Wconversion"
-        jln_buildoptions[#jln_buildoptions+1] = "-Wsign-compare"
-        jln_buildoptions[#jln_buildoptions+1] = "-Wsign-conversion"
-      else
-        if values["conversion_warnings"] == "conversion" then
-          jln_buildoptions[#jln_buildoptions+1] = "-Wconversion"
-        else
-          if values["conversion_warnings"] == "sign" then
-            jln_buildoptions[#jln_buildoptions+1] = "-Wsign-compare"
-            jln_buildoptions[#jln_buildoptions+1] = "-Wsign-conversion"
-          else
-            jln_buildoptions[#jln_buildoptions+1] = "-Wno-conversion"
-            jln_buildoptions[#jln_buildoptions+1] = "-Wno-sign-compare"
-            jln_buildoptions[#jln_buildoptions+1] = "-Wno-sign-conversion"
-          end
-        end
-      end
-    end
     if not ( values["windows_abi_compatibility_warnings"] == "default") then
-      if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
+      if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
         if values["windows_abi_compatibility_warnings"] == "on" then
           jln_buildoptions[#jln_buildoptions+1] = "-Wmismatched-tags"
         else
@@ -791,7 +776,7 @@ function jln_getoptions(values, disable_others, print_compiler)
               end
             end
           else
-            if ( compiler == "clang" or compiler == "clang-cl" ) then
+            if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
               jln_buildoptions[#jln_buildoptions+1] = "-Werror=array-bounds"
               jln_buildoptions[#jln_buildoptions+1] = "-Werror=division-by-zero"
               if not ( compversion < 304 ) then
@@ -915,7 +900,7 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
     if not ( values["color"] == "default") then
-      if ( ( compiler == "gcc" and not ( compversion < 409 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
+      if ( ( compiler == "gcc" and not ( compversion < 409 ) ) or compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
         if values["color"] == "auto" then
           jln_buildoptions[#jln_buildoptions+1] = "-fdiagnostics-color=auto"
         else
@@ -940,7 +925,7 @@ function jln_getoptions(values, disable_others, print_compiler)
     end
     if not ( values["diagnostics_format"] == "default") then
       if values["diagnostics_format"] == "fixits" then
-        if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or ( compiler == "clang-cl" and not ( compversion < 500 ) ) ) then
+        if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or ( compiler == "clang-cl" and not ( compversion < 500 ) ) or ( compiler == "icx" and not ( compversion < 500 ) ) ) then
           jln_buildoptions[#jln_buildoptions+1] = "-fdiagnostics-parseable-fixits"
         end
       else
@@ -969,9 +954,31 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
         jln_buildoptions[#jln_buildoptions+1] = "-Werror=write-strings"
       else
-        if ( compiler == "clang" or compiler == "clang-cl" ) then
+        if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
           jln_buildoptions[#jln_buildoptions+1] = "-Wno-error=c++11-narrowing"
           jln_buildoptions[#jln_buildoptions+1] = "-Wno-reserved-user-defined-literal"
+        end
+      end
+    end
+  end
+  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" or compiler == "icx" or compiler == "icc" ) then
+    if not ( values["conversion_warnings"] == "default") then
+      if values["conversion_warnings"] == "on" then
+        jln_buildoptions[#jln_buildoptions+1] = "-Wconversion"
+        jln_buildoptions[#jln_buildoptions+1] = "-Wsign-compare"
+        jln_buildoptions[#jln_buildoptions+1] = "-Wsign-conversion"
+      else
+        if values["conversion_warnings"] == "conversion" then
+          jln_buildoptions[#jln_buildoptions+1] = "-Wconversion"
+        else
+          if values["conversion_warnings"] == "sign" then
+            jln_buildoptions[#jln_buildoptions+1] = "-Wsign-compare"
+            jln_buildoptions[#jln_buildoptions+1] = "-Wsign-conversion"
+          else
+            jln_buildoptions[#jln_buildoptions+1] = "-Wno-conversion"
+            jln_buildoptions[#jln_buildoptions+1] = "-Wno-sign-compare"
+            jln_buildoptions[#jln_buildoptions+1] = "-Wno-sign-conversion"
+          end
         end
       end
     end
@@ -1089,7 +1096,7 @@ function jln_getoptions(values, disable_others, print_compiler)
             jln_linkoptions[#jln_linkoptions+1] = "-Os"
           else
             if values["optimization"] == "z" then
-              if ( compiler == "clang" or compiler == "clang-cl" ) then
+              if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
                 jln_buildoptions[#jln_buildoptions+1] = "-Oz"
                 jln_linkoptions[#jln_linkoptions+1] = "-Oz"
               else
@@ -1450,52 +1457,7 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if ( compiler == "msvc" or compiler == "clang-cl" ) then
-    if not ( values["stl_fix"] == "default") then
-      if values["stl_fix"] == "on" then
-        jln_buildoptions[#jln_buildoptions+1] = "/DNOMINMAX"
-      end
-    end
-    if not ( values["debug"] == "default") then
-      if values["debug"] == "off" then
-        jln_buildoptions[#jln_buildoptions+1] = "/DEBUG:NONE"
-      else
-        jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
-        jln_buildoptions[#jln_buildoptions+1] = "/Od"
-        if values["debug"] == "on" then
-          jln_buildoptions[#jln_buildoptions+1] = "/DEBUG"
-        else
-          if values["debug"] == "line_tables_only" then
-            jln_buildoptions[#jln_buildoptions+1] = "/DEBUG:FASTLINK"
-          end
-        end
-        if not ( values["optimization"] == "default") then
-          if values["optimization"] == "g" then
-            jln_buildoptions[#jln_buildoptions+1] = "/Zi"
-          else
-            if not ( values["whole_program"] == "default") then
-              if values["whole_program"] == "off" then
-                jln_buildoptions[#jln_buildoptions+1] = "/ZI"
-              else
-                jln_buildoptions[#jln_buildoptions+1] = "/Zi"
-              end
-            else
-              jln_buildoptions[#jln_buildoptions+1] = "/ZI"
-            end
-          end
-        else
-          if not ( values["whole_program"] == "default") then
-            if values["whole_program"] == "off" then
-              jln_buildoptions[#jln_buildoptions+1] = "/ZI"
-            else
-              jln_buildoptions[#jln_buildoptions+1] = "/Zi"
-            end
-          else
-            jln_buildoptions[#jln_buildoptions+1] = "/ZI"
-          end
-        end
-      end
-    end
+  if ( compiler == "msvc" or compiler == "clang-cl" or compiler == "icl" ) then
     if not ( values["exceptions"] == "default") then
       if values["exceptions"] == "on" then
         jln_buildoptions[#jln_buildoptions+1] = "/EHsc"
@@ -1503,60 +1465,6 @@ function jln_getoptions(values, disable_others, print_compiler)
       else
         jln_buildoptions[#jln_buildoptions+1] = "/EHs-"
         jln_buildoptions[#jln_buildoptions+1] = "/D_HAS_EXCEPTIONS=0"
-      end
-    end
-    if not ( values["optimization"] == "default") then
-      if values["optimization"] == "0" then
-        jln_buildoptions[#jln_buildoptions+1] = "/Ob0"
-        jln_buildoptions[#jln_buildoptions+1] = "/Od"
-        jln_buildoptions[#jln_buildoptions+1] = "/Oi-"
-        jln_buildoptions[#jln_buildoptions+1] = "/Oy-"
-      else
-        if values["optimization"] == "g" then
-          jln_buildoptions[#jln_buildoptions+1] = "/Ob1"
-        else
-          jln_buildoptions[#jln_buildoptions+1] = "/DNDEBUG"
-          if values["optimization"] == "1" then
-            jln_buildoptions[#jln_buildoptions+1] = "/O1"
-          else
-            if values["optimization"] == "2" then
-              jln_buildoptions[#jln_buildoptions+1] = "/O2"
-            else
-              if values["optimization"] == "3" then
-                jln_buildoptions[#jln_buildoptions+1] = "/O2"
-              else
-                if ( values["optimization"] == "size" or values["optimization"] == "z" ) then
-                  jln_buildoptions[#jln_buildoptions+1] = "/O1"
-                  jln_buildoptions[#jln_buildoptions+1] = "/GL"
-                  jln_buildoptions[#jln_buildoptions+1] = "/Gw"
-                else
-                  if values["optimization"] == "fast" then
-                    jln_buildoptions[#jln_buildoptions+1] = "/O2"
-                    jln_buildoptions[#jln_buildoptions+1] = "/fp:fast"
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-    if not ( values["whole_program"] == "default") then
-      if values["whole_program"] == "off" then
-        jln_buildoptions[#jln_buildoptions+1] = "/GL-"
-      else
-        jln_buildoptions[#jln_buildoptions+1] = "/GL"
-        jln_buildoptions[#jln_buildoptions+1] = "/Gw"
-        jln_linkoptions[#jln_linkoptions+1] = "/LTCG"
-        if values["whole_program"] == "strip_all" then
-          jln_linkoptions[#jln_linkoptions+1] = "/OPT:REF"
-        end
-      end
-    end
-    if not ( values["pedantic"] == "default") then
-      if not ( values["pedantic"] == "off" ) then
-        jln_buildoptions[#jln_buildoptions+1] = "/permissive-"
-        jln_buildoptions[#jln_buildoptions+1] = "/Zc:__cplusplus"
       end
     end
     if not ( values["rtti"] == "default") then
@@ -1574,29 +1482,130 @@ function jln_getoptions(values, disable_others, print_compiler)
         jln_buildoptions[#jln_buildoptions+1] = "/D_HAS_ITERATOR_DEBUGGING=1"
       end
     end
-    if not ( values["control_flow"] == "default") then
-      if values["control_flow"] == "off" then
-        jln_buildoptions[#jln_buildoptions+1] = "/guard:cf-"
-      else
-        jln_buildoptions[#jln_buildoptions+1] = "/guard:cf"
+    if ( compiler == "msvc" or compiler == "clang-cl" ) then
+      if not ( values["stl_fix"] == "default") then
+        if values["stl_fix"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "/DNOMINMAX"
+        end
       end
-    end
-    if not ( values["stack_protector"] == "default") then
-      if values["stack_protector"] == "off" then
-        jln_buildoptions[#jln_buildoptions+1] = "/GS-"
-      else
-        jln_buildoptions[#jln_buildoptions+1] = "/GS"
-        jln_buildoptions[#jln_buildoptions+1] = "/sdl"
-        if values["stack_protector"] == "strong" then
-          jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
-          if ( compiler == "msvc" and not ( compversion < 1607 ) ) then
-            jln_buildoptions[#jln_buildoptions+1] = "/guard:ehcont"
-            jln_linkoptions[#jln_linkoptions+1] = "/CETCOMPAT"
-          end
+      if not ( values["debug"] == "default") then
+        if values["debug"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "/DEBUG:NONE"
         else
-          if values["stack_protector"] == "all" then
+          jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
+          jln_buildoptions[#jln_buildoptions+1] = "/Od"
+          if values["debug"] == "on" then
+            jln_buildoptions[#jln_buildoptions+1] = "/DEBUG"
+          else
+            if values["debug"] == "line_tables_only" then
+              jln_buildoptions[#jln_buildoptions+1] = "/DEBUG:FASTLINK"
+            end
+          end
+          if not ( values["optimization"] == "default") then
+            if values["optimization"] == "g" then
+              jln_buildoptions[#jln_buildoptions+1] = "/Zi"
+            else
+              if not ( values["whole_program"] == "default") then
+                if values["whole_program"] == "off" then
+                  jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+                else
+                  jln_buildoptions[#jln_buildoptions+1] = "/Zi"
+                end
+              else
+                jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+              end
+            end
+          else
+            if not ( values["whole_program"] == "default") then
+              if values["whole_program"] == "off" then
+                jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+              else
+                jln_buildoptions[#jln_buildoptions+1] = "/Zi"
+              end
+            else
+              jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+            end
+          end
+        end
+      end
+      if not ( values["optimization"] == "default") then
+        if values["optimization"] == "0" then
+          jln_buildoptions[#jln_buildoptions+1] = "/Ob0"
+          jln_buildoptions[#jln_buildoptions+1] = "/Od"
+          jln_buildoptions[#jln_buildoptions+1] = "/Oi-"
+          jln_buildoptions[#jln_buildoptions+1] = "/Oy-"
+        else
+          if values["optimization"] == "g" then
+            jln_buildoptions[#jln_buildoptions+1] = "/Ob1"
+          else
+            jln_buildoptions[#jln_buildoptions+1] = "/DNDEBUG"
+            if values["optimization"] == "1" then
+              jln_buildoptions[#jln_buildoptions+1] = "/O1"
+            else
+              if values["optimization"] == "2" then
+                jln_buildoptions[#jln_buildoptions+1] = "/O2"
+              else
+                if values["optimization"] == "3" then
+                  jln_buildoptions[#jln_buildoptions+1] = "/O2"
+                else
+                  if ( values["optimization"] == "size" or values["optimization"] == "z" ) then
+                    jln_buildoptions[#jln_buildoptions+1] = "/O1"
+                    jln_buildoptions[#jln_buildoptions+1] = "/GL"
+                    jln_buildoptions[#jln_buildoptions+1] = "/Gw"
+                  else
+                    if values["optimization"] == "fast" then
+                      jln_buildoptions[#jln_buildoptions+1] = "/O2"
+                      jln_buildoptions[#jln_buildoptions+1] = "/fp:fast"
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      if not ( values["control_flow"] == "default") then
+        if values["control_flow"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "/guard:cf-"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "/guard:cf"
+        end
+      end
+      if not ( values["whole_program"] == "default") then
+        if values["whole_program"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "/GL-"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "/GL"
+          jln_buildoptions[#jln_buildoptions+1] = "/Gw"
+          jln_linkoptions[#jln_linkoptions+1] = "/LTCG"
+          if values["whole_program"] == "strip_all" then
+            jln_linkoptions[#jln_linkoptions+1] = "/OPT:REF"
+          end
+        end
+      end
+      if not ( values["pedantic"] == "default") then
+        if not ( values["pedantic"] == "off" ) then
+          jln_buildoptions[#jln_buildoptions+1] = "/permissive-"
+          jln_buildoptions[#jln_buildoptions+1] = "/Zc:__cplusplus"
+        end
+      end
+      if not ( values["stack_protector"] == "default") then
+        if values["stack_protector"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "/GS-"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "/GS"
+          jln_buildoptions[#jln_buildoptions+1] = "/sdl"
+          if values["stack_protector"] == "strong" then
             jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
-            jln_buildoptions[#jln_buildoptions+1] = "/RTCc"
+            if ( compiler == "msvc" and not ( compversion < 1607 ) ) then
+              jln_buildoptions[#jln_buildoptions+1] = "/guard:ehcont"
+              jln_linkoptions[#jln_linkoptions+1] = "/CETCOMPAT"
+            end
+          else
+            if values["stack_protector"] == "all" then
+              jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
+              jln_buildoptions[#jln_buildoptions+1] = "/RTCc"
+            end
           end
         end
       end
@@ -1817,6 +1826,439 @@ function jln_getoptions(values, disable_others, print_compiler)
               jln_buildoptions[#jln_buildoptions+1] = "/sdl-"
             end
           end
+        end
+      end
+    end
+  end
+  if compiler == "icl" then
+    if not ( values["warnings"] == "default") then
+      if values["warnings"] == "off" then
+        jln_buildoptions[#jln_buildoptions+1] = "/w"
+      else
+        jln_buildoptions[#jln_buildoptions+1] = "/W2"
+        jln_buildoptions[#jln_buildoptions+1] = "/Qdiag-disable:1418,2259"
+      end
+    end
+    if not ( values["warnings_as_error"] == "default") then
+      if values["warnings_as_error"] == "on" then
+        jln_buildoptions[#jln_buildoptions+1] = "/WX"
+      else
+        if values["warnings_as_error"] == "basic" then
+          jln_buildoptions[#jln_buildoptions+1] = "/Qdiag-error:1079,39,109"
+        end
+      end
+    end
+    if not ( values["windows_bigobj"] == "default") then
+      jln_buildoptions[#jln_buildoptions+1] = "/bigobj"
+    end
+    if not ( values["msvc_conformance"] == "default") then
+      if ( values["msvc_conformance"] == "all" or values["msvc_conformance"] == "all_without_throwing_new" ) then
+        jln_buildoptions[#jln_buildoptions+1] = "/Zc:inline"
+        jln_buildoptions[#jln_buildoptions+1] = "/Zc:strictStrings"
+        if values["msvc_conformance"] == "all" then
+          jln_buildoptions[#jln_buildoptions+1] = "/Zc:throwingNew"
+        end
+      end
+    end
+    if not ( values["debug"] == "default") then
+      if values["debug"] == "off" then
+        jln_buildoptions[#jln_buildoptions+1] = "/debug:NONE"
+      else
+        jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
+        jln_buildoptions[#jln_buildoptions+1] = "/Od"
+        if values["debug"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "/debug:full"
+        else
+          if values["debug"] == "line_tables_only" then
+            jln_buildoptions[#jln_buildoptions+1] = "/debug:minimal"
+          end
+        end
+        if not ( values["optimization"] == "default") then
+          if values["optimization"] == "g" then
+            jln_buildoptions[#jln_buildoptions+1] = "/Zi"
+          else
+            if not ( values["whole_program"] == "default") then
+              if values["whole_program"] == "off" then
+                jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+              else
+                jln_buildoptions[#jln_buildoptions+1] = "/Zi"
+              end
+            else
+              jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+            end
+          end
+        else
+          if not ( values["whole_program"] == "default") then
+            if values["whole_program"] == "off" then
+              jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+            else
+              jln_buildoptions[#jln_buildoptions+1] = "/Zi"
+            end
+          else
+            jln_buildoptions[#jln_buildoptions+1] = "/ZI"
+          end
+        end
+      end
+    end
+    if not ( values["optimization"] == "default") then
+      if values["optimization"] == "0" then
+        jln_buildoptions[#jln_buildoptions+1] = "/Ob0"
+        jln_buildoptions[#jln_buildoptions+1] = "/Od"
+        jln_buildoptions[#jln_buildoptions+1] = "/Oi-"
+        jln_buildoptions[#jln_buildoptions+1] = "/Oy-"
+      else
+        if values["optimization"] == "g" then
+          jln_buildoptions[#jln_buildoptions+1] = "/Ob1"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "/DNDEBUG"
+          jln_buildoptions[#jln_buildoptions+1] = "/GF"
+          if values["optimization"] == "1" then
+            jln_buildoptions[#jln_buildoptions+1] = "/O1"
+          else
+            if values["optimization"] == "2" then
+              jln_buildoptions[#jln_buildoptions+1] = "/O2"
+            else
+              if values["optimization"] == "3" then
+                jln_buildoptions[#jln_buildoptions+1] = "/O2"
+              else
+                if values["optimization"] == "z" then
+                  jln_buildoptions[#jln_buildoptions+1] = "/O3"
+                else
+                  if values["optimization"] == "size" then
+                    jln_buildoptions[#jln_buildoptions+1] = "/Os"
+                  else
+                    if values["optimization"] == "fast" then
+                      jln_buildoptions[#jln_buildoptions+1] = "/fast"
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    if not ( values["stack_protector"] == "default") then
+      if values["stack_protector"] == "off" then
+        jln_buildoptions[#jln_buildoptions+1] = "/GS-"
+      else
+        jln_buildoptions[#jln_buildoptions+1] = "/GS"
+        if values["stack_protector"] == "strong" then
+          jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
+        else
+          if values["stack_protector"] == "all" then
+            jln_buildoptions[#jln_buildoptions+1] = "/RTC1"
+            jln_buildoptions[#jln_buildoptions+1] = "/RTCc"
+          end
+        end
+      end
+    end
+    if not ( values["sanitizers"] == "default") then
+      if values["sanitizers"] == "on" then
+        jln_buildoptions[#jln_buildoptions+1] = "/Qtrapuv"
+      end
+    end
+    if not ( values["float_sanitizers"] == "default") then
+      if values["float_sanitizers"] == "on" then
+        jln_buildoptions[#jln_buildoptions+1] = "/Qfp-stack-check"
+        jln_buildoptions[#jln_buildoptions+1] = "/Qfp-trap:common"
+      end
+    end
+    if not ( values["control_flow"] == "default") then
+      if values["control_flow"] == "off" then
+        jln_buildoptions[#jln_buildoptions+1] = "/guard:cf-"
+        jln_buildoptions[#jln_buildoptions+1] = "/mconditional-branch=keep"
+      else
+        jln_buildoptions[#jln_buildoptions+1] = "/guard:cf"
+        if values["control_flow"] == "branch" then
+          jln_buildoptions[#jln_buildoptions+1] = "/mconditional-branch:all-fix"
+          jln_buildoptions[#jln_buildoptions+1] = "/Qcf-protection:branch"
+        else
+          if values["control_flow"] == "on" then
+            jln_buildoptions[#jln_buildoptions+1] = "/mconditional-branch:all-fix"
+            jln_buildoptions[#jln_buildoptions+1] = "/Qcf-protection:full"
+          end
+        end
+      end
+    end
+    if not ( values["cpu"] == "default") then
+      if values["cpu"] == "generic" then
+        jln_buildoptions[#jln_buildoptions+1] = "/Qtune:generic"
+        jln_linkoptions[#jln_linkoptions+1] = "/Qtune:generic"
+      else
+        jln_buildoptions[#jln_buildoptions+1] = "/QxHost"
+        jln_linkoptions[#jln_linkoptions+1] = "/QxHost"
+      end
+    end
+  else
+    if compiler == "icc" then
+      if not ( values["warnings"] == "default") then
+        if values["warnings"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "-w"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-Wall"
+          jln_buildoptions[#jln_buildoptions+1] = "-Warray-bounds"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wcast-qual"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wchar-subscripts"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wdisabled-optimization"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wenum-compare"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wextra"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wfloat-equal"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wformat-security"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wformat=2"
+          jln_buildoptions[#jln_buildoptions+1] = "-Winit-self"
+          jln_buildoptions[#jln_buildoptions+1] = "-Winvalid-pch"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wmaybe-uninitialized"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wmissing-include-dirs"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wnarrowing"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wnonnull"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wparentheses"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wpointer-sign"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wreorder"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wsequence-point"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wtrigraphs"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wundef"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wunused-function"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wunused-but-set-variable"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wunused-variable"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wpointer-arith"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wdeprecated"
+          jln_buildoptions[#jln_buildoptions+1] = "-Wnon-virtual-dtor"
+          jln_buildoptions[#jln_buildoptions+1] = "-Woverloaded-virtual"
+          if not ( values["switch_warnings"] == "default") then
+            if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "exhaustive_enum" ) then
+              jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-enum"
+            else
+              if values["switch_warnings"] == "mandatory_default" then
+                jln_buildoptions[#jln_buildoptions+1] = "-Wswitch-default"
+              else
+                if values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" then
+                  jln_buildoptions[#jln_buildoptions+1] = "-Wswitch"
+                else
+                  jln_buildoptions[#jln_buildoptions+1] = "-Wno-switch"
+                end
+              end
+            end
+          end
+        end
+      end
+      if not ( values["warnings_as_error"] == "default") then
+        if values["warnings_as_error"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-Werror"
+        else
+          if values["warnings_as_error"] == "basic" then
+            jln_buildoptions[#jln_buildoptions+1] = "-diag-error=1079,39,109"
+          end
+        end
+      end
+      if not ( values["pedantic"] == "default") then
+        if values["pedantic"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "-fgnu-keywords"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-gnu-keywords"
+        end
+      end
+      if not ( values["shadow_warnings"] == "default") then
+        if values["shadow_warnings"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "-Wno-shadow"
+        else
+          if ( values["shadow_warnings"] == "on" or values["shadow_warnings"] == "all" ) then
+            jln_buildoptions[#jln_buildoptions+1] = "-Wshadow"
+          end
+        end
+      end
+      if not ( values["stl_debug"] == "default") then
+        if not ( values["stl_debug"] == "off" ) then
+          if ( values["stl_debug"] == "allow_broken_abi" or values["stl_debug"] == "allow_broken_abi_and_bugs" ) then
+            jln_buildoptions[#jln_buildoptions+1] = "-D_GLIBCXX_DEBUG"
+          else
+            jln_buildoptions[#jln_buildoptions+1] = "-D_GLIBCXX_ASSERTIONS"
+          end
+        end
+      end
+      if not ( values["debug"] == "default") then
+        if values["debug"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "-g0"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-g"
+        end
+      end
+      if not ( values["optimization"] == "default") then
+        if values["optimization"] == "0" then
+          jln_buildoptions[#jln_buildoptions+1] = "-O0"
+        else
+          if values["optimization"] == "g" then
+            jln_buildoptions[#jln_buildoptions+1] = "-O1"
+          else
+            jln_buildoptions[#jln_buildoptions+1] = "-DNDEBUG"
+            if values["optimization"] == "1" then
+              jln_buildoptions[#jln_buildoptions+1] = "-O1"
+            else
+              if values["optimization"] == "2" then
+                jln_buildoptions[#jln_buildoptions+1] = "-O2"
+              else
+                if values["optimization"] == "3" then
+                  jln_buildoptions[#jln_buildoptions+1] = "-O3"
+                else
+                  if values["optimization"] == "z" then
+                    jln_buildoptions[#jln_buildoptions+1] = "-fast"
+                  else
+                    if values["optimization"] == "size" then
+                      jln_buildoptions[#jln_buildoptions+1] = "-Os"
+                    else
+                      if values["optimization"] == "fast" then
+                        jln_buildoptions[#jln_buildoptions+1] = "-Ofast"
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      if not ( values["stack_protector"] == "default") then
+        if values["stack_protector"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-protector-strong"
+          jln_buildoptions[#jln_buildoptions+1] = "-U_FORTIFY_SOURCE"
+          jln_linkoptions[#jln_linkoptions+1] = "-fno-protector-strong"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-D_FORTIFY_SOURCE=2"
+          if values["stack_protector"] == "strong" then
+            jln_buildoptions[#jln_buildoptions+1] = "-fstack-protector-strong"
+            jln_linkoptions[#jln_linkoptions+1] = "-fstack-protector-strong"
+          else
+            if values["stack_protector"] == "all" then
+              jln_buildoptions[#jln_buildoptions+1] = "-fstack-protector-all"
+              jln_linkoptions[#jln_linkoptions+1] = "-fstack-protector-all"
+            else
+              jln_buildoptions[#jln_buildoptions+1] = "-fstack-protector"
+              jln_linkoptions[#jln_linkoptions+1] = "-fstack-protector"
+            end
+          end
+        end
+      end
+      if not ( values["relro"] == "default") then
+        if values["relro"] == "off" then
+          jln_linkoptions[#jln_linkoptions+1] = "-Xlinker-znorelro"
+        else
+          if values["relro"] == "on" then
+            jln_linkoptions[#jln_linkoptions+1] = "-Xlinker-zrelro"
+          else
+            if values["relro"] == "full" then
+              jln_linkoptions[#jln_linkoptions+1] = "-Xlinker-zrelro"
+              jln_linkoptions[#jln_linkoptions+1] = "-Xlinker-znow"
+              jln_linkoptions[#jln_linkoptions+1] = "-Xlinker-znoexecstack"
+            end
+          end
+        end
+      end
+      if not ( values["pie"] == "default") then
+        if values["pie"] == "off" then
+          jln_linkoptions[#jln_linkoptions+1] = "-no-pic"
+        else
+          if values["pie"] == "on" then
+            jln_linkoptions[#jln_linkoptions+1] = "-pie"
+          else
+            if values["pie"] == "fpie" then
+              jln_buildoptions[#jln_buildoptions+1] = "-fpie"
+            else
+              if values["pie"] == "fpic" then
+                jln_buildoptions[#jln_buildoptions+1] = "-fpic"
+              else
+                if values["pie"] == "fPIE" then
+                  jln_buildoptions[#jln_buildoptions+1] = "-fPIE"
+                else
+                  if values["pie"] == "fPIC" then
+                    jln_buildoptions[#jln_buildoptions+1] = "-fPIC"
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      if not ( values["sanitizers"] == "default") then
+        if values["sanitizers"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-ftrapuv"
+        end
+      end
+      if not ( values["integer_sanitizers"] == "default") then
+        if values["integer_sanitizers"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-funsigned-bitfields"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-unsigned-bitfields"
+        end
+      end
+      if not ( values["float_sanitizers"] == "default") then
+        if values["float_sanitizers"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-fp-stack-check"
+          jln_buildoptions[#jln_buildoptions+1] = "-fp-trap=common"
+        end
+      end
+      if not ( values["linker"] == "default") then
+        if values["linker"] == "bfd" then
+          jln_linkoptions[#jln_linkoptions+1] = "-fuse-ld=bfd"
+        else
+          if values["linker"] == "gold" then
+            jln_linkoptions[#jln_linkoptions+1] = "-fuse-ld=gold"
+          else
+            jln_linkoptions[#jln_linkoptions+1] = "-fuse-ld=ld"
+          end
+        end
+      end
+      if not ( values["lto"] == "default") then
+        if values["lto"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "-no-ipo"
+          jln_linkoptions[#jln_linkoptions+1] = "-no-ipo"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-ipo"
+          jln_linkoptions[#jln_linkoptions+1] = "-ipo"
+          if values["lto"] == "fat" then
+            if os.target() == "linux" then
+              jln_buildoptions[#jln_buildoptions+1] = "-ffat-lto-objects"
+              jln_linkoptions[#jln_linkoptions+1] = "-ffat-lto-objects"
+            end
+          end
+        end
+      end
+      if not ( values["control_flow"] == "default") then
+        if values["control_flow"] == "off" then
+          jln_buildoptions[#jln_buildoptions+1] = "-mconditional-branch=keep"
+          jln_buildoptions[#jln_buildoptions+1] = "-fcf-protection=none"
+        else
+          if values["control_flow"] == "branch" then
+            jln_buildoptions[#jln_buildoptions+1] = "-mconditional-branch=all-fix"
+            jln_buildoptions[#jln_buildoptions+1] = "-fcf-protection=branch"
+          else
+            if values["control_flow"] == "on" then
+              jln_buildoptions[#jln_buildoptions+1] = "-mconditional-branch=all-fix"
+              jln_buildoptions[#jln_buildoptions+1] = "-fcf-protection=full"
+            end
+          end
+        end
+      end
+      if not ( values["exceptions"] == "default") then
+        if values["exceptions"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-fexceptions"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-exceptions"
+        end
+      end
+      if not ( values["rtti"] == "default") then
+        if values["rtti"] == "on" then
+          jln_buildoptions[#jln_buildoptions+1] = "-frtti"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-fno-rtti"
+        end
+      end
+      if not ( values["cpu"] == "default") then
+        if values["cpu"] == "generic" then
+          jln_buildoptions[#jln_buildoptions+1] = "-mtune=generic"
+          jln_linkoptions[#jln_linkoptions+1] = "-mtune=generic"
+        else
+          jln_buildoptions[#jln_buildoptions+1] = "-xHost"
+          jln_linkoptions[#jln_linkoptions+1] = "-xHost"
         end
       end
     end
