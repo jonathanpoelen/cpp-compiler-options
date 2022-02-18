@@ -1,3 +1,4 @@
+
 Compilation options for different versions of Clang, GCC, ICC, ICX and MSVC. Provided a generator and different file formats (build system and compiler).
 
 The `output` directory contains files for `cmake`, `xmake`, `premake5`, `meson`, `bjam`/`b2`, `scons` and command-line options for `gcc`/`g++`, `clang`/`clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
@@ -423,15 +424,27 @@ done >> ~/.bashrc
 
 # Generators
 
-$ `./compiler-options.lua [-h] [-c] [-o filebase] [-f [-]{option_name[=value_name][,...]}] [-d option_name=value_name[,...]] {generator} [options...]`
+Usage:
+
+```
+./compiler-options.lua [-h] [-p] [-c] [-o outfilebase]
+                       [-C [-]{platform|compiler|linker}=name[,...]]
+                       [-f [-]{option_name[=value_name][,...]}]
+                       [-d option_name=value_name[,...]]
+                       {generator} [options...]
+```
 
 ```bash
 ./compiler-options.lua -f debug,warning generators/cmake.lua # only with debug and warning
 ./compiler-options.lua -f -debug,warning generators/cmake.lua # without debug nor warning
 ```
 
+- `-p` print ast
+- `-C` Restrict to a list of platform, compiler or linker.
+       When the list is prefixed with '-', values are removed from current AST.
 - `-c` for C, default is C++.
-- `-f` Restrict to a list of option/value. When the list is prefixed by `-`, options/values are removed.
+- `-f` Restrict to a list of option/value.
+       When the list is prefixed with `-`, options/values are removed.
 - `-d` Set new default value. An empty string for `value_name` is equivalent to `default`.
 
 ## generators/compiler.lua

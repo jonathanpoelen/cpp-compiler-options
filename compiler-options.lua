@@ -1,48 +1,5 @@
 #!/usr/bin/env lua
 
---[[
-local _print_ast_ordered_vars = {
-  '_if',
-  '_else',
-  '_t'
-}
-local _kprint_ast_var_filter = {
-  _t=true,
-  _if=true,
-  _else=true,
-  _subelse=true
-}
-
-function printAST(ast, prefix)
-  if type(ast) == 'table' then
-    io.stdout:write('{\n')
-    prefix = prefix or ''
-    local newprefix = prefix..'  '
-
-    for _,k in pairs(_print_ast_ordered_vars) do
-      if ast[k] then
-        io.stdout:write(newprefix..k..': ')
-        printAST(ast[k], newprefix)
-      end
-    end
-
-    for k,x in pairs(ast) do
-      if not _kprint_ast_var_filter[k] then
-        io.stdout:write(newprefix..k..': ')
-        printAST(x, newprefix)
-      end
-    end
-    io.stdout:write(prefix..'}\n')
-  elseif ast then
-    io.stdout:write(ast..'\n')
-  else
-    io.stdout:write('nil\n')
-  end
-  return ast
-end
-]]
-
-
 function has_value(t)
   for k in pairs(t) do
     return true
@@ -2352,7 +2309,7 @@ function insert_missing_function(V)
   end
 end
 
-function run(is_C, filebase, ignore_options, generator_name, ...)
+function run(ast, is_C, filebase, ignore_options, generator_name, ...)
   local V = require(generator_name:gsub('.lua$', ''))
   insert_missing_function(V)
 
@@ -2406,11 +2363,7 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
     insert_missing_function(V)
   end
 
-  -- printAST(MakeAST(is_C),'')
-  -- io.stdout:flush()
-  -- os.exit(1)
-
-  evalflags(MakeAST(is_C), V)
+  evalflags(ast, V)
 
   local out = V:stop(filebase)
   if not out then
@@ -2444,9 +2397,18 @@ function run(is_C, filebase, ignore_options, generator_name, ...)
 end
 
 function help(out)
-  out:write(arg[0] .. [==[' [-c] [-o filebase] [-f [-]{option_name[=value_name][,...]}] [-d option_name=value_name[,...]] {generator.lua} [-h|{options}...]
+  local prefix = string.rep(' ', #arg[0]+1)
+  out:write(arg[0] .. ' [-p] [-c] [-o outfilebase]\n'
+         .. prefix .. '[-f [-]{option_name[=value_name][,...]}]\n'
+         .. prefix .. '[-C [-]{platform|compiler|linker}=name[,...]]\n'
+         .. prefix .. '[-d option_name=value_name[,...]]\n'
+         .. prefix .. '{generator.lua} [-h|{options}...]\n\n' .. [==[
+  -p  print ast
   -c  Generator for C, not for C++
-  -f  Restrict to a list of option/value. When the list is prefixed by '-', options/values are removed.
+  -C  Restrict to a list of platform, compiler or linker.
+      When the list is prefixed with '-', values are removed from current AST.
+  -f  Restrict to a list of option/value.
+      When the list is prefixed by '-', options/values are removed.
   -d  Set new default value. An empty string for value_name is equivalent to 'default'.
 ]==])
 end
@@ -2454,6 +2416,7 @@ end
 local filebase
 local ignore_options = {}
 local is_C = false
+local print_ast = false
 
 function check_optname(cond, optname)
   if not cond then
@@ -2469,9 +2432,14 @@ function check_optvalue(cond, optname, optvalue)
   end
 end
 
+-- {[0]=enabled, keep:bool, [platform_or_compiler_or_linker]=true, ...}
+env_filter = {false, platform={}, compiler={}, linker={}}
+env_types = {}
+
 cli={
   c={function() is_C=true end},
   h={function() help(io.stdout) os.exit(0) end},
+  p={function() print_ast=true end},
 
   o={arg=true, function(value)
     filebase = (value ~= '-') and value or nil
@@ -2488,6 +2456,23 @@ cli={
         check_optvalue(option.kvalues[optvalue], optname, optvalue)
         option.default = optvalue
       end
+    end
+  end},
+
+  C={arg=true, function(value)
+    env_filter[0] = true
+    local neg, k = value:match('(-?)([^=]+)')
+    local t = env_filter[k]
+    if not t then
+      io.stderr:write('Unknown type: ' .. k .. ' with -C\n')
+      help(io.stderr)
+      os.exit(1)
+    end
+    env_types[k] = true
+    env_filter[1] = neg == '-'
+    value = value:sub(#neg + #k + 2)
+    for name in value:gmatch('([^,]+),?') do
+      t[name] = true
     end
   end},
 
@@ -2578,10 +2563,124 @@ while i <= #arg do
   i = i+1
 end
 
-if i > #arg then
+if i > #arg and not print_ast then
+  io.stderr:write('Missing generator file\n\n')
   help(io.stderr)
-  io.stderr:write('Missing generator file\n')
   os.exit(1)
 end
 
-run(is_C, filebase, ignore_options, select(i, ...))
+ast = MakeAST(is_C)
+
+if env_filter[0] then
+  local keep = not env_filter[1]
+
+  function filter_cond(t) --: true = keep, false = remove, nil = unchanged
+    for k,v in pairs(t) do
+      if k == '_and' then
+        for _,x in ipairs(v) do
+          if filter_cond(x) == false then
+            return false
+          end
+        end
+      elseif k == '_or' then
+        local r
+        local is_true = false
+        local is_nil = false
+        local newt = {}
+        for _,x in ipairs(v) do
+          r = filter_cond(x)
+          if r ~= false then
+            newt[#newt+1] = x
+            if r == nil then
+              is_nil = true
+            else
+              is_true = true
+            end
+          end
+        end
+        t._or = newt
+        if is_nil then
+          return nil
+        end
+        return is_true
+      elseif k == '_not' then
+        local r = filter_cond(v)
+        if r ~= nil then
+          return not r
+        end
+      elseif k == '_if' then
+        return filter_cond(v)
+      elseif env_types[k] then
+        return keep == (env_filter[k][v] or false)
+      end
+    end
+  end
+
+  function filter_ast(t)
+    for k,v in pairs(t) do
+      if k == '_if' then
+        if filter_cond(v) == false then
+          local tt = t._else
+          if tt then
+            t._if = tt._if
+            t._t = tt._t
+            t._else = tt._else
+          else
+            t._if = nil
+            t._t = nil
+            return
+          end
+        end
+      elseif type(v) == 'table' then
+        filter_ast(v)
+      end
+    end
+  end
+
+  filter_ast(ast)
+end
+
+if print_ast then
+  local _print_ast_ordered_vars = {
+    '_if',
+    '_else',
+    '_t'
+  }
+
+  local _kprint_ast_var_filter = {
+    _t=true,
+    _if=true,
+    _else=true,
+    _subelse=true
+  }
+
+  function printAST(ast, prefix)
+    if type(ast) == 'table' then
+      io.stdout:write('{\n')
+      local newprefix = prefix..'  '
+
+      for _,k in ipairs(_print_ast_ordered_vars) do
+        if ast[k] then
+          io.stdout:write(newprefix..k..': ')
+          printAST(ast[k], newprefix)
+        end
+      end
+
+      for k,x in pairs(ast) do
+        if not _kprint_ast_var_filter[k] then
+          io.stdout:write(newprefix..k..': ')
+          printAST(x, newprefix)
+        end
+      end
+      io.stdout:write(prefix..'}\n')
+    else
+      io.stdout:write(ast..'\n')
+    end
+    return ast
+  end
+
+  printAST(ast, '')
+  io.stdout:flush()
+else
+  run(ast, is_C, filebase, ignore_options, select(i, ...))
+end
