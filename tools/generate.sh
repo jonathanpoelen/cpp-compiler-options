@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-if (( $# > 1 )) ; then
+if (( $# > 0 )) ; then
   set $1
 fi
 
@@ -24,7 +24,18 @@ OUTPUT_PROJECT="$OUTPUT_DIR_NAME"
 
 # configure temporary paths
 if [[ -z "$LUA" ]]; then
-  LUA=$(which luajit 2>/dev/null||:)
+  LUA=$(which luajit-2017 2>/dev/null||:)
+  if [[ -z "$LUA" ]]; then
+    LUA=$(which luajit 2>/dev/null||:)
+    if [[ -n "$LUA" ]]; then
+      output=$(luajit -v)
+      # luajit 2022 takes longer to load than to run the code
+      if ! [[ $output = *2017* ]]; then
+        LUA=
+      fi
+    fi
+  fi
+
   if [[ -z "$LUA" ]]; then
     LUA=lua
   else
