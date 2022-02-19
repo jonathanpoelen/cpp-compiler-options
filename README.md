@@ -439,12 +439,10 @@ Usage:
 ./compiler-options.lua -f -debug,warning generators/cmake.lua # without debug nor warning
 ```
 
-- `-p` print ast
-- `-C` Restrict to a list of platform, compiler or linker.
-       When the list is prefixed with '-', values are removed from current AST.
+- `-p` Print an AST.
 - `-c` for C, default is C++.
-- `-f` Restrict to a list of option/value.
-       When the list is prefixed with `-`, options/values are removed.
+- `-C` Restrict to a list of platform, compiler or linker. When the list is prefixed with '-', values are removed from current AST.
+- `-f` Restrict to a list of option/value. When the list is prefixed with `-`, options/values are removed.
 - `-d` Set new default value. An empty string for `value_name` is equivalent to `default`.
 
 ## generators/compiler.lua

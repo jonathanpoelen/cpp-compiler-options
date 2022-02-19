@@ -2403,13 +2403,14 @@ function help(out)
          .. prefix .. '[-C [-]{platform|compiler|linker}=name[,...]]\n'
          .. prefix .. '[-d option_name=value_name[,...]]\n'
          .. prefix .. '{generator.lua} [-h|{options}...]\n\n' .. [==[
-  -p  print ast
-  -c  Generator for C, not for C++
+  -p  Print an AST.
+  -c  Generator for C, not for C++.
   -C  Restrict to a list of platform, compiler or linker.
       When the list is prefixed with '-', values are removed from current AST.
   -f  Restrict to a list of option/value.
       When the list is prefixed by '-', options/values are removed.
-  -d  Set new default value. An empty string for value_name is equivalent to 'default'.
+  -d  Set new default value. An empty string for value_name is equivalent
+      to 'default'.
 ]==])
 end
 
