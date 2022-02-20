@@ -23,7 +23,6 @@ return {
     _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
 
     local optprefix = optprefix and optprefix:gsub('-', '_') or ''
-    local prefixfunc = _.is_C and 'jln_c' or 'jln'
     local prefixenv = _.is_C and 'CC' or 'CXX'
 
     local enums, flags, var2opts, opt2vars, xvalues = {}, {}, {}, {}, {}
@@ -34,11 +33,10 @@ return {
       var2opts[#var2opts+1] = "  '" .. name .. "': '" .. optname .. "',\n"
       opt2vars[#opt2vars+1] = "  '" .. optname .. "': '" .. name .. "',\n"
       xvalues[#xvalues+1] = "  x_" .. optname .. " = options.get('" .. optname
-                            .. "', _" .. prefixfunc
-                            .. "_default_flags['" .. optname .. "'])"
+                            .. "', _default_flags['" .. optname .. "'])"
       enums[#enums+1] = "    EnumVariable('" .. name .. "', '"
         .. quotable_desc(option) .. "', default_values.get('"
-        .. optname .. "', _jln_default_flags['" .. optname
+        .. optname .. "', _default_flags['" .. optname
         .. "']),\n                 allowed_values=('"
         .. table.concat(option.values, "', '") .. "'))"
     end
@@ -46,70 +44,97 @@ return {
     _:write([[
 from SCons.Environment import Environment
 from SCons.Variables.EnumVariable import EnumVariable
+import os
+import re
 
-_]] .. prefixfunc .. [[_default_flags = {
+_default_flags = {
 ]] .. table.concat(flags) .. [[
 }
 
-_]] .. prefixfunc .. [[_var2opts = {
+_var2opts = {
 ]] .. table.concat(var2opts) .. [[
 }
 
-_]] .. prefixfunc .. [[_opt2vars = {
+_opt2vars = {
 ]] .. table.concat(opt2vars) .. [[
 }
 
-def ]] .. prefixfunc .. [[_set_global_flags(default_values):
-  _]] .. prefixfunc .. [[_default_flags.update(default_values)
+def set_global_flags(default_values):
+  _default_flags.update(default_values)
 
-def ]] .. prefixfunc .. [[_add_variables(vars, default_values={}):
+def add_variables(vars, default_values={}):
   vars.AddVariables(
 ]] .. table.concat(enums, ',\n') .. [[
   )
 
-def ]] .. prefixfunc .. [[_varname_to_optname(options):
+def varname_to_optname(options):
   return ]] .. (optprefix
-    and '{_' .. prefixfunc .. '_var2opts.get(k, k):v for k,v in options.items()}'
+    and '{_var2opts.get(k, k):v for k,v in options.items()}'
     or 'options'
   ) .. [[
 
-def ]] .. prefixfunc .. [[_optname_to_varname(options):
+def optname_to_varname(options):
   return ]] .. (
     optprefix
-    and '{_' .. prefixfunc .. '_opt2vars.get(k, k):v for k,v in options.items()}'
+    and '{_opt2vars.get(k, k):v for k,v in options.items()}'
     or 'options'
   ) .. [[
 
-def ]] .. prefixfunc .. [[_variables_to_options(vars):
+def variables_to_options(vars):
   args = vars.args
-  return {]] .. (optprefix and '_' .. prefixfunc .. '_var2opts[v.key]' or 'v.key')
+  return {]] .. (optprefix and '_var2opts[v.key]' or 'v.key')
     .. [[:args.get(v.key, v.default) for v in vars.options}
 
-_]] .. prefixfunc .. [[_default_env = Environment()
-_]] .. prefixfunc .. [[_map_compiler = {"g++": "gcc", "mingw": "gcc", "clang++": "clang", "icpc": "icc", "icpx": "icx", "dpcpp": "icx"}
-def ]] .. prefixfunc .. [[_flags(options, compiler=None, version=None, linker=None):
-  compiler = compiler or _]] .. prefixfunc .. [[_default_env[']] .. prefixenv .. [[']
+_default_env = Environment()
+_map_compiler = {
+  "g++": "gcc",
+  "clang++": "clang",
+  "icpc": "icc",
+}
+_compiler_name_extractor = re.compile('([\w+]+(?:-[\w+]+)*)')
+_compiler_version_cache = {}
 
-  _compiler = None
-  for comp in ('clang', 'g++', 'gcc', 'msvc', 'mingw', 'icc', 'icpc', 'icl', 'icx', 'icpx', 'dpcpp'):
-    if compiler.find(comp) != -1:
-      _compiler = comp
-      break
+def get_flags(options, env=None):
+  env = env or _default_env
+  compiler = env[']] .. prefixenv .. [[']
+  version = env.get(']] .. prefixenv .. [[VERSION')
+  linker = env.get('LD')
 
-  if not _compiler:
-    return {}
-
-  compiler = _]] .. prefixfunc .. [[_map_compiler.get(_compiler, _compiler)
+  _compiler = os.path.basename(compiler)
+  _compiler = _compiler_name_extractor.match(_compiler).group(1)
+  _compiler = _map_compiler.get(_compiler, _compiler)
   platform = None
-  if compiler == 'mingw':
+
+  if version:
+    version = version.split(".")
+    version[0] = int(version[0])
+    version[1] = int(version[1]) if len(version) == 1 else 0
+
+  if _compiler == 'mingw':
     compiler = 'gcc'
     platform = 'mingw'
-  version = version or _]] .. prefixfunc .. [[_default_env[']] .. prefixenv .. [[VERSION']
-  version = version.split(".")
-  version[0] = int(version[0])
-  version[1] = int(version[1]) if len(version) == 1 else 0
+  elif _compiler in ('icx', 'icpx', 'dpcpp'):
+    # is icx version, replace with clang version
+    if not version or version[0] > 2000:
+      version = _compiler_version_cache.get(compiler)
+      if not version:
+        from subprocess import check_output
+        out = check_output([compiler, '-x', 'c', '-', '-dM', '-E'], input=b'').decode()
+        m = re.search(
+            '__clang_major__ (\d+)\n'
+            '#define __clang_minor__ (\d+)\n'
+            '#define __clang_patchlevel__ (\d+)',
+            out
+        )
+        version = (int(m.group(1)), int(m.group(2)))
+        _compiler_version_cache[compiler] = version
+    compiler = 'clang'
+  else:
+    compiler = _compiler
 
-  options = options if type(options) == dict else ]] .. prefixfunc .. [[_variables_to_options(options)
+  version = version or (0,0)
+
+  options = options if type(options) == dict else variables_to_options(options)
 
   def verless(major, minor):
     return version[0] < major or (version[0] == major and version[1] < minor)

@@ -1,5 +1,5 @@
-from jln_options import *
+import jln_options as jln
 
 vars = Variables(None, ARGUMENTS)
-jln_add_variables(vars, {'sanitizers':'on'})
-print(jln_flags(vars))
+jln.add_variables(vars, {'sanitizers':'on'})
+print(jln.get_flags(vars))

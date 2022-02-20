@@ -382,18 +382,16 @@ exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-rel
 ```py
 # launch example: scons jln_sanitizers=on
 
-from jln_options import *
+import jln_options as jln
 
-# jln_set_global_flags(options, compiler=None, version=None, linker=None)
-# version is a string. Ex: '7.2' or '5'
-jln_set_global_flags({'rtti': 'off'})
+jln.set_global_flags({'rtti': 'off'})
 
 vars = Variables(None, ARGUMENTS)
-jln_add_variables(vars, {'debug':'on'}) # default value of debug to on
+jln.add_variables(vars, {'debug':'on'}) # default value of debug to on
 
-# {flags=[...], linkflags=[...]}
-flags1 = jln_flags(vars)
-flags2 = jln_flags({'debug':'on'})
+# get_flags(variables[, env]) -> {flags=[...], linkflags=[...]}
+flags1 = jln.get_flags(vars)
+flags2 = jln.get_flags({'debug':'on'})
 ```
 
 
