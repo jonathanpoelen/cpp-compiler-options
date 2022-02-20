@@ -143,8 +143,8 @@ local clang_cl = Compiler('clang-cl')
 local msvc = Compiler('msvc')
 local icc = Compiler('icc')
 local icl = Compiler('icl')
-local icx = Compiler('icx')
-local clang_like = CompilerGroup(clang, clang_cl, icx)
+-- local icx = Compiler('icx')
+local clang_like = CompilerGroup(clang, clang_cl)
 
 -- local msvc_linker = Linker('msvc')
 local lld_link = Linker('lld-link')
@@ -287,8 +287,8 @@ Or(gcc, clang_like) {
           }
         }
       } /
-
-      clang_like {
+      -- clang_like
+      {
         flag'-Weverything',
         flag'-Wno-documentation',
         flag'-Wno-documentation-unknown-command',
@@ -458,26 +458,33 @@ Or(gcc, clang_like) {
           fl'-fsanitize=leak', -- requires the address sanitizer
         }
       }
-    },
+    }
   },
 
   opt'control_flow' {
     lvl'off' {
-      gcc(8) { flag'-fcf-protection=none' } /
-      clang_cl { flag'-fcf-protection=none', flag'-fno-sanitize-cfi-cross-dso' },
-      clang { fl'-fno-sanitize=cfi' },
+      gcc(8) {
+        flag'-fcf-protection=none'
+      } /
+      -- clang, clang_cl
+      {
+        fl'-fno-sanitize=cfi',
+        flag'-fcf-protection=none',
+        flag'-fno-sanitize-cfi-cross-dso',
+      }
     } /
-    Or(gcc(8), clang_cl) {
+    Or(gcc(8), -gcc()) {
       -- gcc: flag'-mcet',
       -- clang_cl: flag'-fsanitize-cfi-cross-dso',
       lvl'branch' { flag'-fcf-protection=branch' } /
       lvl'return' { flag'-fcf-protection=return' } /
-      { flag'-fcf-protection=full' }
-    } /
-    And(lvl'allow_bugs', clang) {
-      fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
-      flag'-fvisibility=hidden',
-      fl'-flto',
+      { flag'-fcf-protection=full' },
+
+      And(lvl'allow_bugs', clang) {
+        fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
+        flag'-fvisibility=hidden',
+        fl'-flto',
+      }
     }
   },
 
@@ -528,6 +535,99 @@ Or(gcc, clang_like) {
     }
   },
 
+  opt'linker' {
+    lvl'native' {
+      gcc { link'-fuse-ld=gold' } /
+      link'-fuse-ld=lld'
+    } /
+    lvl'bfd' {
+      link'-fuse-ld=bfd'
+    } /
+    Or(lvl'gold', gcc(-9)) {
+      link'-fuse-ld=gold'
+    } /
+    opt'lto' {
+      -- -flto is incompatible with -fuse-ld=lld
+      And(-lvl'off', gcc) {
+        link'-fuse-ld=gold'
+      } /
+      link'-fuse-ld=lld',
+    } /
+    link'-fuse-ld=lld',
+  },
+
+  opt'lto' {
+    lvl'off' {
+      fl'-fno-lto',
+    } /
+    gcc {
+      fl'-flto',
+      vers(5) {
+        opt'warnings' {
+          -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
+        },
+        lvl'fat' { flag'-ffat-lto-objects', } /
+        lvl'thin' { link'-fuse-linker-plugin' }
+      }
+    } / {
+      clang_cl {
+        -- LTO require -fuse-ld=lld (link by default)
+        link'-fuse-ld=lld',
+      },
+      And(lvl'thin', vers(6)) {
+        fl'-flto=thin'
+      } /
+      fl'-flto',
+    }
+  },
+
+  opt'shadow_warnings' {
+    lvl'off' {
+      flag'-Wno-shadow',
+      Or(clang_cl, clang(8)) {
+        flag'-Wno-shadow-field'
+      }
+    } /
+    lvl'on' { flag'-Wshadow' } /
+    lvl'all' {
+      gcc { flag'-Wshadow' } /
+      flag'-Wshadow-all',
+    } /
+    gcc(7,1) {
+      lvl'local' {
+        flag'-Wshadow=local'
+      } /
+      lvl'compatible_local' {
+        flag'-Wshadow=compatible-local'
+      }
+    }
+  },
+
+  opt'float_sanitizers' {
+    Or(gcc(5), clang(5), clang_cl) {
+      lvl'on' {
+        flag'-fsanitize=float-divide-by-zero',
+        flag'-fsanitize=float-cast-overflow',
+      } / {
+        flag'-fno-sanitize=float-divide-by-zero',
+        flag'-fno-sanitize=float-cast-overflow',
+      },
+    },
+  },
+
+  opt'integer_sanitizers' {
+    Or(clang(5), clang_cl) {
+      lvl'on' { flag'-fsanitize=integer', } /
+      flag'-fno-sanitize=integer',
+    } /
+    gcc(4,9) {
+      lvl'on' {
+        flag'-ftrapv',
+        flag'-fsanitize=undefined',
+      },
+    }
+  },
+
 },
 
 Or(gcc, clang_like, icc) {
@@ -569,48 +669,13 @@ Or(gcc, clang) {
     lvl'off' { flag '-g0' } /
     lvl'gdb' { flag '-ggdb' } /
     clang {
-      lvl'line_tables_only' { flag'-gline-tables-only' },
+      lvl'line_tables_only' { flag'-gline-tables-only' } /
       lvl'lldb' { flag '-glldb' } /
       lvl'sce' { flag '-gsce' } /
       flag'-g'
     } /
     flag'-g',
     -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
-  },
-
-  opt'linker' {
-    lvl'native' {
-      gcc { link'-fuse-ld=gold' } /
-      link'-fuse-ld=lld'
-    } /
-    lvl'bfd' { link'-fuse-ld=bfd' } /
-    Or(lvl'gold', gcc(-9)) { link'-fuse-ld=gold' } /
-    opt'lto' {
-      -- -flto is incompatible with -fuse-ld=lld
-      And(-lvl'off', gcc) {
-        link'-fuse-ld=gold'
-      } /
-      link'-fuse-ld=lld',
-    } /
-    link'-fuse-ld=lld',
-  },
-
-  opt'lto' {
-    lvl'off' {
-      fl'-fno-lto',
-    } /
-    gcc {
-      fl'-flto',
-      vers(5) {
-        opt'warnings' {
-          -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
-        },
-        lvl'fat' { flag'-ffat-lto-objects', } /
-        lvl'thin' { link'-fuse-linker-plugin' }
-      }
-    } /
-    And(lvl'thin', clang(6)) { fl'-flto=thin' } /
-    fl'-flto',
   },
 
   opt'optimization' {
@@ -770,28 +835,6 @@ Or(gcc, clang) {
     },
   },
 
-  opt'shadow_warnings' {
-    lvl'off' {
-      flag'-Wno-shadow',
-      clang(8) {
-        flag'-Wno-shadow-field'
-      }
-    } /
-    lvl'on' { flag'-Wshadow' } /
-    lvl'all' {
-      clang { flag'-Wshadow-all', } /
-      flag'-Wshadow'
-    } /
-    gcc(7,1) {
-      lvl'local' {
-        flag'-Wshadow=local'
-      } /
-      lvl'compatible_local' {
-        flag'-Wshadow=compatible-local'
-      }
-    }
-  },
-
   opt'elide_type' {
     lvl'on' {
       gcc(8) { cxx'-felide-type' }
@@ -834,34 +877,6 @@ Or(gcc, clang) {
         flag'-fsanitize=pointer-subtract',
       }
     }
-  },
-
-  opt'float_sanitizers' {
-    Or(gcc(5), clang(5)) {
-      lvl'on' {
-        flag'-fsanitize=float-divide-by-zero',
-        flag'-fsanitize=float-cast-overflow',
-      } / {
-        flag'-fno-sanitize=float-divide-by-zero',
-        flag'-fno-sanitize=float-cast-overflow',
-      },
-    },
-  },
-
-  opt'integer_sanitizers' {
-    lvl'on' {
-      gcc(4,9) {
-        flag'-ftrapv',
-        flag'-fsanitize=undefined',
-      },
-      clang(5) {
-        flag'-fsanitize=integer',
-      },
-    } / {
-      clang(5) {
-        flag'-fno-sanitize=integer',
-      },
-    },
   },
 
   opt'noexcept_warnings' {
@@ -920,7 +935,8 @@ Or(msvc, clang_cl, icl) {
     }
   },
 
-  Or(msvc, clang_cl) {
+  -- msvc and clang_cl
+  -icl {
     opt'stl_fix' {
       lvl'on' { flag'/DNOMINMAX', },
     },
@@ -930,7 +946,10 @@ Or(msvc, clang_cl, icl) {
         flag'/RTC1',
         flag'/Od',
         lvl'on' { flag'/DEBUG' } / -- /DEBUG:FULL
-        lvl'line_tables_only' { flag'/DEBUG:FASTLINK' },
+        lvl'line_tables_only' {
+          clang_cl { flag'-gline-tables-only' },
+          flag'/DEBUG:FASTLINK'
+        },
 
         opt'optimization' {
           lvl'g' { flag'/Zi' } /
@@ -1539,8 +1558,8 @@ icc {
 
   opt'linker' {
     lvl'bfd' { link'-fuse-ld=bfd' } /
-    lvl'gold' { link'-fuse-ld=gold' }
-    / { link'-fuse-ld=ld' }
+    lvl'gold' { link'-fuse-ld=gold' } /
+    link'-fuse-ld=lld'
   },
 
   opt'lto' {
