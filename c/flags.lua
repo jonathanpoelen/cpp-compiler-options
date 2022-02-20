@@ -453,7 +453,7 @@ function getoptions(values, disable_others, print_compiler)
 
   local jln_cxflags, jln_ldflags = {}, {}
 
-  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
+  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" ) then
     if not ( values["warnings"] == "") then
       if values["warnings"] == "off" then
         jln_cxflags[#jln_cxflags+1] = "-w"
@@ -530,36 +530,34 @@ function getoptions(values, disable_others, print_compiler)
             end
           end
         else
-          if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
-            jln_cxflags[#jln_cxflags+1] = "-Weverything"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-documentation"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-documentation-unknown-command"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-newline-eof"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-padded"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-global-constructors"
-            if not ( values["switch_warnings"] == "") then
-              if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
-                jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
+          jln_cxflags[#jln_cxflags+1] = "-Weverything"
+          jln_cxflags[#jln_cxflags+1] = "-Wno-documentation"
+          jln_cxflags[#jln_cxflags+1] = "-Wno-documentation-unknown-command"
+          jln_cxflags[#jln_cxflags+1] = "-Wno-newline-eof"
+          jln_cxflags[#jln_cxflags+1] = "-Wno-padded"
+          jln_cxflags[#jln_cxflags+1] = "-Wno-global-constructors"
+          if not ( values["switch_warnings"] == "") then
+            if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
+              jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
+            else
+              if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
+                jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
               else
-                if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
-                  jln_cxflags[#jln_cxflags+1] = "-Wswitch-enum"
-                else
-                  if values["switch_warnings"] == "off" then
-                    jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
-                    jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
-                  end
+                if values["switch_warnings"] == "off" then
+                  jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
+                  jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
                 end
               end
-            else
-              jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
-              jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
             end
-            if not ( values["covered_switch_default_warnings"] == "") then
-              if values["covered_switch_default_warnings"] == "off" then
-                jln_cxflags[#jln_cxflags+1] = "-Wno-covered-switch-default"
-              else
-                jln_cxflags[#jln_cxflags+1] = "-Wcovered-switch-default"
-              end
+          else
+            jln_cxflags[#jln_cxflags+1] = "-Wno-switch"
+            jln_cxflags[#jln_cxflags+1] = "-Wno-switch-enum"
+          end
+          if not ( values["covered_switch_default_warnings"] == "") then
+            if values["covered_switch_default_warnings"] == "off" then
+              jln_cxflags[#jln_cxflags+1] = "-Wno-covered-switch-default"
+            else
+              jln_cxflags[#jln_cxflags+1] = "-Wcovered-switch-default"
             end
           end
         end
@@ -585,7 +583,7 @@ function getoptions(values, disable_others, print_compiler)
               jln_cxflags[#jln_cxflags+1] = "-Werror=logical-not-parentheses"
             end
           else
-            if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
+            if ( compiler == "clang" or compiler == "clang-cl" ) then
               jln_cxflags[#jln_cxflags+1] = "-Werror=array-bounds"
               jln_cxflags[#jln_cxflags+1] = "-Werror=division-by-zero"
               if not ( compversion < 304 ) then
@@ -643,18 +641,16 @@ function getoptions(values, disable_others, print_compiler)
               end
             end
           else
-            if compiler == "gcc" then
-              if not ( compversion < 408 ) then
-                jln_cxflags[#jln_cxflags+1] = "-fsanitize=address"
-                jln_cxflags[#jln_cxflags+1] = "-fno-omit-frame-pointer"
-                jln_cxflags[#jln_cxflags+1] = "-fno-optimize-sibling-calls"
-                jln_ldflags[#jln_ldflags+1] = "-fsanitize=address"
-                if not ( compversion < 409 ) then
-                  jln_cxflags[#jln_cxflags+1] = "-fsanitize=undefined"
-                  jln_cxflags[#jln_cxflags+1] = "-fsanitize=leak"
-                  jln_ldflags[#jln_ldflags+1] = "-fsanitize=undefined"
-                  jln_ldflags[#jln_ldflags+1] = "-fsanitize=leak"
-                end
+            if not ( compversion < 408 ) then
+              jln_cxflags[#jln_cxflags+1] = "-fsanitize=address"
+              jln_cxflags[#jln_cxflags+1] = "-fno-omit-frame-pointer"
+              jln_cxflags[#jln_cxflags+1] = "-fno-optimize-sibling-calls"
+              jln_ldflags[#jln_ldflags+1] = "-fsanitize=address"
+              if not ( compversion < 409 ) then
+                jln_cxflags[#jln_cxflags+1] = "-fsanitize=undefined"
+                jln_cxflags[#jln_cxflags+1] = "-fsanitize=leak"
+                jln_ldflags[#jln_ldflags+1] = "-fsanitize=undefined"
+                jln_ldflags[#jln_ldflags+1] = "-fsanitize=leak"
               end
             end
           end
@@ -666,17 +662,13 @@ function getoptions(values, disable_others, print_compiler)
         if ( compiler == "gcc" and not ( compversion < 800 ) ) then
           jln_cxflags[#jln_cxflags+1] = "-fcf-protection=none"
         else
-          if compiler == "clang-cl" then
-            jln_cxflags[#jln_cxflags+1] = "-fcf-protection=none"
-            jln_cxflags[#jln_cxflags+1] = "-fno-sanitize-cfi-cross-dso"
-          end
-        end
-        if compiler == "clang" then
           jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=cfi"
+          jln_cxflags[#jln_cxflags+1] = "-fcf-protection=none"
+          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize-cfi-cross-dso"
           jln_ldflags[#jln_ldflags+1] = "-fno-sanitize=cfi"
         end
       else
-        if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or compiler == "clang-cl" ) then
+        if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or not ( compiler == "gcc" ) ) then
           if values["control_flow"] == "branch" then
             jln_cxflags[#jln_cxflags+1] = "-fcf-protection=branch"
           else
@@ -686,7 +678,6 @@ function getoptions(values, disable_others, print_compiler)
               jln_cxflags[#jln_cxflags+1] = "-fcf-protection=full"
             end
           end
-        else
           if ( values["control_flow"] == "allow_bugs" and compiler == "clang" ) then
             jln_cxflags[#jln_cxflags+1] = "-fsanitize=cfi"
             jln_cxflags[#jln_cxflags+1] = "-fvisibility=hidden"
@@ -698,7 +689,7 @@ function getoptions(values, disable_others, print_compiler)
       end
     end
     if not ( values["color"] == "") then
-      if ( ( compiler == "gcc" and not ( compversion < 409 ) ) or compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
+      if ( ( compiler == "gcc" and not ( compversion < 409 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
         if values["color"] == "auto" then
           jln_cxflags[#jln_cxflags+1] = "-fdiagnostics-color=auto"
         else
@@ -723,7 +714,7 @@ function getoptions(values, disable_others, print_compiler)
     end
     if not ( values["diagnostics_format"] == "") then
       if values["diagnostics_format"] == "fixits" then
-        if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or ( compiler == "clang-cl" and not ( compversion < 500 ) ) or ( compiler == "icx" and not ( compversion < 500 ) ) ) then
+        if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or ( compiler == "clang-cl" and not ( compversion < 500 ) ) ) then
           jln_cxflags[#jln_cxflags+1] = "-fdiagnostics-parseable-fixits"
         end
       else
@@ -744,68 +735,9 @@ function getoptions(values, disable_others, print_compiler)
       if values["fix_compiler_error"] == "on" then
         jln_cxflags[#jln_cxflags+1] = "-Werror=write-strings"
       else
-        if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
+        if ( compiler == "clang" or compiler == "clang-cl" ) then
           jln_cxflags[#jln_cxflags+1] = "-Wno-error=c++11-narrowing"
           jln_cxflags[#jln_cxflags+1] = "-Wno-reserved-user-defined-literal"
-        end
-      end
-    end
-  end
-  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" or compiler == "icx" or compiler == "icc" ) then
-    if not ( values["conversion_warnings"] == "") then
-      if values["conversion_warnings"] == "on" then
-        jln_cxflags[#jln_cxflags+1] = "-Wconversion"
-        jln_cxflags[#jln_cxflags+1] = "-Wsign-compare"
-        jln_cxflags[#jln_cxflags+1] = "-Wsign-conversion"
-      else
-        if values["conversion_warnings"] == "conversion" then
-          jln_cxflags[#jln_cxflags+1] = "-Wconversion"
-        else
-          if values["conversion_warnings"] == "sign" then
-            jln_cxflags[#jln_cxflags+1] = "-Wsign-compare"
-            jln_cxflags[#jln_cxflags+1] = "-Wsign-conversion"
-          else
-            jln_cxflags[#jln_cxflags+1] = "-Wno-conversion"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-sign-compare"
-            jln_cxflags[#jln_cxflags+1] = "-Wno-sign-conversion"
-          end
-        end
-      end
-    end
-  end
-  if ( compiler == "gcc" or compiler == "clang" ) then
-    if not ( values["coverage"] == "") then
-      if values["coverage"] == "on" then
-        jln_cxflags[#jln_cxflags+1] = "--coverage"
-        jln_ldflags[#jln_ldflags+1] = "--coverage"
-        if compiler == "clang" then
-          jln_ldflags[#jln_ldflags+1] = "-lprofile_rt"
-        end
-      end
-    end
-    if not ( values["debug"] == "") then
-      if values["debug"] == "off" then
-        jln_cxflags[#jln_cxflags+1] = "-g0"
-      else
-        if values["debug"] == "gdb" then
-          jln_cxflags[#jln_cxflags+1] = "-ggdb"
-        else
-          if compiler == "clang" then
-            if values["debug"] == "line_tables_only" then
-              jln_cxflags[#jln_cxflags+1] = "-gline-tables-only"
-            end
-            if values["debug"] == "lldb" then
-              jln_cxflags[#jln_cxflags+1] = "-glldb"
-            else
-              if values["debug"] == "sce" then
-                jln_cxflags[#jln_cxflags+1] = "-gsce"
-              else
-                jln_cxflags[#jln_cxflags+1] = "-g"
-              end
-            end
-          else
-            jln_cxflags[#jln_cxflags+1] = "-g"
-          end
         end
       end
     end
@@ -860,12 +792,132 @@ function getoptions(values, disable_others, print_compiler)
             end
           end
         else
-          if ( values["lto"] == "thin" and compiler == "clang" and not ( compversion < 600 ) ) then
+          if compiler == "clang-cl" then
+            jln_ldflags[#jln_ldflags+1] = "-fuse-ld=lld"
+          end
+          if ( values["lto"] == "thin" and not ( compversion < 600 ) ) then
             jln_cxflags[#jln_cxflags+1] = "-flto=thin"
             jln_ldflags[#jln_ldflags+1] = "-flto=thin"
           else
             jln_cxflags[#jln_cxflags+1] = "-flto"
             jln_ldflags[#jln_ldflags+1] = "-flto"
+          end
+        end
+      end
+    end
+    if not ( values["shadow_warnings"] == "") then
+      if values["shadow_warnings"] == "off" then
+        jln_cxflags[#jln_cxflags+1] = "-Wno-shadow"
+        if ( compiler == "clang-cl" or ( compiler == "clang" and not ( compversion < 800 ) ) ) then
+          jln_cxflags[#jln_cxflags+1] = "-Wno-shadow-field"
+        end
+      else
+        if values["shadow_warnings"] == "on" then
+          jln_cxflags[#jln_cxflags+1] = "-Wshadow"
+        else
+          if values["shadow_warnings"] == "all" then
+            if compiler == "gcc" then
+              jln_cxflags[#jln_cxflags+1] = "-Wshadow"
+            else
+              jln_cxflags[#jln_cxflags+1] = "-Wshadow-all"
+            end
+          else
+            if ( compiler == "gcc" and not ( compversion < 701 ) ) then
+              if values["shadow_warnings"] == "local" then
+                jln_cxflags[#jln_cxflags+1] = "-Wshadow=local"
+              else
+                if values["shadow_warnings"] == "compatible_local" then
+                  jln_cxflags[#jln_cxflags+1] = "-Wshadow=compatible-local"
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    if not ( values["float_sanitizers"] == "") then
+      if ( ( compiler == "gcc" and not ( compversion < 500 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or compiler == "clang-cl" ) then
+        if values["float_sanitizers"] == "on" then
+          jln_cxflags[#jln_cxflags+1] = "-fsanitize=float-divide-by-zero"
+          jln_cxflags[#jln_cxflags+1] = "-fsanitize=float-cast-overflow"
+        else
+          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=float-divide-by-zero"
+          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=float-cast-overflow"
+        end
+      end
+    end
+    if not ( values["integer_sanitizers"] == "") then
+      if ( ( compiler == "clang" and not ( compversion < 500 ) ) or compiler == "clang-cl" ) then
+        if values["integer_sanitizers"] == "on" then
+          jln_cxflags[#jln_cxflags+1] = "-fsanitize=integer"
+        else
+          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=integer"
+        end
+      else
+        if ( compiler == "gcc" and not ( compversion < 409 ) ) then
+          if values["integer_sanitizers"] == "on" then
+            jln_cxflags[#jln_cxflags+1] = "-ftrapv"
+            jln_cxflags[#jln_cxflags+1] = "-fsanitize=undefined"
+          end
+        end
+      end
+    end
+  end
+  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" or compiler == "icc" ) then
+    if not ( values["conversion_warnings"] == "") then
+      if values["conversion_warnings"] == "on" then
+        jln_cxflags[#jln_cxflags+1] = "-Wconversion"
+        jln_cxflags[#jln_cxflags+1] = "-Wsign-compare"
+        jln_cxflags[#jln_cxflags+1] = "-Wsign-conversion"
+      else
+        if values["conversion_warnings"] == "conversion" then
+          jln_cxflags[#jln_cxflags+1] = "-Wconversion"
+        else
+          if values["conversion_warnings"] == "sign" then
+            jln_cxflags[#jln_cxflags+1] = "-Wsign-compare"
+            jln_cxflags[#jln_cxflags+1] = "-Wsign-conversion"
+          else
+            jln_cxflags[#jln_cxflags+1] = "-Wno-conversion"
+            jln_cxflags[#jln_cxflags+1] = "-Wno-sign-compare"
+            jln_cxflags[#jln_cxflags+1] = "-Wno-sign-conversion"
+          end
+        end
+      end
+    end
+  end
+  if ( compiler == "gcc" or compiler == "clang" ) then
+    if not ( values["coverage"] == "") then
+      if values["coverage"] == "on" then
+        jln_cxflags[#jln_cxflags+1] = "--coverage"
+        jln_ldflags[#jln_ldflags+1] = "--coverage"
+        if compiler == "clang" then
+          jln_ldflags[#jln_ldflags+1] = "-lprofile_rt"
+        end
+      end
+    end
+    if not ( values["debug"] == "") then
+      if values["debug"] == "off" then
+        jln_cxflags[#jln_cxflags+1] = "-g0"
+      else
+        if values["debug"] == "gdb" then
+          jln_cxflags[#jln_cxflags+1] = "-ggdb"
+        else
+          if compiler == "clang" then
+            if values["debug"] == "line_tables_only" then
+              jln_cxflags[#jln_cxflags+1] = "-gline-tables-only"
+            else
+              if values["debug"] == "lldb" then
+                jln_cxflags[#jln_cxflags+1] = "-glldb"
+              else
+                if values["debug"] == "sce" then
+                  jln_cxflags[#jln_cxflags+1] = "-gsce"
+                else
+                  jln_cxflags[#jln_cxflags+1] = "-g"
+                end
+              end
+            end
+          else
+            jln_cxflags[#jln_cxflags+1] = "-g"
           end
         end
       end
@@ -886,7 +938,7 @@ function getoptions(values, disable_others, print_compiler)
             jln_ldflags[#jln_ldflags+1] = "-Os"
           else
             if values["optimization"] == "z" then
-              if ( compiler == "clang" or compiler == "clang-cl" or compiler == "icx" ) then
+              if ( compiler == "clang" or compiler == "clang-cl" ) then
                 jln_cxflags[#jln_cxflags+1] = "-Oz"
                 jln_ldflags[#jln_ldflags+1] = "-Oz"
               else
@@ -1081,36 +1133,6 @@ function getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["shadow_warnings"] == "") then
-      if values["shadow_warnings"] == "off" then
-        jln_cxflags[#jln_cxflags+1] = "-Wno-shadow"
-        if ( compiler == "clang" and not ( compversion < 800 ) ) then
-          jln_cxflags[#jln_cxflags+1] = "-Wno-shadow-field"
-        end
-      else
-        if values["shadow_warnings"] == "on" then
-          jln_cxflags[#jln_cxflags+1] = "-Wshadow"
-        else
-          if values["shadow_warnings"] == "all" then
-            if compiler == "clang" then
-              jln_cxflags[#jln_cxflags+1] = "-Wshadow-all"
-            else
-              jln_cxflags[#jln_cxflags+1] = "-Wshadow"
-            end
-          else
-            if ( compiler == "gcc" and not ( compversion < 701 ) ) then
-              if values["shadow_warnings"] == "local" then
-                jln_cxflags[#jln_cxflags+1] = "-Wshadow=local"
-              else
-                if values["shadow_warnings"] == "compatible_local" then
-                  jln_cxflags[#jln_cxflags+1] = "-Wshadow=compatible-local"
-                end
-              end
-            end
-          end
-        end
-      end
-    end
     if not ( values["exceptions"] == "") then
       if values["exceptions"] == "on" then
         jln_cxflags[#jln_cxflags+1] = "-fexceptions"
@@ -1133,32 +1155,6 @@ function getoptions(values, disable_others, print_compiler)
               jln_cxflags[#jln_cxflags+1] = "-fsanitize=pointer-subtract"
             end
           end
-        end
-      end
-    end
-    if not ( values["float_sanitizers"] == "") then
-      if ( ( compiler == "gcc" and not ( compversion < 500 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) ) then
-        if values["float_sanitizers"] == "on" then
-          jln_cxflags[#jln_cxflags+1] = "-fsanitize=float-divide-by-zero"
-          jln_cxflags[#jln_cxflags+1] = "-fsanitize=float-cast-overflow"
-        else
-          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=float-divide-by-zero"
-          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=float-cast-overflow"
-        end
-      end
-    end
-    if not ( values["integer_sanitizers"] == "") then
-      if values["integer_sanitizers"] == "on" then
-        if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-          jln_cxflags[#jln_cxflags+1] = "-ftrapv"
-          jln_cxflags[#jln_cxflags+1] = "-fsanitize=undefined"
-        end
-        if ( compiler == "clang" and not ( compversion < 500 ) ) then
-          jln_cxflags[#jln_cxflags+1] = "-fsanitize=integer"
-        end
-      else
-        if ( compiler == "clang" and not ( compversion < 500 ) ) then
-          jln_cxflags[#jln_cxflags+1] = "-fno-sanitize=integer"
         end
       end
     end
@@ -1214,7 +1210,7 @@ function getoptions(values, disable_others, print_compiler)
         jln_cxflags[#jln_cxflags+1] = "/D_HAS_ITERATOR_DEBUGGING=1"
       end
     end
-    if ( compiler == "msvc" or compiler == "clang-cl" ) then
+    if not ( compiler == "icl" ) then
       if not ( values["stl_fix"] == "") then
         if values["stl_fix"] == "on" then
           jln_cxflags[#jln_cxflags+1] = "/DNOMINMAX"
@@ -1230,6 +1226,9 @@ function getoptions(values, disable_others, print_compiler)
             jln_cxflags[#jln_cxflags+1] = "/DEBUG"
           else
             if values["debug"] == "line_tables_only" then
+              if compiler == "clang-cl" then
+                jln_cxflags[#jln_cxflags+1] = "-gline-tables-only"
+              end
               jln_cxflags[#jln_cxflags+1] = "/DEBUG:FASTLINK"
             end
           end
@@ -1921,7 +1920,7 @@ function getoptions(values, disable_others, print_compiler)
           if values["linker"] == "gold" then
             jln_ldflags[#jln_ldflags+1] = "-fuse-ld=gold"
           else
-            jln_ldflags[#jln_ldflags+1] = "-fuse-ld=ld"
+            jln_ldflags[#jln_ldflags+1] = "-fuse-ld=lld"
           end
         end
       end
