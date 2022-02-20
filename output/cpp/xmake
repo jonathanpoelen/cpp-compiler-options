@@ -576,18 +576,16 @@ function getoptions(values, disable_others, print_compiler)
               end
             end
           else
-            if compiler == "gcc" then
-              if not ( compversion < 408 ) then
-                jln_cxflags[#jln_cxflags+1] = "-fsanitize=address"
-                jln_cxflags[#jln_cxflags+1] = "-fno-omit-frame-pointer"
-                jln_cxflags[#jln_cxflags+1] = "-fno-optimize-sibling-calls"
-                jln_ldflags[#jln_ldflags+1] = "-fsanitize=address"
-                if not ( compversion < 409 ) then
-                  jln_cxflags[#jln_cxflags+1] = "-fsanitize=undefined"
-                  jln_cxflags[#jln_cxflags+1] = "-fsanitize=leak"
-                  jln_ldflags[#jln_ldflags+1] = "-fsanitize=undefined"
-                  jln_ldflags[#jln_ldflags+1] = "-fsanitize=leak"
-                end
+            if not ( compversion < 408 ) then
+              jln_cxflags[#jln_cxflags+1] = "-fsanitize=address"
+              jln_cxflags[#jln_cxflags+1] = "-fno-omit-frame-pointer"
+              jln_cxflags[#jln_cxflags+1] = "-fno-optimize-sibling-calls"
+              jln_ldflags[#jln_ldflags+1] = "-fsanitize=address"
+              if not ( compversion < 409 ) then
+                jln_cxflags[#jln_cxflags+1] = "-fsanitize=undefined"
+                jln_cxflags[#jln_cxflags+1] = "-fsanitize=leak"
+                jln_ldflags[#jln_ldflags+1] = "-fsanitize=undefined"
+                jln_ldflags[#jln_ldflags+1] = "-fsanitize=leak"
               end
             end
           end

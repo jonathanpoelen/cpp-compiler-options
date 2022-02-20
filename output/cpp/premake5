@@ -698,18 +698,16 @@ function jln_getoptions(values, disable_others, print_compiler)
               end
             end
           else
-            if compiler == "gcc" then
-              if not ( compversion < 408 ) then
-                jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=address"
-                jln_buildoptions[#jln_buildoptions+1] = "-fno-omit-frame-pointer"
-                jln_buildoptions[#jln_buildoptions+1] = "-fno-optimize-sibling-calls"
-                jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=address"
-                if not ( compversion < 409 ) then
-                  jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=undefined"
-                  jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=leak"
-                  jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=undefined"
-                  jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=leak"
-                end
+            if not ( compversion < 408 ) then
+              jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=address"
+              jln_buildoptions[#jln_buildoptions+1] = "-fno-omit-frame-pointer"
+              jln_buildoptions[#jln_buildoptions+1] = "-fno-optimize-sibling-calls"
+              jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=address"
+              if not ( compversion < 409 ) then
+                jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=undefined"
+                jln_buildoptions[#jln_buildoptions+1] = "-fsanitize=leak"
+                jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=undefined"
+                jln_linkoptions[#jln_linkoptions+1] = "-fsanitize=leak"
               end
             end
           end

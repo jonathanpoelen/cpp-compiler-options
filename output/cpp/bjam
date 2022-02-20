@@ -834,25 +834,22 @@ rule jln_flags ( properties * )
           }
           else
           {
-            if $(toolset) = "gcc"
+            if ! (  $(version) < "04.08"  )
             {
-              if ! (  $(version) < "04.08"  )
+              flags +=
+                <cxxflags>"-fsanitize=address"
+                <cxxflags>"-fno-omit-frame-pointer"
+                <cxxflags>"-fno-optimize-sibling-calls"
+                <linkflags>"-fsanitize=address"
+              ;
+              if ! (  $(version) < "04.09"  )
               {
                 flags +=
-                  <cxxflags>"-fsanitize=address"
-                  <cxxflags>"-fno-omit-frame-pointer"
-                  <cxxflags>"-fno-optimize-sibling-calls"
-                  <linkflags>"-fsanitize=address"
+                  <cxxflags>"-fsanitize=undefined"
+                  <cxxflags>"-fsanitize=leak"
+                  <linkflags>"-fsanitize=undefined"
+                  <linkflags>"-fsanitize=leak"
                 ;
-                if ! (  $(version) < "04.09"  )
-                {
-                  flags +=
-                    <cxxflags>"-fsanitize=undefined"
-                    <cxxflags>"-fsanitize=leak"
-                    <linkflags>"-fsanitize=undefined"
-                    <linkflags>"-fsanitize=leak"
-                  ;
-                }
               }
             }
           }

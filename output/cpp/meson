@@ -244,14 +244,12 @@ foreach ___jln_flags : ___jln_custom_flags
               endif
             endif
           else
-            if (  (___jln_compiler_id == 'gcc') )
-              if (  not ( ___jln_compiler_version.version_compare('<4.8') ) )
-                jln_cpp_flags += ['-fsanitize=address', '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls', ]
-                jln_link_flags += ['-fsanitize=address', ]
-                if (  not ( ___jln_compiler_version.version_compare('<4.9') ) )
-                  jln_cpp_flags += ['-fsanitize=undefined', '-fsanitize=leak', ]
-                  jln_link_flags += ['-fsanitize=undefined', '-fsanitize=leak', ]
-                endif
+            if (  not ( ___jln_compiler_version.version_compare('<4.8') ) )
+              jln_cpp_flags += ['-fsanitize=address', '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls', ]
+              jln_link_flags += ['-fsanitize=address', ]
+              if (  not ( ___jln_compiler_version.version_compare('<4.9') ) )
+                jln_cpp_flags += ['-fsanitize=undefined', '-fsanitize=leak', ]
+                jln_link_flags += ['-fsanitize=undefined', '-fsanitize=leak', ]
               endif
             endif
           endif

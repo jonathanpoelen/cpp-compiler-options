@@ -381,13 +381,12 @@ def get_flags(options, env=None):
                   if not ( x_stack_protector == 'off' ) :
                     flags += ('-fsanitize-minimal-runtime', )
           else:
-            if compiler == 'gcc' :
-              if not ( verless(4, 8) ) :
-                flags += ('-fsanitize=address', '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls', )
-                linkflags += ('-fsanitize=address', )
-                if not ( verless(4, 9) ) :
-                  flags += ('-fsanitize=undefined', '-fsanitize=leak', )
-                  linkflags += ('-fsanitize=undefined', '-fsanitize=leak', )
+            if not ( verless(4, 8) ) :
+              flags += ('-fsanitize=address', '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls', )
+              linkflags += ('-fsanitize=address', )
+              if not ( verless(4, 9) ) :
+                flags += ('-fsanitize=undefined', '-fsanitize=leak', )
+                linkflags += ('-fsanitize=undefined', '-fsanitize=leak', )
     if not ( x_control_flow == 'default') :
       if x_control_flow == 'off' :
         if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
