@@ -447,7 +447,8 @@ Or(gcc, clang_like) {
         },
       }
     } /
-    gcc {
+    -- gcc
+    {
       vers(4,8) {
         fl'-fsanitize=address', -- memory, thread are mutually exclusive
         flag'-fno-omit-frame-pointer',
@@ -2419,13 +2420,14 @@ function help(out)
   local prefix = string.rep(' ', #arg[0]+1)
   out:write(arg[0] .. ' [-p] [-c] [-o outfilebase]\n'
          .. prefix .. '[-f [-]{option_name[=value_name][,...]}]\n'
-         .. prefix .. '[-C [-]{platform|compiler|linker}=name[,...]]\n'
+         .. prefix .. '[-C [-]{tool_or_platform[,...]]\n'
          .. prefix .. '[-d option_name=value_name[,...]]\n'
          .. prefix .. '{generator.lua} [-h|{options}...]\n\n' .. [==[
   -p  Print an AST.
   -c  Generator for C, not for C++.
   -C  Restrict to a list of platform, compiler or linker.
       When the list is prefixed with '-', values are removed from current AST.
+      Use -C list to display the list of tools and platforms.
   -f  Restrict to a list of option/value.
       When the list is prefixed by '-', options/values are removed.
   -d  Set new default value. An empty string for value_name is equivalent
@@ -2452,9 +2454,32 @@ function check_optvalue(cond, optname, optvalue)
   end
 end
 
--- {[0]=enabled, keep:bool, [platform_or_compiler_or_linker]=true, ...}
-env_filter = {false, platform={}, compiler={}, linker={}}
-env_types = {}
+-- {[0]=enabled, remove:bool, [platform_or_compiler_or_linker]=true, ...}
+tools_filter = {
+  enabled=false,
+  remove=false,
+  ktools_filter={},
+  tools={
+    {'platform', {
+      'linux',
+      'macos',
+      'mingw',
+      'windows',
+    }},
+    {'compiler', {
+      'gcc',
+      'clang',
+      'clang-cl',
+      'msvc',
+      'icc',
+      'icl',
+    }},
+    {'linker', {
+      'ld64',
+      'lld-link',
+    }},
+  }
+}
 
 cli={
   c={function() is_C=true end},
@@ -2479,20 +2504,52 @@ cli={
     end
   end},
 
-  C={arg=true, function(value)
-    env_filter[0] = true
-    local neg, k = value:match('(-?)([^=]+)')
-    local t = env_filter[k]
-    if not t then
-      io.stderr:write('Unknown type: ' .. k .. ' with -C\n')
-      help(io.stderr)
-      os.exit(1)
+  t={arg=true, function(value)
+    if value == 'list' then
+      local newline = false
+      for _,t in ipairs(tools_filter.tools) do
+        if newline then
+          print()
+        end
+        print(t[1] .. ':')
+        for _,tool in ipairs(t[2]) do
+          print('- ' .. tool)
+        end
+        newline = true
+      end
+      os.exit(0)
     end
-    env_types[k] = true
-    env_filter[1] = neg == '-'
-    value = value:sub(#neg + #k + 2)
-    for name in value:gmatch('([^,]+),?') do
-      t[name] = true
+
+    -- make ktools {tool=true} and ktypes {['compiler'|...]}=true}
+    local ktools = tools_filter.ktools
+    if not ktools then
+      ktools = {}
+      local ktypes = {}
+      for _,t in ipairs(tools_filter.tools) do
+        ktypes[t[1]] = true
+        for _,tool in ipairs(t[2]) do
+          ktools[tool] = true
+        end
+      end
+      tools_filter.ktools = ktools
+      tools_filter.ktypes = ktypes
+    end
+
+    tools_filter.enabled = true
+    if value:match('^-') then
+      tools_filter.remove = true
+      value = value:sub(2)
+    end
+
+    local ktools_filter = tools_filter.ktools_filter
+    for tool in value:gmatch('([-_%w]+)') do
+      if ktools[tool] then
+        ktools_filter[tool] = true
+      else
+        io.stderr:write('Unknown tool: ' .. tool .. ' with -C\n')
+        help(io.stderr)
+        os.exit(1)
+      end
     end
   end},
 
@@ -2591,14 +2648,17 @@ end
 
 ast = MakeAST(is_C)
 
-if env_filter[0] then
-  local keep = not env_filter[1]
+if tools_filter.enabled then
+  local keep = not tools_filter.remove
+  local ktypes = tools_filter.ktypes
+  local ktools_filter = tools_filter.ktools_filter
 
   function filter_cond(t) --: true = keep, false = remove, nil = unchanged
     for k,v in pairs(t) do
       if k == '_and' then
         for _,x in ipairs(v) do
-          if filter_cond(x) == false then
+          local r = filter_cond(x)
+          if r == false then
             return false
           end
         end
@@ -2630,34 +2690,52 @@ if env_filter[0] then
         end
       elseif k == '_if' then
         return filter_cond(v)
-      elseif env_types[k] then
-        return keep == (env_filter[k][v] or false)
+      elseif ktypes[k] then
+        return keep == (ktools_filter[v] or false)
       end
     end
   end
 
   function filter_ast(t)
-    for k,v in pairs(t) do
-      if k == '_if' then
-        if filter_cond(v) == false then
-          local tt = t._else
-          if tt then
-            t._if = tt._if
-            t._t = tt._t
-            t._else = tt._else
-          else
-            t._if = nil
-            t._t = nil
-            return
-          end
+    if t._if then
+      local r = filter_cond(t._if)
+      if r == false then
+        if not t._else or filter_ast(t._else) == false then
+          return false
         end
-      elseif type(v) == 'table' then
-        filter_ast(v)
+        t._if = t._if._not or {_not=t._if}
+        t._t = t._else
+        t._else = nil
+        return nil
+      elseif r == true then
+        t._else = nil
+      elseif t._else and filter_ast(t._else) == false then
+        t._else = nil
+      end
+    end
+
+    if t._t then
+      t = t._t
+    end
+
+    if #t > 0 then
+      local return_false = true
+      for k,v in ipairs(t) do
+        if filter_ast(v) == false then
+          t[k] = nil
+        else
+          return_false = false
+        end
+      end
+      if return_false then
+        return false
       end
     end
   end
 
-  filter_ast(ast)
+  if filter_ast(ast) == false then
+    ast = {}
+  end
 end
 
 if print_ast then
