@@ -5,5 +5,7 @@
 -Wno-global-constructors
 -Wno-newline-eof
 -Wno-padded
+-Wno-shadow
+-Wno-shadow-field
 -Wno-switch
 -Wno-switch-enum

@@ -2,8 +2,10 @@
 
 from SCons.Environment import Environment
 from SCons.Variables.EnumVariable import EnumVariable
+import os
+import re
 
-_jln_default_flags = {
+_default_flags = {
   'color': 'default',
   'control_flow': 'default',
   'conversion_warnings': 'on',
@@ -46,7 +48,7 @@ _jln_default_flags = {
   'windows_bigobj': 'on',
 }
 
-_jln_var2opts = {
+_var2opts = {
   'jln_color': 'color',
   'jln_control_flow': 'control_flow',
   'jln_conversion_warnings': 'conversion_warnings',
@@ -89,7 +91,7 @@ _jln_var2opts = {
   'jln_windows_bigobj': 'windows_bigobj',
 }
 
-_jln_opt2vars = {
+_opt2vars = {
   'color': 'jln_color',
   'control_flow': 'jln_control_flow',
   'conversion_warnings': 'jln_conversion_warnings',
@@ -132,173 +134,198 @@ _jln_opt2vars = {
   'windows_bigobj': 'jln_windows_bigobj',
 }
 
-def jln_set_global_flags(default_values):
-  _jln_default_flags.update(default_values)
+def set_global_flags(default_values):
+  _default_flags.update(default_values)
 
-def jln_add_variables(vars, default_values={}):
+def add_variables(vars, default_values={}):
   vars.AddVariables(
-    EnumVariable('jln_color', '', default_values.get('color', _jln_default_flags['color']),
+    EnumVariable('jln_color', '', default_values.get('color', _default_flags['color']),
                  allowed_values=('default', 'auto', 'never', 'always')),
-    EnumVariable('jln_control_flow', 'insert extra runtime security checks to detect attempts to compromise your code', default_values.get('control_flow', _jln_default_flags['control_flow']),
+    EnumVariable('jln_control_flow', 'insert extra runtime security checks to detect attempts to compromise your code', default_values.get('control_flow', _default_flags['control_flow']),
                  allowed_values=('default', 'off', 'on', 'branch', 'return', 'allow_bugs')),
-    EnumVariable('jln_conversion_warnings', 'warn for implicit conversions that may alter a value', default_values.get('conversion_warnings', _jln_default_flags['conversion_warnings']),
+    EnumVariable('jln_conversion_warnings', 'warn for implicit conversions that may alter a value', default_values.get('conversion_warnings', _default_flags['conversion_warnings']),
                  allowed_values=('default', 'off', 'on', 'sign', 'conversion')),
-    EnumVariable('jln_coverage', '', default_values.get('coverage', _jln_default_flags['coverage']),
+    EnumVariable('jln_coverage', '', default_values.get('coverage', _default_flags['coverage']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_covered_switch_default_warnings', 'warning for default label in switch which covers all enumeration values', default_values.get('covered_switch_default_warnings', _jln_default_flags['covered_switch_default_warnings']),
+    EnumVariable('jln_covered_switch_default_warnings', 'warning for default label in switch which covers all enumeration values', default_values.get('covered_switch_default_warnings', _default_flags['covered_switch_default_warnings']),
                  allowed_values=('default', 'on', 'off')),
-    EnumVariable('jln_cpu', '', default_values.get('cpu', _jln_default_flags['cpu']),
+    EnumVariable('jln_cpu', '', default_values.get('cpu', _default_flags['cpu']),
                  allowed_values=('default', 'generic', 'native')),
-    EnumVariable('jln_debug', 'produce debugging information in the operating system\'s', default_values.get('debug', _jln_default_flags['debug']),
+    EnumVariable('jln_debug', 'produce debugging information in the operating system\'s', default_values.get('debug', _default_flags['debug']),
                  allowed_values=('default', 'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce')),
-    EnumVariable('jln_diagnostics_format', 'emit fix-it hints in a machine-parseable format', default_values.get('diagnostics_format', _jln_default_flags['diagnostics_format']),
+    EnumVariable('jln_diagnostics_format', 'emit fix-it hints in a machine-parseable format', default_values.get('diagnostics_format', _default_flags['diagnostics_format']),
                  allowed_values=('default', 'fixits', 'patch', 'print_source_range_info')),
-    EnumVariable('jln_diagnostics_show_template_tree', 'enables printing a tree-like structure showing the common and differing parts of the types', default_values.get('diagnostics_show_template_tree', _jln_default_flags['diagnostics_show_template_tree']),
+    EnumVariable('jln_diagnostics_show_template_tree', 'enables printing a tree-like structure showing the common and differing parts of the types', default_values.get('diagnostics_show_template_tree', _default_flags['diagnostics_show_template_tree']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_elide_type', 'prints diagnostics showing common parts of template types as \"[...]\"', default_values.get('elide_type', _jln_default_flags['elide_type']),
+    EnumVariable('jln_elide_type', 'prints diagnostics showing common parts of template types as \"[...]\"', default_values.get('elide_type', _default_flags['elide_type']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_exceptions', 'enable C++ exception', default_values.get('exceptions', _jln_default_flags['exceptions']),
+    EnumVariable('jln_exceptions', 'enable C++ exception', default_values.get('exceptions', _default_flags['exceptions']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_fix_compiler_error', 'transforms some warnings into errors to comply with the standard', default_values.get('fix_compiler_error', _jln_default_flags['fix_compiler_error']),
+    EnumVariable('jln_fix_compiler_error', 'transforms some warnings into errors to comply with the standard', default_values.get('fix_compiler_error', _default_flags['fix_compiler_error']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_float_sanitizers', '', default_values.get('float_sanitizers', _jln_default_flags['float_sanitizers']),
+    EnumVariable('jln_float_sanitizers', '', default_values.get('float_sanitizers', _default_flags['float_sanitizers']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_integer_sanitizers', '', default_values.get('integer_sanitizers', _jln_default_flags['integer_sanitizers']),
+    EnumVariable('jln_integer_sanitizers', '', default_values.get('integer_sanitizers', _default_flags['integer_sanitizers']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_linker', 'configure linker', default_values.get('linker', _jln_default_flags['linker']),
+    EnumVariable('jln_linker', 'configure linker', default_values.get('linker', _default_flags['linker']),
                  allowed_values=('default', 'bfd', 'gold', 'lld', 'native')),
-    EnumVariable('jln_lto', 'enable Link Time Optimization', default_values.get('lto', _jln_default_flags['lto']),
+    EnumVariable('jln_lto', 'enable Link Time Optimization', default_values.get('lto', _default_flags['lto']),
                  allowed_values=('default', 'off', 'on', 'fat', 'thin')),
-    EnumVariable('jln_msvc_conformance', 'standard conformance options', default_values.get('msvc_conformance', _jln_default_flags['msvc_conformance']),
+    EnumVariable('jln_msvc_conformance', 'standard conformance options', default_values.get('msvc_conformance', _default_flags['msvc_conformance']),
                  allowed_values=('default', 'all', 'all_without_throwing_new')),
-    EnumVariable('jln_msvc_crt_secure_no_warnings', 'disable CRT warnings', default_values.get('msvc_crt_secure_no_warnings', _jln_default_flags['msvc_crt_secure_no_warnings']),
+    EnumVariable('jln_msvc_crt_secure_no_warnings', 'disable CRT warnings', default_values.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_msvc_isystem', 'warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)', default_values.get('msvc_isystem', _jln_default_flags['msvc_isystem']),
+    EnumVariable('jln_msvc_isystem', 'warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)', default_values.get('msvc_isystem', _default_flags['msvc_isystem']),
                  allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
-    EnumVariable('jln_msvc_isystem_with_template_from_non_external', 'warnings concerning template in an external header (requires msvc_isystem)', default_values.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external']),
+    EnumVariable('jln_msvc_isystem_with_template_from_non_external', 'warnings concerning template in an external header (requires msvc_isystem)', default_values.get('msvc_isystem_with_template_from_non_external', _default_flags['msvc_isystem_with_template_from_non_external']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_noexcept_warnings', 'Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception.', default_values.get('noexcept_warnings', _jln_default_flags['noexcept_warnings']),
+    EnumVariable('jln_noexcept_warnings', 'Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception.', default_values.get('noexcept_warnings', _default_flags['noexcept_warnings']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_optimization', 'optimization level\\n - 0: not optimize\\n - g: enable debugging experience\\n - 1: optimize\\n - 2: optimize even more\\n - 3: optimize yet more\\n - fast: enables all optimization=3 and disregard strict standards compliance\\n - size: optimize for size\\n - z: optimize for size aggressively (/!\\ possible slow compilation)', default_values.get('optimization', _jln_default_flags['optimization']),
+    EnumVariable('jln_optimization', 'optimization level\\n - 0: not optimize\\n - g: enable debugging experience\\n - 1: optimize\\n - 2: optimize even more\\n - 3: optimize yet more\\n - fast: enables all optimization=3 and disregard strict standards compliance\\n - size: optimize for size\\n - z: optimize for size aggressively (/!\\ possible slow compilation)', default_values.get('optimization', _default_flags['optimization']),
                  allowed_values=('default', '0', 'g', '1', '2', '3', 'fast', 'size', 'z')),
-    EnumVariable('jln_other_sanitizers', 'enable other sanitizers', default_values.get('other_sanitizers', _jln_default_flags['other_sanitizers']),
+    EnumVariable('jln_other_sanitizers', 'enable other sanitizers', default_values.get('other_sanitizers', _default_flags['other_sanitizers']),
                  allowed_values=('default', 'off', 'thread', 'pointer', 'memory')),
-    EnumVariable('jln_pedantic', 'issue all the warnings demanded by strict ISO C and ISO C++', default_values.get('pedantic', _jln_default_flags['pedantic']),
+    EnumVariable('jln_pedantic', 'issue all the warnings demanded by strict ISO C and ISO C++', default_values.get('pedantic', _default_flags['pedantic']),
                  allowed_values=('default', 'off', 'on', 'as_error')),
-    EnumVariable('jln_pie', 'controls position-independent code generation', default_values.get('pie', _jln_default_flags['pie']),
+    EnumVariable('jln_pie', 'controls position-independent code generation', default_values.get('pie', _default_flags['pie']),
                  allowed_values=('default', 'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE')),
-    EnumVariable('jln_relro', 'specifies a memory segment that should be made read-only after relocation, if supported.', default_values.get('relro', _jln_default_flags['relro']),
+    EnumVariable('jln_relro', 'specifies a memory segment that should be made read-only after relocation, if supported.', default_values.get('relro', _default_flags['relro']),
                  allowed_values=('default', 'off', 'on', 'full')),
-    EnumVariable('jln_reproducible_build_warnings', 'warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations', default_values.get('reproducible_build_warnings', _jln_default_flags['reproducible_build_warnings']),
+    EnumVariable('jln_reproducible_build_warnings', 'warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations', default_values.get('reproducible_build_warnings', _default_flags['reproducible_build_warnings']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_rtti', 'disable generation of information about every class with virtual functions for use by the C++ run-time type identification features (\"dynamic_cast\" and \"typeid\")', default_values.get('rtti', _jln_default_flags['rtti']),
+    EnumVariable('jln_rtti', 'disable generation of information about every class with virtual functions for use by the C++ run-time type identification features (\"dynamic_cast\" and \"typeid\")', default_values.get('rtti', _default_flags['rtti']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_sanitizers', 'enable sanitizers (asan, ubsan, etc)', default_values.get('sanitizers', _jln_default_flags['sanitizers']),
+    EnumVariable('jln_sanitizers', 'enable sanitizers (asan, ubsan, etc)', default_values.get('sanitizers', _default_flags['sanitizers']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_shadow_warnings', '', default_values.get('shadow_warnings', _jln_default_flags['shadow_warnings']),
+    EnumVariable('jln_shadow_warnings', '', default_values.get('shadow_warnings', _default_flags['shadow_warnings']),
                  allowed_values=('default', 'off', 'on', 'local', 'compatible_local', 'all')),
-    EnumVariable('jln_stack_protector', 'emit extra code to check for buffer overflows, such as stack smashing attacks', default_values.get('stack_protector', _jln_default_flags['stack_protector']),
+    EnumVariable('jln_stack_protector', 'emit extra code to check for buffer overflows, such as stack smashing attacks', default_values.get('stack_protector', _default_flags['stack_protector']),
                  allowed_values=('default', 'off', 'on', 'strong', 'all')),
-    EnumVariable('jln_stl_debug', 'controls the debug level of the STL', default_values.get('stl_debug', _jln_default_flags['stl_debug']),
+    EnumVariable('jln_stl_debug', 'controls the debug level of the STL', default_values.get('stl_debug', _default_flags['stl_debug']),
                  allowed_values=('default', 'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception')),
-    EnumVariable('jln_stl_fix', 'enable /DNOMINMAX with msvc', default_values.get('stl_fix', _jln_default_flags['stl_fix']),
+    EnumVariable('jln_stl_fix', 'enable /DNOMINMAX with msvc', default_values.get('stl_fix', _default_flags['stl_fix']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_suggestions', 'warn for cases where adding an attribute may be beneficial', default_values.get('suggestions', _jln_default_flags['suggestions']),
+    EnumVariable('jln_suggestions', 'warn for cases where adding an attribute may be beneficial', default_values.get('suggestions', _default_flags['suggestions']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_switch_warnings', 'warnings concerning the switch keyword', default_values.get('switch_warnings', _jln_default_flags['switch_warnings']),
+    EnumVariable('jln_switch_warnings', 'warnings concerning the switch keyword', default_values.get('switch_warnings', _default_flags['switch_warnings']),
                  allowed_values=('default', 'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default')),
-    EnumVariable('jln_warnings', 'warning level', default_values.get('warnings', _jln_default_flags['warnings']),
+    EnumVariable('jln_warnings', 'warning level', default_values.get('warnings', _default_flags['warnings']),
                  allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
-    EnumVariable('jln_warnings_as_error', 'make all or some warnings into errors', default_values.get('warnings_as_error', _jln_default_flags['warnings_as_error']),
+    EnumVariable('jln_warnings_as_error', 'make all or some warnings into errors', default_values.get('warnings_as_error', _default_flags['warnings_as_error']),
                  allowed_values=('default', 'off', 'on', 'basic')),
-    EnumVariable('jln_whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.', default_values.get('whole_program', _jln_default_flags['whole_program']),
+    EnumVariable('jln_whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.', default_values.get('whole_program', _default_flags['whole_program']),
                  allowed_values=('default', 'off', 'on', 'strip_all')),
-    EnumVariable('jln_windows_abi_compatibility_warnings', 'In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys', default_values.get('windows_abi_compatibility_warnings', _jln_default_flags['windows_abi_compatibility_warnings']),
+    EnumVariable('jln_windows_abi_compatibility_warnings', 'In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys', default_values.get('windows_abi_compatibility_warnings', _default_flags['windows_abi_compatibility_warnings']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_windows_bigobj', 'increases that addressable sections capacity', default_values.get('windows_bigobj', _jln_default_flags['windows_bigobj']),
+    EnumVariable('jln_windows_bigobj', 'increases that addressable sections capacity', default_values.get('windows_bigobj', _default_flags['windows_bigobj']),
                  allowed_values=('default', 'on'))  )
 
-def jln_varname_to_optname(options):
-  return {_jln_var2opts.get(k, k):v for k,v in options.items()}
-def jln_optname_to_varname(options):
-  return {_jln_opt2vars.get(k, k):v for k,v in options.items()}
-def jln_variables_to_options(vars):
+def varname_to_optname(options):
+  return {_var2opts.get(k, k):v for k,v in options.items()}
+def optname_to_varname(options):
+  return {_opt2vars.get(k, k):v for k,v in options.items()}
+def variables_to_options(vars):
   args = vars.args
-  return {_jln_var2opts[v.key]:args.get(v.key, v.default) for v in vars.options}
+  return {_var2opts[v.key]:args.get(v.key, v.default) for v in vars.options}
 
-_jln_default_env = Environment()
-_jln_map_compiler = {"g++": "gcc", "mingw": "gcc", "clang++": "clang", "icpc": "icc", "icpx": "icx", "dpcpp": "icx"}
-def jln_flags(options, compiler=None, version=None, linker=None):
-  compiler = compiler or _jln_default_env['CXX']
+_default_env = Environment()
+_map_compiler = {
+  "g++": "gcc",
+  "clang++": "clang",
+  "icpc": "icc",
+}
+_compiler_name_extractor = re.compile('([\w+]+(?:-[\w+]+)*)')
+_compiler_version_cache = {}
 
-  _compiler = None
-  for comp in ('clang', 'g++', 'gcc', 'msvc', 'mingw', 'icc', 'icpc', 'icl', 'icx', 'icpx', 'dpcpp'):
-    if compiler.find(comp) != -1:
-      _compiler = comp
-      break
+def get_flags(options, env=None):
+  env = env or _default_env
+  compiler = env['CXX']
+  version = env.get('CXXVERSION')
+  linker = env.get('LD')
 
-  if not _compiler:
-    return {}
-
-  compiler = _jln_map_compiler.get(_compiler, _compiler)
+  _compiler = os.path.basename(compiler)
+  _compiler = _compiler_name_extractor.match(_compiler).group(1)
+  _compiler = _map_compiler.get(_compiler, _compiler)
   platform = None
-  if compiler == 'mingw':
+
+  if version:
+    version = version.split(".")
+    version[0] = int(version[0])
+    version[1] = int(version[1]) if len(version) == 1 else 0
+
+  if _compiler == 'mingw':
     compiler = 'gcc'
     platform = 'mingw'
-  version = version or _jln_default_env['CXXVERSION']
-  version = version.split(".")
-  version[0] = int(version[0])
-  version[1] = int(version[1]) if len(version) == 1 else 0
+  elif _compiler in ('icx', 'icpx', 'dpcpp'):
+    # is icx version, replace with clang version
+    if not version or version[0] > 2000:
+      version = _compiler_version_cache.get(compiler)
+      if not version:
+        from subprocess import check_output
+        out = check_output([compiler, '-x', 'c', '-', '-dM', '-E'], input=b'').decode()
+        m = re.search(
+            '__clang_major__ (\d+)\n'
+            '#define __clang_minor__ (\d+)\n'
+            '#define __clang_patchlevel__ (\d+)',
+            out
+        )
+        version = (int(m.group(1)), int(m.group(2)))
+        _compiler_version_cache[compiler] = version
+    compiler = 'clang'
+  else:
+    compiler = _compiler
 
-  options = options if type(options) == dict else jln_variables_to_options(options)
+  version = version or (0,0)
+
+  options = options if type(options) == dict else variables_to_options(options)
 
   def verless(major, minor):
     return version[0] < major or (version[0] == major and version[1] < minor)
 
   flags=[]
   linkflags=[]
-  x_color = options.get('color', _jln_default_flags['color'])
-  x_control_flow = options.get('control_flow', _jln_default_flags['control_flow'])
-  x_conversion_warnings = options.get('conversion_warnings', _jln_default_flags['conversion_warnings'])
-  x_coverage = options.get('coverage', _jln_default_flags['coverage'])
-  x_covered_switch_default_warnings = options.get('covered_switch_default_warnings', _jln_default_flags['covered_switch_default_warnings'])
-  x_cpu = options.get('cpu', _jln_default_flags['cpu'])
-  x_debug = options.get('debug', _jln_default_flags['debug'])
-  x_diagnostics_format = options.get('diagnostics_format', _jln_default_flags['diagnostics_format'])
-  x_diagnostics_show_template_tree = options.get('diagnostics_show_template_tree', _jln_default_flags['diagnostics_show_template_tree'])
-  x_elide_type = options.get('elide_type', _jln_default_flags['elide_type'])
-  x_exceptions = options.get('exceptions', _jln_default_flags['exceptions'])
-  x_fix_compiler_error = options.get('fix_compiler_error', _jln_default_flags['fix_compiler_error'])
-  x_float_sanitizers = options.get('float_sanitizers', _jln_default_flags['float_sanitizers'])
-  x_integer_sanitizers = options.get('integer_sanitizers', _jln_default_flags['integer_sanitizers'])
-  x_linker = options.get('linker', _jln_default_flags['linker'])
-  x_lto = options.get('lto', _jln_default_flags['lto'])
-  x_msvc_conformance = options.get('msvc_conformance', _jln_default_flags['msvc_conformance'])
-  x_msvc_crt_secure_no_warnings = options.get('msvc_crt_secure_no_warnings', _jln_default_flags['msvc_crt_secure_no_warnings'])
-  x_msvc_isystem = options.get('msvc_isystem', _jln_default_flags['msvc_isystem'])
-  x_msvc_isystem_with_template_from_non_external = options.get('msvc_isystem_with_template_from_non_external', _jln_default_flags['msvc_isystem_with_template_from_non_external'])
-  x_noexcept_warnings = options.get('noexcept_warnings', _jln_default_flags['noexcept_warnings'])
-  x_optimization = options.get('optimization', _jln_default_flags['optimization'])
-  x_other_sanitizers = options.get('other_sanitizers', _jln_default_flags['other_sanitizers'])
-  x_pedantic = options.get('pedantic', _jln_default_flags['pedantic'])
-  x_pie = options.get('pie', _jln_default_flags['pie'])
-  x_relro = options.get('relro', _jln_default_flags['relro'])
-  x_reproducible_build_warnings = options.get('reproducible_build_warnings', _jln_default_flags['reproducible_build_warnings'])
-  x_rtti = options.get('rtti', _jln_default_flags['rtti'])
-  x_sanitizers = options.get('sanitizers', _jln_default_flags['sanitizers'])
-  x_shadow_warnings = options.get('shadow_warnings', _jln_default_flags['shadow_warnings'])
-  x_stack_protector = options.get('stack_protector', _jln_default_flags['stack_protector'])
-  x_stl_debug = options.get('stl_debug', _jln_default_flags['stl_debug'])
-  x_stl_fix = options.get('stl_fix', _jln_default_flags['stl_fix'])
-  x_suggestions = options.get('suggestions', _jln_default_flags['suggestions'])
-  x_switch_warnings = options.get('switch_warnings', _jln_default_flags['switch_warnings'])
-  x_warnings = options.get('warnings', _jln_default_flags['warnings'])
-  x_warnings_as_error = options.get('warnings_as_error', _jln_default_flags['warnings_as_error'])
-  x_whole_program = options.get('whole_program', _jln_default_flags['whole_program'])
-  x_windows_abi_compatibility_warnings = options.get('windows_abi_compatibility_warnings', _jln_default_flags['windows_abi_compatibility_warnings'])
-  x_windows_bigobj = options.get('windows_bigobj', _jln_default_flags['windows_bigobj'])
+  x_color = options.get('color', _default_flags['color'])
+  x_control_flow = options.get('control_flow', _default_flags['control_flow'])
+  x_conversion_warnings = options.get('conversion_warnings', _default_flags['conversion_warnings'])
+  x_coverage = options.get('coverage', _default_flags['coverage'])
+  x_covered_switch_default_warnings = options.get('covered_switch_default_warnings', _default_flags['covered_switch_default_warnings'])
+  x_cpu = options.get('cpu', _default_flags['cpu'])
+  x_debug = options.get('debug', _default_flags['debug'])
+  x_diagnostics_format = options.get('diagnostics_format', _default_flags['diagnostics_format'])
+  x_diagnostics_show_template_tree = options.get('diagnostics_show_template_tree', _default_flags['diagnostics_show_template_tree'])
+  x_elide_type = options.get('elide_type', _default_flags['elide_type'])
+  x_exceptions = options.get('exceptions', _default_flags['exceptions'])
+  x_fix_compiler_error = options.get('fix_compiler_error', _default_flags['fix_compiler_error'])
+  x_float_sanitizers = options.get('float_sanitizers', _default_flags['float_sanitizers'])
+  x_integer_sanitizers = options.get('integer_sanitizers', _default_flags['integer_sanitizers'])
+  x_linker = options.get('linker', _default_flags['linker'])
+  x_lto = options.get('lto', _default_flags['lto'])
+  x_msvc_conformance = options.get('msvc_conformance', _default_flags['msvc_conformance'])
+  x_msvc_crt_secure_no_warnings = options.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings'])
+  x_msvc_isystem = options.get('msvc_isystem', _default_flags['msvc_isystem'])
+  x_msvc_isystem_with_template_from_non_external = options.get('msvc_isystem_with_template_from_non_external', _default_flags['msvc_isystem_with_template_from_non_external'])
+  x_noexcept_warnings = options.get('noexcept_warnings', _default_flags['noexcept_warnings'])
+  x_optimization = options.get('optimization', _default_flags['optimization'])
+  x_other_sanitizers = options.get('other_sanitizers', _default_flags['other_sanitizers'])
+  x_pedantic = options.get('pedantic', _default_flags['pedantic'])
+  x_pie = options.get('pie', _default_flags['pie'])
+  x_relro = options.get('relro', _default_flags['relro'])
+  x_reproducible_build_warnings = options.get('reproducible_build_warnings', _default_flags['reproducible_build_warnings'])
+  x_rtti = options.get('rtti', _default_flags['rtti'])
+  x_sanitizers = options.get('sanitizers', _default_flags['sanitizers'])
+  x_shadow_warnings = options.get('shadow_warnings', _default_flags['shadow_warnings'])
+  x_stack_protector = options.get('stack_protector', _default_flags['stack_protector'])
+  x_stl_debug = options.get('stl_debug', _default_flags['stl_debug'])
+  x_stl_fix = options.get('stl_fix', _default_flags['stl_fix'])
+  x_suggestions = options.get('suggestions', _default_flags['suggestions'])
+  x_switch_warnings = options.get('switch_warnings', _default_flags['switch_warnings'])
+  x_warnings = options.get('warnings', _default_flags['warnings'])
+  x_warnings_as_error = options.get('warnings_as_error', _default_flags['warnings_as_error'])
+  x_whole_program = options.get('whole_program', _default_flags['whole_program'])
+  x_windows_abi_compatibility_warnings = options.get('windows_abi_compatibility_warnings', _default_flags['windows_abi_compatibility_warnings'])
+  x_windows_bigobj = options.get('windows_bigobj', _default_flags['windows_bigobj'])
 
-  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' ) :
+  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' ) :
     if not ( x_warnings == 'default') :
       if x_warnings == 'off' :
         flags += ('-w', )
@@ -336,39 +363,38 @@ def jln_flags(options, compiler=None, version=None, linker=None):
                         if not ( verless(8, 0) ) :
                           flags += ('-Wclass-memaccess', )
         else:
-          if ( compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' ) :
-            flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', )
-            if not ( x_switch_warnings == 'default') :
-              if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
-                flags += ('-Wno-switch-enum', )
-              else:
-                if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
-                  flags += ('-Wswitch-enum', )
-                else:
-                  if x_switch_warnings == 'off' :
-                    flags += ('-Wno-switch', '-Wno-switch-enum', )
+          flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', )
+          if not ( x_switch_warnings == 'default') :
+            if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
+              flags += ('-Wno-switch-enum', )
             else:
-              flags += ('-Wno-switch', '-Wno-switch-enum', )
-            if not ( x_covered_switch_default_warnings == 'default') :
-              if x_covered_switch_default_warnings == 'off' :
-                flags += ('-Wno-covered-switch-default', )
+              if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
+                flags += ('-Wswitch-enum', )
               else:
-                flags += ('-Wcovered-switch-default', )
-            if not ( verless(3, 9) ) :
-              flags += ('-Wno-undefined-var-template', )
-              if not ( verless(5, 0) ) :
-                flags += ('-Wno-inconsistent-missing-destructor-override', )
-                if not ( verless(9, 0) ) :
-                  flags += ('-Wno-ctad-maybe-unsupported', )
-                  if not ( verless(10, 0) ) :
-                    flags += ('-Wno-c++20-compat', )
-                    if not ( verless(11, 0) ) :
-                      flags += ('-Wno-suggest-destructor-override', )
+                if x_switch_warnings == 'off' :
+                  flags += ('-Wno-switch', '-Wno-switch-enum', )
+          else:
+            flags += ('-Wno-switch', '-Wno-switch-enum', )
+          if not ( x_covered_switch_default_warnings == 'default') :
+            if x_covered_switch_default_warnings == 'off' :
+              flags += ('-Wno-covered-switch-default', )
+            else:
+              flags += ('-Wcovered-switch-default', )
+          if not ( verless(3, 9) ) :
+            flags += ('-Wno-undefined-var-template', )
+            if not ( verless(5, 0) ) :
+              flags += ('-Wno-inconsistent-missing-destructor-override', )
+              if not ( verless(9, 0) ) :
+                flags += ('-Wno-ctad-maybe-unsupported', )
+                if not ( verless(10, 0) ) :
+                  flags += ('-Wno-c++20-compat', )
+                  if not ( verless(11, 0) ) :
+                    flags += ('-Wno-suggest-destructor-override', )
         if ( x_warnings == 'strict' or x_warnings == 'very_strict' ) :
           if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
             flags += ('-Wcast-align=strict', )
     if not ( x_windows_abi_compatibility_warnings == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(10, 0) ) ) or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' ) :
+      if ( ( compiler == 'gcc' and not ( verless(10, 0) ) ) or compiler == 'clang' or compiler == 'clang-cl' ) :
         if x_windows_abi_compatibility_warnings == 'on' :
           flags += ('-Wmismatched-tags', )
         else:
@@ -386,7 +412,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
               if not ( verless(7, 0) ) :
                 flags += ('-Werror=literal-suffix', )
           else:
-            if ( compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' ) :
+            if ( compiler == 'clang' or compiler == 'clang-cl' ) :
               flags += ('-Werror=array-bounds', '-Werror=division-by-zero', )
               if not ( verless(3, 4) ) :
                 flags += ('-Werror=logical-not-parentheses', )
@@ -438,13 +464,10 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
           flags += ('-fcf-protection=none', )
         else:
-          if compiler == 'clang-cl' :
-            flags += ('-fcf-protection=none', '-fno-sanitize-cfi-cross-dso', )
-        if compiler == 'clang' :
-          flags += ('-fno-sanitize=cfi', )
+          flags += ('-fno-sanitize=cfi', '-fcf-protection=none', '-fno-sanitize-cfi-cross-dso', )
           linkflags += ('-fno-sanitize=cfi', )
       else:
-        if ( ( compiler == 'gcc' and not ( verless(8, 0) ) ) or compiler == 'clang-cl' ) :
+        if ( ( compiler == 'gcc' and not ( verless(8, 0) ) ) or not ( compiler == 'gcc' ) ) :
           if x_control_flow == 'branch' :
             flags += ('-fcf-protection=branch', )
           else:
@@ -452,12 +475,11 @@ def jln_flags(options, compiler=None, version=None, linker=None):
               flags += ('-fcf-protection=return', )
             else:
               flags += ('-fcf-protection=full', )
-        else:
           if ( x_control_flow == 'allow_bugs' and compiler == 'clang' ) :
             flags += ('-fsanitize=cfi', '-fvisibility=hidden', '-flto', )
             linkflags += ('-fsanitize=cfi', '-flto', )
     if not ( x_color == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(4, 9) ) ) or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' ) :
+      if ( ( compiler == 'gcc' and not ( verless(4, 9) ) ) or compiler == 'clang' or compiler == 'clang-cl' ) :
         if x_color == 'auto' :
           flags += ('-fdiagnostics-color=auto', )
         else:
@@ -474,7 +496,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           flags += ('-Wno-date-time', )
     if not ( x_diagnostics_format == 'default') :
       if x_diagnostics_format == 'fixits' :
-        if ( ( compiler == 'gcc' and not ( verless(7, 0) ) ) or ( compiler == 'clang' and not ( verless(5, 0) ) ) or ( compiler == 'clang-cl' and not ( verless(5, 0) ) ) or ( compiler == 'icx' and not ( verless(5, 0) ) ) ) :
+        if ( ( compiler == 'gcc' and not ( verless(7, 0) ) ) or ( compiler == 'clang' and not ( verless(5, 0) ) ) or ( compiler == 'clang-cl' and not ( verless(5, 0) ) ) ) :
           flags += ('-fdiagnostics-parseable-fixits', )
       else:
         if x_diagnostics_format == 'patch' :
@@ -493,46 +515,8 @@ def jln_flags(options, compiler=None, version=None, linker=None):
               flags += ('-Werror=literal-suffix', )
         flags += ('-Werror=write-strings', )
       else:
-        if ( compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' ) :
+        if ( compiler == 'clang' or compiler == 'clang-cl' ) :
           flags += ('-Wno-error=c++11-narrowing', '-Wno-reserved-user-defined-literal', )
-  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' or compiler == 'icc' ) :
-    if not ( x_conversion_warnings == 'default') :
-      if x_conversion_warnings == 'on' :
-        flags += ('-Wconversion', '-Wsign-compare', '-Wsign-conversion', )
-      else:
-        if x_conversion_warnings == 'conversion' :
-          flags += ('-Wconversion', )
-        else:
-          if x_conversion_warnings == 'sign' :
-            flags += ('-Wsign-compare', '-Wsign-conversion', )
-          else:
-            flags += ('-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', )
-  if ( compiler == 'gcc' or compiler == 'clang' ) :
-    if not ( x_coverage == 'default') :
-      if x_coverage == 'on' :
-        flags += ('--coverage', )
-        linkflags += ('--coverage', )
-        if compiler == 'clang' :
-          linkflags += ('-lprofile_rt', )
-    if not ( x_debug == 'default') :
-      if x_debug == 'off' :
-        flags += ('-g0', )
-      else:
-        if x_debug == 'gdb' :
-          flags += ('-ggdb', )
-        else:
-          if compiler == 'clang' :
-            if x_debug == 'line_tables_only' :
-              flags += ('-gline-tables-only', )
-            if x_debug == 'lldb' :
-              flags += ('-glldb', )
-            else:
-              if x_debug == 'sce' :
-                flags += ('-gsce', )
-              else:
-                flags += ('-g', )
-          else:
-            flags += ('-g', )
     if not ( x_linker == 'default') :
       if x_linker == 'native' :
         if compiler == 'gcc' :
@@ -572,12 +556,90 @@ def jln_flags(options, compiler=None, version=None, linker=None):
               if x_lto == 'thin' :
                 linkflags += ('-fuse-linker-plugin', )
         else:
-          if ( x_lto == 'thin' and compiler == 'clang' and not ( verless(6, 0) ) ) :
+          if compiler == 'clang-cl' :
+            linkflags += ('-fuse-ld=lld', )
+          if ( x_lto == 'thin' and not ( verless(6, 0) ) ) :
             flags += ('-flto=thin', )
             linkflags += ('-flto=thin', )
           else:
             flags += ('-flto', )
             linkflags += ('-flto', )
+    if not ( x_shadow_warnings == 'default') :
+      if x_shadow_warnings == 'off' :
+        flags += ('-Wno-shadow', )
+        if ( compiler == 'clang-cl' or ( compiler == 'clang' and not ( verless(8, 0) ) ) ) :
+          flags += ('-Wno-shadow-field', )
+      else:
+        if x_shadow_warnings == 'on' :
+          flags += ('-Wshadow', )
+        else:
+          if x_shadow_warnings == 'all' :
+            if compiler == 'gcc' :
+              flags += ('-Wshadow', )
+            else:
+              flags += ('-Wshadow-all', )
+          else:
+            if ( compiler == 'gcc' and not ( verless(7, 1) ) ) :
+              if x_shadow_warnings == 'local' :
+                flags += ('-Wshadow=local', )
+              else:
+                if x_shadow_warnings == 'compatible_local' :
+                  flags += ('-Wshadow=compatible-local', )
+    if not ( x_float_sanitizers == 'default') :
+      if ( ( compiler == 'gcc' and not ( verless(5, 0) ) ) or ( compiler == 'clang' and not ( verless(5, 0) ) ) or compiler == 'clang-cl' ) :
+        if x_float_sanitizers == 'on' :
+          flags += ('-fsanitize=float-divide-by-zero', '-fsanitize=float-cast-overflow', )
+        else:
+          flags += ('-fno-sanitize=float-divide-by-zero', '-fno-sanitize=float-cast-overflow', )
+    if not ( x_integer_sanitizers == 'default') :
+      if ( ( compiler == 'clang' and not ( verless(5, 0) ) ) or compiler == 'clang-cl' ) :
+        if x_integer_sanitizers == 'on' :
+          flags += ('-fsanitize=integer', )
+        else:
+          flags += ('-fno-sanitize=integer', )
+      else:
+        if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
+          if x_integer_sanitizers == 'on' :
+            flags += ('-ftrapv', '-fsanitize=undefined', )
+  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icc' ) :
+    if not ( x_conversion_warnings == 'default') :
+      if x_conversion_warnings == 'on' :
+        flags += ('-Wconversion', '-Wsign-compare', '-Wsign-conversion', )
+      else:
+        if x_conversion_warnings == 'conversion' :
+          flags += ('-Wconversion', )
+        else:
+          if x_conversion_warnings == 'sign' :
+            flags += ('-Wsign-compare', '-Wsign-conversion', )
+          else:
+            flags += ('-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', )
+  if ( compiler == 'gcc' or compiler == 'clang' ) :
+    if not ( x_coverage == 'default') :
+      if x_coverage == 'on' :
+        flags += ('--coverage', )
+        linkflags += ('--coverage', )
+        if compiler == 'clang' :
+          linkflags += ('-lprofile_rt', )
+    if not ( x_debug == 'default') :
+      if x_debug == 'off' :
+        flags += ('-g0', )
+      else:
+        if x_debug == 'gdb' :
+          flags += ('-ggdb', )
+        else:
+          if compiler == 'clang' :
+            if x_debug == 'line_tables_only' :
+              flags += ('-gline-tables-only', )
+            else:
+              if x_debug == 'lldb' :
+                flags += ('-glldb', )
+              else:
+                if x_debug == 'sce' :
+                  flags += ('-gsce', )
+                else:
+                  flags += ('-g', )
+          else:
+            flags += ('-g', )
     if not ( x_optimization == 'default') :
       if x_optimization == '0' :
         flags += ('-O0', )
@@ -594,7 +656,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
             linkflags += ('-Os', )
           else:
             if x_optimization == 'z' :
-              if ( compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icx' ) :
+              if ( compiler == 'clang' or compiler == 'clang-cl' ) :
                 flags += ('-Oz', )
                 linkflags += ('-Oz', )
               else:
@@ -742,27 +804,6 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         if not ( x_pedantic == 'default') :
           if not ( x_pedantic == 'off' ) :
             flags += ('-D_GLIBCXX_DEBUG_PEDANTIC', )
-    if not ( x_shadow_warnings == 'default') :
-      if x_shadow_warnings == 'off' :
-        flags += ('-Wno-shadow', )
-        if ( compiler == 'clang' and not ( verless(8, 0) ) ) :
-          flags += ('-Wno-shadow-field', )
-      else:
-        if x_shadow_warnings == 'on' :
-          flags += ('-Wshadow', )
-        else:
-          if x_shadow_warnings == 'all' :
-            if compiler == 'clang' :
-              flags += ('-Wshadow-all', )
-            else:
-              flags += ('-Wshadow', )
-          else:
-            if ( compiler == 'gcc' and not ( verless(7, 1) ) ) :
-              if x_shadow_warnings == 'local' :
-                flags += ('-Wshadow=local', )
-              else:
-                if x_shadow_warnings == 'compatible_local' :
-                  flags += ('-Wshadow=compatible-local', )
     if not ( x_elide_type == 'default') :
       if x_elide_type == 'on' :
         if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
@@ -797,21 +838,6 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           if x_other_sanitizers == 'pointer' :
             if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
               flags += ('-fsanitize=pointer-compare', '-fsanitize=pointer-subtract', )
-    if not ( x_float_sanitizers == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(5, 0) ) ) or ( compiler == 'clang' and not ( verless(5, 0) ) ) ) :
-        if x_float_sanitizers == 'on' :
-          flags += ('-fsanitize=float-divide-by-zero', '-fsanitize=float-cast-overflow', )
-        else:
-          flags += ('-fno-sanitize=float-divide-by-zero', '-fno-sanitize=float-cast-overflow', )
-    if not ( x_integer_sanitizers == 'default') :
-      if x_integer_sanitizers == 'on' :
-        if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
-          flags += ('-ftrapv', '-fsanitize=undefined', )
-        if ( compiler == 'clang' and not ( verless(5, 0) ) ) :
-          flags += ('-fsanitize=integer', )
-      else:
-        if ( compiler == 'clang' and not ( verless(5, 0) ) ) :
-          flags += ('-fno-sanitize=integer', )
     if not ( x_noexcept_warnings == 'default') :
       if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
         if x_noexcept_warnings == 'on' :
@@ -852,7 +878,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
         flags += ('/D_HAS_ITERATOR_DEBUGGING=0', )
       else:
         flags += ('/D_DEBUG', '/D_HAS_ITERATOR_DEBUGGING=1', )
-    if ( compiler == 'msvc' or compiler == 'clang-cl' ) :
+    if not ( compiler == 'icl' ) :
       if not ( x_stl_fix == 'default') :
         if x_stl_fix == 'on' :
           flags += ('/DNOMINMAX', )
@@ -865,6 +891,8 @@ def jln_flags(options, compiler=None, version=None, linker=None):
             flags += ('/DEBUG', )
           else:
             if x_debug == 'line_tables_only' :
+              if compiler == 'clang-cl' :
+                flags += ('-gline-tables-only', )
               flags += ('/DEBUG:FASTLINK', )
           if not ( x_optimization == 'default') :
             if x_optimization == 'g' :
@@ -1290,7 +1318,7 @@ def jln_flags(options, compiler=None, version=None, linker=None):
           if x_linker == 'gold' :
             linkflags += ('-fuse-ld=gold', )
           else:
-            linkflags += ('-fuse-ld=ld', )
+            linkflags += ('-fuse-ld=lld', )
       if not ( x_lto == 'default') :
         if x_lto == 'off' :
           flags += ('-no-ipo', )

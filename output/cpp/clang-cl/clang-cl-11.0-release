@@ -1,2 +1,4 @@
 /DNDEBUG
+-flto
+-fuse-ld=lld
 /O2
