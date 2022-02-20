@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2022-02-20
+
+- scons: new API
+
 ## 2022-02-14
 
 - add icc, icl and icx compilers
