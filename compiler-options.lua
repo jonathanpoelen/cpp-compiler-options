@@ -2420,12 +2420,12 @@ function help(out)
   local prefix = string.rep(' ', #arg[0]+1)
   out:write(arg[0] .. ' [-p] [-c] [-o outfilebase]\n'
          .. prefix .. '[-f [-]{option_name[=value_name][,...]}]\n'
-         .. prefix .. '[-C [-]{tool_or_platform[,...]]\n'
+         .. prefix .. '[-t [-]{tool_or_platform[,...]]\n'
          .. prefix .. '[-d option_name=value_name[,...]]\n'
          .. prefix .. '{generator.lua} [-h|{options}...]\n\n' .. [==[
   -p  Print an AST.
   -c  Generator for C, not for C++.
-  -C  Restrict to a list of platform, compiler or linker.
+  -t  Restrict to a list of platform, compiler or linker.
       When the list is prefixed with '-', values are removed from current AST.
       Use -C list to display the list of tools and platforms.
   -f  Restrict to a list of option/value.
@@ -2595,10 +2595,11 @@ cli={
   end},
 }
 
-function getoption(flag)
+function getoption(s, pos)
+  local flag = s:sub(2,2)
   local opt = cli[flag]
   if not opt then
-    io.stderr:write('Unknown option: -' .. opt .. ' in ' .. s .. '\n')
+    io.stderr:write('Unknown option: -' .. flag .. ' in ' .. s .. '\n')
     os.exit(2)
   end
   return opt
@@ -2611,7 +2612,7 @@ while i <= #arg do
     break
   end
 
-  local opt = getoption(s:sub(2,2))
+  local opt = getoption(s, 2)
   local ipos = 2
   while not opt.arg do
     opt[1]()

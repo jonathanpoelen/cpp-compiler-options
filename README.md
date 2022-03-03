@@ -426,7 +426,7 @@ Usage:
 
 ```
 ./compiler-options.lua [-h] [-p] [-c] [-o outfilebase]
-                       [-C [-]{platform|compiler|linker}=name[,...]]
+                       [-t [-]{platform|compiler|linker}=name[,...]]
                        [-f [-]{option_name[=value_name][,...]}]
                        [-d option_name=value_name[,...]]
                        {generator} [options...]
@@ -439,7 +439,7 @@ Usage:
 
 - `-p` Print an AST.
 - `-c` for C, default is C++.
-- `-C` Restrict to a list of platform, compiler or linker. When the list is prefixed with '-', values are removed from current AST.
+- `-t` Restrict to a list of platform, compiler or linker. When the list is prefixed with '-', values are removed from current AST.
 - `-f` Restrict to a list of option/value. When the list is prefixed with `-`, options/values are removed.
 - `-d` Set new default value. An empty string for `value_name` is equivalent to `default`.
 
