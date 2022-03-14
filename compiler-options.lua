@@ -411,7 +411,7 @@ Or(gcc, clang_like) {
           cxx'-Wsuggest-final-methods',
        -- flag'-Wsuggest-attribute=format',
           vers(5,1) {
-            flag'-Wnoexcept',
+            cxx'-Wnoexcept',
           },
         }
       }
