@@ -1054,12 +1054,12 @@ msvc {
       },
       vers(15,6) {
         cxx'/Zc:externConstexpr',
-        vers(16,8) {
-          cxx'/Zc:lambda',
-          vers(16,5) {
-            flag'/Zc:preprocessor',
-          },
-        }
+        vers(16,5) {
+          flag'/Zc:preprocessor',
+          vers(16,8) {
+            cxx'/Zc:lambda',
+          }
+        },
       }
     }
   },
