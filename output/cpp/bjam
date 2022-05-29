@@ -2358,15 +2358,15 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>"/Zc:externConstexpr"
           ;
-          if ! (  $(version) < "16.08"  )
+          if ! (  $(version) < "16.05"  )
           {
             flags +=
-              <cxxflags>"/Zc:lambda"
+              <cxxflags>"/Zc:preprocessor"
             ;
-            if ! (  $(version) < "16.05"  )
+            if ! (  $(version) < "16.08"  )
             {
               flags +=
-                <cxxflags>"/Zc:preprocessor"
+                <cxxflags>"/Zc:lambda"
               ;
             }
           }

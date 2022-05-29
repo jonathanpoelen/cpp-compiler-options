@@ -358,9 +358,6 @@ def get_flags(options, env=None):
       if not ( x_suggestions == 'off' ) :
         if compiler == 'gcc' :
           flags += ('-Wsuggest-attribute=pure', '-Wsuggest-attribute=const', )
-          if not ( verless(5, 0) ) :
-            if not ( verless(5, 1) ) :
-              flags += ('-Wnoexcept', )
     if not ( x_sanitizers == 'default') :
       if x_sanitizers == 'off' :
         flags += ('-fno-sanitize=all', )
@@ -858,9 +855,8 @@ def get_flags(options, env=None):
         if x_msvc_conformance == 'all' :
           flags += ('/Zc:throwingNew', )
         if not ( verless(15, 6) ) :
-          if not ( verless(16, 8) ) :
-            if not ( verless(16, 5) ) :
-              flags += ('/Zc:preprocessor', )
+          if not ( verless(16, 5) ) :
+            flags += ('/Zc:preprocessor', )
     if not ( x_msvc_crt_secure_no_warnings == 'default') :
       if x_msvc_crt_secure_no_warnings == 'on' :
         flags += ('/D_CRT_SECURE_NO_WARNINGS=1', )

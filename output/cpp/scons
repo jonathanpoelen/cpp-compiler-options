@@ -973,10 +973,10 @@ def get_flags(options, env=None):
           flags += ('/Zc:throwingNew', )
         if not ( verless(15, 6) ) :
           flags += ('/Zc:externConstexpr', )
-          if not ( verless(16, 8) ) :
-            flags += ('/Zc:lambda', )
-            if not ( verless(16, 5) ) :
-              flags += ('/Zc:preprocessor', )
+          if not ( verless(16, 5) ) :
+            flags += ('/Zc:preprocessor', )
+            if not ( verless(16, 8) ) :
+              flags += ('/Zc:lambda', )
     if not ( x_msvc_crt_secure_no_warnings == 'default') :
       if x_msvc_crt_secure_no_warnings == 'on' :
         flags += ('/D_CRT_SECURE_NO_WARNINGS=1', )

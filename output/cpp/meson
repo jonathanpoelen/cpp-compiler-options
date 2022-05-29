@@ -982,10 +982,10 @@ foreach ___jln_flags : ___jln_custom_flags
         endif
         if (  not ( ___jln_compiler_version.version_compare('<15.6') ) )
           jln_cpp_flags += ['/Zc:externConstexpr', ]
-          if (  not ( ___jln_compiler_version.version_compare('<16.8') ) )
-            jln_cpp_flags += ['/Zc:lambda', ]
-            if (  not ( ___jln_compiler_version.version_compare('<16.5') ) )
-              jln_cpp_flags += ['/Zc:preprocessor', ]
+          if (  not ( ___jln_compiler_version.version_compare('<16.5') ) )
+            jln_cpp_flags += ['/Zc:preprocessor', ]
+            if (  not ( ___jln_compiler_version.version_compare('<16.8') ) )
+              jln_cpp_flags += ['/Zc:lambda', ]
             endif
           endif
         endif

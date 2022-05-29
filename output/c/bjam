@@ -629,15 +629,6 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wsuggest-attribute=pure"
             <cflags>"-Wsuggest-attribute=const"
           ;
-          if ! (  $(version) < "05.00"  )
-          {
-            if ! (  $(version) < "05.01"  )
-            {
-              flags +=
-                <cflags>"-Wnoexcept"
-              ;
-            }
-          }
         }
       }
     }
@@ -2089,14 +2080,11 @@ rule jln_c_flags ( properties * )
         }
         if ! (  $(version) < "15.06"  )
         {
-          if ! (  $(version) < "16.08"  )
+          if ! (  $(version) < "16.05"  )
           {
-            if ! (  $(version) < "16.05"  )
-            {
-              flags +=
-                <cflags>"/Zc:preprocessor"
-              ;
-            }
+            flags +=
+              <cflags>"/Zc:preprocessor"
+            ;
           }
         }
       }
