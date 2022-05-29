@@ -78,31 +78,34 @@ function Logical(op, ...)
 end
 
 function Compiler(name)
+  local cond = {compiler=name}
   return function(x_or_major, minor)
     if type(x_or_major) == 'number' then
       return If({_and={
-        {compiler=name},
+        cond,
         (x_or_major < 0)
         and {_not={version={-x_or_major, minor or 0}}}
         or {version={x_or_major, minor or 0}}
       }})
     else
-      local r = If({compiler=name})
+      local r = If(cond)
       return x_or_major and r(x_or_major) or r
     end
   end
 end
 
 function Platform(name)
+  local cond = {platform=name}
   return function(x)
-    local r = If({platform=name})
+    local r = If(cond)
     return x and r(x) or r
   end
 end
 
 function Linker(name)
+  local cond = {linker=name}
   return function(x)
-    local r = If({linker=name})
+    local r = If(cond)
     return x and r(x) or r
   end
 end
