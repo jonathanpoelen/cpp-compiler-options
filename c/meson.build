@@ -288,11 +288,6 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       if (  not ( (___jln_c_flags.get('suggestions', 'default') == 'off') ) )
         if (  (___jln_c_compiler_id == 'gcc') )
           jln_c_c_flags += ['-Wsuggest-attribute=pure', '-Wsuggest-attribute=const', ]
-          if (  not ( ___jln_c_compiler_version.version_compare('<5.0') ) )
-            if (  not ( ___jln_c_compiler_version.version_compare('<5.1') ) )
-              jln_c_c_flags += ['-Wnoexcept', ]
-            endif
-          endif
         endif
       endif
     endif
@@ -992,10 +987,8 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           jln_c_c_flags += ['/Zc:throwingNew', ]
         endif
         if (  not ( ___jln_c_compiler_version.version_compare('<15.6') ) )
-          if (  not ( ___jln_c_compiler_version.version_compare('<16.8') ) )
-            if (  not ( ___jln_c_compiler_version.version_compare('<16.5') ) )
-              jln_c_c_flags += ['/Zc:preprocessor', ]
-            endif
+          if (  not ( ___jln_c_compiler_version.version_compare('<16.5') ) )
+            jln_c_c_flags += ['/Zc:preprocessor', ]
           endif
         endif
       endif
