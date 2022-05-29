@@ -155,7 +155,7 @@ end
 
     _:print([[
 import'core.platform.platform'
-import"lib.detect"
+import'lib.detect'
 
 local _get_extra = function(opt)
   local x = get_config(opt)
@@ -246,14 +246,13 @@ local _comp_cache = {}
 local _ld_cache = {}
 
 -- getoptions(values = {}, disable_others = false, print_compiler = false)
--- `values`: same as tovalue()
+-- `values`: same as tovalues()
 -- `disable_others`: boolean
 -- `print_compiler`: boolean
 -- return {]] .. cxflags .. [[=table, ldflags=table}
 function getoptions(values, disable_others, print_compiler)
-  local compversion
-
   values = tovalues(values, disable_others)
+
   local compiler = values.]] .. compprefix .. [[
   local version = values.]] .. compprefix .. [[_version
   local linker = values.ld
@@ -268,15 +267,15 @@ function getoptions(values, disable_others, print_compiler)
         _ld_cache[original_linker] = linker
       else
         local program, toolname = platform.tool('ld')
-        linker = toolname or detect.find_toolname(program) or nil
-        _ld_cache[original_linker] = linker or ''
+        linker = toolname or detect.find_toolname(program) or ''
+        _ld_cache[original_linker] = linker
       end
     end
   end
 
-  local cache = _comp_cache
   local original_compiler = compiler or ''
-  local compcache = cache[original_compiler]
+  local compcache = _comp_cache[original_compiler]
+  local compversion
 
   if compcache then
     compiler = compcache[1]
@@ -284,45 +283,37 @@ function getoptions(values, disable_others, print_compiler)
     compversion = compcache[3]
     if not compiler then
       -- wrintf("Unknown compiler")
-      return {buildoptions={}, linkoptions={}}
+      return {]] .. cxflags .. [[={}, ldflags={}}
     end
   else
-    cache[original_compiler] = {}
+    _comp_cache[original_compiler] = {}
 
     local toolname
     if not compiler then
       compiler, toolname = platform.tool(']] .. (_.is_C and "cc" or "cxx") .. [[')
-    end
-
-    if not compiler then
-      -- wprint("Unknown compiler")
-      return {]] .. cxflags .. [[={}, ldflags={}}
-    end
-
-    local realcompiler = compiler
-
-    compiler = detect.find_toolname(compiler)
-    if not compiler then
-      compiler = detect.find_toolname(toolname) or toolname
-      if compiler then
-        if not version then
-          version = toolname:match("%d+%.?%d*%.?%d*$")
-        end
-      else
-        compiler = realcompiler
+      if not compiler then
+        -- wprint("Unknown compiler")
+        compcache[original_compiler] = {}
+        return {]] .. cxflags .. [[={}, ldflags={}}
       end
     end
+
+    local compinfos = detect.find_tool(toolname or compiler, {version=true, program=compiler})
+    if compinfos then
+      compiler = compinfos.name
+      version = compinfos.version
+    else
+      -- extract basename
+      compiler = compiler:match('/([^/]+)$') or compiler
+      version = compiler:match('%d+%.?%d*%.?%d*$') or ''
+      local has_sep = compiler:byte(#compiler-1) == 45 -- '-'
+      -- remove version suffix
+      compiler = compiler:sub(1, #compiler - #version - (has_sep and 2 or 1))
+    end
+
     compiler = _compiler_by_toolname[compiler]
             or (compiler:find('^vs') and 'msvc')
             or compiler
-
-    if not version then
-      version = detect.find_programver(realcompiler)
-
-      if not version then
-        version = tostring(tonumber(os.date("%y")) - (compiler:sub(0, 5) == 'clang' and 14 or 12))
-      end
-    end
 
     compversion = {}
     for i in version:gmatch("%d+") do
@@ -330,11 +321,12 @@ function getoptions(values, disable_others, print_compiler)
     end
     if not compversion[1] then
       cprint("${color.red}Wrong version format: %s", version)
+      compcache[original_compiler] = {}
       return {]] .. cxflags .. [[={}, ldflags={}}
     end
-    compversion = compversion[1] * 100 + (compversion[2] or 0)
 
-    cache[original_compiler] = {compiler, version, compversion}
+    compversion = compversion[1] * 100 + (compversion[2] or 0)
+    _comp_cache[original_compiler] = {compiler, version, compversion}
   end
 
   if print_compiler then
