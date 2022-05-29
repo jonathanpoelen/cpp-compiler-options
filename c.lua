@@ -706,11 +706,6 @@ function jln_c_getoptions(values, disable_others, print_compiler)
         if compiler == "gcc" then
           jln_buildoptions[#jln_buildoptions+1] = "-Wsuggest-attribute=pure"
           jln_buildoptions[#jln_buildoptions+1] = "-Wsuggest-attribute=const"
-          if not ( compversion < 500 ) then
-            if not ( compversion < 501 ) then
-              jln_buildoptions[#jln_buildoptions+1] = "-Wnoexcept"
-            end
-          end
         end
       end
     end
@@ -1458,10 +1453,8 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           jln_buildoptions[#jln_buildoptions+1] = "/Zc:throwingNew"
         end
         if not ( compversion < 1506 ) then
-          if not ( compversion < 1608 ) then
-            if not ( compversion < 1605 ) then
-              jln_buildoptions[#jln_buildoptions+1] = "/Zc:preprocessor"
-            end
+          if not ( compversion < 1605 ) then
+            jln_buildoptions[#jln_buildoptions+1] = "/Zc:preprocessor"
           end
         end
       end

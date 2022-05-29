@@ -1623,10 +1623,10 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
         if not ( compversion < 1506 ) then
           jln_buildoptions[#jln_buildoptions+1] = "/Zc:externConstexpr"
-          if not ( compversion < 1608 ) then
-            jln_buildoptions[#jln_buildoptions+1] = "/Zc:lambda"
-            if not ( compversion < 1605 ) then
-              jln_buildoptions[#jln_buildoptions+1] = "/Zc:preprocessor"
+          if not ( compversion < 1605 ) then
+            jln_buildoptions[#jln_buildoptions+1] = "/Zc:preprocessor"
+            if not ( compversion < 1608 ) then
+              jln_buildoptions[#jln_buildoptions+1] = "/Zc:lambda"
             end
           end
         end
