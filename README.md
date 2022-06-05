@@ -6,45 +6,54 @@ includes'cpp'
 -- Registers new command-line options and set default values
 jln_cxx_init_options({warnings='very_strict'} --[[, category=string|boolean]])
 
-options = {}
-if is_mode('debug') then
-  options.str_debug = 'on'
-end
+-- Set options for a specific mode (see also jln_cxx_rule())
+jln_cxx_init_modes({
+  debug={
+    stl_debug='on',
+  },
+  release={
+    function() ... end, -- callback for release mode
+    lto='on',
+  },
+  -- ...
+})
+
+target('hello1')
+  set_kind('binary')
+  add_files('src/hello.cpp')
+
+
 
 -- Create a new rule. Options are added to the current configuration
-jln_cxx_rule('jln_debug', options --[[, disable_others = false, imported='cpp.flags']])
-add_rules('jln_flags')
+jln_cxx_rule('custom_rule', {warnings_as_error='on'} --[[, disable_other_options = false]])
 
-target('hello')
+target('hello2')
   set_kind('binary')
-  -- Custom configuration when jln_cxx_rule() is not enough
+  add_rules('custom_rule')
+  add_files('src/hello.cpp')
+
+
+
+target('hello3')
+  set_kind('binary')
+  -- Custom configuration when jln_cxx_rule() or jln_cxx_modes() are not enough
   on_load(function(target)
     import'cpp.flags'
-    -- getoptions(values = {}, disable_others = false, print_compiler = false)
-    -- `values`: table. ex: {warnings='on'}
-    -- `values` can have 3 additional fields:
-    --  - `cxx`: compiler name (otherwise deducted from --cxx and --toolchain)
-    --  - `cxx_version` (otherwise deducted from cxx)
-    --  - `ld`: linker name
-    -- `disable_others`: boolean
-    -- `print_compiler`: boolean
-    -- return {cxxflags=table, ldflags=table}
-    -- Note: with C language, cxxflags, cxx and cxx_version become cflags, cc and cc_version
-    local options = flags.getoptions({elide_type='on'})
-    for _,opt in ipairs(options.cxxflags) do target:add('cxxflags', opt, {force=true}) end
-    for _,opt in ipairs(options.ldflags) do target:add('ldflags', opt, {force=true}) end
-
-    -- or equivalent (return also options)
-    flags.setoptions(target, {elide_type='on'})
-
-    -- return the merge of the default values and new value table
-    local values = flags.tovalues({elide_type='on'}, --[[disable_others:bool]])
-    print(values)
+    -- see also getoptions() and tovalues()
+    local options = flags.setoptions(target, {elide_type='on'} --[[, disable_other_options = false]])
+    print(options)
   end)
+  add_files('src/hello.cpp')
 
-  add_files('src/*.cpp')
 
--- NOTE: for C, jln_ and jln_cxx_ prefix function become jln_c_
+-- jln_options can have 3 additional fields:
+--  - `cxx`: (C++ only) compiler name (otherwise deducted from --cxx and --toolchain)
+--  - `cc`: (C only) compiler name (otherwise deducted from --cc and --toolchain)
+--  - `cxx_version` (C++ only) (otherwise deducted from cxx)
+--  - `cc_version` (C only) (otherwise deducted from cc)
+--  - `ld`: linker name
+
+-- NOTE: for C, jln_cxx_ prefix become jln_c_
 ```
 
 
