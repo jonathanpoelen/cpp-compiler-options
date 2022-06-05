@@ -72,7 +72,7 @@ return {
     _._strs = {}
 
     _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
-    _:print('\nfunction ' .. funcprefix .. 'init_options(defaults, category)')
+    _:print('\nfunction ' .. funcprefix .. 'init_options(defaults, category --[[string|boolean=false]])')
     _:print(common_code)
     _:print([[
   if defaults then
@@ -128,21 +128,57 @@ return {
     end
     _:print('end\n')
 
-    _:print('\nlocal cached_flags = {}\n\n')
-    _:print('-- Create a new rule. Options are added to the current configuration')
-    _:print('function ' .. funcprefix .. 'rule(rulename, options, disable_others, imported)')
-    _:print('  imported = imported or "' .. imported_filename .. '"\n')
     _:print([[
+-- `options_by_modes`: {
+--    [modename]: {
+--      function() ... end, -- optional callback
+--      stl_debug='on', ... -- options (see tovalues())
+--    }
+--  }
+-- `func_options`: {
+--    rulename = name for current mode (default value is '__]] .. funcprefix .. [[_flags__')
+--    disable_other_options = see ]] .. funcprefix .. [[rule
+--    imported = see ]] .. funcprefix .. [[rule
+-- }
+function ]] .. funcprefix .. [[init_modes(options_by_modes, func_options)
+  for mode,options in pairs(options_by_modes) do
+    if is_mode(mode) then
+      func_options = func_options or {}
+      local rulename = func_options.rulename or '__]] .. funcprefix .. [[_flags__'
+      local callback = options[1]
+      if callback then
+        options[1] = nil
+      end
+      ]] .. funcprefix .. [[rule(rulename, options, func_options.disable_other_options, func_options.imported)
+      if callback then
+        options[1] = callback
+      end
+      callback()
+      add_rules(rulename)
+      return
+    end
+  end
+end
+
+
+local cached_flags = {}
+
+-- Create a new rule. Options are added to the current configuration (see tovalues())
+function ]] .. funcprefix .. [[rule(rulename, options, disable_other_options, imported)
+  imported = imported or ']] .. imported_filename .. [['
+
   rule(rulename)
     on_load(function(target)
       local cached = cached_flags[rulename]
       if not cached then
         import(imported)
-        cached = flags.getoptions(options, disable_others)
+        cached = flags.getoptions(options, disable_other_options)
+        table.insert(cached.cxxflags, {force=true})
+        table.insert(cached.ldflags, {force=true})
         cached_flags[rulename] = cached
       end
-      for _,opt in ipairs(cached.cxxflags) do target:add('cxxflags', opt, {force=true}) end
-      for _,opt in ipairs(cached.ldflags) do target:add('ldflags', opt, {force=true}) end
+      target:add('cxxflags', table.unpack(cached.cxxflags))
+      target:add('ldflags', table.unpack(cached.ldflags))
     end)
   rule_end()
 end
@@ -176,13 +212,13 @@ local _check_flags = function(d)
 end
 
 -- Returns the merge of the default values and new value table
--- tovalues(table, disable_others = false)
+-- tovalues(table, disable_other_options = false)
 -- `values`: table. ex: {warnings='on'}
 -- `values` can have 3 additional fields:
 --  - `cxx`: compiler name (otherwise deducted from --cxx and --toolchain)
 --  - `cxx_version`: compiler version (otherwise deducted from cxx). ex: '7', '7.2'
 --  - `ld`: linker name
-function tovalues(values, disable_others)
+function tovalues(values, disable_other_options)
   if values then
     _check_flags(values)
     return {]])
@@ -192,7 +228,7 @@ function tovalues(values, disable_others)
       local isnotsamename = (opt ~= optname)
       _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
-              .. 'or (disable_others and "" or _flag_names["' .. optname
+              .. 'or (disable_other_options and "" or _flag_names["' .. optname
               .. '"][get_config("' .. opt .. '")]),')
     end
     for i,extra in ipairs(extraopts) do
@@ -200,7 +236,7 @@ function tovalues(values, disable_others)
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
-              .. 'or (not disable_others and _get_extra("' .. opt .. '")) or nil,')
+              .. 'or (not disable_other_options and _get_extra("' .. opt .. '")) or nil,')
     end
     _:print([[}
   else
@@ -221,10 +257,14 @@ function tovalues(values, disable_others)
 end
 
 -- same as getoptions() and apply the options on a target
-function setoptions(target, values, disable_others, print_compiler)
-  local options = getoptions(values, disable_others, print_compiler)
-  for _,opt in ipairs(options.]] .. cxflags .. [[) do target:add(']] .. cxflags .. [[', opt, {force=true}) end
-  for _,opt in ipairs(options.ldflags) do target:add('ldflags', opt, {force=true}) end
+function setoptions(target, values, disable_other_options, print_compiler)
+  local options = getoptions(values, disable_other_options, print_compiler)
+  table.insert(options.cxxflags, {force=true})
+  table.insert(options.ldflags, {force=true})
+  target:add(']] .. cxflags .. [[', table.unpack(options.]] .. cxflags .. [[))
+  target:add('ldflags', table.unpack(options.ldflags))
+  table.remove(options.cxxflags)
+  table.remove(options.ldflags)
   return options
 end
 
@@ -245,13 +285,13 @@ local _compiler_by_toolname = {
 local _comp_cache = {}
 local _ld_cache = {}
 
--- getoptions(values = {}, disable_others = false, print_compiler = false)
+-- getoptions(values = {}, disable_other_options = false, print_compiler = false)
 -- `values`: same as tovalues()
--- `disable_others`: boolean
+-- `disable_other_options`: boolean
 -- `print_compiler`: boolean
 -- return {]] .. cxflags .. [[=table, ldflags=table}
-function getoptions(values, disable_others, print_compiler)
-  values = tovalues(values, disable_others)
+function getoptions(values, disable_other_options, print_compiler)
+  values = tovalues(values, disable_other_options)
 
   local compiler = values.]] .. compprefix .. [[
   local version = values.]] .. compprefix .. [[_version
@@ -262,7 +302,7 @@ function getoptions(values, disable_others, print_compiler)
     linker = _ld_cache[original_linker]
 
     if not linker then
-      if disable_others then
+      if disable_other_options then
         linker = ''
         _ld_cache[original_linker] = linker
       else
@@ -333,6 +373,7 @@ function getoptions(values, disable_others, print_compiler)
     cprint("getoptions: compiler: ${cyan}%s${reset}, version: ${cyan}%s", compiler, version)
   end
 
+  local insert = table.insert
   local jln_cxflags, jln_ldflags = {}, {}
 ]])
   end,
@@ -343,8 +384,8 @@ function getoptions(values, disable_others, print_compiler)
   _vcond_platform=function(_, platform) return 'is_plat("' .. toplatform(platform) .. '")' end,
   _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 
-  cxx=function(_, x) return _.indent .. 'jln_cxflags[#jln_cxflags+1] = "' .. x .. '"\n' end,
-  link=function(_, x) return _.indent .. 'jln_ldflags[#jln_ldflags+1] = "' .. x .. '"\n' end,
+  cxx=function(_, x) return _.indent .. 'insert(jln_cxflags, "' .. x .. '")\n' end,
+  link=function(_, x) return _.indent .. 'insert(jln_ldflags, "' .. x .. '")\n' end,
 
   act=function(_, name, datas, optname)
     _:print(_.indent .. '-- unimplementable')
