@@ -1,7 +1,10 @@
 includes'cpp'
 
 jln_cxx_init_options({warnings='very_strict'})
-jln_cxx_init_modes({debug={function() end}})
+jln_cxx_init_modes({
+  debug={function() end},
+  release={}
+})
 
 target("test")
   set_kind("binary")

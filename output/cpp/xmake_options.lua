@@ -473,8 +473,8 @@ function jln_cxx_init_modes(options_by_modes, func_options)
       jln_cxx_rule(rulename, options, func_options.disable_other_options, func_options.imported)
       if callback then
         options[1] = callback
+        callback()
       end
-      callback()
       add_rules(rulename)
       return
     end
