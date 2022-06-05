@@ -1,7 +1,7 @@
 -- File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
 
-function jln_c_init_options(defaults, category)
+function jln_c_init_options(defaults, category --[[string|boolean=false]])
 local _extraopt_flag_names = {
   ["jln-cc"] = true,
   ["cc"] = true,
@@ -380,24 +380,56 @@ local _flag_names = {
   option("jln-ld", {showmenu=true, description="Path or name of the linker for jln functions", default=""})
 end
 
+-- `options_by_modes`: {
+--    [modename]: {
+--      function() ... end, -- optional callback
+--      stl_debug='on', ... -- options (see tovalues())
+--    }
+--  }
+-- `func_options`: {
+--    rulename = name for current mode (default value is '__jln_c__flags__')
+--    disable_other_options = see jln_c_rule
+--    imported = see jln_c_rule
+-- }
+function jln_c_init_modes(options_by_modes, func_options)
+  for mode,options in pairs(options_by_modes) do
+    if is_mode(mode) then
+      func_options = func_options or {}
+      local rulename = func_options.rulename or '__jln_c__flags__'
+      local callback = options[1]
+      if callback then
+        options[1] = nil
+      end
+      jln_c_rule(rulename, options, func_options.disable_other_options, func_options.imported)
+      if callback then
+        options[1] = callback
+      end
+      callback()
+      add_rules(rulename)
+      return
+    end
+  end
+end
+
 
 local cached_flags = {}
 
-
--- Create a new rule. Options are added to the current configuration
-function jln_c_rule(rulename, options, disable_others, imported)
-  imported = imported or "c.flags"
+-- Create a new rule. Options are added to the current configuration (see tovalues())
+function jln_c_rule(rulename, options, disable_other_options, imported)
+  imported = imported or 'c.flags'
 
   rule(rulename)
     on_load(function(target)
       local cached = cached_flags[rulename]
       if not cached then
         import(imported)
-        cached = flags.getoptions(options, disable_others)
+        cached = flags.getoptions(options, disable_other_options)
+        table.insert(cached.cxxflags, {force=true})
+        table.insert(cached.ldflags, {force=true})
         cached_flags[rulename] = cached
       end
-      for _,opt in ipairs(cached.cxxflags) do target:add('cxxflags', opt, {force=true}) end
-      for _,opt in ipairs(cached.ldflags) do target:add('ldflags', opt, {force=true}) end
+      target:add('cxxflags', table.unpack(cached.cxxflags))
+      target:add('ldflags', table.unpack(cached.ldflags))
     end)
   rule_end()
 end
