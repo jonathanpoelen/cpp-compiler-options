@@ -4,7 +4,7 @@
 --  includes'cpp'
 --  
 --  -- Registers new command-line options and set default values
---  jln_cxx_init_options({warnings='very_strict'} --[[, category=string|boolean]])
+--  jln_cxx_init_options({warnings='very_strict', warnings_as_error='basic'})
 --  
 --  -- Set options for a specific mode (see also jln_cxx_rule())
 --  jln_cxx_init_modes({
@@ -25,7 +25,7 @@
 --  
 --  
 --  -- Create a new rule. Options are added to the current configuration
---  jln_cxx_rule('custom_rule', {warnings_as_error='on'} --[[, disable_other_options = false]])
+--  jln_cxx_rule('custom_rule', {warnings_as_error='on'})
 --  
 --  target('hello2')
 --    set_kind('binary')
@@ -39,19 +39,12 @@
 --    -- Custom configuration when jln_cxx_rule() or jln_cxx_modes() are not enough
 --    on_load(function(target)
 --      import'cpp.flags'
---      -- see also getoptions() and tovalues()
---      local options = flags.setoptions(target, {elide_type='on'} --[[, disable_other_options = false]])
---      print(options)
+--      -- see also get_flags() and create_options()
+--      local flags = flags.set_flags(target, {elide_type='on'})
+--      print(flags)
 --    end)
 --    add_files('src/hello.cpp')
 --  
---  
---  -- jln_options can have 3 additional fields:
---  --  - `cxx`: (C++ only) compiler name (otherwise deducted from --cxx and --toolchain)
---  --  - `cc`: (C only) compiler name (otherwise deducted from --cc and --toolchain)
---  --  - `cxx_version` (C++ only) (otherwise deducted from cxx)
---  --  - `cc_version` (C only) (otherwise deducted from cc)
---  --  - `ld`: linker name
 --  
 --  -- NOTE: for C, jln_cxx_ prefix become jln_c_
 --  ```
@@ -250,54 +243,57 @@ local _check_flags = function(d)
   end
 end
 
--- Returns the merge of the default values and new value table
--- tovalues(table, disable_other_options = false)
--- `values`: table. ex: {warnings='on'}
--- `values` can have 3 additional fields:
+-- Returns the merge of the default options and options parameter
+-- `options`: table. ex: {warnings='on'}
+-- `options` can have 3 additional fields:
 --  - `cxx`: compiler name (otherwise deducted from --cxx and --toolchain)
 --  - `cxx_version`: compiler version (otherwise deducted from cxx). ex: '7', '7.2'
 --  - `ld`: linker name
-function tovalues(values, disable_other_options)
-  if values then
-    _check_flags(values)
+-- `extra_options` = {
+--   disable_other_options: bool = false
+-- }
+function create_options(options, extra_options)
+  if options then
+    _check_flags(options)
+    local disable_other_options = extra_options and extra_options.disable_other_options
     return {
-      ["color"] = values["color"] or values["jln-color"] or (disable_other_options and "" or _flag_names["color"][get_config("jln-color")]),
-      ["control_flow"] = values["control_flow"] or values["jln-control-flow"] or (disable_other_options and "" or _flag_names["control_flow"][get_config("jln-control-flow")]),
-      ["conversion_warnings"] = values["conversion_warnings"] or values["jln-conversion-warnings"] or (disable_other_options and "" or _flag_names["conversion_warnings"][get_config("jln-conversion-warnings")]),
-      ["coverage"] = values["coverage"] or values["jln-coverage"] or (disable_other_options and "" or _flag_names["coverage"][get_config("jln-coverage")]),
-      ["covered_switch_default_warnings"] = values["covered_switch_default_warnings"] or values["jln-covered-switch-default-warnings"] or (disable_other_options and "" or _flag_names["covered_switch_default_warnings"][get_config("jln-covered-switch-default-warnings")]),
-      ["cpu"] = values["cpu"] or values["jln-cpu"] or (disable_other_options and "" or _flag_names["cpu"][get_config("jln-cpu")]),
-      ["debug"] = values["debug"] or values["jln-debug"] or (disable_other_options and "" or _flag_names["debug"][get_config("jln-debug")]),
-      ["diagnostics_format"] = values["diagnostics_format"] or values["jln-diagnostics-format"] or (disable_other_options and "" or _flag_names["diagnostics_format"][get_config("jln-diagnostics-format")]),
-      ["exceptions"] = values["exceptions"] or values["jln-exceptions"] or (disable_other_options and "" or _flag_names["exceptions"][get_config("jln-exceptions")]),
-      ["fix_compiler_error"] = values["fix_compiler_error"] or values["jln-fix-compiler-error"] or (disable_other_options and "" or _flag_names["fix_compiler_error"][get_config("jln-fix-compiler-error")]),
-      ["float_sanitizers"] = values["float_sanitizers"] or values["jln-float-sanitizers"] or (disable_other_options and "" or _flag_names["float_sanitizers"][get_config("jln-float-sanitizers")]),
-      ["integer_sanitizers"] = values["integer_sanitizers"] or values["jln-integer-sanitizers"] or (disable_other_options and "" or _flag_names["integer_sanitizers"][get_config("jln-integer-sanitizers")]),
-      ["linker"] = values["linker"] or values["jln-linker"] or (disable_other_options and "" or _flag_names["linker"][get_config("jln-linker")]),
-      ["lto"] = values["lto"] or values["jln-lto"] or (disable_other_options and "" or _flag_names["lto"][get_config("jln-lto")]),
-      ["msvc_conformance"] = values["msvc_conformance"] or values["jln-msvc-conformance"] or (disable_other_options and "" or _flag_names["msvc_conformance"][get_config("jln-msvc-conformance")]),
-      ["msvc_crt_secure_no_warnings"] = values["msvc_crt_secure_no_warnings"] or values["jln-msvc-crt-secure-no-warnings"] or (disable_other_options and "" or _flag_names["msvc_crt_secure_no_warnings"][get_config("jln-msvc-crt-secure-no-warnings")]),
-      ["msvc_isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_other_options and "" or _flag_names["msvc_isystem"][get_config("jln-msvc-isystem")]),
-      ["optimization"] = values["optimization"] or values["jln-optimization"] or (disable_other_options and "" or _flag_names["optimization"][get_config("jln-optimization")]),
-      ["other_sanitizers"] = values["other_sanitizers"] or values["jln-other-sanitizers"] or (disable_other_options and "" or _flag_names["other_sanitizers"][get_config("jln-other-sanitizers")]),
-      ["pedantic"] = values["pedantic"] or values["jln-pedantic"] or (disable_other_options and "" or _flag_names["pedantic"][get_config("jln-pedantic")]),
-      ["pie"] = values["pie"] or values["jln-pie"] or (disable_other_options and "" or _flag_names["pie"][get_config("jln-pie")]),
-      ["relro"] = values["relro"] or values["jln-relro"] or (disable_other_options and "" or _flag_names["relro"][get_config("jln-relro")]),
-      ["reproducible_build_warnings"] = values["reproducible_build_warnings"] or values["jln-reproducible-build-warnings"] or (disable_other_options and "" or _flag_names["reproducible_build_warnings"][get_config("jln-reproducible-build-warnings")]),
-      ["sanitizers"] = values["sanitizers"] or values["jln-sanitizers"] or (disable_other_options and "" or _flag_names["sanitizers"][get_config("jln-sanitizers")]),
-      ["shadow_warnings"] = values["shadow_warnings"] or values["jln-shadow-warnings"] or (disable_other_options and "" or _flag_names["shadow_warnings"][get_config("jln-shadow-warnings")]),
-      ["stack_protector"] = values["stack_protector"] or values["jln-stack-protector"] or (disable_other_options and "" or _flag_names["stack_protector"][get_config("jln-stack-protector")]),
-      ["stl_fix"] = values["stl_fix"] or values["jln-stl-fix"] or (disable_other_options and "" or _flag_names["stl_fix"][get_config("jln-stl-fix")]),
-      ["suggestions"] = values["suggestions"] or values["jln-suggestions"] or (disable_other_options and "" or _flag_names["suggestions"][get_config("jln-suggestions")]),
-      ["switch_warnings"] = values["switch_warnings"] or values["jln-switch-warnings"] or (disable_other_options and "" or _flag_names["switch_warnings"][get_config("jln-switch-warnings")]),
-      ["warnings"] = values["warnings"] or values["jln-warnings"] or (disable_other_options and "" or _flag_names["warnings"][get_config("jln-warnings")]),
-      ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_other_options and "" or _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")]),
-      ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_other_options and "" or _flag_names["whole_program"][get_config("jln-whole-program")]),
-      ["windows_bigobj"] = values["windows_bigobj"] or values["jln-windows-bigobj"] or (disable_other_options and "" or _flag_names["windows_bigobj"][get_config("jln-windows-bigobj")]),
-      ["cc"] = values["cc"] or (not disable_other_options and _get_extra("jln-cc")) or nil,
-      ["cc_version"] = values["cc_version"] or (not disable_other_options and _get_extra("jln-cc-version")) or nil,
-      ["ld"] = values["ld"] or (not disable_other_options and _get_extra("jln-ld")) or nil,
-}
+      color = options.color or options["jln-color"] or (disable_other_options and "" or _flag_names.color[get_config("jln-color")]),
+      control_flow = options.control_flow or options["jln-control-flow"] or (disable_other_options and "" or _flag_names.control_flow[get_config("jln-control-flow")]),
+      conversion_warnings = options.conversion_warnings or options["jln-conversion-warnings"] or (disable_other_options and "" or _flag_names.conversion_warnings[get_config("jln-conversion-warnings")]),
+      coverage = options.coverage or options["jln-coverage"] or (disable_other_options and "" or _flag_names.coverage[get_config("jln-coverage")]),
+      covered_switch_default_warnings = options.covered_switch_default_warnings or options["jln-covered-switch-default-warnings"] or (disable_other_options and "" or _flag_names.covered_switch_default_warnings[get_config("jln-covered-switch-default-warnings")]),
+      cpu = options.cpu or options["jln-cpu"] or (disable_other_options and "" or _flag_names.cpu[get_config("jln-cpu")]),
+      debug = options.debug or options["jln-debug"] or (disable_other_options and "" or _flag_names.debug[get_config("jln-debug")]),
+      diagnostics_format = options.diagnostics_format or options["jln-diagnostics-format"] or (disable_other_options and "" or _flag_names.diagnostics_format[get_config("jln-diagnostics-format")]),
+      exceptions = options.exceptions or options["jln-exceptions"] or (disable_other_options and "" or _flag_names.exceptions[get_config("jln-exceptions")]),
+      fix_compiler_error = options.fix_compiler_error or options["jln-fix-compiler-error"] or (disable_other_options and "" or _flag_names.fix_compiler_error[get_config("jln-fix-compiler-error")]),
+      float_sanitizers = options.float_sanitizers or options["jln-float-sanitizers"] or (disable_other_options and "" or _flag_names.float_sanitizers[get_config("jln-float-sanitizers")]),
+      integer_sanitizers = options.integer_sanitizers or options["jln-integer-sanitizers"] or (disable_other_options and "" or _flag_names.integer_sanitizers[get_config("jln-integer-sanitizers")]),
+      linker = options.linker or options["jln-linker"] or (disable_other_options and "" or _flag_names.linker[get_config("jln-linker")]),
+      lto = options.lto or options["jln-lto"] or (disable_other_options and "" or _flag_names.lto[get_config("jln-lto")]),
+      msvc_conformance = options.msvc_conformance or options["jln-msvc-conformance"] or (disable_other_options and "" or _flag_names.msvc_conformance[get_config("jln-msvc-conformance")]),
+      msvc_crt_secure_no_warnings = options.msvc_crt_secure_no_warnings or options["jln-msvc-crt-secure-no-warnings"] or (disable_other_options and "" or _flag_names.msvc_crt_secure_no_warnings[get_config("jln-msvc-crt-secure-no-warnings")]),
+      msvc_isystem = options.msvc_isystem or options["jln-msvc-isystem"] or (disable_other_options and "" or _flag_names.msvc_isystem[get_config("jln-msvc-isystem")]),
+      optimization = options.optimization or options["jln-optimization"] or (disable_other_options and "" or _flag_names.optimization[get_config("jln-optimization")]),
+      other_sanitizers = options.other_sanitizers or options["jln-other-sanitizers"] or (disable_other_options and "" or _flag_names.other_sanitizers[get_config("jln-other-sanitizers")]),
+      pedantic = options.pedantic or options["jln-pedantic"] or (disable_other_options and "" or _flag_names.pedantic[get_config("jln-pedantic")]),
+      pie = options.pie or options["jln-pie"] or (disable_other_options and "" or _flag_names.pie[get_config("jln-pie")]),
+      relro = options.relro or options["jln-relro"] or (disable_other_options and "" or _flag_names.relro[get_config("jln-relro")]),
+      reproducible_build_warnings = options.reproducible_build_warnings or options["jln-reproducible-build-warnings"] or (disable_other_options and "" or _flag_names.reproducible_build_warnings[get_config("jln-reproducible-build-warnings")]),
+      sanitizers = options.sanitizers or options["jln-sanitizers"] or (disable_other_options and "" or _flag_names.sanitizers[get_config("jln-sanitizers")]),
+      shadow_warnings = options.shadow_warnings or options["jln-shadow-warnings"] or (disable_other_options and "" or _flag_names.shadow_warnings[get_config("jln-shadow-warnings")]),
+      stack_protector = options.stack_protector or options["jln-stack-protector"] or (disable_other_options and "" or _flag_names.stack_protector[get_config("jln-stack-protector")]),
+      stl_fix = options.stl_fix or options["jln-stl-fix"] or (disable_other_options and "" or _flag_names.stl_fix[get_config("jln-stl-fix")]),
+      suggestions = options.suggestions or options["jln-suggestions"] or (disable_other_options and "" or _flag_names.suggestions[get_config("jln-suggestions")]),
+      switch_warnings = options.switch_warnings or options["jln-switch-warnings"] or (disable_other_options and "" or _flag_names.switch_warnings[get_config("jln-switch-warnings")]),
+      warnings = options.warnings or options["jln-warnings"] or (disable_other_options and "" or _flag_names.warnings[get_config("jln-warnings")]),
+      warnings_as_error = options.warnings_as_error or options["jln-warnings-as-error"] or (disable_other_options and "" or _flag_names.warnings_as_error[get_config("jln-warnings-as-error")]),
+      whole_program = options.whole_program or options["jln-whole-program"] or (disable_other_options and "" or _flag_names.whole_program[get_config("jln-whole-program")]),
+      windows_bigobj = options.windows_bigobj or options["jln-windows-bigobj"] or (disable_other_options and "" or _flag_names.windows_bigobj[get_config("jln-windows-bigobj")]),
+      cc = options.cc or (not disable_other_options and _get_extra("jln-cc")) or nil,
+      cc_version = options.cc_version or (not disable_other_options and _get_extra("jln-cc-version")) or nil,
+      ld = options.ld or (not disable_other_options and _get_extra("jln-ld")) or nil,
+    }
   else
     return {
       ["color"] = _flag_names["color"][get_config("jln-color")],
@@ -336,13 +332,13 @@ function tovalues(values, disable_other_options)
       ["cc"] = _get_extra("jln-cc"),
       ["cc_version"] = _get_extra("jln-cc-version"),
       ["ld"] = _get_extra("jln-ld"),
-}
+    }
   end
 end
 
--- same as getoptions() and apply the options on a target
-function setoptions(target, values, disable_other_options, print_compiler)
-  local options = getoptions(values, disable_other_options, print_compiler)
+-- Same as get_flags() and apply the options on a target
+function set_flags(target, options, extra_options)
+  options = get_flags(options, extra_options)
   table.insert(options.cxxflags, {force=true})
   table.insert(options.ldflags, {force=true})
   target:add('cflags', table.unpack(options.cflags))
@@ -353,7 +349,8 @@ function setoptions(target, values, disable_other_options, print_compiler)
 end
 
 local _compiler_by_toolname = {
-  vs='msvc',
+  vs='cl',
+  cl='cl',
   gcc='gcc',
   gxx='gcc',
   clang='clang',
@@ -367,37 +364,43 @@ local _compiler_by_toolname = {
 }
 
 local _comp_cache = {}
-local _ld_cache = {}
+local _ld_cache
 
--- getoptions(values = {}, disable_other_options = false, print_compiler = false)
--- `values`: same as tovalues()
--- `disable_other_options`: boolean
--- `print_compiler`: boolean
+local extract_progname_and_version_from_path = function(compiler)
+  compiler = compiler:match('/([^/]+)$') or compiler
+  local version = compiler:match('%d+%.?%d*%.?%d*$') or ''
+  -- remove version suffix
+  local has_sep = compiler:byte(#compiler - #version) == 45 -- '-'
+  compiler = compiler:sub(1, #compiler - #version - (has_sep and 1 or 0))
+  return compiler, version
+end
+
+-- Returns an array of compile and link flags
+-- `options`: same as create_options()
+-- `extra_options` = {
+--   disable_other_options: bool = false
+--   print_compiler: bool = false -- for debug only
+-- }
 -- return {cflags=table, ldflags=table}
-function getoptions(values, disable_other_options, print_compiler)
-  values = tovalues(values, disable_other_options)
+function get_flags(options, extra_options)
+  options = create_options(options, extra_options)
 
-  local compiler = values.cc  local version = values.cc_version
-  local linker = values.ld
+  local compiler = options.cc
+  local version = options.cc_version
+  local linker = options.ld
 
-  do
-    local original_linker = linker or ''
-    linker = _ld_cache[original_linker]
-
+  if not linker then
+    linker = _ld_cache
     if not linker then
-      if disable_other_options then
-        linker = ''
-        _ld_cache[original_linker] = linker
-      else
-        local program, toolname = platform.tool('ld')
-        linker = toolname or detect.find_toolname(program) or ''
-        _ld_cache[original_linker] = linker
-      end
+      local program, toolname = platform.tool('ld')
+      linker = toolname or detect.find_toolname(program) or ''
+      _ld_cache = linker
     end
   end
 
   local original_compiler = compiler or ''
-  local compcache = _comp_cache[original_compiler]
+  local original_version = version or ''
+  local compcache = (_comp_cache[original_compiler] or {})[original_version]
   local compversion
 
   if compcache then
@@ -409,59 +412,61 @@ function getoptions(values, disable_other_options, print_compiler)
       return {cflags={}, ldflags={}}
     end
   else
-    _comp_cache[original_compiler] = {}
-
-    local toolname
-    if not compiler then
-      compiler, toolname = platform.tool('cc')
+    if compiler then
+      local restored_version = version
+      compiler, version = extract_progname_and_version_from_path(compiler)
+      version = restored_version or version
+    else
+      local toolname
       if not compiler then
-        -- wprint("Unknown compiler")
-        compcache[original_compiler] = {}
-        return {cflags={}, ldflags={}}
+        compiler, toolname = platform.tool('cc')
+        if not compiler then
+          -- wprint("Unknown compiler")
+          local tmp = _comp_cache[original_compiler] or {}
+          tmp[original_version] = {}
+          _comp_cache[original_compiler] = tmp
+          return {cflags={}, ldflags={}}
+        end
+      end
+
+      local compinfos = detect.find_tool(toolname or compiler, {version=true, program=compiler})
+      if compinfos then
+        compiler = compinfos.name
+        version = compinfos.version
+      else
+        compiler, version = extract_progname_and_version_from_path(compiler)
       end
     end
 
-    local compinfos = detect.find_tool(toolname or compiler, {version=true, program=compiler})
-    if compinfos then
-      compiler = compinfos.name
-      version = compinfos.version
-    else
-      -- extract basename
-      compiler = compiler:match('/([^/]+)$') or compiler
-      version = compiler:match('%d+%.?%d*%.?%d*$') or ''
-      local has_sep = compiler:byte(#compiler-1) == 45 -- '-'
-      -- remove version suffix
-      compiler = compiler:sub(1, #compiler - #version - (has_sep and 2 or 1))
-    end
-
-    compiler = _compiler_by_toolname[compiler]
-            or (compiler:find('^vs') and 'msvc')
-            or compiler
+    compiler = _compiler_by_toolname[compiler] or compiler
 
     compversion = {}
     for i in version:gmatch("%d+") do
       compversion[#compversion+1] = tonumber(i)
     end
+
     if not compversion[1] then
-      cprint("${color.red}Wrong version format: %s", version)
-      compcache[original_compiler] = {}
-      return {cflags={}, ldflags={}}
+      wprint("Wrong version format: %s", version)
+      compversion = 0
+    else
+      compversion = compversion[1] * 100000 + (compversion[2] or 0)
     end
 
-    compversion = compversion[1] * 100 + (compversion[2] or 0)
-    _comp_cache[original_compiler] = {compiler, version, compversion}
+    local tmp = _comp_cache[original_compiler] or {}
+    tmp[original_version] = {compiler, version, compversion}
+    _comp_cache[original_compiler] = tmp
   end
 
-  if print_compiler then
-    cprint("getoptions: compiler: ${cyan}%s${reset}, version: ${cyan}%s", compiler, version)
+  if extra_options and extra_options.print_compiler then
+    cprint("get_flags: compiler: ${cyan}%s${reset}, version: ${cyan}%s", compiler, version)
   end
 
   local insert = table.insert
   local jln_cxflags, jln_ldflags = {}, {}
 
   if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" ) then
-    if not ( values["warnings"] == "") then
-      if values["warnings"] == "off" then
+    if not ( options.warnings == "") then
+      if options.warnings == "off" then
         insert(jln_cxflags, "-w")
       else
         if compiler == "gcc" then
@@ -487,17 +492,17 @@ function getoptions(values, disable_other_options, print_compiler)
           insert(jln_cxflags, "-Wold-style-definition")
           insert(jln_cxflags, "-Wstrict-prototypes")
           insert(jln_cxflags, "-Wwrite-strings")
-          if not ( values["switch_warnings"] == "") then
-            if values["switch_warnings"] == "on" then
+          if not ( options.switch_warnings == "") then
+            if options.switch_warnings == "on" then
               insert(jln_cxflags, "-Wswitch")
             else
-              if values["switch_warnings"] == "exhaustive_enum" then
+              if options.switch_warnings == "exhaustive_enum" then
                 insert(jln_cxflags, "-Wswitch-enum")
               else
-                if values["switch_warnings"] == "mandatory_default" then
+                if options.switch_warnings == "mandatory_default" then
                   insert(jln_cxflags, "-Wswitch-default")
                 else
-                  if values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" then
+                  if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
                     insert(jln_cxflags, "-Wswitch-default")
                     insert(jln_cxflags, "-Wswitch-enum")
                   else
@@ -507,23 +512,23 @@ function getoptions(values, disable_other_options, print_compiler)
               end
             end
           end
-          if not ( compversion < 407 ) then
+          if not ( compversion < 400007 ) then
             insert(jln_cxflags, "-Wsuggest-attribute=noreturn")
             insert(jln_cxflags, "-Wlogical-op")
             insert(jln_cxflags, "-Wvector-operation-performance")
             insert(jln_cxflags, "-Wdouble-promotion")
             insert(jln_cxflags, "-Wtrampolines")
-            if not ( compversion < 408 ) then
-              if not ( compversion < 409 ) then
+            if not ( compversion < 400008 ) then
+              if not ( compversion < 400009 ) then
                 insert(jln_cxflags, "-Wfloat-conversion")
-                if not ( compversion < 501 ) then
+                if not ( compversion < 500001 ) then
                   insert(jln_cxflags, "-Wformat-signedness")
                   insert(jln_cxflags, "-Warray-bounds=2")
-                  if not ( compversion < 601 ) then
+                  if not ( compversion < 600001 ) then
                     insert(jln_cxflags, "-Wduplicated-cond")
                     insert(jln_cxflags, "-Wnull-dereference")
-                    if not ( compversion < 700 ) then
-                      if not ( compversion < 701 ) then
+                    if not ( compversion < 700000 ) then
+                      if not ( compversion < 700001 ) then
                         insert(jln_cxflags, "-Walloc-zero")
                         insert(jln_cxflags, "-Walloca")
                         insert(jln_cxflags, "-Wformat-overflow=2")
@@ -542,14 +547,14 @@ function getoptions(values, disable_other_options, print_compiler)
           insert(jln_cxflags, "-Wno-newline-eof")
           insert(jln_cxflags, "-Wno-padded")
           insert(jln_cxflags, "-Wno-global-constructors")
-          if not ( values["switch_warnings"] == "") then
-            if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
+          if not ( options.switch_warnings == "") then
+            if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
               insert(jln_cxflags, "-Wno-switch-enum")
             else
-              if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
+              if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
                 insert(jln_cxflags, "-Wswitch-enum")
               else
-                if values["switch_warnings"] == "off" then
+                if options.switch_warnings == "off" then
                   insert(jln_cxflags, "-Wno-switch")
                   insert(jln_cxflags, "-Wno-switch-enum")
                 end
@@ -559,31 +564,31 @@ function getoptions(values, disable_other_options, print_compiler)
             insert(jln_cxflags, "-Wno-switch")
             insert(jln_cxflags, "-Wno-switch-enum")
           end
-          if not ( values["covered_switch_default_warnings"] == "") then
-            if values["covered_switch_default_warnings"] == "off" then
+          if not ( options.covered_switch_default_warnings == "") then
+            if options.covered_switch_default_warnings == "off" then
               insert(jln_cxflags, "-Wno-covered-switch-default")
             else
               insert(jln_cxflags, "-Wcovered-switch-default")
             end
           end
         end
-        if ( values["warnings"] == "strict" or values["warnings"] == "very_strict" ) then
-          if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+        if ( options.warnings == "strict" or options.warnings == "very_strict" ) then
+          if ( compiler == "gcc" and not ( compversion < 800000 ) ) then
             insert(jln_cxflags, "-Wcast-align=strict")
           end
         end
       end
     end
-    if not ( values["warnings_as_error"] == "") then
-      if values["warnings_as_error"] == "on" then
+    if not ( options.warnings_as_error == "") then
+      if options.warnings_as_error == "on" then
         insert(jln_cxflags, "-Werror")
       else
-        if values["warnings_as_error"] == "basic" then
+        if options.warnings_as_error == "basic" then
           insert(jln_cxflags, "-Werror=return-type")
           insert(jln_cxflags, "-Werror=init-self")
           if compiler == "gcc" then
             insert(jln_cxflags, "-Werror=div-by-zero")
-            if not ( compversion < 501 ) then
+            if not ( compversion < 500001 ) then
               insert(jln_cxflags, "-Werror=array-bounds")
               insert(jln_cxflags, "-Werror=logical-op")
               insert(jln_cxflags, "-Werror=logical-not-parentheses")
@@ -592,7 +597,7 @@ function getoptions(values, disable_other_options, print_compiler)
             if ( compiler == "clang" or compiler == "clang-cl" ) then
               insert(jln_cxflags, "-Werror=array-bounds")
               insert(jln_cxflags, "-Werror=division-by-zero")
-              if not ( compversion < 304 ) then
+              if not ( compversion < 300004 ) then
                 insert(jln_cxflags, "-Werror=logical-not-parentheses")
               end
             end
@@ -602,16 +607,16 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["suggestions"] == "") then
-      if not ( values["suggestions"] == "off" ) then
+    if not ( options.suggestions == "") then
+      if not ( options.suggestions == "off" ) then
         if compiler == "gcc" then
           insert(jln_cxflags, "-Wsuggest-attribute=pure")
           insert(jln_cxflags, "-Wsuggest-attribute=const")
         end
       end
     end
-    if not ( values["sanitizers"] == "") then
-      if values["sanitizers"] == "off" then
+    if not ( options.sanitizers == "") then
+      if options.sanitizers == "off" then
         insert(jln_cxflags, "-fno-sanitize=all")
         insert(jln_ldflags, "-fno-sanitize=all")
       else
@@ -621,7 +626,7 @@ function getoptions(values, disable_other_options, print_compiler)
           insert(jln_cxflags, "-fsanitize-address-use-after-scope")
         else
           if compiler == "clang" then
-            if not ( compversion < 301 ) then
+            if not ( compversion < 300001 ) then
               insert(jln_cxflags, "-fsanitize=undefined")
               insert(jln_cxflags, "-fsanitize=address")
               insert(jln_cxflags, "-fsanitize-address-use-after-scope")
@@ -629,25 +634,25 @@ function getoptions(values, disable_other_options, print_compiler)
               insert(jln_cxflags, "-fno-optimize-sibling-calls")
               insert(jln_ldflags, "-fsanitize=undefined")
               insert(jln_ldflags, "-fsanitize=address")
-              if not ( compversion < 304 ) then
+              if not ( compversion < 300004 ) then
                 insert(jln_cxflags, "-fsanitize=leak")
                 insert(jln_ldflags, "-fsanitize=leak")
               end
-              if not ( compversion < 600 ) then
-                if not ( values["stack_protector"] == "") then
-                  if not ( values["stack_protector"] == "off" ) then
+              if not ( compversion < 600000 ) then
+                if not ( options.stack_protector == "") then
+                  if not ( options.stack_protector == "off" ) then
                     insert(jln_cxflags, "-fsanitize-minimal-runtime")
                   end
                 end
               end
             end
           else
-            if not ( compversion < 408 ) then
+            if not ( compversion < 400008 ) then
               insert(jln_cxflags, "-fsanitize=address")
               insert(jln_cxflags, "-fno-omit-frame-pointer")
               insert(jln_cxflags, "-fno-optimize-sibling-calls")
               insert(jln_ldflags, "-fsanitize=address")
-              if not ( compversion < 409 ) then
+              if not ( compversion < 400009 ) then
                 insert(jln_cxflags, "-fsanitize=undefined")
                 insert(jln_cxflags, "-fsanitize=leak")
                 insert(jln_ldflags, "-fsanitize=undefined")
@@ -658,9 +663,9 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["control_flow"] == "") then
-      if values["control_flow"] == "off" then
-        if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+    if not ( options.control_flow == "") then
+      if options.control_flow == "off" then
+        if ( compiler == "gcc" and not ( compversion < 800000 ) ) then
           insert(jln_cxflags, "-fcf-protection=none")
         else
           insert(jln_cxflags, "-fno-sanitize=cfi")
@@ -669,17 +674,17 @@ function getoptions(values, disable_other_options, print_compiler)
           insert(jln_ldflags, "-fno-sanitize=cfi")
         end
       else
-        if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or not ( compiler == "gcc" ) ) then
-          if values["control_flow"] == "branch" then
+        if ( ( compiler == "gcc" and not ( compversion < 800000 ) ) or not ( compiler == "gcc" ) ) then
+          if options.control_flow == "branch" then
             insert(jln_cxflags, "-fcf-protection=branch")
           else
-            if values["control_flow"] == "return" then
+            if options.control_flow == "return" then
               insert(jln_cxflags, "-fcf-protection=return")
             else
               insert(jln_cxflags, "-fcf-protection=full")
             end
           end
-          if ( values["control_flow"] == "allow_bugs" and compiler == "clang" ) then
+          if ( options.control_flow == "allow_bugs" and compiler == "clang" ) then
             insert(jln_cxflags, "-fsanitize=cfi")
             insert(jln_cxflags, "-fvisibility=hidden")
             insert(jln_cxflags, "-flto")
@@ -689,42 +694,42 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["color"] == "") then
-      if ( ( compiler == "gcc" and not ( compversion < 409 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
-        if values["color"] == "auto" then
+    if not ( options.color == "") then
+      if ( ( compiler == "gcc" and not ( compversion < 400009 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
+        if options.color == "auto" then
           insert(jln_cxflags, "-fdiagnostics-color=auto")
         else
-          if values["color"] == "never" then
+          if options.color == "never" then
             insert(jln_cxflags, "-fdiagnostics-color=never")
           else
-            if values["color"] == "always" then
+            if options.color == "always" then
               insert(jln_cxflags, "-fdiagnostics-color=always")
             end
           end
         end
       end
     end
-    if not ( values["reproducible_build_warnings"] == "") then
-      if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-        if values["reproducible_build_warnings"] == "on" then
+    if not ( options.reproducible_build_warnings == "") then
+      if ( compiler == "gcc" and not ( compversion < 400009 ) ) then
+        if options.reproducible_build_warnings == "on" then
           insert(jln_cxflags, "-Wdate-time")
         else
           insert(jln_cxflags, "-Wno-date-time")
         end
       end
     end
-    if not ( values["diagnostics_format"] == "") then
-      if values["diagnostics_format"] == "fixits" then
-        if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or ( compiler == "clang-cl" and not ( compversion < 500 ) ) ) then
+    if not ( options.diagnostics_format == "") then
+      if options.diagnostics_format == "fixits" then
+        if ( ( compiler == "gcc" and not ( compversion < 700000 ) ) or ( compiler == "clang" and not ( compversion < 500000 ) ) or ( compiler == "clang-cl" and not ( compversion < 500000 ) ) ) then
           insert(jln_cxflags, "-fdiagnostics-parseable-fixits")
         end
       else
-        if values["diagnostics_format"] == "patch" then
-          if ( compiler == "gcc" and not ( compversion < 700 ) ) then
+        if options.diagnostics_format == "patch" then
+          if ( compiler == "gcc" and not ( compversion < 700000 ) ) then
             insert(jln_cxflags, "-fdiagnostics-generate-patch")
           end
         else
-          if values["diagnostics_format"] == "print_source_range_info" then
+          if options.diagnostics_format == "print_source_range_info" then
             if compiler == "clang" then
               insert(jln_cxflags, "-fdiagnostics-print-source-range-info")
             end
@@ -732,8 +737,8 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["fix_compiler_error"] == "") then
-      if values["fix_compiler_error"] == "on" then
+    if not ( options.fix_compiler_error == "") then
+      if options.fix_compiler_error == "on" then
         insert(jln_cxflags, "-Werror=write-strings")
       else
         if ( compiler == "clang" or compiler == "clang-cl" ) then
@@ -742,22 +747,22 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["linker"] == "") then
-      if values["linker"] == "native" then
+    if not ( options.linker == "") then
+      if options.linker == "native" then
         if compiler == "gcc" then
           insert(jln_ldflags, "-fuse-ld=gold")
         else
           insert(jln_ldflags, "-fuse-ld=lld")
         end
       else
-        if values["linker"] == "bfd" then
+        if options.linker == "bfd" then
           insert(jln_ldflags, "-fuse-ld=bfd")
         else
-          if ( values["linker"] == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900 ) ) ) ) then
+          if ( options.linker == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900000 ) ) ) ) then
             insert(jln_ldflags, "-fuse-ld=gold")
           else
-            if not ( values["lto"] == "") then
-              if ( not ( values["lto"] == "off" ) and compiler == "gcc" ) then
+            if not ( options.lto == "") then
+              if ( not ( options.lto == "off" ) and compiler == "gcc" ) then
                 insert(jln_ldflags, "-fuse-ld=gold")
               else
                 insert(jln_ldflags, "-fuse-ld=lld")
@@ -769,25 +774,25 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["lto"] == "") then
-      if values["lto"] == "off" then
+    if not ( options.lto == "") then
+      if options.lto == "off" then
         insert(jln_cxflags, "-fno-lto")
         insert(jln_ldflags, "-fno-lto")
       else
         if compiler == "gcc" then
           insert(jln_cxflags, "-flto")
           insert(jln_ldflags, "-flto")
-          if not ( compversion < 500 ) then
-            if not ( values["warnings"] == "") then
-              if not ( values["warnings"] == "off" ) then
+          if not ( compversion < 500000 ) then
+            if not ( options.warnings == "") then
+              if not ( options.warnings == "off" ) then
                 insert(jln_cxflags, "-flto-odr-type-merging")
                 insert(jln_ldflags, "-flto-odr-type-merging")
               end
             end
-            if values["lto"] == "fat" then
+            if options.lto == "fat" then
               insert(jln_cxflags, "-ffat-lto-objects")
             else
-              if values["lto"] == "thin" then
+              if options.lto == "thin" then
                 insert(jln_ldflags, "-fuse-linker-plugin")
               end
             end
@@ -796,7 +801,7 @@ function getoptions(values, disable_other_options, print_compiler)
           if compiler == "clang-cl" then
             insert(jln_ldflags, "-fuse-ld=lld")
           end
-          if ( values["lto"] == "thin" and not ( compversion < 600 ) ) then
+          if ( options.lto == "thin" and not ( compversion < 600000 ) ) then
             insert(jln_cxflags, "-flto=thin")
             insert(jln_ldflags, "-flto=thin")
           else
@@ -806,28 +811,28 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["shadow_warnings"] == "") then
-      if values["shadow_warnings"] == "off" then
+    if not ( options.shadow_warnings == "") then
+      if options.shadow_warnings == "off" then
         insert(jln_cxflags, "-Wno-shadow")
-        if ( compiler == "clang-cl" or ( compiler == "clang" and not ( compversion < 800 ) ) ) then
+        if ( compiler == "clang-cl" or ( compiler == "clang" and not ( compversion < 800000 ) ) ) then
           insert(jln_cxflags, "-Wno-shadow-field")
         end
       else
-        if values["shadow_warnings"] == "on" then
+        if options.shadow_warnings == "on" then
           insert(jln_cxflags, "-Wshadow")
         else
-          if values["shadow_warnings"] == "all" then
+          if options.shadow_warnings == "all" then
             if compiler == "gcc" then
               insert(jln_cxflags, "-Wshadow")
             else
               insert(jln_cxflags, "-Wshadow-all")
             end
           else
-            if ( compiler == "gcc" and not ( compversion < 701 ) ) then
-              if values["shadow_warnings"] == "local" then
+            if ( compiler == "gcc" and not ( compversion < 700001 ) ) then
+              if options.shadow_warnings == "local" then
                 insert(jln_cxflags, "-Wshadow=local")
               else
-                if values["shadow_warnings"] == "compatible_local" then
+                if options.shadow_warnings == "compatible_local" then
                   insert(jln_cxflags, "-Wshadow=compatible-local")
                 end
               end
@@ -836,9 +841,9 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["float_sanitizers"] == "") then
-      if ( ( compiler == "gcc" and not ( compversion < 500 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or compiler == "clang-cl" ) then
-        if values["float_sanitizers"] == "on" then
+    if not ( options.float_sanitizers == "") then
+      if ( ( compiler == "gcc" and not ( compversion < 500000 ) ) or ( compiler == "clang" and not ( compversion < 500000 ) ) or compiler == "clang-cl" ) then
+        if options.float_sanitizers == "on" then
           insert(jln_cxflags, "-fsanitize=float-divide-by-zero")
           insert(jln_cxflags, "-fsanitize=float-cast-overflow")
         else
@@ -847,16 +852,16 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["integer_sanitizers"] == "") then
-      if ( ( compiler == "clang" and not ( compversion < 500 ) ) or compiler == "clang-cl" ) then
-        if values["integer_sanitizers"] == "on" then
+    if not ( options.integer_sanitizers == "") then
+      if ( ( compiler == "clang" and not ( compversion < 500000 ) ) or compiler == "clang-cl" ) then
+        if options.integer_sanitizers == "on" then
           insert(jln_cxflags, "-fsanitize=integer")
         else
           insert(jln_cxflags, "-fno-sanitize=integer")
         end
       else
-        if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-          if values["integer_sanitizers"] == "on" then
+        if ( compiler == "gcc" and not ( compversion < 400009 ) ) then
+          if options.integer_sanitizers == "on" then
             insert(jln_cxflags, "-ftrapv")
             insert(jln_cxflags, "-fsanitize=undefined")
           end
@@ -865,16 +870,16 @@ function getoptions(values, disable_other_options, print_compiler)
     end
   end
   if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" or compiler == "icc" ) then
-    if not ( values["conversion_warnings"] == "") then
-      if values["conversion_warnings"] == "on" then
+    if not ( options.conversion_warnings == "") then
+      if options.conversion_warnings == "on" then
         insert(jln_cxflags, "-Wconversion")
         insert(jln_cxflags, "-Wsign-compare")
         insert(jln_cxflags, "-Wsign-conversion")
       else
-        if values["conversion_warnings"] == "conversion" then
+        if options.conversion_warnings == "conversion" then
           insert(jln_cxflags, "-Wconversion")
         else
-          if values["conversion_warnings"] == "sign" then
+          if options.conversion_warnings == "sign" then
             insert(jln_cxflags, "-Wsign-compare")
             insert(jln_cxflags, "-Wsign-conversion")
           else
@@ -887,8 +892,8 @@ function getoptions(values, disable_other_options, print_compiler)
     end
   end
   if ( compiler == "gcc" or compiler == "clang" ) then
-    if not ( values["coverage"] == "") then
-      if values["coverage"] == "on" then
+    if not ( options.coverage == "") then
+      if options.coverage == "on" then
         insert(jln_cxflags, "--coverage")
         insert(jln_ldflags, "--coverage")
         if compiler == "clang" then
@@ -896,21 +901,21 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["debug"] == "") then
-      if values["debug"] == "off" then
+    if not ( options.debug == "") then
+      if options.debug == "off" then
         insert(jln_cxflags, "-g0")
       else
-        if values["debug"] == "gdb" then
+        if options.debug == "gdb" then
           insert(jln_cxflags, "-ggdb")
         else
           if compiler == "clang" then
-            if values["debug"] == "line_tables_only" then
+            if options.debug == "line_tables_only" then
               insert(jln_cxflags, "-gline-tables-only")
             else
-              if values["debug"] == "lldb" then
+              if options.debug == "lldb" then
                 insert(jln_cxflags, "-glldb")
               else
-                if values["debug"] == "sce" then
+                if options.debug == "sce" then
                   insert(jln_cxflags, "-gsce")
                 else
                   insert(jln_cxflags, "-g")
@@ -923,22 +928,22 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["optimization"] == "") then
-      if values["optimization"] == "0" then
+    if not ( options.optimization == "") then
+      if options.optimization == "0" then
         insert(jln_cxflags, "-O0")
         insert(jln_ldflags, "-O0")
       else
-        if values["optimization"] == "g" then
+        if options.optimization == "g" then
           insert(jln_cxflags, "-Og")
           insert(jln_ldflags, "-Og")
         else
           insert(jln_cxflags, "-DNDEBUG")
           insert(jln_ldflags, "-Wl,-O1")
-          if values["optimization"] == "size" then
+          if options.optimization == "size" then
             insert(jln_cxflags, "-Os")
             insert(jln_ldflags, "-Os")
           else
-            if values["optimization"] == "z" then
+            if options.optimization == "z" then
               if ( compiler == "clang" or compiler == "clang-cl" ) then
                 insert(jln_cxflags, "-Oz")
                 insert(jln_ldflags, "-Oz")
@@ -947,19 +952,19 @@ function getoptions(values, disable_other_options, print_compiler)
                 insert(jln_ldflags, "-Os")
               end
             else
-              if values["optimization"] == "fast" then
+              if options.optimization == "fast" then
                 insert(jln_cxflags, "-Ofast")
                 insert(jln_ldflags, "-Ofast")
               else
-                if values["optimization"] == "1" then
+                if options.optimization == "1" then
                   insert(jln_cxflags, "-O1")
                   insert(jln_ldflags, "-O1")
                 else
-                  if values["optimization"] == "2" then
+                  if options.optimization == "2" then
                     insert(jln_cxflags, "-O2")
                     insert(jln_ldflags, "-O2")
                   else
-                    if values["optimization"] == "3" then
+                    if options.optimization == "3" then
                       insert(jln_cxflags, "-O3")
                       insert(jln_ldflags, "-O3")
                     end
@@ -971,8 +976,8 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["cpu"] == "") then
-      if values["cpu"] == "generic" then
+    if not ( options.cpu == "") then
+      if options.cpu == "generic" then
         insert(jln_cxflags, "-mtune=generic")
         insert(jln_ldflags, "-mtune=generic")
       else
@@ -982,10 +987,10 @@ function getoptions(values, disable_other_options, print_compiler)
         insert(jln_ldflags, "-mtune=native")
       end
     end
-    if not ( values["whole_program"] == "") then
-      if values["whole_program"] == "off" then
+    if not ( options.whole_program == "") then
+      if options.whole_program == "off" then
         insert(jln_cxflags, "-fno-whole-program")
-        if ( compiler == "clang" and not ( compversion < 309 ) ) then
+        if ( compiler == "clang" and not ( compversion < 300009 ) ) then
           insert(jln_cxflags, "-fno-whole-program-vtables")
           insert(jln_ldflags, "-fno-whole-program-vtables")
         end
@@ -995,7 +1000,7 @@ function getoptions(values, disable_other_options, print_compiler)
           insert(jln_ldflags, "-Wl,-S")
         else
           insert(jln_ldflags, "-s")
-          if values["whole_program"] == "strip_all" then
+          if options.whole_program == "strip_all" then
             insert(jln_ldflags, "-Wl,--gc-sections")
             insert(jln_ldflags, "-Wl,--strip-all")
           end
@@ -1005,14 +1010,14 @@ function getoptions(values, disable_other_options, print_compiler)
           insert(jln_ldflags, "-fwhole-program")
         else
           if compiler == "clang" then
-            if not ( compversion < 309 ) then
-              if not ( values["lto"] == "") then
-                if not ( values["lto"] == "off" ) then
+            if not ( compversion < 300009 ) then
+              if not ( options.lto == "") then
+                if not ( options.lto == "off" ) then
                   insert(jln_cxflags, "-fwhole-program-vtables")
                   insert(jln_ldflags, "-fwhole-program-vtables")
                 end
               end
-              if not ( compversion < 700 ) then
+              if not ( compversion < 700000 ) then
                 insert(jln_cxflags, "-fforce-emit-vtables")
                 insert(jln_ldflags, "-fforce-emit-vtables")
               end
@@ -1021,28 +1026,28 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["pedantic"] == "") then
-      if not ( values["pedantic"] == "off" ) then
+    if not ( options.pedantic == "") then
+      if not ( options.pedantic == "off" ) then
         insert(jln_cxflags, "-pedantic")
-        if values["pedantic"] == "as_error" then
+        if options.pedantic == "as_error" then
           insert(jln_cxflags, "-pedantic-errors")
         end
       end
     end
-    if not ( values["stack_protector"] == "") then
-      if values["stack_protector"] == "off" then
+    if not ( options.stack_protector == "") then
+      if options.stack_protector == "off" then
         insert(jln_cxflags, "-Wno-stack-protector")
         insert(jln_cxflags, "-U_FORTIFY_SOURCE")
         insert(jln_ldflags, "-Wno-stack-protector")
       else
         insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
         insert(jln_cxflags, "-Wstack-protector")
-        if values["stack_protector"] == "strong" then
+        if options.stack_protector == "strong" then
           if compiler == "gcc" then
-            if not ( compversion < 409 ) then
+            if not ( compversion < 400009 ) then
               insert(jln_cxflags, "-fstack-protector-strong")
               insert(jln_ldflags, "-fstack-protector-strong")
-              if not ( compversion < 800 ) then
+              if not ( compversion < 800000 ) then
                 insert(jln_cxflags, "-fstack-clash-protection")
                 insert(jln_ldflags, "-fstack-clash-protection")
               end
@@ -1053,24 +1058,24 @@ function getoptions(values, disable_other_options, print_compiler)
               insert(jln_cxflags, "-fsanitize=safe-stack")
               insert(jln_ldflags, "-fstack-protector-strong")
               insert(jln_ldflags, "-fsanitize=safe-stack")
-              if not ( compversion < 1100 ) then
+              if not ( compversion < 1100000 ) then
                 insert(jln_cxflags, "-fstack-clash-protection")
                 insert(jln_ldflags, "-fstack-clash-protection")
               end
             end
           end
         else
-          if values["stack_protector"] == "all" then
+          if options.stack_protector == "all" then
             insert(jln_cxflags, "-fstack-protector-all")
             insert(jln_ldflags, "-fstack-protector-all")
-            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+            if ( compiler == "gcc" and not ( compversion < 800000 ) ) then
               insert(jln_cxflags, "-fstack-clash-protection")
               insert(jln_ldflags, "-fstack-clash-protection")
             else
               if compiler == "clang" then
                 insert(jln_cxflags, "-fsanitize=safe-stack")
                 insert(jln_ldflags, "-fsanitize=safe-stack")
-                if not ( compversion < 1100 ) then
+                if not ( compversion < 1100000 ) then
                   insert(jln_cxflags, "-fstack-clash-protection")
                   insert(jln_ldflags, "-fstack-clash-protection")
                 end
@@ -1087,17 +1092,17 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["relro"] == "") then
-      if values["relro"] == "off" then
+    if not ( options.relro == "") then
+      if options.relro == "off" then
         insert(jln_ldflags, "-Wl,-z,norelro")
       else
-        if values["relro"] == "on" then
+        if options.relro == "on" then
           insert(jln_ldflags, "-Wl,-z,relro")
         else
-          if values["relro"] == "full" then
+          if options.relro == "full" then
             insert(jln_ldflags, "-Wl,-z,relro,-z,now,-z,noexecstack")
-            if not ( values["linker"] == "") then
-              if not ( ( values["linker"] == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900 ) ) ) or ( values["linker"] == "native" and compiler == "gcc" ) ) ) then
+            if not ( options.linker == "") then
+              if not ( ( options.linker == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900000 ) ) ) or ( options.linker == "native" and compiler == "gcc" ) ) ) then
                 insert(jln_ldflags, "-Wl,-z,separate-code")
               end
             end
@@ -1105,26 +1110,26 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["pie"] == "") then
-      if values["pie"] == "off" then
+    if not ( options.pie == "") then
+      if options.pie == "off" then
         insert(jln_ldflags, "-no-pic")
       else
-        if values["pie"] == "on" then
+        if options.pie == "on" then
           insert(jln_ldflags, "-pie")
         else
-          if values["pie"] == "static" then
+          if options.pie == "static" then
             insert(jln_ldflags, "-static-pie")
           else
-            if values["pie"] == "fpie" then
+            if options.pie == "fpie" then
               insert(jln_cxflags, "-fpie")
             else
-              if values["pie"] == "fpic" then
+              if options.pie == "fpic" then
                 insert(jln_cxflags, "-fpic")
               else
-                if values["pie"] == "fPIE" then
+                if options.pie == "fPIE" then
                   insert(jln_cxflags, "-fPIE")
                 else
-                  if values["pie"] == "fPIC" then
+                  if options.pie == "fPIC" then
                     insert(jln_cxflags, "-fPIC")
                   end
                 end
@@ -1134,24 +1139,24 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["exceptions"] == "") then
-      if values["exceptions"] == "on" then
+    if not ( options.exceptions == "") then
+      if options.exceptions == "on" then
         insert(jln_cxflags, "-fexceptions")
       else
         insert(jln_cxflags, "-fno-exceptions")
       end
     end
-    if not ( values["other_sanitizers"] == "") then
-      if values["other_sanitizers"] == "thread" then
+    if not ( options.other_sanitizers == "") then
+      if options.other_sanitizers == "thread" then
         insert(jln_cxflags, "-fsanitize=thread")
       else
-        if values["other_sanitizers"] == "memory" then
-          if ( compiler == "clang" and not ( compversion < 500 ) ) then
+        if options.other_sanitizers == "memory" then
+          if ( compiler == "clang" and not ( compversion < 500000 ) ) then
             insert(jln_cxflags, "-fsanitize=memory")
           end
         else
-          if values["other_sanitizers"] == "pointer" then
-            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+          if options.other_sanitizers == "pointer" then
+            if ( compiler == "gcc" and not ( compversion < 800000 ) ) then
               insert(jln_cxflags, "-fsanitize=pointer-compare")
               insert(jln_cxflags, "-fsanitize=pointer-subtract")
             end
@@ -1161,11 +1166,11 @@ function getoptions(values, disable_other_options, print_compiler)
     end
   end
   if linker == "lld-link" then
-    if not ( values["lto"] == "") then
-      if values["lto"] == "off" then
+    if not ( options.lto == "") then
+      if options.lto == "off" then
         insert(jln_cxflags, "-fno-lto")
       else
-        if values["lto"] == "thin" then
+        if options.lto == "thin" then
           insert(jln_cxflags, "-flto=thin")
         else
           insert(jln_cxflags, "-flto")
@@ -1173,12 +1178,12 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["whole_program"] == "") then
-      if values["whole_program"] == "off" then
+    if not ( options.whole_program == "") then
+      if options.whole_program == "off" then
         insert(jln_cxflags, "-fno-whole-program")
       else
-        if not ( values["lto"] == "") then
-          if not ( values["lto"] == "off" ) then
+        if not ( options.lto == "") then
+          if not ( options.lto == "off" ) then
             insert(jln_cxflags, "-fwhole-program-vtables")
             insert(jln_ldflags, "-fwhole-program-vtables")
           end
@@ -1186,9 +1191,9 @@ function getoptions(values, disable_other_options, print_compiler)
       end
     end
   end
-  if ( compiler == "msvc" or compiler == "clang-cl" or compiler == "icl" ) then
-    if not ( values["exceptions"] == "") then
-      if values["exceptions"] == "on" then
+  if ( compiler == "cl" or compiler == "clang-cl" or compiler == "icl" ) then
+    if not ( options.exceptions == "") then
+      if options.exceptions == "on" then
         insert(jln_cxflags, "/EHsc")
         insert(jln_cxflags, "/D_HAS_EXCEPTIONS=1")
       else
@@ -1196,15 +1201,15 @@ function getoptions(values, disable_other_options, print_compiler)
         insert(jln_cxflags, "/D_HAS_EXCEPTIONS=0")
       end
     end
-    if not ( values["rtti"] == "") then
-      if values["rtti"] == "on" then
+    if not ( options.rtti == "") then
+      if options.rtti == "on" then
         insert(jln_cxflags, "/GR")
       else
         insert(jln_cxflags, "/GR-")
       end
     end
-    if not ( values["stl_debug"] == "") then
-      if values["stl_debug"] == "off" then
+    if not ( options.stl_debug == "") then
+      if options.stl_debug == "off" then
         insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=0")
       else
         insert(jln_cxflags, "/D_DEBUG")
@@ -1212,33 +1217,33 @@ function getoptions(values, disable_other_options, print_compiler)
       end
     end
     if not ( compiler == "icl" ) then
-      if not ( values["stl_fix"] == "") then
-        if values["stl_fix"] == "on" then
+      if not ( options.stl_fix == "") then
+        if options.stl_fix == "on" then
           insert(jln_cxflags, "/DNOMINMAX")
         end
       end
-      if not ( values["debug"] == "") then
-        if values["debug"] == "off" then
+      if not ( options.debug == "") then
+        if options.debug == "off" then
           insert(jln_cxflags, "/DEBUG:NONE")
         else
           insert(jln_cxflags, "/RTC1")
           insert(jln_cxflags, "/Od")
-          if values["debug"] == "on" then
+          if options.debug == "on" then
             insert(jln_cxflags, "/DEBUG")
           else
-            if values["debug"] == "line_tables_only" then
+            if options.debug == "line_tables_only" then
               if compiler == "clang-cl" then
                 insert(jln_cxflags, "-gline-tables-only")
               end
               insert(jln_cxflags, "/DEBUG:FASTLINK")
             end
           end
-          if not ( values["optimization"] == "") then
-            if values["optimization"] == "g" then
+          if not ( options.optimization == "") then
+            if options.optimization == "g" then
               insert(jln_cxflags, "/Zi")
             else
-              if not ( values["whole_program"] == "") then
-                if values["whole_program"] == "off" then
+              if not ( options.whole_program == "") then
+                if options.whole_program == "off" then
                   insert(jln_cxflags, "/ZI")
                 else
                   insert(jln_cxflags, "/Zi")
@@ -1248,8 +1253,8 @@ function getoptions(values, disable_other_options, print_compiler)
               end
             end
           else
-            if not ( values["whole_program"] == "") then
-              if values["whole_program"] == "off" then
+            if not ( options.whole_program == "") then
+              if options.whole_program == "off" then
                 insert(jln_cxflags, "/ZI")
               else
                 insert(jln_cxflags, "/Zi")
@@ -1260,32 +1265,32 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["optimization"] == "") then
-        if values["optimization"] == "0" then
+      if not ( options.optimization == "") then
+        if options.optimization == "0" then
           insert(jln_cxflags, "/Ob0")
           insert(jln_cxflags, "/Od")
           insert(jln_cxflags, "/Oi-")
           insert(jln_cxflags, "/Oy-")
         else
-          if values["optimization"] == "g" then
+          if options.optimization == "g" then
             insert(jln_cxflags, "/Ob1")
           else
             insert(jln_cxflags, "/DNDEBUG")
-            if values["optimization"] == "1" then
+            if options.optimization == "1" then
               insert(jln_cxflags, "/O1")
             else
-              if values["optimization"] == "2" then
+              if options.optimization == "2" then
                 insert(jln_cxflags, "/O2")
               else
-                if values["optimization"] == "3" then
+                if options.optimization == "3" then
                   insert(jln_cxflags, "/O2")
                 else
-                  if ( values["optimization"] == "size" or values["optimization"] == "z" ) then
+                  if ( options.optimization == "size" or options.optimization == "z" ) then
                     insert(jln_cxflags, "/O1")
                     insert(jln_cxflags, "/GL")
                     insert(jln_cxflags, "/Gw")
                   else
-                    if values["optimization"] == "fast" then
+                    if options.optimization == "fast" then
                       insert(jln_cxflags, "/O2")
                       insert(jln_cxflags, "/fp:fast")
                     end
@@ -1296,44 +1301,44 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["control_flow"] == "") then
-        if values["control_flow"] == "off" then
+      if not ( options.control_flow == "") then
+        if options.control_flow == "off" then
           insert(jln_cxflags, "/guard:cf-")
         else
           insert(jln_cxflags, "/guard:cf")
         end
       end
-      if not ( values["whole_program"] == "") then
-        if values["whole_program"] == "off" then
+      if not ( options.whole_program == "") then
+        if options.whole_program == "off" then
           insert(jln_cxflags, "/GL-")
         else
           insert(jln_cxflags, "/GL")
           insert(jln_cxflags, "/Gw")
           insert(jln_ldflags, "/LTCG")
-          if values["whole_program"] == "strip_all" then
+          if options.whole_program == "strip_all" then
             insert(jln_ldflags, "/OPT:REF")
           end
         end
       end
-      if not ( values["pedantic"] == "") then
-        if not ( values["pedantic"] == "off" ) then
+      if not ( options.pedantic == "") then
+        if not ( options.pedantic == "off" ) then
           insert(jln_cxflags, "/permissive-")
         end
       end
-      if not ( values["stack_protector"] == "") then
-        if values["stack_protector"] == "off" then
+      if not ( options.stack_protector == "") then
+        if options.stack_protector == "off" then
           insert(jln_cxflags, "/GS-")
         else
           insert(jln_cxflags, "/GS")
           insert(jln_cxflags, "/sdl")
-          if values["stack_protector"] == "strong" then
+          if options.stack_protector == "strong" then
             insert(jln_cxflags, "/RTC1")
-            if ( compiler == "msvc" and not ( compversion < 1607 ) ) then
+            if ( compiler == "cl" and not ( compversion < 1600007 ) ) then
               insert(jln_cxflags, "/guard:ehcont")
               insert(jln_ldflags, "/CETCOMPAT")
             end
           else
-            if values["stack_protector"] == "all" then
+            if options.stack_protector == "all" then
               insert(jln_cxflags, "/RTC1")
               insert(jln_cxflags, "/RTCc")
             end
@@ -1342,63 +1347,63 @@ function getoptions(values, disable_other_options, print_compiler)
       end
     end
   end
-  if compiler == "msvc" then
-    if not ( values["windows_bigobj"] == "") then
+  if compiler == "cl" then
+    if not ( options.windows_bigobj == "") then
       insert(jln_cxflags, "/bigobj")
     end
-    if not ( values["msvc_conformance"] == "") then
-      if ( values["msvc_conformance"] == "all" or values["msvc_conformance"] == "all_without_throwing_new" ) then
+    if not ( options.msvc_conformance == "") then
+      if ( options.msvc_conformance == "all" or options.msvc_conformance == "all_without_throwing_new" ) then
         insert(jln_cxflags, "/Zc:inline")
         insert(jln_cxflags, "/Zc:referenceBinding")
-        if values["msvc_conformance"] == "all" then
+        if options.msvc_conformance == "all" then
           insert(jln_cxflags, "/Zc:throwingNew")
         end
-        if not ( compversion < 1506 ) then
-          if not ( compversion < 1605 ) then
+        if not ( compversion < 1500006 ) then
+          if not ( compversion < 1600005 ) then
             insert(jln_cxflags, "/Zc:preprocessor")
           end
         end
       end
     end
-    if not ( values["msvc_crt_secure_no_warnings"] == "") then
-      if values["msvc_crt_secure_no_warnings"] == "on" then
+    if not ( options.msvc_crt_secure_no_warnings == "") then
+      if options.msvc_crt_secure_no_warnings == "on" then
         insert(jln_cxflags, "/D_CRT_SECURE_NO_WARNINGS=1")
       else
-        if values["msvc_crt_secure_no_warnings"] == "off" then
+        if options.msvc_crt_secure_no_warnings == "off" then
           insert(jln_cxflags, "/U_CRT_SECURE_NO_WARNINGS")
         end
       end
     end
-    if not ( values["msvc_isystem"] == "") then
-      if values["msvc_isystem"] == "external_as_include_system_flag" then
+    if not ( options.msvc_isystem == "") then
+      if options.msvc_isystem == "external_as_include_system_flag" then
         -- unimplementable
       else
         insert(jln_cxflags, "/experimental:external")
         insert(jln_cxflags, "/external:W0")
-        if values["msvc_isystem"] == "anglebrackets" then
+        if options.msvc_isystem == "anglebrackets" then
           insert(jln_cxflags, "/external:anglebrackets")
         else
           insert(jln_cxflags, "/external:env:INCLUDE")
           insert(jln_cxflags, "/external:env:CAExcludePath")
         end
       end
-      if not ( values["msvc_isystem_with_template_from_non_external"] == "") then
-        if values["msvc_isystem_with_template_from_non_external"] == "off" then
+      if not ( options.msvc_isystem_with_template_from_non_external == "") then
+        if options.msvc_isystem_with_template_from_non_external == "off" then
           insert(jln_cxflags, "/external:template")
         else
           insert(jln_cxflags, "/external:template-")
         end
       end
-      if not ( values["warnings"] == "") then
-        if values["warnings"] == "off" then
+      if not ( options.warnings == "") then
+        if options.warnings == "off" then
           insert(jln_cxflags, "/W0")
         else
           insert(jln_cxflags, "/wd4710")
           insert(jln_cxflags, "/wd4711")
-          if not ( not ( compversion < 1921 ) ) then
+          if not ( not ( compversion < 1900021 ) ) then
             insert(jln_cxflags, "/wd4774")
           end
-          if values["warnings"] == "on" then
+          if options.warnings == "on" then
             insert(jln_cxflags, "/W4")
             insert(jln_cxflags, "/wd4514")
           else
@@ -1413,22 +1418,22 @@ function getoptions(values, disable_other_options, print_compiler)
             insert(jln_cxflags, "/wd4464")
             insert(jln_cxflags, "/wd4868")
             insert(jln_cxflags, "/wd5045")
-            if values["warnings"] == "strict" then
+            if options.warnings == "strict" then
               insert(jln_cxflags, "/wd4583")
               insert(jln_cxflags, "/wd4619")
             end
           end
         end
       end
-      if not ( values["switch_warnings"] == "") then
-        if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
+      if not ( options.switch_warnings == "") then
+        if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
           insert(jln_cxflags, "/w14062")
         else
-          if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
+          if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
             insert(jln_cxflags, "/w14061")
             insert(jln_cxflags, "/w14062")
           else
-            if values["switch_warnings"] == "off" then
+            if options.switch_warnings == "off" then
               insert(jln_cxflags, "/wd4061")
               insert(jln_cxflags, "/wd4062")
             end
@@ -1436,11 +1441,11 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     else
-      if not ( values["warnings"] == "") then
-        if values["warnings"] == "off" then
+      if not ( options.warnings == "") then
+        if options.warnings == "off" then
           insert(jln_cxflags, "/W0")
         else
-          if values["warnings"] == "on" then
+          if options.warnings == "on" then
             insert(jln_cxflags, "/W4")
             insert(jln_cxflags, "/wd4514")
             insert(jln_cxflags, "/wd4711")
@@ -1456,7 +1461,7 @@ function getoptions(values, disable_other_options, print_compiler)
             insert(jln_cxflags, "/wd4668")
             insert(jln_cxflags, "/wd4710")
             insert(jln_cxflags, "/wd4711")
-            if not ( not ( compversion < 1921 ) ) then
+            if not ( not ( compversion < 1900021 ) ) then
               insert(jln_cxflags, "/wd4774")
             end
             insert(jln_cxflags, "/wd4820")
@@ -1466,7 +1471,7 @@ function getoptions(values, disable_other_options, print_compiler)
             insert(jln_cxflags, "/wd4464")
             insert(jln_cxflags, "/wd4868")
             insert(jln_cxflags, "/wd5045")
-            if values["warnings"] == "strict" then
+            if options.warnings == "strict" then
               insert(jln_cxflags, "/wd4061")
               insert(jln_cxflags, "/wd4266")
               insert(jln_cxflags, "/wd4583")
@@ -1478,18 +1483,18 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["conversion_warnings"] == "") then
-      if values["conversion_warnings"] == "on" then
+    if not ( options.conversion_warnings == "") then
+      if options.conversion_warnings == "on" then
         insert(jln_cxflags, "/w14244")
         insert(jln_cxflags, "/w14245")
         insert(jln_cxflags, "/w14388")
         insert(jln_cxflags, "/w14365")
       else
-        if values["conversion_warnings"] == "conversion" then
+        if options.conversion_warnings == "conversion" then
           insert(jln_cxflags, "/w14244")
           insert(jln_cxflags, "/w14365")
         else
-          if values["conversion_warnings"] == "sign" then
+          if options.conversion_warnings == "sign" then
             insert(jln_cxflags, "/w14388")
             insert(jln_cxflags, "/w14245")
           else
@@ -1501,28 +1506,28 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["shadow_warnings"] == "") then
-      if values["shadow_warnings"] == "off" then
+    if not ( options.shadow_warnings == "") then
+      if options.shadow_warnings == "off" then
         insert(jln_cxflags, "/wd4456")
         insert(jln_cxflags, "/wd4459")
       else
-        if ( values["shadow_warnings"] == "on" or values["shadow_warnings"] == "all" ) then
+        if ( options.shadow_warnings == "on" or options.shadow_warnings == "all" ) then
           insert(jln_cxflags, "/w4456")
           insert(jln_cxflags, "/w4459")
         else
-          if values["shadow_warnings"] == "local" then
+          if options.shadow_warnings == "local" then
             insert(jln_cxflags, "/w4456")
             insert(jln_cxflags, "/wd4459")
           end
         end
       end
     end
-    if not ( values["warnings_as_error"] == "") then
-      if values["warnings_as_error"] == "on" then
+    if not ( options.warnings_as_error == "") then
+      if options.warnings_as_error == "on" then
         insert(jln_cxflags, "/WX")
         insert(jln_ldflags, "/WX")
       else
-        if values["warnings_as_error"] == "off" then
+        if options.warnings_as_error == "off" then
           insert(jln_cxflags, "/WX-")
         else
           insert(jln_cxflags, "/we4716")
@@ -1530,24 +1535,24 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["lto"] == "") then
-      if values["lto"] == "off" then
+    if not ( options.lto == "") then
+      if options.lto == "off" then
         insert(jln_cxflags, "/LTCG:OFF")
       else
         insert(jln_cxflags, "/GL")
         insert(jln_ldflags, "/LTCG")
       end
     end
-    if not ( values["sanitizers"] == "") then
-      if not ( compversion < 1609 ) then
+    if not ( options.sanitizers == "") then
+      if not ( compversion < 1600009 ) then
         insert(jln_cxflags, "/fsanitize=address")
         insert(jln_cxflags, "/fsanitize-address-use-after-return")
       else
-        if values["sanitizers"] == "on" then
+        if options.sanitizers == "on" then
           insert(jln_cxflags, "/sdl")
         else
-          if not ( values["stack_protector"] == "") then
-            if not ( values["stack_protector"] == "off" ) then
+          if not ( options.stack_protector == "") then
+            if not ( options.stack_protector == "off" ) then
               insert(jln_cxflags, "/sdl-")
             end
           end
@@ -1556,54 +1561,54 @@ function getoptions(values, disable_other_options, print_compiler)
     end
   end
   if compiler == "icl" then
-    if not ( values["warnings"] == "") then
-      if values["warnings"] == "off" then
+    if not ( options.warnings == "") then
+      if options.warnings == "off" then
         insert(jln_cxflags, "/w")
       else
         insert(jln_cxflags, "/W2")
         insert(jln_cxflags, "/Qdiag-disable:1418,2259")
       end
     end
-    if not ( values["warnings_as_error"] == "") then
-      if values["warnings_as_error"] == "on" then
+    if not ( options.warnings_as_error == "") then
+      if options.warnings_as_error == "on" then
         insert(jln_cxflags, "/WX")
       else
-        if values["warnings_as_error"] == "basic" then
+        if options.warnings_as_error == "basic" then
           insert(jln_cxflags, "/Qdiag-error:1079,39,109")
         end
       end
     end
-    if not ( values["windows_bigobj"] == "") then
+    if not ( options.windows_bigobj == "") then
       insert(jln_cxflags, "/bigobj")
     end
-    if not ( values["msvc_conformance"] == "") then
-      if ( values["msvc_conformance"] == "all" or values["msvc_conformance"] == "all_without_throwing_new" ) then
+    if not ( options.msvc_conformance == "") then
+      if ( options.msvc_conformance == "all" or options.msvc_conformance == "all_without_throwing_new" ) then
         insert(jln_cxflags, "/Zc:inline")
         insert(jln_cxflags, "/Zc:strictStrings")
-        if values["msvc_conformance"] == "all" then
+        if options.msvc_conformance == "all" then
           insert(jln_cxflags, "/Zc:throwingNew")
         end
       end
     end
-    if not ( values["debug"] == "") then
-      if values["debug"] == "off" then
+    if not ( options.debug == "") then
+      if options.debug == "off" then
         insert(jln_cxflags, "/debug:NONE")
       else
         insert(jln_cxflags, "/RTC1")
         insert(jln_cxflags, "/Od")
-        if values["debug"] == "on" then
+        if options.debug == "on" then
           insert(jln_cxflags, "/debug:full")
         else
-          if values["debug"] == "line_tables_only" then
+          if options.debug == "line_tables_only" then
             insert(jln_cxflags, "/debug:minimal")
           end
         end
-        if not ( values["optimization"] == "") then
-          if values["optimization"] == "g" then
+        if not ( options.optimization == "") then
+          if options.optimization == "g" then
             insert(jln_cxflags, "/Zi")
           else
-            if not ( values["whole_program"] == "") then
-              if values["whole_program"] == "off" then
+            if not ( options.whole_program == "") then
+              if options.whole_program == "off" then
                 insert(jln_cxflags, "/ZI")
               else
                 insert(jln_cxflags, "/Zi")
@@ -1613,8 +1618,8 @@ function getoptions(values, disable_other_options, print_compiler)
             end
           end
         else
-          if not ( values["whole_program"] == "") then
-            if values["whole_program"] == "off" then
+          if not ( options.whole_program == "") then
+            if options.whole_program == "off" then
               insert(jln_cxflags, "/ZI")
             else
               insert(jln_cxflags, "/Zi")
@@ -1625,34 +1630,34 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["optimization"] == "") then
-      if values["optimization"] == "0" then
+    if not ( options.optimization == "") then
+      if options.optimization == "0" then
         insert(jln_cxflags, "/Ob0")
         insert(jln_cxflags, "/Od")
         insert(jln_cxflags, "/Oi-")
         insert(jln_cxflags, "/Oy-")
       else
-        if values["optimization"] == "g" then
+        if options.optimization == "g" then
           insert(jln_cxflags, "/Ob1")
         else
           insert(jln_cxflags, "/DNDEBUG")
           insert(jln_cxflags, "/GF")
-          if values["optimization"] == "1" then
+          if options.optimization == "1" then
             insert(jln_cxflags, "/O1")
           else
-            if values["optimization"] == "2" then
+            if options.optimization == "2" then
               insert(jln_cxflags, "/O2")
             else
-              if values["optimization"] == "3" then
+              if options.optimization == "3" then
                 insert(jln_cxflags, "/O2")
               else
-                if values["optimization"] == "z" then
+                if options.optimization == "z" then
                   insert(jln_cxflags, "/O3")
                 else
-                  if values["optimization"] == "size" then
+                  if options.optimization == "size" then
                     insert(jln_cxflags, "/Os")
                   else
-                    if values["optimization"] == "fast" then
+                    if options.optimization == "fast" then
                       insert(jln_cxflags, "/fast")
                     end
                   end
@@ -1663,51 +1668,51 @@ function getoptions(values, disable_other_options, print_compiler)
         end
       end
     end
-    if not ( values["stack_protector"] == "") then
-      if values["stack_protector"] == "off" then
+    if not ( options.stack_protector == "") then
+      if options.stack_protector == "off" then
         insert(jln_cxflags, "/GS-")
       else
         insert(jln_cxflags, "/GS")
-        if values["stack_protector"] == "strong" then
+        if options.stack_protector == "strong" then
           insert(jln_cxflags, "/RTC1")
         else
-          if values["stack_protector"] == "all" then
+          if options.stack_protector == "all" then
             insert(jln_cxflags, "/RTC1")
             insert(jln_cxflags, "/RTCc")
           end
         end
       end
     end
-    if not ( values["sanitizers"] == "") then
-      if values["sanitizers"] == "on" then
+    if not ( options.sanitizers == "") then
+      if options.sanitizers == "on" then
         insert(jln_cxflags, "/Qtrapuv")
       end
     end
-    if not ( values["float_sanitizers"] == "") then
-      if values["float_sanitizers"] == "on" then
+    if not ( options.float_sanitizers == "") then
+      if options.float_sanitizers == "on" then
         insert(jln_cxflags, "/Qfp-stack-check")
         insert(jln_cxflags, "/Qfp-trap:common")
       end
     end
-    if not ( values["control_flow"] == "") then
-      if values["control_flow"] == "off" then
+    if not ( options.control_flow == "") then
+      if options.control_flow == "off" then
         insert(jln_cxflags, "/guard:cf-")
         insert(jln_cxflags, "/mconditional-branch=keep")
       else
         insert(jln_cxflags, "/guard:cf")
-        if values["control_flow"] == "branch" then
+        if options.control_flow == "branch" then
           insert(jln_cxflags, "/mconditional-branch:all-fix")
           insert(jln_cxflags, "/Qcf-protection:branch")
         else
-          if values["control_flow"] == "on" then
+          if options.control_flow == "on" then
             insert(jln_cxflags, "/mconditional-branch:all-fix")
             insert(jln_cxflags, "/Qcf-protection:full")
           end
         end
       end
     end
-    if not ( values["cpu"] == "") then
-      if values["cpu"] == "generic" then
+    if not ( options.cpu == "") then
+      if options.cpu == "generic" then
         insert(jln_cxflags, "/Qtune:generic")
         insert(jln_ldflags, "/Qtune:generic")
       else
@@ -1717,8 +1722,8 @@ function getoptions(values, disable_other_options, print_compiler)
     end
   else
     if compiler == "icc" then
-      if not ( values["warnings"] == "") then
-        if values["warnings"] == "off" then
+      if not ( options.warnings == "") then
+        if options.warnings == "off" then
           insert(jln_cxflags, "-w")
         else
           insert(jln_cxflags, "-Wall")
@@ -1750,14 +1755,14 @@ function getoptions(values, disable_other_options, print_compiler)
           insert(jln_cxflags, "-Wold-style-definition")
           insert(jln_cxflags, "-Wstrict-prototypes")
           insert(jln_cxflags, "-Wwrite-strings")
-          if not ( values["switch_warnings"] == "") then
-            if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "exhaustive_enum" ) then
+          if not ( options.switch_warnings == "") then
+            if ( options.switch_warnings == "on" or options.switch_warnings == "exhaustive_enum" ) then
               insert(jln_cxflags, "-Wswitch-enum")
             else
-              if values["switch_warnings"] == "mandatory_default" then
+              if options.switch_warnings == "mandatory_default" then
                 insert(jln_cxflags, "-Wswitch-default")
               else
-                if values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" then
+                if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
                   insert(jln_cxflags, "-Wswitch")
                 else
                   insert(jln_cxflags, "-Wno-switch")
@@ -1767,62 +1772,62 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["warnings_as_error"] == "") then
-        if values["warnings_as_error"] == "on" then
+      if not ( options.warnings_as_error == "") then
+        if options.warnings_as_error == "on" then
           insert(jln_cxflags, "-Werror")
         else
-          if values["warnings_as_error"] == "basic" then
+          if options.warnings_as_error == "basic" then
             insert(jln_cxflags, "-diag-error=1079,39,109")
           end
         end
       end
-      if not ( values["pedantic"] == "") then
-        if values["pedantic"] == "off" then
+      if not ( options.pedantic == "") then
+        if options.pedantic == "off" then
           insert(jln_cxflags, "-fgnu-keywords")
         else
           insert(jln_cxflags, "-fno-gnu-keywords")
         end
       end
-      if not ( values["shadow_warnings"] == "") then
-        if values["shadow_warnings"] == "off" then
+      if not ( options.shadow_warnings == "") then
+        if options.shadow_warnings == "off" then
           insert(jln_cxflags, "-Wno-shadow")
         else
-          if ( values["shadow_warnings"] == "on" or values["shadow_warnings"] == "all" ) then
+          if ( options.shadow_warnings == "on" or options.shadow_warnings == "all" ) then
             insert(jln_cxflags, "-Wshadow")
           end
         end
       end
-      if not ( values["debug"] == "") then
-        if values["debug"] == "off" then
+      if not ( options.debug == "") then
+        if options.debug == "off" then
           insert(jln_cxflags, "-g0")
         else
           insert(jln_cxflags, "-g")
         end
       end
-      if not ( values["optimization"] == "") then
-        if values["optimization"] == "0" then
+      if not ( options.optimization == "") then
+        if options.optimization == "0" then
           insert(jln_cxflags, "-O0")
         else
-          if values["optimization"] == "g" then
+          if options.optimization == "g" then
             insert(jln_cxflags, "-O1")
           else
             insert(jln_cxflags, "-DNDEBUG")
-            if values["optimization"] == "1" then
+            if options.optimization == "1" then
               insert(jln_cxflags, "-O1")
             else
-              if values["optimization"] == "2" then
+              if options.optimization == "2" then
                 insert(jln_cxflags, "-O2")
               else
-                if values["optimization"] == "3" then
+                if options.optimization == "3" then
                   insert(jln_cxflags, "-O3")
                 else
-                  if values["optimization"] == "z" then
+                  if options.optimization == "z" then
                     insert(jln_cxflags, "-fast")
                   else
-                    if values["optimization"] == "size" then
+                    if options.optimization == "size" then
                       insert(jln_cxflags, "-Os")
                     else
-                      if values["optimization"] == "fast" then
+                      if options.optimization == "fast" then
                         insert(jln_cxflags, "-Ofast")
                       end
                     end
@@ -1833,18 +1838,18 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["stack_protector"] == "") then
-        if values["stack_protector"] == "off" then
+      if not ( options.stack_protector == "") then
+        if options.stack_protector == "off" then
           insert(jln_cxflags, "-fno-protector-strong")
           insert(jln_cxflags, "-U_FORTIFY_SOURCE")
           insert(jln_ldflags, "-fno-protector-strong")
         else
           insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
-          if values["stack_protector"] == "strong" then
+          if options.stack_protector == "strong" then
             insert(jln_cxflags, "-fstack-protector-strong")
             insert(jln_ldflags, "-fstack-protector-strong")
           else
-            if values["stack_protector"] == "all" then
+            if options.stack_protector == "all" then
               insert(jln_cxflags, "-fstack-protector-all")
               insert(jln_ldflags, "-fstack-protector-all")
             else
@@ -1854,14 +1859,14 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["relro"] == "") then
-        if values["relro"] == "off" then
+      if not ( options.relro == "") then
+        if options.relro == "off" then
           insert(jln_ldflags, "-Xlinker-znorelro")
         else
-          if values["relro"] == "on" then
+          if options.relro == "on" then
             insert(jln_ldflags, "-Xlinker-zrelro")
           else
-            if values["relro"] == "full" then
+            if options.relro == "full" then
               insert(jln_ldflags, "-Xlinker-zrelro")
               insert(jln_ldflags, "-Xlinker-znow")
               insert(jln_ldflags, "-Xlinker-znoexecstack")
@@ -1869,23 +1874,23 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["pie"] == "") then
-        if values["pie"] == "off" then
+      if not ( options.pie == "") then
+        if options.pie == "off" then
           insert(jln_ldflags, "-no-pic")
         else
-          if values["pie"] == "on" then
+          if options.pie == "on" then
             insert(jln_ldflags, "-pie")
           else
-            if values["pie"] == "fpie" then
+            if options.pie == "fpie" then
               insert(jln_cxflags, "-fpie")
             else
-              if values["pie"] == "fpic" then
+              if options.pie == "fpic" then
                 insert(jln_cxflags, "-fpic")
               else
-                if values["pie"] == "fPIE" then
+                if options.pie == "fPIE" then
                   insert(jln_cxflags, "-fPIE")
                 else
-                  if values["pie"] == "fPIC" then
+                  if options.pie == "fPIC" then
                     insert(jln_cxflags, "-fPIC")
                   end
                 end
@@ -1894,43 +1899,43 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["sanitizers"] == "") then
-        if values["sanitizers"] == "on" then
+      if not ( options.sanitizers == "") then
+        if options.sanitizers == "on" then
           insert(jln_cxflags, "-ftrapuv")
         end
       end
-      if not ( values["integer_sanitizers"] == "") then
-        if values["integer_sanitizers"] == "on" then
+      if not ( options.integer_sanitizers == "") then
+        if options.integer_sanitizers == "on" then
           insert(jln_cxflags, "-funsigned-bitfields")
         else
           insert(jln_cxflags, "-fno-unsigned-bitfields")
         end
       end
-      if not ( values["float_sanitizers"] == "") then
-        if values["float_sanitizers"] == "on" then
+      if not ( options.float_sanitizers == "") then
+        if options.float_sanitizers == "on" then
           insert(jln_cxflags, "-fp-stack-check")
           insert(jln_cxflags, "-fp-trap=common")
         end
       end
-      if not ( values["linker"] == "") then
-        if values["linker"] == "bfd" then
+      if not ( options.linker == "") then
+        if options.linker == "bfd" then
           insert(jln_ldflags, "-fuse-ld=bfd")
         else
-          if values["linker"] == "gold" then
+          if options.linker == "gold" then
             insert(jln_ldflags, "-fuse-ld=gold")
           else
             insert(jln_ldflags, "-fuse-ld=lld")
           end
         end
       end
-      if not ( values["lto"] == "") then
-        if values["lto"] == "off" then
+      if not ( options.lto == "") then
+        if options.lto == "off" then
           insert(jln_cxflags, "-no-ipo")
           insert(jln_ldflags, "-no-ipo")
         else
           insert(jln_cxflags, "-ipo")
           insert(jln_ldflags, "-ipo")
-          if values["lto"] == "fat" then
+          if options.lto == "fat" then
             if is_plat("linux") then
               insert(jln_cxflags, "-ffat-lto-objects")
               insert(jln_ldflags, "-ffat-lto-objects")
@@ -1938,31 +1943,31 @@ function getoptions(values, disable_other_options, print_compiler)
           end
         end
       end
-      if not ( values["control_flow"] == "") then
-        if values["control_flow"] == "off" then
+      if not ( options.control_flow == "") then
+        if options.control_flow == "off" then
           insert(jln_cxflags, "-mconditional-branch=keep")
           insert(jln_cxflags, "-fcf-protection=none")
         else
-          if values["control_flow"] == "branch" then
+          if options.control_flow == "branch" then
             insert(jln_cxflags, "-mconditional-branch=all-fix")
             insert(jln_cxflags, "-fcf-protection=branch")
           else
-            if values["control_flow"] == "on" then
+            if options.control_flow == "on" then
               insert(jln_cxflags, "-mconditional-branch=all-fix")
               insert(jln_cxflags, "-fcf-protection=full")
             end
           end
         end
       end
-      if not ( values["exceptions"] == "") then
-        if values["exceptions"] == "on" then
+      if not ( options.exceptions == "") then
+        if options.exceptions == "on" then
           insert(jln_cxflags, "-fexceptions")
         else
           insert(jln_cxflags, "-fno-exceptions")
         end
       end
-      if not ( values["cpu"] == "") then
-        if values["cpu"] == "generic" then
+      if not ( options.cpu == "") then
+        if options.cpu == "generic" then
           insert(jln_cxflags, "-mtune=generic")
           insert(jln_ldflags, "-mtune=generic")
         else
@@ -1973,7 +1978,7 @@ function getoptions(values, disable_other_options, print_compiler)
     end
   end
   if is_plat("mingw") then
-    if not ( values["windows_bigobj"] == "") then
+    if not ( options.windows_bigobj == "") then
       insert(jln_cxflags, "-Wa,-mbig-obj")
     end
   end
