@@ -9,6 +9,13 @@ local toplatform = function(plat)
   return platform_table[plat] or plat
 end
 
+local compiler_table = {
+  msvc='cl',
+}
+local tocomp = function(comp)
+  return compiler_table[comp] or comp
+end
+
 return {
   ignore = {
     -- msvc_isystem=true,
@@ -34,8 +41,8 @@ return {
 
     local funcprefix = (_.is_C and 'jln_c_' or 'jln_cxx_')
     local compprefix = (_.is_C and 'cc' or 'cxx')
-    local cxflags = _.is_C and "cflags" or "cxxflags"
-    local imported_filename = _.is_C and "c.flags" or "cpp.flags"
+    local cxflags = _.is_C and 'cflags' or 'cxxflags'
+    local import_base = _.is_C and 'c' or 'cpp'
     _.cxflags_name = cxflags
 
     local extraopts = {
@@ -72,11 +79,21 @@ return {
     _._strs = {}
 
     _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
-    _:print('\nfunction ' .. funcprefix .. 'init_options(defaults, category --[[string|boolean=false]])')
+    _:print([[
+local _import_base = ']] .. import_base .. [['
+
+-- Registers new command-line options and set default values
+-- `default_options` (see create_options())
+-- `extra_options` = {
+--   category :string|boolean = false -- add a category for option()
+--   import_base: string = ']] .. import_base .. [[' -- default value for ]] .. funcprefix .. [[rule()
+-- }
+]])
+    _:print('\nfunction ' .. funcprefix .. 'init_options(default_options, extra_options)')
     _:print(common_code)
     _:print([[
-  if defaults then
-    for k,v in pairs(defaults) do
+  if default_options then
+    for k,v in pairs(default_options) do
       local ref = _flag_names[k]
       if not ref then
         if not _extraopt_flag_names[k] then
@@ -91,7 +108,7 @@ return {
       end
     end
   else
-    defaults = {}
+    default_options = {}
   end
 
   local check_option = function(opt, optname)
@@ -101,7 +118,11 @@ return {
     end
   end
 
-  category = category == true and "]] .. funcprefix:sub(1, -2) .. [["
+  extra_options = extra_options or {}
+  _import_base = extra_options.import_base or _import_base
+
+  local category = extra_options.category
+  category = category == true and ']] .. funcprefix .. [[flags'
           or category
           or nil
     ]])
@@ -113,8 +134,8 @@ return {
       _:print('           category=category,')
       _:print('           description="' .. quotable_desc(option) .. '",')
       _:print('           values={"' .. table.concat(option.values, '", "') .. '"},')
-      _:print('           default=defaults["' .. optname .. '"] '
-              .. (opt ~= optname and 'or defaults["' .. opt .. '"] ' or '')
+      _:print('           default=default_options["' .. optname .. '"] '
+              .. (opt ~= optname and 'or default_options["' .. opt .. '"] ' or '')
               .. 'or "' .. option.default .. '",')
       _:print('           after_check=function(option) check_option("'
               .. opt .. '", "' .. optname .. '") end,')
@@ -129,27 +150,28 @@ return {
     _:print('end\n')
 
     _:print([[
--- `options_by_modes`: {
---    [modename]: {
---      function() ... end, -- optional callback
---      stl_debug='on', ... -- options (see tovalues())
---    }
---  }
--- `func_options`: {
---    rulename = name for current mode (default value is '__]] .. funcprefix .. [[_flags__')
---    disable_other_options = see ]] .. funcprefix .. [[rule
---    imported = see ]] .. funcprefix .. [[rule
+-- Set options for a specific mode (see also ]] .. funcprefix .. [[rule())
+-- `options_by_modes` = {
+--   [modename]: {
+--     function() ... end, -- optional callback
+--     stl_debug='on', ... -- options (see create_options())
+--   }
 -- }
-function ]] .. funcprefix .. [[init_modes(options_by_modes, func_options)
+-- `extra_options` = {
+--   rulename :string = name for current mode (default value is '__]] .. funcprefix .. [[flags__')
+--   other options are sent to ]] .. funcprefix .. [[rule()
+-- }
+function ]] .. funcprefix .. [[init_modes(options_by_modes, extra_options)
+  extra_options = extra_options or {}
+  local rulename = extra_options.rulename or '__]] .. funcprefix .. [[flags__'
+
   for mode,options in pairs(options_by_modes) do
     if is_mode(mode) then
-      func_options = func_options or {}
-      local rulename = func_options.rulename or '__]] .. funcprefix .. [[_flags__'
       local callback = options[1]
       if callback then
         options[1] = nil
       end
-      ]] .. funcprefix .. [[rule(rulename, options, func_options.disable_other_options, func_options.imported)
+      ]] .. funcprefix .. [[rule(rulename, options, extra_options)
       if callback then
         options[1] = callback
         callback()
@@ -158,21 +180,41 @@ function ]] .. funcprefix .. [[init_modes(options_by_modes, func_options)
       return
     end
   end
+
+  ]] .. funcprefix .. [[rule(rulename, {}, extra_options)
+  add_rules(rulename)
 end
 
 
 local cached_flags = {}
 
--- Create a new rule. Options are added to the current configuration (see tovalues())
-function ]] .. funcprefix .. [[rule(rulename, options, disable_other_options, imported)
-  imported = imported or ']] .. imported_filename .. [['
+-- Create a new rule. Options are added to the current configuration (see create_options())
+-- `options`: same as create_options()
+-- `extra_options` = {
+--   import_base :string = import directory containing flags.lua (default: ']] .. import_base .. [[')
+--   clone_options :boolean = make an internal copy of options
+--                            which prevents changing it after the call to ]] .. funcprefix .. [[rule().
+--                            (default: false)
+--   other options are sent to get_flags()
+-- }
+function ]] .. funcprefix .. [[rule(rulename, options, extra_options)
+  extra_options = extra_options or {}
+  local import_base = extra_options.import_base or ']] .. import_base .. [['
+
+  if extra_options.clone_options then
+    local cloned = {}
+    for k, v in pairs(options) do
+      cloned[k] = v
+    end
+    options = cloned
+  end
 
   rule(rulename)
     on_load(function(target)
       local cached = cached_flags[rulename]
       if not cached then
-        import(imported)
-        cached = flags.getoptions(options, disable_other_options)
+        import(import_base .. '.flags')
+        cached = flags.get_flags(options, extra_options)
         table.insert(cached.cxxflags, {force=true})
         table.insert(cached.ldflags, {force=true})
         cached_flags[rulename] = cached
@@ -211,34 +253,37 @@ local _check_flags = function(d)
   end
 end
 
--- Returns the merge of the default values and new value table
--- tovalues(table, disable_other_options = false)
--- `values`: table. ex: {warnings='on'}
--- `values` can have 3 additional fields:
+-- Returns the merge of the default options and options parameter
+-- `options`: table. ex: {warnings='on'}
+-- `options` can have 3 additional fields:
 --  - `cxx`: compiler name (otherwise deducted from --cxx and --toolchain)
 --  - `cxx_version`: compiler version (otherwise deducted from cxx). ex: '7', '7.2'
 --  - `ld`: linker name
-function tovalues(values, disable_other_options)
-  if values then
-    _check_flags(values)
+-- `extra_options` = {
+--   disable_other_options: bool = false
+-- }
+function create_options(options, extra_options)
+  if options then
+    _check_flags(options)
+    local disable_other_options = extra_options and extra_options.disable_other_options
     return {]])
     for option in _:getoptions() do
       local optname = option.name
       local opt = _:tostroption(optname)
       local isnotsamename = (opt ~= optname)
-      _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
-              .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
-              .. 'or (disable_other_options and "" or _flag_names["' .. optname
-              .. '"][get_config("' .. opt .. '")]),')
+      _:print('      ' .. optname .. ' = options.' .. optname .. ' '
+              .. (isnotsamename and 'or options["' .. opt .. '"] ' or '')
+              .. 'or (disable_other_options and "" or _flag_names.' .. optname
+              .. '[get_config("' .. opt .. '")]),')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = _:tostroption(optname)
-      _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
-              .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
+      _:print('      ' .. optname .. ' = options.' .. optname .. ' '
+              .. (isnotsamename and 'or options["' .. opt .. '"] ' or '')
               .. 'or (not disable_other_options and _get_extra("' .. opt .. '")) or nil,')
     end
-    _:print([[}
+    _:print([[    }
   else
     return {]])
     for option in _:getoptions() do
@@ -252,13 +297,13 @@ function tovalues(values, disable_other_options)
       local opt = _:tostroption(optname)
       _:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
     end
-    _:print([[}
+    _:print([[    }
   end
 end
 
--- same as getoptions() and apply the options on a target
-function setoptions(target, values, disable_other_options, print_compiler)
-  local options = getoptions(values, disable_other_options, print_compiler)
+-- Same as get_flags() and apply the options on a target
+function set_flags(target, options, extra_options)
+  options = get_flags(options, extra_options)
   table.insert(options.cxxflags, {force=true})
   table.insert(options.ldflags, {force=true})
   target:add(']] .. cxflags .. [[', table.unpack(options.]] .. cxflags .. [[))
@@ -269,7 +314,8 @@ function setoptions(target, values, disable_other_options, print_compiler)
 end
 
 local _compiler_by_toolname = {
-  vs='msvc',
+  vs='cl',
+  cl='cl',
   gcc='gcc',
   gxx='gcc',
   clang='clang',
@@ -283,38 +329,44 @@ local _compiler_by_toolname = {
 }
 
 local _comp_cache = {}
-local _ld_cache = {}
+local _ld_cache
 
--- getoptions(values = {}, disable_other_options = false, print_compiler = false)
--- `values`: same as tovalues()
--- `disable_other_options`: boolean
--- `print_compiler`: boolean
+local extract_progname_and_version_from_path = function(compiler)
+  compiler = compiler:match('/([^/]+)$') or compiler
+  local version = compiler:match('%d+%.?%d*%.?%d*$') or ''
+  -- remove version suffix
+  local has_sep = compiler:byte(#compiler - #version) == 45 -- '-'
+  compiler = compiler:sub(1, #compiler - #version - (has_sep and 1 or 0))
+  return compiler, version
+end
+
+-- Returns an array of compile and link flags
+-- `options`: same as create_options()
+-- `extra_options` = {
+--   disable_other_options: bool = false
+--   print_compiler: bool = false -- for debug only
+-- }
 -- return {]] .. cxflags .. [[=table, ldflags=table}
-function getoptions(values, disable_other_options, print_compiler)
-  values = tovalues(values, disable_other_options)
+function get_flags(options, extra_options)
+  options = create_options(options, extra_options)
 
-  local compiler = values.]] .. compprefix .. [[
-  local version = values.]] .. compprefix .. [[_version
-  local linker = values.ld
+  local compiler = options.]] .. compprefix .. [[
 
-  do
-    local original_linker = linker or ''
-    linker = _ld_cache[original_linker]
+  local version = options.]] .. compprefix .. [[_version
+  local linker = options.ld
 
+  if not linker then
+    linker = _ld_cache
     if not linker then
-      if disable_other_options then
-        linker = ''
-        _ld_cache[original_linker] = linker
-      else
-        local program, toolname = platform.tool('ld')
-        linker = toolname or detect.find_toolname(program) or ''
-        _ld_cache[original_linker] = linker
-      end
+      local program, toolname = platform.tool('ld')
+      linker = toolname or detect.find_toolname(program) or ''
+      _ld_cache = linker
     end
   end
 
   local original_compiler = compiler or ''
-  local compcache = _comp_cache[original_compiler]
+  local original_version = version or ''
+  local compcache = (_comp_cache[original_compiler] or {})[original_version]
   local compversion
 
   if compcache then
@@ -326,51 +378,53 @@ function getoptions(values, disable_other_options, print_compiler)
       return {]] .. cxflags .. [[={}, ldflags={}}
     end
   else
-    _comp_cache[original_compiler] = {}
-
-    local toolname
-    if not compiler then
-      compiler, toolname = platform.tool(']] .. (_.is_C and "cc" or "cxx") .. [[')
+    if compiler then
+      local restored_version = version
+      compiler, version = extract_progname_and_version_from_path(compiler)
+      version = restored_version or version
+    else
+      local toolname
       if not compiler then
-        -- wprint("Unknown compiler")
-        compcache[original_compiler] = {}
-        return {]] .. cxflags .. [[={}, ldflags={}}
+        compiler, toolname = platform.tool(']] .. (_.is_C and "cc" or "cxx") .. [[')
+        if not compiler then
+          -- wprint("Unknown compiler")
+          local tmp = _comp_cache[original_compiler] or {}
+          tmp[original_version] = {}
+          _comp_cache[original_compiler] = tmp
+          return {]] .. cxflags .. [[={}, ldflags={}}
+        end
+      end
+
+      local compinfos = detect.find_tool(toolname or compiler, {version=true, program=compiler})
+      if compinfos then
+        compiler = compinfos.name
+        version = compinfos.version
+      else
+        compiler, version = extract_progname_and_version_from_path(compiler)
       end
     end
 
-    local compinfos = detect.find_tool(toolname or compiler, {version=true, program=compiler})
-    if compinfos then
-      compiler = compinfos.name
-      version = compinfos.version
-    else
-      -- extract basename
-      compiler = compiler:match('/([^/]+)$') or compiler
-      version = compiler:match('%d+%.?%d*%.?%d*$') or ''
-      local has_sep = compiler:byte(#compiler-1) == 45 -- '-'
-      -- remove version suffix
-      compiler = compiler:sub(1, #compiler - #version - (has_sep and 2 or 1))
-    end
-
-    compiler = _compiler_by_toolname[compiler]
-            or (compiler:find('^vs') and 'msvc')
-            or compiler
+    compiler = _compiler_by_toolname[compiler] or compiler
 
     compversion = {}
     for i in version:gmatch("%d+") do
       compversion[#compversion+1] = tonumber(i)
     end
+
     if not compversion[1] then
-      cprint("${color.red}Wrong version format: %s", version)
-      compcache[original_compiler] = {}
-      return {]] .. cxflags .. [[={}, ldflags={}}
+      wprint("Wrong version format: %s", version)
+      compversion = 0
+    else
+      compversion = compversion[1] * 100000 + (compversion[2] or 0)
     end
 
-    compversion = compversion[1] * 100 + (compversion[2] or 0)
-    _comp_cache[original_compiler] = {compiler, version, compversion}
+    local tmp = _comp_cache[original_compiler] or {}
+    tmp[original_version] = {compiler, version, compversion}
+    _comp_cache[original_compiler] = tmp
   end
 
-  if print_compiler then
-    cprint("getoptions: compiler: ${cyan}%s${reset}, version: ${cyan}%s", compiler, version)
+  if extra_options and extra_options.print_compiler then
+    cprint("get_flags: compiler: ${cyan}%s${reset}, version: ${cyan}%s", compiler, version)
   end
 
   local insert = table.insert
@@ -378,9 +432,9 @@ function getoptions(values, disable_other_options, print_compiler)
 ]])
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return 'values["' .. optname .. '"] == "' .. todefault(lvl) .. '"' end,
-  _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
-  _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
+  _vcond_lvl=function(_, lvl, optname) return 'options.' .. optname .. ' == "' .. todefault(lvl) .. '"' end,
+  _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100000 + minor) end,
+  _vcond_compiler=function(_, compiler) return 'compiler == "' .. tocomp(compiler) .. '"' end,
   _vcond_platform=function(_, platform) return 'is_plat("' .. toplatform(platform) .. '")' end,
   _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 

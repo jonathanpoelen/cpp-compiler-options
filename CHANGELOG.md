@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2022-06-06
+
+- xmake: new API
+
 ## 2022-02-20
 
 - scons: new API

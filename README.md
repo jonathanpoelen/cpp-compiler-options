@@ -217,7 +217,7 @@ Copy `output/cpp/xmake_options.lua` to `myproj/cpp/xmake.lua` and `output/cpp/xm
 includes'cpp'
 
 -- Registers new command-line options and set default values
-jln_cxx_init_options({warnings='very_strict'} --[[, category=string|boolean]])
+jln_cxx_init_options({warnings='very_strict', warnings_as_error='basic'})
 
 -- Set options for a specific mode (see also jln_cxx_rule())
 jln_cxx_init_modes({
@@ -238,7 +238,7 @@ target('hello1')
 
 
 -- Create a new rule. Options are added to the current configuration
-jln_cxx_rule('custom_rule', {warnings_as_error='on'} --[[, disable_other_options = false]])
+jln_cxx_rule('custom_rule', {warnings_as_error='on'})
 
 target('hello2')
   set_kind('binary')
@@ -252,19 +252,12 @@ target('hello3')
   -- Custom configuration when jln_cxx_rule() or jln_cxx_modes() are not enough
   on_load(function(target)
     import'cpp.flags'
-    -- see also getoptions() and tovalues()
-    local options = flags.setoptions(target, {elide_type='on'} --[[, disable_other_options = false]])
-    print(options)
+    -- see also get_flags() and create_options()
+    local flags = flags.set_flags(target, {elide_type='on'})
+    print(flags)
   end)
   add_files('src/hello.cpp')
 
-
--- jln_options can have 3 additional fields:
---  - `cxx`: (C++ only) compiler name (otherwise deducted from --cxx and --toolchain)
---  - `cc`: (C only) compiler name (otherwise deducted from --cc and --toolchain)
---  - `cxx_version` (C++ only) (otherwise deducted from cxx)
---  - `cc_version` (C only) (otherwise deducted from cc)
---  - `ld`: linker name
 
 -- NOTE: for C, jln_cxx_ prefix become jln_c_
 ```

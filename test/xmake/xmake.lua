@@ -10,6 +10,6 @@ target("test")
   set_kind("binary")
   on_load(function(target)
     import'cpp.flags'
-    flags.setoptions(target)
+    flags.set_flags(target)
   end)
   add_files("test.cpp")
