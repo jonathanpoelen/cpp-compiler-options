@@ -273,9 +273,15 @@ Copy `output/cpp/meson_options.txt` and rename `output/cpp/meson` to `meson_jln_
 
 project('test', 'cpp')
 
-# default value (without prefix)
+# default options (without prefix)
 # optional
 jln_default_flags = {'rtti': 'off'}
+
+# options for specific buildtype (added to default options)
+# optional
+jln_buildtype_flags = {
+  'debug': {'rtti': 'on'},
+}
 
 # optional
 jln_custom_flags = [

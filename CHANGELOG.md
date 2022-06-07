@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2022-06-07
+
+- meson: add jln_buildtype_flags (options for specific buildtype)
+
 ## 2022-06-06
 
 - xmake: new API

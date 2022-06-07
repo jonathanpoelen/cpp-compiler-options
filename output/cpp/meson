@@ -1,6 +1,6 @@
 # File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
-___jln_default_flags = get_variable('jln_default_flags', {})
+___jln_default_flags = get_variable('jln_default_flags', {}) + get_variable('jln_buildtype_flags', {}).get(get_option('buildtype'), {})
 if get_option('warning_level') == '0'
   ___jln_warnings = 'off'
 else

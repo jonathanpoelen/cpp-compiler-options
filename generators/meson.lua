@@ -34,7 +34,8 @@ return {
     _.prefixfunc = prefixfunc
 
     local option_strs = _._option_strs
-    _:write([[___]] .. prefixfunc .. [[_default_flags = get_variable(']] .. prefixfunc .. [[_default_flags', {})
+    _:write([[
+___]] .. prefixfunc .. [[_default_flags = get_variable(']] .. prefixfunc .. [[_default_flags', {}) + get_variable(']] .. prefixfunc .. [[_buildtype_flags', {}).get(get_option('buildtype'), {})
 if get_option('warning_level') == '0'
   ___]] .. prefixfunc .. [[_warnings = 'off'
 else
