@@ -78,7 +78,7 @@ return {
     local common_code = _:get_output()
     _._strs = {}
 
-    _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+    _:print_header('--')
     _:print([[
 local _import_base = ']] .. import_base .. [['
 

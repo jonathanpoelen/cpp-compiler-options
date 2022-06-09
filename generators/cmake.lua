@@ -21,7 +21,7 @@ return {
       endif='endif()',
     })
 
-    _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+    _:print_header('#')
 
     for option in _:getoptions() do
       _:print('set(_JLN_' .. option.name:upper() .. '_VALUES '.. table.concat(option.values, ' ') .. ')')
@@ -219,7 +219,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
   # extract clang version
   file(WRITE "${CMAKE_BINARY_DIR}/jln_null.c" "")
   execute_process(
-    COMMAND ${CMAKE_CXX_COMPILER} -x c "${CMAKE_BINARY_DIR}/jln_null.c" -dM -E 
+    COMMAND ${CMAKE_CXX_COMPILER} -x c "${CMAKE_BINARY_DIR}/jln_null.c" -dM -E
     OUTPUT_VARIABLE JLN_ICX_MACROS_OUTPUT
   )
   file(REMOVE "${CMAKE_BINARY_DIR}/jln_null.c")

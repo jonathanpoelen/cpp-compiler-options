@@ -71,8 +71,8 @@ return {
 
     _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
-    _:print([[# File generated with https://github.com/jonathanpoelen/cpp-compiler-options
-
+    _:print_header('#')
+    _:print([[
 # jam reference: https://www.boost.org/build/doc/html/index.html
 
 import feature : feature ;

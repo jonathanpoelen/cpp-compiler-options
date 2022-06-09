@@ -20,7 +20,7 @@ return {
       endif='',
     })
 
-    _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+    _:print_header('#')
 
     local optprefix = optprefix and optprefix:gsub('-', '_') or ''
     local prefixenv = _.is_C and 'CC' or 'CXX'

@@ -28,7 +28,7 @@ return {
       endif='endif',
     })
 
-    _:print('# File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+    _:print_header('#')
 
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
     _.prefixfunc = prefixfunc

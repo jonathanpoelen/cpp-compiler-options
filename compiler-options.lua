@@ -1999,6 +1999,10 @@ Vbase = {
 
   _strs={},
   print=function(_, s) _:write(s) _:write('\n') end,
+  print_header=function(_, prefix)
+    _:write(prefix)
+    _:write(' File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n\n')
+  end,
   write=function(_, s) _._strs[#_._strs+1] = s end,
   get_output=function(_) return table.concat(_._strs) end,
 

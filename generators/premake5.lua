@@ -21,7 +21,7 @@ return {
       endif='end',
     })
 
-    _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+    _:print_header('--')
 
     local compprefix = (_.is_C and 'cc' or 'cxx')
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
