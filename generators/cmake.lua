@@ -1,3 +1,5 @@
+local table_insert = table.insert
+
 return {
   --ignore={
   --  optimization=true,
@@ -135,7 +137,7 @@ endfunction()
     local names = {}
     for option in _:getoptions() do
       local name = option.name:upper()
-      names[#names+1] = name
+      table_insert(names, name)
       _:write(';' .. name)
     end
     if _._koptions.auto_profile then

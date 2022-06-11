@@ -1,3 +1,5 @@
+local table_insert = table.insert
+
 return {
   ignore={
   --  optimization=true,
@@ -79,9 +81,9 @@ end]])
       for i,v in ipairs(option.values) do
         local desc = option.value_descriptions[i]
         if desc then
-          values[#values+1] = "{'" .. v .. "', '".. quotable(desc) .. "'}"
+          table_insert(values, "{'" .. v .. "', '".. quotable(desc) .. "'}")
         else
-          values[#values+1] = "{'" .. v .. "'}"
+          table_insert(values, "{'" .. v .. "'}")
         end
       end
       _:print('\n  newoption{trigger="' .. opt .. '", allowed={' ..  table.concat(values, ', ') .. '}, description="' .. quotable(option.description) .. '"}')
@@ -182,6 +184,8 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
   local original_compiler = compiler or ''
   local compcache = cache[original_compiler]
 
+  local table_insert = table.insert
+
   if compcache then
     compiler = compcache[1]
     version = compcache[2]
@@ -250,7 +254,7 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
 
     compversion = {}
     for i in version:gmatch("%d+") do
-      compversion[#compversion+1] = tonumber(i)
+      table_insert(compversion, tonumber(i))
     end
     if not compversion[1] then
       printf("WARNING: wrong version format")
@@ -275,8 +279,8 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
   _vcond_platform=function(_, platform) return 'os.target() == "' .. platform .. '"' end,
   _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
 
-  cxx=function(_, x) return _.indent .. 'jln_buildoptions[#jln_buildoptions+1] = "' .. x .. '"\n' end,
-  link=function(_, x) return _.indent .. 'jln_linkoptions[#jln_linkoptions+1] = "' .. x .. '"\n' end,
+  cxx=function(_, x) return _.indent .. 'table_insert(jln_buildoptions, "' .. x .. '")\n' end,
+  link=function(_, x) return _.indent .. 'table_insert(jln_linkoptions, "' .. x .. '")\n' end,
 
   act=function(_, name, datas, optname)
     _:print(_.indent .. '-- unimplementable')

@@ -1,3 +1,5 @@
+local table_insert = table.insert
+
 local meson_compilers = {
   icc='intel',
   icl='intel-cl',
@@ -45,9 +47,9 @@ ___]] .. prefixfunc .. [[_flags = {
 ]])
     for option in _:getoptions() do
       local name = _:tobuildoption(option.name)
-      option_strs[#option_strs+1] = "option('" .. name .. "', type : 'combo', choices : ['"
+      table_insert(option_strs, "option('" .. name .. "', type : 'combo', choices : ['"
         .. table.concat(option.values, "', '") .. "'], value : '" .. option.default
-        .. "', description : '" .. quotable_desc(option) .. "')"
+        .. "', description : '" .. quotable_desc(option) .. "')")
       if option.name == 'warnings' then
         _:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_warnings,\n")
       else

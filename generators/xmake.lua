@@ -1,3 +1,5 @@
+local table_insert = table.insert
+
 local todefault = function(x)
   return x == 'default' and '' or x
 end
@@ -65,7 +67,7 @@ return {
       local opt = _:tostroption(option.name)
       local list = {}
       for _,arg in ipairs(option.values) do
-        list[#list+1] = '["' .. arg .. '"]="' .. todefault(arg) .. '", '
+        table_insert(list, '["' .. arg .. '"]="' .. todefault(arg) .. '", ')
       end
       local allowed = table.concat(list)
       _:print('  ["' .. opt .. '"] = {' .. allowed .. '[""]=""},')

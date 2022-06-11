@@ -1,3 +1,5 @@
+local table_insert = table.insert
+
 return {
   -- ignore={ },
 
@@ -51,14 +53,14 @@ return {
         end,
 
         startoptcond=function(_)
-          stackcomp[#stackcomp+1] = stackcomp[#stackcomp]
-          stackifcomp[#stackifcomp+1] = false
+          table_insert(stackcomp, stackcomp[#stackcomp])
+          table_insert(stackifcomp, false)
         end,
 
         startcond=function(_, x)
           local r = _:_startcond(x, {{}, false})
-          stackifcomp[#stackifcomp+1] = r or false
-          stackcomp[#stackcomp+1] = r or stackcomp[#stackcomp]
+          table_insert(stackifcomp, r or false)
+          table_insert(stackcomp, r or stackcomp[#stackcomp])
         end,
 
         elsecond=function(_)
@@ -83,7 +85,7 @@ return {
               -- assume than minimal version is 8.0
               for vers, d in pairs(t) do
                 if d[1] >= 8 then
-                  versions[#versions+1] = d
+                  table_insert(versions, d)
                 end
               end
               if #versions <= 1 then
@@ -91,10 +93,10 @@ return {
               end
             else
               for vers, d in pairs(t) do
-                versions[#versions+1] = d
+                table_insert(versions, d)
               end
             end
-            comps[#comps+1] = {comp, versions}
+            table_insert(comps, {comp, versions})
           end
 
           -- sort by name
@@ -113,19 +115,19 @@ return {
               -- vers(2) { ... } / { ... } -> version 2 and 1.99
               local minimal_comp = comp_vers[2][1]
               if minimal_comp[2] == 0 then
-                names[#names+1] = minimal_comp[4] .. '-'
-                              .. (minimal_comp[1] - 1) .. '.0'
+                table_insert(names, minimal_comp[4] .. '-'
+                                 .. (minimal_comp[1] - 1) .. '.0')
               else
-                names[#names+1] = minimal_comp[4] .. '-'
-                              .. minimal_comp[1] .. '.'
-                              .. (minimal_comp[2] - 1)
+                table_insert(names, minimal_comp[4] .. '-'
+                                 .. minimal_comp[1] .. '.'
+                                 .. (minimal_comp[2] - 1))
               end
 
               for k,d in ipairs(comp_vers[2]) do
-                names[#names+1] = d[3]
+                table_insert(names, d[3])
               end
             else
-              names[#names+1] = comp_vers[1]
+              table_insert(names, comp_vers[1])
             end
           end
 
@@ -163,14 +165,14 @@ return {
       print('\nBy default:')
       local lines={}
       for k,v in pairs(opts) do
-        lines[#lines+1] = '  ' .. k .. '=' .. v
+        table_insert(lines, '  ' .. k .. '=' .. v)
       end
       table.sort(lines)
       print(table.concat(lines, '\n'))
       lines={}
       print('\nOptions:')
       for option in _:getoptions() do
-        lines[#lines+1] = '  ' .. option.name .. ' = ' .. table.concat(option.values, ', ')
+        table_insert(lines, '  ' .. option.name .. ' = ' .. table.concat(option.values, ', '))
       end
       print(table.concat(lines, '\n'))
       return 0
@@ -207,7 +209,7 @@ return {
         end
       end
       compiler = compiler:gsub('-$','')
-      version:gsub('[%w_]+', function(x) t[#t+1]=x end)
+      version:gsub('[%w_]+', function(x) table_insert(t, x) end)
       major = t[1] and tonumber(t[1]) or 999
       minor = t[2] and tonumber(t[2]) or 999
     end
@@ -309,7 +311,7 @@ return {
       stop=function(_)
         local l = {}
         for k,v in pairs(flags) do
-          l[#l+1] = k
+          table_insert(l, k)
         end
 
         if #l ~= 0 then

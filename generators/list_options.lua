@@ -1,9 +1,11 @@
 local knwon_opts = {}
 local errors = {}
 
+local table_insert = table.insert
+
 local without_space_or_error = function(_, s)
   if s:find(' ') then
-    errors[#errors+1] = '"' .. s .. '" contains a space'
+    table_insert(errors, '"' .. s .. '" contains a space')
   end
 end
 
@@ -51,9 +53,9 @@ return {
 
       push_opt_for_print = function(option, str, desc)
         local strings = categorized_opts[categorized_opts[option.name] or other_cat][2]
-        strings[#strings+1] = str
+        table_insert(strings, str)
         if verbose and desc then
-          strings[#strings+1] = '  ' .. desc
+          table_insert(strings, '  ' .. desc)
         end
       end
 
@@ -63,13 +65,13 @@ return {
         for k,infos in ipairs(categorized_opts) do
           if #infos[2] ~= 0 then
             if not first then
-              strings[#strings+1] = ''
+              table_insert(strings, '')
             end
-            strings[#strings+1] = color and ('\027[1m# ' .. infos[1] .. '\027[0m:\n')
-                                         or ('# ' .. infos[1] .. ':\n')
+            table_insert(strings, color and ('\027[1m# ' .. infos[1] .. '\027[0m:\n')
+                                         or ('# ' .. infos[1] .. ':\n'))
             first = false
             for k,str in ipairs(infos[2]) do
-              strings[#strings+1] = str
+              table_insert(strings, str)
             end
           end
         end
@@ -141,7 +143,7 @@ return {
     local known = knwon_opts[optname]
     if not known then
       if is_available(_, optname) then
-        errors[#errors+1] = '_koptions[' .. optname .. ']: unknown key'
+        table_insert(errors, '_koptions[' .. optname .. ']: unknown key')
       end
     else
       known[2] = true
@@ -153,10 +155,10 @@ return {
       local known = knwon_opts[optname]
       if not known then
         if is_available(_, optname) then
-          errors[#errors+1] = '_koptions[' .. optname .. ']: unknown key'
+          table_insert(errors, '_koptions[' .. optname .. ']: unknown key')
         end
       elseif not known[1][x.lvl] then
-        errors[#errors+1] = '_koptions[' .. optname .. ']: unknown value: ' .. x.lvl
+        table_insert(errors, '_koptions[' .. optname .. ']: unknown value: ' .. x.lvl)
       else
         known[2] = true
       end
@@ -175,7 +177,7 @@ return {
   stop=function(_)
     for k,opts in pairs(knwon_opts) do
       if not opts[2] then
-        errors[#errors+1] = '_koptions[' .. k .. ']: not used in the tree'
+        table_insert(errors, '_koptions[' .. k .. ']: not used in the tree')
       end
     end
     if #errors ~= 0 then

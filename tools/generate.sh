@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 if (( $# > 0 )) ; then
   set $1
@@ -29,7 +29,7 @@ if [[ -z "$LUA" ]]; then
     LUA=$(which luajit 2>/dev/null||:)
     if [[ -n "$LUA" ]]; then
       output=$(luajit -v)
-      # luajit 2022 takes longer to load than to run the code
+      # luajit 2022 (luajit-2.1.0-beta3) takes longer to load than to run the code
       if ! [[ $output = *2017* ]]; then
         LUA=
       fi
@@ -48,70 +48,74 @@ if [[ -z "$LUA" ]]; then
   fi
 fi
 
-sgen ()
-{
-  $LUA ./compiler-options.lua generators/$1.lua
-}
 
-gen ()
-{
-  local extra_arg=$1
-  local out="-o$OUTPUT_DIR/$2"
-  local f=generators/$3.lua
-  shift 3
-  $LUA ./compiler-options.lua $extra_arg "$out" $f "$@"
-}
+LANG_OPTS=(-C -c)
+LANG_DIRS=(cpp c)
 
-OPT_COMP_GEN=('' -c)
-DIR_COMP_GEN=(cpp c)
+
+# check options
+params=(generators/list_options.lua)
+
+# create files by build system
+for ((i=0; $i<2; ++i)) ; do
+  suffix=${LANG_DIRS[$i]}
+  for g in bjam cmake premake5 meson scons xmake ; do
+    params+=(--- ${LANG_OPTS[$i]} "-o$OUTPUT_DIR/$suffix/$g" generators/$g.lua jln-)
+  done
+done
+
+$LUA ./compiler-options.lua "${params[@]}"
+
+
+
+params=()
 
 gencompopt ()
 {
-  local lang=$1
-  local cat=$2
-  local compiler=$3
+  local -i nb_lang=$1 i
+  local suffix=$2
 
   shift 2
-  for ((i=0; $i<$lang; ++i)) ; do
-    local out="$OUTPUT_DIR/${DIR_COMP_GEN[$i]}/$compname/$compiler-$cat"
-    $LUA ./compiler-options.lua ${OPT_COMP_GEN[$i]} generators/compiler.lua "$@" | sort -u > "$out"
+  for ((i=0; $i<$nb_lang; ++i)) ; do
+    params+=(
+      ${LANG_OPTS[$i]}
+      "-o$OUTPUT_DIR/${LANG_DIRS[$i]}/$compname/$comp-$suffix"
+      generators/compiler.lua
+      "$comp"
+      "$@"
+      ---
+    )
   done
 }
 
-# check options
-sgen list_options
-
-for ((i=0; $i<2; ++i)) ; do
-  suffix=${DIR_COMP_GEN[$i]}
-  for g in bjam cmake premake5 meson scons xmake ; do
-    gen "${OPT_COMP_GEN[$i]}" $suffix/$g $g jln-
-  done
-done
-
-sgen compiler | while read comp ; do
-  # icx is a clang, ignored
-  if [[ $comp =~ ^icx ]]; then
-    continue
-  fi
+# options by compilers
+while read comp ; do
   compname=${comp%-[0-9]*}
-  gencompopt 2 release                       $comp cpu=native lto optimization=2 linker=native
-  gencompopt 2 warnings                      $comp shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings
-  gencompopt 2 warnings_with_conversions     $comp shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings conversion_warnings
-  gencompopt 1 stl_debug_broken_abi          $comp stl_fix stl_debug=allow_broken_abi
-  gencompopt 1 stl_debug_broken_abi_and_bugs $comp stl_fix stl_debug=allow_broken_abi_and_bugs
-  gencompopt 1 sanitizers-pointer            $comp other_sanitizers=pointer
-  gencompopt 1 template_tree                 $comp elide_type=off diagnostics_show_template_tree=on
-  for g in suggestions stl_debug debug sanitizers ; do
-    gencompopt 2 $g $comp $g
-  done
-done
+  # C and C++
+  gencompopt 2 release                    cpu=native lto optimization=2 linker=native
+  gencompopt 2 warnings                   shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings
+  gencompopt 2 warnings_with_conversions  shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings conversion_warnings
+  gencompopt 2 suggestions                suggestions
+  gencompopt 2 stl_debug                  stl_debug
+  gencompopt 2 debug                      debug
+  gencompopt 2 sanitizers                 sanitizers
+  # C++ only
+  gencompopt 1 stl_debug_broken_abi          stl_fix stl_debug=allow_broken_abi
+  gencompopt 1 stl_debug_broken_abi_and_bugs stl_fix stl_debug=allow_broken_abi_and_bugs
+  gencompopt 1 sanitizers-pointer            other_sanitizers=pointer
+  gencompopt 1 template_tree                 elide_type=off diagnostics_show_template_tree=on
+done < <($LUA ./compiler-options.lua generators/compiler.lua)
 
-echo -e "\n"Duplicated and removed:
-for d in ${DIR_COMP_GEN[@]} ; do
+$LUA ./compiler-options.lua "${params[@]}"
+
+
+
+echo $'\nDuplicated and removed:'
+for d in ${LANG_DIRS[@]} ; do
   $LUA "$PROJECT_PATH"/tools/merge_generated.lua "$OUTPUT_DIR/$d/" "$OUTPUT_DIR"/$d/*/*
 done
 
-echo -e "\n"Empty and removed:
+echo $'\nEmpty and removed:'
 find "$OUTPUT_DIR" -size 0 -delete -print
 
 if [[ -d "$OUTPUT_PROJECT" ]]; then

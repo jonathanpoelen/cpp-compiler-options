@@ -1,3 +1,5 @@
+local table_insert = table.insert
+
 return {
   ignore={
   --  optimization=true,
@@ -29,16 +31,16 @@ return {
     for option in _:getoptions() do
       local optname = option.name
       local name = optprefix .. optname
-      flags[#flags+1] = "  '" .. optname .. "': '" .. option.default .. "',\n"
-      var2opts[#var2opts+1] = "  '" .. name .. "': '" .. optname .. "',\n"
-      opt2vars[#opt2vars+1] = "  '" .. optname .. "': '" .. name .. "',\n"
-      xvalues[#xvalues+1] = "  x_" .. optname .. " = options.get('" .. optname
-                            .. "', _default_flags['" .. optname .. "'])"
-      enums[#enums+1] = "    EnumVariable('" .. name .. "', '"
+      table_insert(flags, "  '" .. optname .. "': '" .. option.default .. "',\n")
+      table_insert(var2opts, "  '" .. name .. "': '" .. optname .. "',\n")
+      table_insert(opt2vars, "  '" .. optname .. "': '" .. name .. "',\n")
+      table_insert(xvalues, "  x_" .. optname .. " = options.get('" .. optname
+                         .. "', _default_flags['" .. optname .. "'])")
+      table_insert(enums, "    EnumVariable('" .. name .. "', '"
         .. quotable_desc(option) .. "', default_values.get('"
         .. optname .. "', _default_flags['" .. optname
         .. "']),\n                 allowed_values=('"
-        .. table.concat(option.values, "', '") .. "'))"
+        .. table.concat(option.values, "', '") .. "'))")
     end
 
     _:write([[

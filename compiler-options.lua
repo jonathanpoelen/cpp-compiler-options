@@ -148,7 +148,6 @@ local clang_cl = Compiler('clang-cl')
 local msvc = Compiler('msvc')
 local icc = Compiler('icc')
 local icl = Compiler('icl')
--- local icx = Compiler('icx')
 local clang_like = CompilerGroup(clang, clang_cl)
 
 -- local msvc_linker = Linker('msvc')
@@ -2330,20 +2329,32 @@ function evalflags(t, v, curropt)
   end
 end
 
-function insert_missing_function(V)
-  for k,mem in pairs(Vbase) do
-    if not V[k] then
-      V[k] = mem
+function clone_table(t)
+  local newt = {}
+  for k,v in pairs(t) do
+    if type(v) == 'table' then
+      newt[k] = clone_table(v)
+    else
+      newt[k] = v
     end
   end
+  return newt
 end
 
-function run(ast, is_C, filebase, ignore_options, generator_name, ...)
-  local V = require(generator_name:gsub('.lua$', ''))
-  insert_missing_function(V)
+_g_generators = {}
+function get_generator(name)
+  name = name:gsub('.lua$', '')
+  local generator = _g_generators[name]
+
+  if generator then
+    return clone_table(generator)
+  end
+
+  generator = require(name)
+  insert_missing_function(generator)
 
   -- check values of ignore
-  for k,mem in pairs(V.ignore) do
+  for k,mem in pairs(generator.ignore) do
     local opt = Vbase._koptions[k]
     if not opt then
       error('Unknown ' .. k .. ' in ignore table')
@@ -2361,6 +2372,21 @@ function run(ast, is_C, filebase, ignore_options, generator_name, ...)
       end
     end
   end
+
+  _g_generators[name] = generator
+  return clone_table(generator)
+end
+
+function insert_missing_function(V)
+  for k,mem in pairs(Vbase) do
+    if not V[k] then
+      V[k] = mem
+    end
+  end
+end
+
+function run(ast, is_C, filebase, ignore_options, generator_name, ...)
+  local V = get_generator(generator_name)
 
   -- add ignore from cli
   for name,x in pairs(ignore_options) do
@@ -2427,13 +2453,15 @@ end
 
 function help(out)
   local prefix = string.rep(' ', #arg[0]+1)
-  out:write(arg[0] .. ' [-p] [-c] [-o outfilebase]\n'
+  out:write(arg[0] .. ' [-p] [-c|-C] [-o outfilebase]\n'
          .. prefix .. '[-f [-]{option_name[=value_name][,...]}]\n'
          .. prefix .. '[-t [-]{tool_or_platform[,...]]\n'
          .. prefix .. '[-d option_name=value_name[,...]]\n'
-         .. prefix .. '{generator.lua} [-h|{options}...]\n\n' .. [==[
+         .. prefix .. '{generator.lua} [-h|{options}...]\n'
+         .. prefix .. '[--- same options]\n\n' .. [==[
   -p  Print an AST.
   -c  Generator for C, not for C++.
+  -C  Generator for C++, not for C. (default)
   -t  Restrict to a list of platform, compiler or linker.
       When the list is prefixed with '-', values are removed from current AST.
       Use -C list to display the list of tools and platforms.
@@ -2443,11 +2471,6 @@ function help(out)
       to 'default'.
 ]==])
 end
-
-local filebase
-local ignore_options = {}
-local is_C = false
-local print_ast = false
 
 function check_optname(cond, optname)
   if not cond then
@@ -2490,8 +2513,24 @@ tools_filter = {
   }
 }
 
+local filebase
+local ignore_options = {}
+local is_C = false
+local print_ast = false
+local run_params = {}
+
+function push_run_params()
+  local params = {is_C, filebase, ignore_options}
+  table_insert(run_params, params)
+  filebase = nil
+  ignore_options = {}
+  is_C = false
+  return params
+end
+
 cli={
   c={function() is_C=true end},
+  C={function() is_C=false end},
   h={function() help(io.stdout) os.exit(0) end},
   p={function() print_ast=true end},
 
@@ -2499,6 +2538,7 @@ cli={
     filebase = (value ~= '-') and value or nil
   end},
 
+  -- Set new default value
   d={arg=true, function(value)
     for optname,optvalue in value:gmatch('([_%w]+)=([_%w]*)') do
       local option = Vbase._koptions[optname]
@@ -2513,6 +2553,7 @@ cli={
     end
   end},
 
+  -- Restrict to a list of platform, compiler or linker.
   t={arg=true, function(value)
     if value == 'list' then
       local newline = false
@@ -2562,6 +2603,7 @@ cli={
     end
   end},
 
+  -- Restrict to a list of option/value.
   f={arg=true, function(value)
     for optname,optvalue in value:gmatch('([_%w]+)=?([_%w]*)') do
       local option = Vbase._koptions[optname]
@@ -2614,11 +2656,50 @@ function getoption(s, pos)
   return opt
 end
 
-i=1
-while i <= #arg do
-  local s = arg[i]
+-- workaround for luvit
+if not arg then
+  arg = process.argv
+  opti=2
+else
+  opti=1
+end
+
+while opti <= #arg do
+  local s = arg[opti]
+
+  -- is a generator name
   if s:sub(1,1) ~= '-' then
-    break
+    if print_ast then
+      push_run_params()
+      break
+    end
+
+    while opti <= #arg do
+      local params = push_run_params()
+
+      -- find separator of generator
+      for i=opti,#arg do
+        s = arg[i]
+        if s == '---' then
+          opti = opti + 1
+          break
+        end
+        table_insert(params, s)
+      end
+
+      opti = opti + #params - 3
+      s = arg[opti]
+
+      -- the next group start with a named option
+      if s and s:sub(1,1) == '-' then
+        break
+      end
+    end
+
+    if opti > #arg then
+      opti = opti - 1
+      break
+    end
   end
 
   local opt = getoption(s, 2)
@@ -2634,11 +2715,11 @@ while i <= #arg do
 
   if opt.arg then
     local value
-    if #arg[i] ~= ipos then
+    if #arg[opti] ~= ipos then
       value = s:sub(ipos+1)
     else
-      i = i+1
-      value = arg[i]
+      opti = opti+1
+      value = arg[opti]
       if not value then
         help(io.stderr)
         os.exit(2)
@@ -2647,148 +2728,159 @@ while i <= #arg do
     opt[1](value)
   end
 
-  i = i+1
+  opti = opti+1
 end
 
-if i > #arg and not print_ast then
+if opti > #arg and not print_ast then
   io.stderr:write('Missing generator file\n\n')
   help(io.stderr)
   os.exit(1)
 end
 
-ast = MakeAST(is_C)
+ast_c = nil
+ast_cpp = nil
 
-if tools_filter.enabled then
-  local keep = not tools_filter.remove
-  local ktypes = tools_filter.ktypes
-  local ktools_filter = tools_filter.ktools_filter
+for _, params in ipairs(run_params) do
+  if params[1] then
+    ast_c = ast_c or MakeAST(true)
+    ast = ast_c
+  else
+    ast_cpp = ast_cpp or MakeAST(false)
+    ast = ast_cpp
+  end
 
-  function filter_cond(t) --: true = keep, false = remove, nil = unchanged
-    for k,v in pairs(t) do
-      if k == '_and' then
-        for _,x in ipairs(v) do
-          local r = filter_cond(x)
-          if r == false then
-            return false
-          end
-        end
-      elseif k == '_or' then
-        local r
-        local is_true = false
-        local is_nil = false
-        local newt = {}
-        for _,x in ipairs(v) do
-          r = filter_cond(x)
-          if r ~= false then
-            table_insert(newt, x)
-            if r == nil then
-              is_nil = true
-            else
-              is_true = true
+  if tools_filter.enabled then
+    local keep = not tools_filter.remove
+    local ktypes = tools_filter.ktypes
+    local ktools_filter = tools_filter.ktools_filter
+
+    function filter_cond(t) --: true = keep, false = remove, nil = unchanged
+      for k,v in pairs(t) do
+        if k == '_and' then
+          for _,x in ipairs(v) do
+            local r = filter_cond(x)
+            if r == false then
+              return false
             end
           end
+        elseif k == '_or' then
+          local r
+          local is_true = false
+          local is_nil = false
+          local newt = {}
+          for _,x in ipairs(v) do
+            r = filter_cond(x)
+            if r ~= false then
+              table_insert(newt, x)
+              if r == nil then
+                is_nil = true
+              else
+                is_true = true
+              end
+            end
+          end
+          t._or = newt
+          if is_nil then
+            return nil
+          end
+          return is_true
+        elseif k == '_not' then
+          local r = filter_cond(v)
+          if r ~= nil then
+            return not r
+          end
+        elseif k == '_if' then
+          return filter_cond(v)
+        elseif ktypes[k] then
+          return keep == (ktools_filter[v] or false)
         end
-        t._or = newt
-        if is_nil then
-          return nil
-        end
-        return is_true
-      elseif k == '_not' then
-        local r = filter_cond(v)
-        if r ~= nil then
-          return not r
-        end
-      elseif k == '_if' then
-        return filter_cond(v)
-      elseif ktypes[k] then
-        return keep == (ktools_filter[v] or false)
       end
     end
-  end
 
-  function filter_ast(t)
-    if t._if then
-      local r = filter_cond(t._if)
-      if r == false then
-        if not t._else or filter_ast(t._else) == false then
+    function filter_ast(t)
+      if t._if then
+        local r = filter_cond(t._if)
+        if r == false then
+          if not t._else or filter_ast(t._else) == false then
+            return false
+          end
+          t._if = t._if._not or {_not=t._if}
+          t._t = t._else
+          t._else = nil
+          return nil
+        elseif r == true then
+          t._else = nil
+        elseif t._else and filter_ast(t._else) == false then
+          t._else = nil
+        end
+      end
+
+      if t._t then
+        t = t._t
+      end
+
+      if #t > 0 then
+        local return_false = true
+        for k,v in ipairs(t) do
+          if filter_ast(v) == false then
+            t[k] = nil
+          else
+            return_false = false
+          end
+        end
+        if return_false then
           return false
         end
-        t._if = t._if._not or {_not=t._if}
-        t._t = t._else
-        t._else = nil
-        return nil
-      elseif r == true then
-        t._else = nil
-      elseif t._else and filter_ast(t._else) == false then
-        t._else = nil
       end
     end
 
-    if t._t then
-      t = t._t
-    end
-
-    if #t > 0 then
-      local return_false = true
-      for k,v in ipairs(t) do
-        if filter_ast(v) == false then
-          t[k] = nil
-        else
-          return_false = false
-        end
-      end
-      if return_false then
-        return false
-      end
+    if filter_ast(ast) == false then
+      ast = {}
     end
   end
 
-  if filter_ast(ast) == false then
-    ast = {}
-  end
-end
+  if print_ast then
+    local _print_ast_ordered_vars = {
+      '_if',
+      '_else',
+      '_t'
+    }
 
-if print_ast then
-  local _print_ast_ordered_vars = {
-    '_if',
-    '_else',
-    '_t'
-  }
+    local _kprint_ast_var_filter = {
+      _t=true,
+      _if=true,
+      _else=true,
+      _subelse=true
+    }
 
-  local _kprint_ast_var_filter = {
-    _t=true,
-    _if=true,
-    _else=true,
-    _subelse=true
-  }
+    function printAST(ast, prefix)
+      if type(ast) == 'table' then
+        io.stdout:write('{\n')
+        local newprefix = prefix..'  '
 
-  function printAST(ast, prefix)
-    if type(ast) == 'table' then
-      io.stdout:write('{\n')
-      local newprefix = prefix..'  '
-
-      for _,k in ipairs(_print_ast_ordered_vars) do
-        if ast[k] then
-          io.stdout:write(newprefix..k..': ')
-          printAST(ast[k], newprefix)
+        for _,k in ipairs(_print_ast_ordered_vars) do
+          if ast[k] then
+            io.stdout:write(newprefix..k..': ')
+            printAST(ast[k], newprefix)
+          end
         end
-      end
 
-      for k,x in pairs(ast) do
-        if not _kprint_ast_var_filter[k] then
-          io.stdout:write(newprefix..k..': ')
-          printAST(x, newprefix)
+        for k,x in pairs(ast) do
+          if not _kprint_ast_var_filter[k] then
+            io.stdout:write(newprefix..k..': ')
+            printAST(x, newprefix)
+          end
         end
+        io.stdout:write(prefix..'}\n')
+      else
+        io.stdout:write(ast..'\n')
       end
-      io.stdout:write(prefix..'}\n')
-    else
-      io.stdout:write(ast..'\n')
+      return ast
     end
-    return ast
-  end
 
-  printAST(ast, '')
-  io.stdout:flush()
-else
-  run(ast, is_C, filebase, ignore_options, select(i, ...))
+    printAST(ast, '')
+    io.stdout:flush()
+  else
+    run(ast, unpack(params))
+  end
 end
