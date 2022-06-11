@@ -1,5 +1,7 @@
 #!/usr/bin/env lua
 
+local table_insert = table.insert
+
 function has_value(t)
   for k in pairs(t) do
     return true
@@ -68,10 +70,10 @@ function Logical(op, ...)
     assert(not x._if.opt)
     if x._if[op] then
       for _,cond in ipairs(x._if[op]) do
-        conds[#conds+1] = cond
+        table_insert(conds, cond)
       end
     else
-      conds[#conds+1] = x._if
+      table_insert(conds, x._if)
     end
   end
   return If({[op]=conds})
@@ -118,7 +120,7 @@ function CompilerGroup(...)
     if type(x) == 'number' then
       local t = {}
       for _,tool in ipairs(tools) do
-        t[#t+1] = tool(x, y)
+        table_insert(t, tool(x, y))
       end
       return Or(unpack(t))
     end
@@ -1620,7 +1622,7 @@ function create_ordered_keys(t)
   local ordered_keys = {}
 
   for k in pairs(t) do
-    ordered_keys[#ordered_keys + 1] = k
+    table_insert(ordered_keys, k)
   end
 
   table.sort(ordered_keys)
@@ -2003,7 +2005,7 @@ Vbase = {
     _:write(prefix)
     _:write(' File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n\n')
   end,
-  write=function(_, s) _._strs[#_._strs+1] = s end,
+  write=function(_, s) table_insert(_._strs, s) end,
   get_output=function(_) return table.concat(_._strs) end,
 
   startoptcond=noop, -- function(_, name) end,
@@ -2165,7 +2167,7 @@ Vbase = {
             local newvalues = {}
             for j,value in ipairs(option.values) do
               if not filter[value] then
-                newvalues[#newvalues+1] = value
+                table_insert(newvalues, value)
               end
             end
             option = {
@@ -2186,12 +2188,12 @@ Vbase = {
             ordered_values = {default_value}
             for i,value in pairs(option.values) do
               if value ~= default_value then
-                ordered_values[#ordered_values + 1] = value
+                table_insert(ordered_values, value)
               end
             end
           end
           option.ordered_values = ordered_values
-          computed_options[#computed_options + 1] = option
+          table_insert(computed_options, option)
         end
       end
     end
@@ -2211,11 +2213,11 @@ Vbase = {
         local values = {}
         local profile = _._opts_build_type[k]
         for i,kv in pairs(create_ordered_keys(profile)) do
-          values[#values + 1] = {kv, profile[kv]}
+          table_insert(values, {kv, profile[kv]})
         end
-        computed_build_types[#computed_build_types + 1] = {k, values}
+        table_insert(computed_build_types, {k, values})
       end
-      computed_build_types[#computed_build_types + 1] = {nil, nil}
+      table_insert(computed_build_types, {nil, nil})
     end
 
     return unpack_table_iterator(computed_build_types)
@@ -2678,7 +2680,7 @@ if tools_filter.enabled then
         for _,x in ipairs(v) do
           r = filter_cond(x)
           if r ~= false then
-            newt[#newt+1] = x
+            table_insert(newt, x)
             if r == nil then
               is_nil = true
             else
