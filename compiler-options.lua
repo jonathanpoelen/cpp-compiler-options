@@ -153,7 +153,7 @@ local clang_like = CompilerGroup(clang, clang_cl)
 local lld_link = Linker('lld-link')
 local ld64 = Linker('ld64') -- Apple ld64
 
-function link(x) return { link=(x:match('^[-/]') and x or '-l'..x) } end
+function link(x) return { link=x } end
 function flag(x) return { cxx=x } end
 function fl(x) return { cxx=x, link=x } end
 function act(id, datas) return { act={id, datas} } end
