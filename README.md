@@ -86,6 +86,7 @@ integer_sanitizers = default off on
 other_sanitizers = default off thread pointer memory
 sanitizers = default off on
 stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
+var_init = default pattern
 
 # Optimization:
 

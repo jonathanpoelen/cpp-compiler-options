@@ -355,6 +355,11 @@ Or(gcc, clang_like) {
     },
   },
 
+  opt'var_init' {
+    lvl'pattern' {
+      Or(gcc(12), clang(8)) { flag'-ftrivial-auto-var-init=pattern' }, }
+  },
+
   opt'windows_abi_compatibility_warnings' {
     Or(gcc(10), clang_like) {
       lvl'on' { cxx'-Wmismatched-tags' } /
@@ -1901,6 +1906,11 @@ Vbase = {
       incidental=true,
     },
 
+    var_init={
+      values={'pattern'},
+      description='initialize all stack variables implicitly, including padding',
+    },
+
     warnings={
       values={'off', 'on', 'strict', 'very_strict'},
       default='on',
@@ -1963,6 +1973,7 @@ Vbase = {
       'other_sanitizers',
       'sanitizers',
       'stl_debug',
+      'var_init',
     }},
     {'Optimization', {
       'cpu',

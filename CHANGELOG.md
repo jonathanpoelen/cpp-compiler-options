@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2022-06-12
+
+- add `var_init=pattern`
+
 ## 2022-06-07
 
 - meson: add jln_buildtype_flags (options for specific buildtype)
