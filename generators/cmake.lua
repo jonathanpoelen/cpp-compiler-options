@@ -167,17 +167,15 @@ endfunction()
       minimum_size_release='MinSizeRel',
     }
     for buildtypename, opts in _:getbuildtype() do
-      local cmake_buildtype = buildtypes[buildtypename]
-      if cmake_buildtype then
-        _:print('\n    if("' .. cmake_buildtype .. '" STREQUAL "${_JLN_BUILD_TYPE}")')
-        for i,xs in pairs(opts) do
-          local cmake_opt = 'JLN_DEFAULT_FLAG_' .. xs[1]:upper()
-          _:print('      if(NOT DEFINED ' .. cmake_opt .. ')')
-          _:print('        set(' .. cmake_opt .. ' "' .. xs[2] .. '")')
-          _:print('      endif()')
-        end
-        _:print('    endif()')
+      buildtypename = buildtypes[buildtypename] or error('Unknown build type: ' .. buildtypename)
+      _:print('\n    if("' .. buildtypename .. '" STREQUAL "${_JLN_BUILD_TYPE}")')
+      for i,xs in pairs(opts) do
+        local cmake_opt = 'JLN_DEFAULT_FLAG_' .. xs[1]:upper()
+        _:print('      if(NOT DEFINED ' .. cmake_opt .. ')')
+        _:print('        set(' .. cmake_opt .. ' "' .. xs[2] .. '")')
+        _:print('      endif()')
       end
+      _:print('    endif()')
     end
     _:print('  endif()\n')
 
