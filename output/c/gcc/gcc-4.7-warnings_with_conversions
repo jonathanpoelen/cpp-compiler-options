@@ -1,4 +1,3 @@
--pedantic
 -Wall
 -Wbad-function-cast
 -Wcast-align
@@ -8,8 +7,8 @@
 -Wdouble-promotion
 -Wextra
 -Wfloat-equal
--Wformat=2
 -Wformat-security
+-Wformat=2
 -Winit-self
 -Winvalid-pch
 -Wjump-misses-init
@@ -30,3 +29,4 @@
 -Wunused-macros
 -Wvector-operation-performance
 -Wwrite-strings
+-pedantic

@@ -1,5 +1,5 @@
 -DNDEBUG
+-O2
 -fuse-ld=lld
 -ipo
--O2
 -xHost

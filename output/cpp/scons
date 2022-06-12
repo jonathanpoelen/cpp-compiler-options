@@ -41,6 +41,7 @@ _default_flags = {
   'stl_fix': 'on',
   'suggestions': 'default',
   'switch_warnings': 'on',
+  'var_init': 'default',
   'warnings': 'on',
   'warnings_as_error': 'default',
   'whole_program': 'default',
@@ -84,6 +85,7 @@ _var2opts = {
   'jln_stl_fix': 'stl_fix',
   'jln_suggestions': 'suggestions',
   'jln_switch_warnings': 'switch_warnings',
+  'jln_var_init': 'var_init',
   'jln_warnings': 'warnings',
   'jln_warnings_as_error': 'warnings_as_error',
   'jln_whole_program': 'whole_program',
@@ -127,6 +129,7 @@ _opt2vars = {
   'stl_fix': 'jln_stl_fix',
   'suggestions': 'jln_suggestions',
   'switch_warnings': 'jln_switch_warnings',
+  'var_init': 'jln_var_init',
   'warnings': 'jln_warnings',
   'warnings_as_error': 'jln_warnings_as_error',
   'whole_program': 'jln_whole_program',
@@ -209,6 +212,8 @@ def add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_switch_warnings', 'warnings concerning the switch keyword', default_values.get('switch_warnings', _default_flags['switch_warnings']),
                  allowed_values=('default', 'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default')),
+    EnumVariable('jln_var_init', 'initialize all stack variables implicitly, including padding', default_values.get('var_init', _default_flags['var_init']),
+                 allowed_values=('default', 'pattern')),
     EnumVariable('jln_warnings', 'warning level', default_values.get('warnings', _default_flags['warnings']),
                  allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
     EnumVariable('jln_warnings_as_error', 'make all or some warnings into errors', default_values.get('warnings_as_error', _default_flags['warnings_as_error']),
@@ -319,6 +324,7 @@ def get_flags(options, env=None):
   x_stl_fix = options.get('stl_fix', _default_flags['stl_fix'])
   x_suggestions = options.get('suggestions', _default_flags['suggestions'])
   x_switch_warnings = options.get('switch_warnings', _default_flags['switch_warnings'])
+  x_var_init = options.get('var_init', _default_flags['var_init'])
   x_warnings = options.get('warnings', _default_flags['warnings'])
   x_warnings_as_error = options.get('warnings_as_error', _default_flags['warnings_as_error'])
   x_whole_program = options.get('whole_program', _default_flags['whole_program'])
@@ -393,6 +399,10 @@ def get_flags(options, env=None):
         if ( x_warnings == 'strict' or x_warnings == 'very_strict' ) :
           if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
             flags += ('-Wcast-align=strict', )
+    if not ( x_var_init == 'default') :
+      if x_var_init == 'pattern' :
+        if ( ( compiler == 'gcc' and not ( verless(12, 0) ) ) or ( compiler == 'clang' and not ( verless(8, 0) ) ) ) :
+          flags += ('-ftrivial-auto-var-init=pattern', )
     if not ( x_windows_abi_compatibility_warnings == 'default') :
       if ( ( compiler == 'gcc' and not ( verless(10, 0) ) ) or compiler == 'clang' or compiler == 'clang-cl' ) :
         if x_windows_abi_compatibility_warnings == 'on' :

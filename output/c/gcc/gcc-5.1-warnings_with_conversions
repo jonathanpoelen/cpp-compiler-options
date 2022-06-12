@@ -1,4 +1,3 @@
--pedantic
 -Wall
 -Warray-bounds=2
 -Wbad-function-cast
@@ -10,9 +9,9 @@
 -Wextra
 -Wfloat-conversion
 -Wfloat-equal
--Wformat=2
 -Wformat-security
 -Wformat-signedness
+-Wformat=2
 -Winit-self
 -Winvalid-pch
 -Wjump-misses-init
@@ -33,3 +32,4 @@
 -Wunused-macros
 -Wvector-operation-performance
 -Wwrite-strings
+-pedantic

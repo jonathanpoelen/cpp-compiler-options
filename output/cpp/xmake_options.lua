@@ -91,6 +91,8 @@ local _flag_names = {
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
+  ["jln-var-init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
+  ["var_init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
@@ -417,6 +419,14 @@ local _flag_names = {
            values={"default", "on", "off", "exhaustive_enum", "mandatory_default", "exhaustive_enum_and_mandatory_default"},
            default=default_options["switch_warnings"] or default_options["jln-switch-warnings"] or "on",
            after_check=function(option) check_option("jln-switch-warnings", "switch_warnings") end,
+         })
+  option("jln-var-init", {
+           showmenu=true,
+           category=category,
+           description="initialize all stack variables implicitly, including padding",
+           values={"default", "pattern"},
+           default=default_options["var_init"] or default_options["jln-var-init"] or "default",
+           after_check=function(option) check_option("jln-var-init", "var_init") end,
          })
   option("jln-warnings", {
            showmenu=true,

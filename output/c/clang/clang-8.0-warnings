@@ -1,4 +1,3 @@
--pedantic
 -Weverything
 -Wno-documentation
 -Wno-documentation-unknown-command
@@ -9,3 +8,4 @@
 -Wno-shadow-field
 -Wno-switch
 -Wno-switch-enum
+-pedantic

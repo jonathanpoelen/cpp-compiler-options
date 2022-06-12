@@ -1,6 +1,6 @@
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
--fsanitize=address
 -fsanitize-address-use-after-scope
+-fsanitize=address
 -fsanitize=leak
 -fsanitize=undefined

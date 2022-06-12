@@ -1,4 +1,3 @@
--fno-gnu-keywords
 -Wall
 -Warray-bounds
 -Wcast-qual
@@ -9,16 +8,16 @@
 -Wenum-compare
 -Wextra
 -Wfloat-equal
--Wformat=2
 -Wformat-security
+-Wformat=2
 -Winit-self
 -Winvalid-pch
 -Wmaybe-uninitialized
 -Wmissing-include-dirs
 -Wnarrowing
--Wnonnull
--Wnon-virtual-dtor
 -Wno-shadow
+-Wnon-virtual-dtor
+-Wnonnull
 -Woverloaded-virtual
 -Wparentheses
 -Wpointer-arith
@@ -32,3 +31,4 @@
 -Wunused-but-set-variable
 -Wunused-function
 -Wunused-variable
+-fno-gnu-keywords

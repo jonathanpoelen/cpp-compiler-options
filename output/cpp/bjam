@@ -79,6 +79,8 @@ feature <jln-stl-fix> : _ on default off : incidental ;
 feature <jln-suggestions> : _ default off on : propagated ;
 # warnings concerning the switch keyword
 feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
+# initialize all stack variables implicitly, including padding
+feature <jln-var-init> : _ default pattern : incidental ;
 # warning level
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
 # make all or some warnings into errors
@@ -109,6 +111,7 @@ feature <jln-sanitizers-incidental> : _ default off on : incidental ;
 feature <jln-stack-protector-incidental> : _ default off on strong all : incidental ;
 feature <jln-stl-debug-incidental> : _ default off on allow-broken-abi allow-broken-abi-and-bugs assert-as-exception : incidental ;
 feature <jln-stl-fix-incidental> : _ on default off : incidental ;
+feature <jln-var-init-incidental> : _ default pattern : incidental ;
 feature <jln-warnings-as-error-incidental> : _ default off on basic : incidental ;
 feature <jln-whole-program-incidental> : _ default off on strip-all : incidental ;
 feature <jln-windows-bigobj-incidental> : _ on default : incidental ;
@@ -148,6 +151,7 @@ feature <jln-stl-debug-default> : default off on allow-broken-abi allow-broken-a
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
+feature <jln-var-init-default> : default pattern : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
@@ -212,6 +216,7 @@ constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on allow-
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
 constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
 constant jln_env_switch_warnings : [ jln-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
+constant jln_env_var_init : [ jln-get-env jln_var_init : default pattern ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_env_warnings_as_error : [ jln-get-env jln_warnings_as_error : default off on basic ] ;
 constant jln_env_whole_program : [ jln-get-env jln_whole_program : default off on strip-all ] ;
@@ -259,6 +264,8 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-stl-debug-incidental JLN_STL_DEBUG_INCIDENTAL : <jln-stl-debug-incidental> ;
   toolset.flags jln-stl-fix JLN_STL_FIX : <jln-stl-fix> ;
   toolset.flags jln-stl-fix-incidental JLN_STL_FIX_INCIDENTAL : <jln-stl-fix-incidental> ;
+  toolset.flags jln-var-init JLN_VAR_INIT : <jln-var-init> ;
+  toolset.flags jln-var-init-incidental JLN_VAR_INIT_INCIDENTAL : <jln-var-init-incidental> ;
   toolset.flags jln-warnings-as-error JLN_WARNINGS_AS_ERROR : <jln-warnings-as-error> ;
   toolset.flags jln-warnings-as-error-incidental JLN_WARNINGS_AS_ERROR_INCIDENTAL : <jln-warnings-as-error-incidental> ;
   toolset.flags jln-whole-program JLN_WHOLE_PROGRAM : <jln-whole-program> ;
@@ -361,6 +368,7 @@ rule jln_flags ( properties * )
       <relevant>jln-stack-protector
       <relevant>jln-stl-debug
       <relevant>jln-stl-fix
+      <relevant>jln-var-init
       <relevant>jln-warnings-as-error
       <relevant>jln-whole-program
       <relevant>jln-windows-bigobj
@@ -402,6 +410,7 @@ rule jln_flags ( properties * )
   local x_stl_fix = [ jln-get-value2 $(ps) : jln-stl-fix : jln-stl-fix-incidental : $(jln_env_stl_fix) ] ;
   local x_suggestions = [ jln-get-value $(ps) : jln-suggestions : $(jln_env_suggestions) ] ;
   local x_switch_warnings = [ jln-get-value $(ps) : jln-switch-warnings : $(jln_env_switch_warnings) ] ;
+  local x_var_init = [ jln-get-value2 $(ps) : jln-var-init : jln-var-init-incidental : $(jln_env_var_init) ] ;
   local x_warnings = [ jln-get-value $(ps) : jln-warnings : $(jln_env_warnings) ] ;
   local x_warnings_as_error = [ jln-get-value2 $(ps) : jln-warnings-as-error : jln-warnings-as-error-incidental : $(jln_env_warnings_as_error) ] ;
   local x_whole_program = [ jln-get-value2 $(ps) : jln-whole-program : jln-whole-program-incidental : $(jln_env_whole_program) ] ;
@@ -651,6 +660,18 @@ rule jln_flags ( properties * )
               <cxxflags>"-Wcast-align=strict"
             ;
           }
+        }
+      }
+    }
+    if ( $(x_var_init) != "default" )
+    {
+      if ( $(x_var_init) = "pattern" )
+      {
+        if (  (  $(toolset) = "gcc" && ! (  $(version) < "12.00"  )  ) || (  $(toolset) = "clang" && ! (  $(version) < "08.00"  )  )  )
+        {
+          flags +=
+            <cxxflags>"-ftrivial-auto-var-init=pattern"
+          ;
         }
       }
     }

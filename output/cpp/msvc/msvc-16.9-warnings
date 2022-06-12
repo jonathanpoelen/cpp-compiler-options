@@ -1,7 +1,7 @@
-/permissive-
 /W4
+/Zc:__cplusplus
+/permissive-
 /wd4456
 /wd4459
 /wd4514
 /wd4711
-/Zc:__cplusplus

@@ -1,4 +1,3 @@
-/permissive-
 -Weverything
 -Wno-c++20-compat
 -Wno-c++98-compat
@@ -19,3 +18,4 @@
 -Wno-undefined-var-template
 -Wno-weak-vtables
 /Zc:__cplusplus
+/permissive-

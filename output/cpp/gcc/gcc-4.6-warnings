@@ -1,17 +1,16 @@
--pedantic
 -Wall
 -Wcast-align
 -Wcast-qual
 -Wdisabled-optimization
 -Wextra
 -Wfloat-equal
--Wformat=2
 -Wformat-security
+-Wformat=2
 -Winvalid-pch
 -Wmissing-declarations
 -Wmissing-include-dirs
--Wnon-virtual-dtor
 -Wno-shadow
+-Wnon-virtual-dtor
 -Wold-style-cast
 -Woverloaded-virtual
 -Wpacked
@@ -19,3 +18,4 @@
 -Wredundant-decls
 -Wundef
 -Wunused-macros
+-pedantic

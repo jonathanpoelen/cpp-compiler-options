@@ -1,4 +1,3 @@
-/permissive-
 -Wconversion
 -Weverything
 -Wno-c++98-compat
@@ -20,3 +19,4 @@
 -Wsign-compare
 -Wsign-conversion
 /Zc:__cplusplus
+/permissive-

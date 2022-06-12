@@ -1,7 +1,7 @@
 -DNDEBUG
+-O2
+-Wl,-O1
 -flto
 -fuse-ld=gold
 -march=native
 -mtune=native
--O2
--Wl,-O1

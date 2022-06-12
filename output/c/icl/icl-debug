@@ -1,4 +1,4 @@
-/debug:full
 /Od
 /RTC1
 /ZI
+/debug:full

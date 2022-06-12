@@ -36,6 +36,7 @@ ___jln_c_flags = {
   'stl_fix': ___jln_c_default_flags.get('stl_fix', get_option('jln_stl_fix')),
   'suggestions': ___jln_c_default_flags.get('suggestions', get_option('jln_suggestions')),
   'switch_warnings': ___jln_c_default_flags.get('switch_warnings', get_option('jln_switch_warnings')),
+  'var_init': ___jln_c_default_flags.get('var_init', get_option('jln_var_init')),
   'warnings': ___jln_c_warnings,
   'warnings_as_error': ___jln_c_default_flags.get('warnings_as_error', get_option('jln_warnings_as_error')),
   'whole_program': ___jln_c_default_flags.get('whole_program', get_option('jln_whole_program')),
@@ -131,6 +132,13 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           if (  ( (___jln_c_compiler_id == 'gcc') and not ( ___jln_c_compiler_version.version_compare('<8.0') ) ) )
             jln_c_c_flags += ['-Wcast-align=strict', ]
           endif
+        endif
+      endif
+    endif
+    if (  not ( (___jln_c_flags.get('var_init', 'default') == 'default')) )
+      if (  (___jln_c_flags.get('var_init', 'default') == 'pattern') )
+        if (  ( ( (___jln_c_compiler_id == 'gcc') and not ( ___jln_c_compiler_version.version_compare('<12.0') ) ) or ( (___jln_c_compiler_id == 'clang') and not ( ___jln_c_compiler_version.version_compare('<8.0') ) ) ) )
+          jln_c_c_flags += ['-ftrivial-auto-var-init=pattern', ]
         endif
       endif
     endif

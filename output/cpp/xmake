@@ -80,6 +80,8 @@ local _flag_names = {
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
+  ["jln-var-init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
+  ["var_init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
@@ -163,6 +165,7 @@ function create_options(options, extra_options)
       stl_fix = options.stl_fix or options["jln-stl-fix"] or (disable_other_options and "" or _flag_names.stl_fix[get_config("jln-stl-fix")]),
       suggestions = options.suggestions or options["jln-suggestions"] or (disable_other_options and "" or _flag_names.suggestions[get_config("jln-suggestions")]),
       switch_warnings = options.switch_warnings or options["jln-switch-warnings"] or (disable_other_options and "" or _flag_names.switch_warnings[get_config("jln-switch-warnings")]),
+      var_init = options.var_init or options["jln-var-init"] or (disable_other_options and "" or _flag_names.var_init[get_config("jln-var-init")]),
       warnings = options.warnings or options["jln-warnings"] or (disable_other_options and "" or _flag_names.warnings[get_config("jln-warnings")]),
       warnings_as_error = options.warnings_as_error or options["jln-warnings-as-error"] or (disable_other_options and "" or _flag_names.warnings_as_error[get_config("jln-warnings-as-error")]),
       whole_program = options.whole_program or options["jln-whole-program"] or (disable_other_options and "" or _flag_names.whole_program[get_config("jln-whole-program")]),
@@ -209,6 +212,7 @@ function create_options(options, extra_options)
       ["stl_fix"] = _flag_names["stl_fix"][get_config("jln-stl-fix")],
       ["suggestions"] = _flag_names["suggestions"][get_config("jln-suggestions")],
       ["switch_warnings"] = _flag_names["switch_warnings"][get_config("jln-switch-warnings")],
+      ["var_init"] = _flag_names["var_init"][get_config("jln-var-init")],
       ["warnings"] = _flag_names["warnings"][get_config("jln-warnings")],
       ["warnings_as_error"] = _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")],
       ["whole_program"] = _flag_names["whole_program"][get_config("jln-whole-program")],
@@ -486,6 +490,13 @@ function get_flags(options, extra_options)
           if ( compiler == "gcc" and not ( compversion < 800000 ) ) then
             insert(jln_cxflags, "-Wcast-align=strict")
           end
+        end
+      end
+    end
+    if not ( options.var_init == "") then
+      if options.var_init == "pattern" then
+        if ( ( compiler == "gcc" and not ( compversion < 1200000 ) ) or ( compiler == "clang" and not ( compversion < 800000 ) ) ) then
+          insert(jln_cxflags, "-ftrivial-auto-var-init=pattern")
         end
       end
     end
