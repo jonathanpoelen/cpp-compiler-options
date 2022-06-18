@@ -3,6 +3,7 @@ local table_insert = table.insert
 local meson_compilers = {
   icc='intel',
   icl='intel-cl',
+  ['clang-emcc']='emscripten',
 }
 
 return {
@@ -74,7 +75,11 @@ ___]] .. prefixfunc .. [[_flags = {
 
 ___]] .. prefixfunc .. [[_compiler = meson.get_compiler(']] .. lang .. [[')
 ___]] .. prefixfunc .. [[_compiler_id = ___]] .. prefixfunc .. [[_compiler.get_id()
-___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.version()
+if ___]] .. prefixfunc .. [[_compiler_id == 'emscripten'
+  ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.get_define('__clang_major__.__clang_minor__').replace(' ', '')
+else
+  ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.version()
+endif
 ___]] .. prefixfunc .. [[_linker_id = ___]] .. prefixfunc .. [[_compiler.get_linker_id()
 
 ___]] .. prefixfunc .. [[_custom_flags = get_variable(']] .. prefixfunc .. [[_custom_flags', []) + [___]] .. prefixfunc .. [[_flags]

@@ -28,7 +28,8 @@ function ramify(x)
   return x
 end
 
-local if_mt = {
+local if_mt -- referenced by __unm
+if_mt = {
   __call = function(_, x)
     assert(not _._t, '`_t` is not nil')
 
@@ -46,14 +47,8 @@ local if_mt = {
     return _
   end,
   __unm = function(_)
-    assert(_._if, 'not a conditional expression')
     return setmetatable({ _if={_not=_._if}, _t=_._t, _subelse=_._subelse }, if_mt)
   end,
-}
-
-local opt_mt = {
-  __call = if_mt.__call,
-  __div = if_mt.__div,
 }
 
 function If(condition)
@@ -61,7 +56,7 @@ function If(condition)
 end
 
 function Logical(op, ...)
-  local conds={}
+  local conds = {}
   for k,x in ipairs({...}) do
     if type(x) == 'function' then
       x = x()
@@ -116,17 +111,17 @@ local unpack = table.unpack or unpack
 
 function CompilerGroup(...)
   local tools = {...}
-  return function(x, y)
-    if type(x) == 'number' then
-      local t = {}
+  return function(x_or_major, minor)
+    if type(x_or_major) == 'number' then
+      local conds = {}
       for _,tool in ipairs(tools) do
-        table_insert(t, tool(x, y))
+        table_insert(conds, tool(x_or_major, minor)._if)
       end
-      return Or(unpack(t))
+      return If({_or=conds})
     end
 
     local r = Or(unpack(tools))
-    return x and r(x) or r
+    return x_or_major and r(x_or_major) or r
   end
 end
 
@@ -136,6 +131,10 @@ function And(...) return Logical('_and', ...) end
 function vers(major, minor) return If({version={major, minor or 0}}) end
 function lvl(x) return If({lvl=x}) end
 function opt(x) return If({opt=x}) end
+
+function IfOptOr(opt, lvl, x)
+  return opt(lvl(x)) / x
+end
 
 local windows = Platform('windows')
 local linux = Platform('linux')
@@ -148,7 +147,12 @@ local clang_cl = Compiler('clang-cl')
 local msvc = Compiler('msvc')
 local icc = Compiler('icc')
 local icl = Compiler('icl')
-local clang_like = CompilerGroup(clang, clang_cl)
+local emcc = Compiler('emcc')
+local clang_emcc = Compiler('clang-emcc') -- virtual compiler
+local clang_like = CompilerGroup(clang, clang_cl, clang_emcc)
+
+-- for clang-emcc to emcc
+-- local switch_to_real_compiler = {switch_to_special=true}
 
 -- local msvc_linker = Linker('msvc')
 local lld_link = Linker('lld-link')
@@ -183,14 +187,18 @@ end
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
 
--- icc/icl:
--- icc (linux) -diag-enable warn -diag-dump
+-- icc, icpc and icl:
+-- icc / icpc (linux) -diag-enable warn -diag-dump
 -- icl (windows) /Qdiag-enable:warn -Qdiag-dump
 -- https://www.intel.com/content/www/us/en/develop/documentation/cpp-compiler-developer-guide-and-reference/top/compiler-reference/compiler-options/alphabetical-list-of-compiler-options.html
 -- https://www.intel.com/content/www/us/en/develop/documentation/cpp-compiler-developer-guide-and-reference/top/compiler-reference/compiler-options/deprecated-and-removed-compiler-options.html
 
--- icx
+-- icx, icpx, dpcpp are clang compiler
 -- icx -qnextgen-diag
+
+-- emcc
+-- List of all compiler & linker options: https://emscripten.org/docs/tools_reference/emcc.html
+-- List of all -s options: https://github.com/emscripten-core/emscripten/blob/main/src/settings.js
 
 return --[[printAST]] {
 
@@ -355,6 +363,35 @@ Or(gcc, clang_like) {
     },
   },
 
+  opt'diagnostics_show_template_tree' {
+    Or(gcc(8), clang) {
+      lvl'on' { cxx'-fdiagnostics-show-template-tree' } / cxx'-fno-diagnostics-show-template-tree',
+    },
+  },
+
+  opt'elide_type' {
+    lvl'on' {
+      gcc(8) { cxx'-felide-type' }
+    } /
+    Or(gcc(8), clang(3,4)) {
+      cxx'-fno-elide-type',
+    },
+  },
+
+  opt'exceptions' {
+    lvl'on' {
+      flag'-fexceptions',
+      clang_emcc {
+        flag'-sDISABLE_EXCEPTION_CATCHING=0',
+      }
+    } /
+    flag'-fno-exceptions',
+  },
+
+  opt'rtti' {
+    lvl'on' { cxx'-frtti' } / cxx'-fno-rtti',
+  },
+
   opt'var_init' {
     lvl'pattern' {
       Or(gcc(12), clang(8)) { flag'-ftrivial-auto-var-init=pattern' }, }
@@ -386,7 +423,8 @@ Or(gcc, clang_like) {
           }
         }
       } /
-      clang_like {
+      -- clang_like
+      {
         flag'-Werror=array-bounds',
         flag'-Werror=division-by-zero',
 
@@ -499,7 +537,7 @@ Or(gcc, clang_like) {
   },
 
   opt'color' {
-    Or(gcc(4,9), clang_like) {
+    Or(gcc(4,9), -gcc() --[[=clang_like]]) {
       lvl'auto' { flag'-fdiagnostics-color=auto' } /
       lvl'never' { flag'-fdiagnostics-color=never' } /
       lvl'always' { flag'-fdiagnostics-color=always' },
@@ -514,7 +552,7 @@ Or(gcc, clang_like) {
 
   opt'diagnostics_format' {
     lvl'fixits' {
-      Or(gcc(7), clang_like(5)) {
+      Or(gcc(7), And(-gcc(), vers(5)) --[[=clang_like(5)]]) {
         flag'-fdiagnostics-parseable-fixits'
       }
     } /
@@ -539,31 +577,10 @@ Or(gcc, clang_like) {
       },
       flag'-Werror=write-strings'
     } /
-    clang_like {
+    -gcc() --[[=clang_like]] {
       flag'-Wno-error=c++11-narrowing',
       flag'-Wno-reserved-user-defined-literal',
     }
-  },
-
-  opt'linker' {
-    lvl'native' {
-      gcc { link'-fuse-ld=gold' } /
-      link'-fuse-ld=lld'
-    } /
-    lvl'bfd' {
-      link'-fuse-ld=bfd'
-    } /
-    Or(lvl'gold', gcc(-9)) {
-      link'-fuse-ld=gold'
-    } /
-    opt'lto' {
-      -- -flto is incompatible with -fuse-ld=lld
-      And(-lvl'off', gcc) {
-        link'-fuse-ld=gold'
-      } /
-      link'-fuse-ld=lld',
-    } /
-    link'-fuse-ld=lld',
   },
 
   opt'lto' {
@@ -579,7 +596,9 @@ Or(gcc, clang_like) {
         lvl'fat' { flag'-ffat-lto-objects', } /
         lvl'thin' { link'-fuse-linker-plugin' }
       }
-    } / {
+    } /
+    -- clang_like
+    {
       clang_cl {
         -- LTO require -fuse-ld=lld (link by default)
         link'-fuse-ld=lld',
@@ -640,8 +659,8 @@ Or(gcc, clang_like) {
 
 },
 
-Or(gcc, clang_like, icc) {
-  opt'conversion_warnings' {
+opt'conversion_warnings' {
+  Or(gcc, clang_like, icc) {
     lvl'on' {
       flag'-Wconversion',
       flag'-Wsign-compare',
@@ -662,6 +681,40 @@ Or(gcc, clang_like, icc) {
   },
 },
 
+Or(gcc, clang, clang_emcc) {
+  opt'stl_debug' {
+    -lvl'off' {
+      lvl'assert_as_exception' {
+        cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
+      },
+      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
+        clang {
+          -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
+          Or(vers(8), lvl'allow_broken_abi_and_bugs') {
+            cxx'-D_LIBCPP_DEBUG=1',
+          },
+        },
+        cxx'-D_GLIBCXX_DEBUG',
+      }
+      / cxx'-D_GLIBCXX_ASSERTIONS',
+      opt'pedantic' {
+        -lvl'off' {
+          cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
+        },
+      },
+    },
+  },
+
+  opt'pedantic' {
+    -lvl'off' {
+      flag'-pedantic',
+      lvl'as_error' {
+        flag'-pedantic-errors',
+      },
+    },
+  },
+},
+
 Or(gcc, clang) {
   opt'coverage' {
     lvl'on' {
@@ -676,12 +729,12 @@ Or(gcc, clang) {
   },
 
   opt'debug' {
-    lvl'off' { flag '-g0' } /
-    lvl'gdb' { flag '-ggdb' } /
+    lvl'off' { flag'-g0' } /
+    lvl'gdb' { flag'-ggdb' } /
     clang {
       lvl'line_tables_only' { flag'-gline-tables-only' } /
-      lvl'lldb' { flag '-glldb' } /
-      lvl'sce' { flag '-gsce' } /
+      lvl'lldb' { flag'-glldb' } /
+      lvl'sce' { flag'-gsce' } /
       flag'-g'
     } /
     flag'-g',
@@ -689,23 +742,44 @@ Or(gcc, clang) {
   },
 
   opt'optimization' {
-    lvl'0' { fl'-O0' } /
-    lvl'g' { fl'-Og' } /
+    lvl'0' { flag'-O0' } /
+    lvl'g' { flag'-Og' } /
     {
       flag'-DNDEBUG',
       link'-Wl,-O1',
-      lvl'size' { fl'-Os' } /
-      lvl'z' { clang_like { fl'-Oz' } / fl'-Os' } /
-      lvl'fast' { fl'-Ofast' } /
-      lvl'1' { fl'-O1' } /
-      lvl'2' { fl'-O2' } /
-      lvl'3' { fl'-O3' }
+      lvl'1' { flag'-O1' } /
+      lvl'2' { flag'-O2' } /
+      lvl'3' { flag'-O3' } /
+      lvl'size' { flag'-Os' } /
+      lvl'z' { clang { flag'-Oz' } / flag'-Os' } /
+      lvl'fast' { flag'-Ofast' }
     }
   },
 
   opt'cpu' {
     lvl'generic' { fl'-mtune=generic' } /
     { fl'-march=native', fl'-mtune=native', }
+  },
+
+  opt'linker' {
+    lvl'native' {
+      gcc { link'-fuse-ld=gold' } /
+      link'-fuse-ld=lld'
+    } /
+    lvl'bfd' {
+      link'-fuse-ld=bfd'
+    } /
+    Or(lvl'gold', gcc(-9)) {
+      link'-fuse-ld=gold'
+    } /
+    opt'lto' {
+      -- -flto is incompatible with -fuse-ld=lld
+      And(-lvl'off', gcc) {
+        link'-fuse-ld=gold'
+      } /
+      link'-fuse-ld=lld',
+    } /
+    link'-fuse-ld=lld',
   },
 
   opt'whole_program' {
@@ -741,15 +815,6 @@ Or(gcc, clang) {
         }
       }
     }
-  },
-
-  opt'pedantic' {
-    -lvl'off' {
-      flag'-pedantic',
-      lvl'as_error' {
-        flag'-pedantic-errors',
-      },
-    },
   },
 
   opt'stack_protector' {
@@ -820,52 +885,6 @@ Or(gcc, clang) {
     lvl'fpic'{ flag'-fpic', } /
     lvl'fPIE'{ flag'-fPIE', } /
     lvl'fPIC'{ flag'-fPIC', },
-  },
-
-  opt'stl_debug' {
-    -lvl'off' {
-      lvl'assert_as_exception' {
-        cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
-      },
-      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
-        clang {
-          -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
-          Or(vers(8), lvl'allow_broken_abi_and_bugs') {
-            cxx'-D_LIBCPP_DEBUG=1',
-          },
-        },
-        cxx'-D_GLIBCXX_DEBUG',
-      }
-      / cxx'-D_GLIBCXX_ASSERTIONS',
-      opt'pedantic' {
-        -lvl'off' {
-          cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
-        },
-      },
-    },
-  },
-
-  opt'elide_type' {
-    lvl'on' {
-      gcc(8) { cxx'-felide-type' }
-    } /
-    Or(gcc(8), clang(3,4)) {
-      cxx'-fno-elide-type',
-    },
-  },
-
-  opt'exceptions' {
-    lvl'on' { flag'-fexceptions', } / flag'-fno-exceptions',
-  },
-
-  opt'rtti' {
-    lvl'on' { cxx'-frtti' } / cxx'-fno-rtti',
-  },
-
-  opt'diagnostics_show_template_tree' {
-    Or(gcc(8), clang) {
-      lvl'on' { cxx'-fdiagnostics-show-template-tree' } / cxx'-fno-diagnostics-show-template-tree',
-    },
   },
 
   opt'other_sanitizers' {
@@ -1246,7 +1265,7 @@ msvc {
   },
 
   opt'warnings_as_error' {
-    lvl'on' { fl'/WX' } /
+    lvl'on' { flag'/WX' } /
     lvl'off' { flag'/WX-' } /
     -- lvl'basic'
     {
@@ -1616,6 +1635,43 @@ icc {
 mingw {
   opt'windows_bigobj' {
     flag'-Wa,-mbig-obj',
+  },
+} /
+
+clang_emcc {
+  opt'optimization' {
+    lvl'0' { fl'-O0' } /
+    lvl'g' { fl'-Og' } /
+    {
+      flag'-DNDEBUG',
+      lvl'1' { fl'-O1' } /
+      lvl'2' { fl'-O2' } /
+      {
+        lvl'3' { fl'-O3' } /
+        lvl'fast' {
+          fl'-O3',
+          -- The LLVM wasm backend avoids traps by adding more code around each possible trap
+          -- (basically clamping the value if it would trap).
+          -- That code may not run in older VMs, though.
+          fl'-mnontrapping-fptoint',
+        } /
+        lvl'size' { fl'-Os' } /
+        lvl'z' { fl'-Oz' },
+        -- -- This greatly reduces the size of the support JavaScript code
+        -- -- Note that this increases compile time significantly.
+        -- fl'--closure 1',
+      }
+    }
+  },
+
+  opt'debug' {
+    -lvl'off' {
+      -- Building with ASSERTIONS=1 causes STACK_OVERFLOW_CHECK=1
+      link'-sASSERTIONS=1',
+      link'-sDEMANGLE_SUPPORT=1',
+      -- ASan does not work with SAFE_HEAP
+      IfOptOr(opt'sanitizers', -lvl'on', link'-sSAFE_HEAP=1'),
+    }
   },
 },
 
@@ -2667,14 +2723,7 @@ function getoption(s, pos)
   return opt
 end
 
--- workaround for luvit
-if not arg then
-  arg = process.argv
-  opti=2
-else
-  opti=1
-end
-
+opti=1
 while opti <= #arg do
   local s = arg[opti]
 

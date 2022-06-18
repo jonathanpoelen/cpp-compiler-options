@@ -315,6 +315,39 @@ function set_flags(target, options, extra_options)
   return options
 end
 
+
+local function string_version_to_number(version)
+  local parts = {}
+  for i in version:gmatch("%d+") do
+    table.insert(parts, tonumber(i))
+  end
+
+  if parts[1] then
+    return parts[1] * 100000 + (parts[2] or 0)
+  end
+
+  wprint("Wrong version format: %s", version)
+  return 0
+end
+
+
+local function add_comp_cache(original_compiler, original_version, data)
+  local tmp = _comp_cache[original_compiler] or {}
+  tmp[original_version] = data
+  _comp_cache[original_compiler] = tmp
+end
+
+
+local function extract_progname_and_version_from_path(compiler)
+  compiler = compiler:match('/([^/]+)$') or compiler
+  local version = compiler:match('%d+%.?%d*%.?%d*$') or ''
+  -- remove version suffix
+  local has_sep = compiler:byte(#compiler - #version) == 45 -- '-'
+  compiler = compiler:sub(1, #compiler - #version - (has_sep and 1 or 0))
+  return compiler, version
+end
+
+
 local _compiler_by_toolname = {
   vs='cl',
   cl='cl',
@@ -328,19 +361,19 @@ local _compiler_by_toolname = {
   icx='icx',
   icpx='icx',
   dpcpp='icx',
+  ['em++']='emcc',
 }
+
 
 local _comp_cache = {}
 local _ld_cache
 
-local extract_progname_and_version_from_path = function(compiler)
-  compiler = compiler:match('/([^/]+)$') or compiler
-  local version = compiler:match('%d+%.?%d*%.?%d*$') or ''
-  -- remove version suffix
-  local has_sep = compiler:byte(#compiler - #version) == 45 -- '-'
-  compiler = compiler:sub(1, #compiler - #version - (has_sep and 1 or 0))
-  return compiler, version
+local function add_comp_cache(original_compiler, original_version, data)
+  local tmp = _comp_cache[original_compiler] or {}
+  tmp[original_version] = data
+  _comp_cache[original_compiler] = tmp
 end
+
 
 -- Returns an array of compile and link flags
 -- `options`: same as create_options()
@@ -375,28 +408,27 @@ function get_flags(options, extra_options)
     compiler = compcache[1]
     version = compcache[2]
     compversion = compcache[3]
-    if not compiler then
+    if not (compiler or primary_compiler) then
       -- wrintf("Unknown compiler")
       return {]] .. cxflags .. [[={}, ldflags={}}
     end
   else
+    local compiler_path = compiler
+
     if compiler then
       local restored_version = version
       compiler, version = extract_progname_and_version_from_path(compiler)
       version = restored_version or version
     else
       local toolname
+      compiler, toolname = platform.tool(']] .. (_.is_C and "cc" or "cxx") .. [[')
       if not compiler then
-        compiler, toolname = platform.tool(']] .. (_.is_C and "cc" or "cxx") .. [[')
-        if not compiler then
-          -- wprint("Unknown compiler")
-          local tmp = _comp_cache[original_compiler] or {}
-          tmp[original_version] = {}
-          _comp_cache[original_compiler] = tmp
-          return {]] .. cxflags .. [[={}, ldflags={}}
-        end
+        -- wprint("Unknown compiler")
+        add_comp_cache(original_compiler, original_version, {})
+        return {]] .. cxflags .. [[={}, ldflags={}}
       end
 
+      compiler_path = compiler
       local compinfos = detect.find_tool(toolname or compiler, {version=true, program=compiler})
       if compinfos then
         compiler = compinfos.name
@@ -408,25 +440,19 @@ function get_flags(options, extra_options)
 
     compiler = _compiler_by_toolname[compiler] or compiler
 
-    compversion = {}
-    for i in version:gmatch("%d+") do
-      compversion[#compversion+1] = tonumber(i)
+    if compiler == 'emcc' then
+      compiler = 'clang-emcc'
+      local outdata, errdata = os.iorunv(compiler_path, {'-v'}, {envs = extra_options.envs})
+      version = errdata:match('clang version ([^ ]+)')
     end
 
-    if not compversion[1] then
-      wprint("Wrong version format: %s", version)
-      compversion = 0
-    else
-      compversion = compversion[1] * 100000 + (compversion[2] or 0)
-    end
+    compversion = string_version_to_number(version)
 
-    local tmp = _comp_cache[original_compiler] or {}
-    tmp[original_version] = {compiler, version, compversion}
-    _comp_cache[original_compiler] = tmp
+    add_comp_cache(original_compiler, original_version, {compiler, version, compversion})
   end
 
   if extra_options and extra_options.print_compiler then
-    cprint("get_flags: compiler: ${cyan}%s${reset}, version: ${cyan}%s", compiler, version)
+    cprint("get_flags: compiler: ${cyan}%s${reset} (${cyan}%s${reset}), linker: ${cyan}%s", compiler, version, linker)
   end
 
   local insert = table.insert

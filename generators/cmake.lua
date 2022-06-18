@@ -210,6 +210,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   if(MSVC)
     set(JLN_CLANG_CL_]].. compiler_type .. [[_COMPILER 1)
+  elseif (CMAKE_CXX_COMPILER MATCHES ]] .. (_.is_C and '/emcc' or '/em\\\\+\\\\+') .. [[)
+    set(JLN_CLANG_EMCC_]].. compiler_type .. [[_COMPILER 1)
   else()
     set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
   endif()
@@ -247,6 +249,7 @@ endif()
       msvc='JLN_MSVC_'.. compiler_type .. '_COMPILER',
       clang='JLN_CLANG_'.. compiler_type .. '_COMPILER',
       ['clang-cl']='JLN_CLANG_CL_'.. compiler_type .. '_COMPILER',
+      ['clang-emcc']='JLN_CLANG_EMCC_'.. compiler_type .. '_COMPILER',
       icl='JLN_ICL_'.. compiler_type .. '_COMPILER',
       icc='JLN_ICC_'.. compiler_type .. '_COMPILER',
       icx='JLN_ICX_'.. compiler_type .. '_COMPILER',

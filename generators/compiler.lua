@@ -81,7 +81,7 @@ return {
           local comps = {}
           for comp, t in pairs(versions_by_compiler) do
             local versions = {}
-            if comp == 'clang-cl' then
+            if comp == 'clang-cl' or comp == 'clang-emcc' then
               -- assume than minimal version is 8.0
               for vers, d in pairs(t) do
                 if d[1] >= 8 then

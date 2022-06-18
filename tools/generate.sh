@@ -90,6 +90,9 @@ gencompopt ()
 
 # options by compilers
 while read comp ; do
+  # ignore emscripten
+  [[ $comp = 'clang-emcc'* ]] && continue
+
   compname=${comp%-[0-9]*}
   # C and C++
   gencompopt 2 release                    cpu=native lto optimization=2 linker=native

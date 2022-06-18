@@ -1,9 +1,9 @@
-local normnum=function(x)
+local function normnum(x)
   x = '00' .. tostring(x)
   return x:sub(-2)
 end
 
-local jamlvl=function(lvl)
+local function jamlvl(lvl)
   return lvl:gsub('_', '-')
 end
 
@@ -46,9 +46,9 @@ return {
   end,
 
   _vcond_verless=function(_, major, minor)
-    return '$(version) < "' .. normnum(major) .. '.' .. normnum(minor) .. '"'
+    return '[ numbers.less $(NORMALIZED_' .. _.prefixcomp .. '_COMP_VERSION) ' .. tostring(major * 100000 + minor) .. ' ]'
   end,
-  _vcond_compiler=function(_, compiler) return '$(toolset) = "' .. (jamcompilers[compiler] or compiler) .. '"' end,
+  _vcond_compiler=function(_, compiler) return '$(NORMALIZED_' .. _.prefixcomp .. '_COMP) = "' .. (jamcompilers[compiler] or compiler) .. '"' end,
   _vcond_platform=function(_, platform) return '[ os.name ] = ' .. jamplatforms[platform] end,
   _vcond_linker=function(_, linker) return '$(linker) = "' .. linker .. '"' end,
 
@@ -77,6 +77,10 @@ return {
 
 import feature : feature ;
 import modules ;
+import numbers ;
+import os ;
+import property-set ;
+import string ;
 
 JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 ]])
@@ -93,6 +97,8 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     local locals = ''
     local defaults = ''
     local prefixfunc = _.is_C and 'jln_c' or 'jln'
+
+    _.prefixcomp = _.is_C and 'C' or 'CXX'
 
     for option in _:getoptions() do
       local opt, iopt, env = _:tobjamoption(option)
@@ -130,8 +136,6 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     _:print(defaults)
     _:print([[
 
-import os ;
-
 rule ]] .. prefixfunc .. [[-get-env ( env : values * )
 {
   local x = [ os.environ $(env) ] ;
@@ -158,34 +162,45 @@ rule ]] .. prefixfunc .. [[-get-env ( env : values * )
     _:print(toolsetflags)
     _:print('}')
     _:print([[
-import property-set ;
-import string ;
 
 local ORIGINAL_TOOLSET = 0 ;
-local COMP_VERSION = 00.00 ;
+local NORMALIZED_]] .. _.prefixcomp .. [[_COMP = "" ;
+local NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 100000 ;
 
-rule ]] .. prefixfunc .. [[-get-normalized-compiler-version ( toolset : version )
+rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
 {
-  # TODO `version` is not the real version. For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
-  # define PP_CAT_I(a,b) a##b
-  # define PP_CAT(a,b) PP_CAT_I(a,b)
-  # g++ -x c++ -E - <<<'PP_CAT(__GNUC__, PP_CAT(__GNUC_MINOR__, __GNUC_PATCHLEVEL__))'
-  # clang++ -x c++ -E - <<<'PP_CAT(__clang_major__, PP_CAT(__clang_minor__, __clang_patchlevel__))'
   if $(ORIGINAL_TOOLSET) != $(toolset)
   {
-    local version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
-    if ! $(version) {
-      if $(toolset) != intel {
-        version = [ MATCH ".*(\\d+\\.\\d+\\.\\d+).*" : [ SHELL "$(toolset) --version" ] ] ;
+    ORIGINAL_TOOLSET = $(toolset) ;
+
+    local is_emcc = 0 ;
+    switch $(toolset)  {
+      case emscripten* : is_emcc = 1 ;
+      case emcc* : is_emcc = 1 ;
+    }
+
+    if $(is_emcc) = 1 {
+      NORMALIZED_]] .. _.prefixcomp .. [[_COMP = clang-emcc ;
+      # get clang version. Assume emcc exists
+      version = [ MATCH "clang version ([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "emcc -v 2>&1" ] ] ;
+    }
+    else {
+      # TODO `version` is not the real version.
+      # For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
+      NORMALIZED_]] .. _.prefixcomp .. [[_COMP = $(toolset) ;
+      version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
+      if ! $(version) {
+        if $(toolset) != intel {
+          version = [ MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "$(toolset) --version" ] ] ;
+        }
       }
     }
+
     local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
-    local major = [ MATCH "(..)$" : [ string.join 00 $(match[1]) ] ] ;
-    local minor = [ MATCH "(..)$" : [ string.join 00 $(match[3]) ] ] ;
-    COMP_VERSION = $(major).$(minor) ;
-    ORIGINAL_TOOLSET = $(toolset) ;
+    local major = $(match[1]) ;
+    local minor = [ MATCH "(.....)$" : [ string.join 00000 $(match[3]) ] ] ;
+    NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = $(major)$(minor) ;
   }
-  return $(COMP_VERSION) ;
 }
 
 rule ]] .. prefixfunc .. [[-get-value ( ps : opt : env )
@@ -225,8 +240,7 @@ rule ]] .. prefixfunc .. [[_flags ( properties * )
   local ps = [ property-set.create $(properties) ] ;
   local toolset = [ $(ps).get <toolset> ] ;
   local original_version = [ $(ps).get <toolset-$(toolset):version> ] ;
-  local version = [ ]] .. prefixfunc .. [[-get-normalized-compiler-version $(toolset)
-                  : $(original_version) ] ;
+  ]] .. prefixfunc .. [[-update-normalized-compiler $(toolset) : $(original_version) ;
   local linker = [ $(ps).get <linker> ] ;
 
   local flags = ;
