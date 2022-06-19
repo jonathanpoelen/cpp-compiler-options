@@ -913,7 +913,35 @@ Or(gcc, clang) {
       lvl'on' { cxx'-Wnoexcept' } /
       { cxx'-Wno-noexcept' }
     }
-  }
+  },
+
+  opt'analyzer' {
+    gcc(10) {
+      lvl'off' {
+        flag'-fno-analyzer'
+      } / {
+        flag'-fanalyzer',
+        lvl'taint' {
+          flag'-fanalyzer-checker=taint'
+        },
+
+        opt'analyzer_too_complex_warning' {
+          lvl'on' {
+            flag'-Wanalyzer-too-complex'
+          } / --[[lvl'off']] {
+            flag'-Wno-analyzer-too-complex'
+          }
+        },
+
+        opt'analyzer_verbosity' {
+          lvl'0' { flag'-fanalyzer-verbosity=0' } /
+          lvl'1' { flag'-fanalyzer-verbosity=1' } /
+          lvl'2' { flag'-fanalyzer-verbosity=2' } /
+          --[[lvl'3']] { flag'-fanalyzer-verbosity=3' }
+        },
+      },
+    }
+  },
 },
 
 lld_link {
@@ -1753,6 +1781,29 @@ Vbase = {
     unavailable: language for which this option is not available (c or cpp)
   ]]
   _koptions={
+    analyzer={
+      values={'off', 'on', 'taint'},
+      description='enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)',
+      incidental=true,
+    },
+
+    analyzer_too_complex_warning={
+      values={'off', 'on'},
+      description='By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.',
+      incidental=true,
+    },
+
+    analyzer_verbosity={
+      values={
+        {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'},
+        {'1', 'As per the previous level, but also show events for the entry to each function.'},
+        {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'},
+        {'3', 'As per the previous level, but show all control flow events, not just significant ones.'},
+      },
+      description='controls the complexity of the control flow paths that are emitted for analyzer diagnostics',
+      incidental=true,
+    },
+
     color={
       values={'auto', 'never', 'always'},
       incidental=true,
@@ -2002,6 +2053,9 @@ Vbase = {
 
   _opts_by_category={
     {'Warning', {
+      'analyzer',
+      'analyzer_too_complex_warning',
+      'analyzer_verbosity',
       'conversion_warnings',
       'covered_switch_default_warnings',
       'fix_compiler_error',
