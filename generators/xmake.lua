@@ -361,6 +361,7 @@ local _compiler_by_toolname = {
   icx='icx',
   icpx='icx',
   dpcpp='icx',
+  ['dpcpp-cl']='icx-cl',
   ['em++']='emcc',
 }
 
@@ -444,6 +445,19 @@ function get_flags(options, extra_options)
       compiler = 'clang-emcc'
       local outdata, errdata = os.iorunv(compiler_path, {'-v'}, {envs = extra_options.envs})
       version = errdata:match('clang version ([^ ]+)')
+    elseif compiler == 'icx' or compiler == 'icx-cl' then
+      compiler = compiler == 'icx' and 'clang' or 'clang-cl'
+      try {
+        function()
+          -- . as cpp file is an error, but stderr is good
+          os.iorunv(compiler_path, {'-v', '-x', 'c++', '.', '-E'}, {envs = extra_options.envs})
+        end,
+        catch {
+          function(proc)
+            version = proc.stderr:match('/clang/([^ ]+)')
+          end
+        }
+      }
     end
 
     compversion = string_version_to_number(version)

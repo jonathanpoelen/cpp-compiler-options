@@ -174,9 +174,14 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
     ORIGINAL_TOOLSET = $(toolset) ;
 
     local is_emcc = 0 ;
+    local is_intel = 0 ;
     switch $(toolset)  {
       case emscripten* : is_emcc = 1 ;
       case emcc* : is_emcc = 1 ;
+      case intel : is_intel = 1 ;
+      case icx* : is_intel = 1 ;
+      case icpx* : is_intel = 1 ;
+      case dpcpp* : is_intel = 1 ;
     }
 
     if $(is_emcc) = 1 {
@@ -184,22 +189,38 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
       # get clang version. Assume emcc exists
       version = [ MATCH "clang version ([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "emcc -v 2>&1" ] ] ;
     }
+    # icx / icpx
+    else if $(is_intel) = 1 {
+      NORMALIZED_]] .. _.prefixcomp .. [[_COMP = clang ;
+      switch $(version)  {
+        case 2021* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1200000 ;
+        case 2022* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1400000 ;
+        case 2023* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1600000 ;
+        case 2024* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1800000 ;
+        case 2025* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2000000 ;
+        case 2026* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2200000 ;
+        case 2027* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2400000 ;
+        case 2028* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2600000 ;
+        case 2029* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2800000 ;
+        case 2030* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 3000000 ;
+      }
+    }
     else {
       # TODO `version` is not the real version.
       # For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
       NORMALIZED_]] .. _.prefixcomp .. [[_COMP = $(toolset) ;
       version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
       if ! $(version) {
-        if $(toolset) != intel {
-          version = [ MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "$(toolset) --version" ] ] ;
-        }
+        version = [ MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "$(toolset) --version" ] ] ;
       }
     }
 
-    local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
-    local major = $(match[1]) ;
-    local minor = [ MATCH "(.....)$" : [ string.join 00000 $(match[3]) ] ] ;
-    NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = $(major)$(minor) ;
+    if $(is_intel) = 0 {
+      local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
+      local major = $(match[1]) ;
+      local minor = [ MATCH "(.....)$" : [ string.join 00000 $(match[3]) ] ] ;
+      NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = $(major)$(minor) ;
+    }
   }
 }
 

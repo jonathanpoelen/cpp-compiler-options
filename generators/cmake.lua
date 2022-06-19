@@ -208,26 +208,29 @@ set(JLN_]].. compiler_type .. [[_COMPILER_VERSION ${CMAKE_]].. compiler_type .. 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(JLN_GCC_]].. compiler_type .. [[_COMPILER 1)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if(MSVC)
-    set(JLN_CLANG_CL_]].. compiler_type .. [[_COMPILER 1)
-  elseif (CMAKE_CXX_COMPILER MATCHES ]] .. (_.is_C and '/emcc' or '/em\\\\+\\\\+') .. [[)
+  if (CMAKE_CXX_COMPILER MATCHES ]] .. (_.is_C and '/emcc' or '/em\\\\+\\\\+') .. [[)
     set(JLN_CLANG_EMCC_]].. compiler_type .. [[_COMPILER 1)
+  elseif(MSVC)
+    set(JLN_CLANG_CL_]].. compiler_type .. [[_COMPILER 1)
   else()
     set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
   endif()
+# icx / icpx, dpcpp
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
   set(JLN_ICX_]].. compiler_type .. [[_COMPILER 1)
   set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
-  # extract clang version
-  file(WRITE "${CMAKE_BINARY_DIR}/jln_null.c" "")
+  # extract clang version (dpcpp requires a valid c++ file)
+  file(WRITE "${CMAKE_BINARY_DIR}/jln_null.cpp"
+             "int vers = __clang_major__ - __clang_minor__;")
   execute_process(
-    COMMAND ${CMAKE_CXX_COMPILER} -x c "${CMAKE_BINARY_DIR}/jln_null.c" -dM -E
+    COMMAND ${CMAKE_CXX_COMPILER} "${CMAKE_BINARY_DIR}/jln_null.cpp" -E
     OUTPUT_VARIABLE JLN_ICX_MACROS_OUTPUT
   )
-  file(REMOVE "${CMAKE_BINARY_DIR}/jln_null.c")
-  string(REGEX MATCH "__clang_major__ ([0-9]+)\n#define __clang_minor__ ([0-9]+)\n#define __clang_patchlevel__ ([0-9]+)"
-         JLN_ICX_CLANG_VERSION "${JLN_ICX_MACROS_OUTPUT}")
+  file(REMOVE "${CMAKE_BINARY_DIR}/jln_null.cpp")
+  string(REGEX MATCH "\nint vers = ([0-9]+) - ([0-9]+)"
+         JLN_ICX_MACROS_OUTPUT "${JLN_ICX_MACROS_OUTPUT}")
   set(JLN_]].. compiler_type .. [[_COMPILER_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
+# icc / icl
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   if (CMAKE_HOST_WIN32)
     set(JLN_ICL_]].. compiler_type .. [[_COMPILER 1)
@@ -252,7 +255,6 @@ endif()
       ['clang-emcc']='JLN_CLANG_EMCC_'.. compiler_type .. '_COMPILER',
       icl='JLN_ICL_'.. compiler_type .. '_COMPILER',
       icc='JLN_ICC_'.. compiler_type .. '_COMPILER',
-      icx='JLN_ICX_'.. compiler_type .. '_COMPILER',
       -- linker
       ld64='JLN_LD64_'.. compiler_type .. '_LINKER',
       ['lld-link']='JLN_LLD_LINK_'.. compiler_type .. '_LINKER',
