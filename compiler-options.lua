@@ -51,14 +51,32 @@ if_mt = {
   end,
 }
 
+local if_mt_func = {
+  __call = function(_, ...)
+    return _._impl(...)
+  end,
+  __div = function(_, x)
+    return _._impl() / x
+  end,
+  __unm = function(_)
+    return -_._impl()
+  end,
+}
+
 function If(condition)
   return setmetatable({ _if=condition }, if_mt)
+end
+
+function IfFunc(f)
+  return setmetatable({ _impl=f }, if_mt_func)
 end
 
 function Logical(op, ...)
   local conds = {}
   for k,x in ipairs({...}) do
-    if type(x) == 'function' then
+    if x._impl then
+      x = x._impl()
+    elseif type(x) == 'function' then
       x = x()
     end
     assert(x._if and not x._t)
@@ -76,7 +94,7 @@ end
 
 function Compiler(name)
   local cond = {compiler=name}
-  return function(x_or_major, minor)
+  return IfFunc(function(x_or_major, minor)
     if type(x_or_major) == 'number' then
       return If({_and={
         cond,
@@ -88,30 +106,30 @@ function Compiler(name)
       local r = If(cond)
       return x_or_major and r(x_or_major) or r
     end
-  end
+  end)
 end
 
 function Platform(name)
   local cond = {platform=name}
-  return function(x)
+  return IfFunc(function(x)
     local r = If(cond)
     return x and r(x) or r
-  end
+  end)
 end
 
 function Linker(name)
   local cond = {linker=name}
-  return function(x)
+  return IfFunc(function(x)
     local r = If(cond)
     return x and r(x) or r
-  end
+  end)
 end
 
 local unpack = table.unpack or unpack
 
 function CompilerGroup(...)
   local tools = {...}
-  return function(x_or_major, minor)
+  return IfFunc(function(x_or_major, minor)
     if type(x_or_major) == 'number' then
       local conds = {}
       for _,tool in ipairs(tools) do
@@ -122,7 +140,7 @@ function CompilerGroup(...)
 
     local r = Or(unpack(tools))
     return x_or_major and r(x_or_major) or r
-  end
+  end)
 end
 
 function Or(...) return Logical('_or', ...) end
@@ -131,10 +149,6 @@ function And(...) return Logical('_and', ...) end
 function vers(major, minor) return If({version={major, minor or 0}}) end
 function lvl(x) return If({lvl=x}) end
 function opt(x) return If({opt=x}) end
-
-function IfOptOr(opt, lvl, x)
-  return opt(lvl(x)) / x
-end
 
 local windows = Platform('windows')
 local linux = Platform('linux')
@@ -147,8 +161,8 @@ local clang_cl = Compiler('clang-cl')
 local msvc = Compiler('msvc')
 local icc = Compiler('icc')
 local icl = Compiler('icl')
-local emcc = Compiler('emcc')
-local clang_emcc = Compiler('clang-emcc') -- virtual compiler
+-- local emcc = Compiler('emcc')
+local clang_emcc = Compiler('clang-emcc') -- virtual compiler, refer to clang version
 local clang_like = CompilerGroup(clang, clang_cl, clang_emcc)
 
 -- for clang-emcc to emcc
@@ -521,7 +535,7 @@ Or(gcc, clang_like) {
         flag'-fno-sanitize-cfi-cross-dso',
       }
     } /
-    Or(gcc(8), -gcc()) {
+    Or(gcc(8), -gcc) {
       -- gcc: flag'-mcet',
       -- clang_cl: flag'-fsanitize-cfi-cross-dso',
       lvl'branch' { flag'-fcf-protection=branch' } /
@@ -537,7 +551,7 @@ Or(gcc, clang_like) {
   },
 
   opt'color' {
-    Or(gcc(4,9), -gcc() --[[=clang_like]]) {
+    Or(gcc(4,9), -gcc --[[=clang_like]]) {
       lvl'auto' { flag'-fdiagnostics-color=auto' } /
       lvl'never' { flag'-fdiagnostics-color=never' } /
       lvl'always' { flag'-fdiagnostics-color=always' },
@@ -552,7 +566,7 @@ Or(gcc, clang_like) {
 
   opt'diagnostics_format' {
     lvl'fixits' {
-      Or(gcc(7), And(-gcc(), vers(5)) --[[=clang_like(5)]]) {
+      Or(gcc(7), And(-gcc, vers(5)) --[[=clang_like(5)]]) {
         flag'-fdiagnostics-parseable-fixits'
       }
     } /
@@ -577,7 +591,7 @@ Or(gcc, clang_like) {
       },
       flag'-Werror=write-strings'
     } /
-    -gcc() --[[=clang_like]] {
+    -gcc --[[=clang_like]] {
       flag'-Wno-error=c++11-narrowing',
       flag'-Wno-reserved-user-defined-literal',
     }
@@ -1498,8 +1512,9 @@ icc {
         lvl'mandatory_default' { flag'-Wswitch-default' } /
         lvl'exhaustive_enum_and_mandatory_default' {
           flag'-Wswitch',
-      } /
-        { flag'-Wno-switch' }
+        } / {
+          flag'-Wno-switch'
+        },
       },
     }
   },
@@ -1698,7 +1713,11 @@ clang_emcc {
       link'-sASSERTIONS=1',
       link'-sDEMANGLE_SUPPORT=1',
       -- ASan does not work with SAFE_HEAP
-      IfOptOr(opt'sanitizers', -lvl'on', link'-sSAFE_HEAP=1'),
+      opt'sanitizers' {
+        -lvl'on' { link'-sSAFE_HEAP=1' },
+      } / {
+        link'-sSAFE_HEAP=1'
+      },
     }
   },
 },

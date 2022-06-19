@@ -46,9 +46,13 @@ main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninit
     1. [generators/compiler.lua](#generatorscompilerlua)
     2. [generators/list_options.lua](#generatorslist_optionslua)
     3. [generators/{cmake,xmake,meson,premake5,bjam,scons}.lua](#generatorscmakexmakemesonpremake5bjamsconslua)
-4. [How to add options?](#how-to-add-options)
-    1. [Update the options tree](#update-the-options-tree)
-        1. [if_mt](#if_mt)
+4. [How to add or modify options?](#how-to-add-or-modify-options)
+    1. [Flags](#flags)
+    2. [Compilers and linkers](#compilers-and-linkers)
+    3. [Platform](#platform)
+    4. [Options and levels](#options-and-levels)
+    5. [Conditions](#conditions)
+    6. [if_mt](#if_mt)
 <!-- /toc -->
 
 # Options
@@ -469,42 +473,69 @@ Generators for different build system.
 $ `./compiler-options.lua [-o filebase] {generator} [option-prefix]`
 
 
-# How to add options?
+# How to add or modify options?
 
 Edit `compiler-options.lua` file.
 
-The variable `G` contains the options tree.
+The `MakeAST` function contains the options tree.
 
 `_koptions` of `Vbase` contains the list of available options.
+`_opts_by_category` a categorization of these options.
 
-## Update the options tree
+
+## Flags
 
 - `c`, `cxx`, `flag`, `link`, `fl`
+
 ```lua
 c'-Wall' -- C only
 cxx'-Wall' -- C++ only
 flag'-Wall' -- C and C++
-link'-option'
-link'libname' -- alias of link'-llibname'
+link'-flto' -- Link option
 fl'xxx' -- is a alias of {flag'xxx',link'xxx'}
 ```
 
-The following functions return the metatable `if_mt`:
 
-- `gcc`, `clang`, `clang_cl`, `clang_like`, `msvc`, `mingw`, `icc`, `icx`
-- `linux`, `windows`, `macos`
-- `vers`
+## Compilers and linkers
+
+- `gcc` for gcc or g++
+- `clang` for clang or clang++
+- `clang_cl` for clang-cl
+- `clang_emcc` refers to the version of clang used by emcc
+- `clang_like` refers to `clang`, `clang_cl` and `clang_emcc`
+- `msvc` for cl
+- `icc`
+- `icl`
+- `lld_link` for lld-link
+- `ld64`
+
+`icx`, `icpx`, `dpcpp` are equivalent to `clang`.
+
+With `mingw`, the compiler is `gcc`.
+
+version can be specified with `vers(major, optional_minor)` or `compname(major, optional_minor)`.
 
 ```lua
-gcc { ... } -- for gcc only.
+gcc { ... } -- for gcc only
 gcc(5) { ... } -- for >= gcc-5
 gcc(5, 3) { ... } -- for >= gcc-5.3
 gcc(-5, 3) { ... } -- for < gcc-5.3
 
-gcc(major, minor) { ... } -- is a alias of `gcc { vers(major, minor) { ... } }`
+gcc(major, minor) { ... } -- equivalent to `gcc { vers(major, minor) { ... } }`
 ```
 
-- `opt`, `lvl`
+## Platform
+
+- `linux`
+- `windows`
+- `macos`
+- `mingw` with `gcc` as compiler
+
+
+## Options and levels
+
+- `opt'name' { ... }`
+- `lvl'name' { ... }`
 
 ```lua
 opt'warnings' { -- if warnings is enabled (not `warnings=default`)
@@ -512,15 +543,19 @@ opt'warnings' { -- if warnings is enabled (not `warnings=default`)
 }
 ```
 
-- `Or`, `And`
+## Conditions
+
+- `Or(...)`
+- `And(...)`
 
 ```lua
 Or(gcc, clang, msvc) { ... }
 And(gcc, lvl'off') { ... }
 ```
 
+## if_mt
 
-### if_mt
+Compilers, linkers, platforms and condition returns a `if_mt`.
 
 - `-xxx {...}` for `not xxx`
 - `xxx {...} / yyy {...}` for `xxx else yyy`
@@ -529,12 +564,6 @@ And(gcc, lvl'off') { ... }
 -gcc(5,3) { ... } -- < gcc-5.3
 opt'warnings' { -lvl'on' { ... } } -- neither warnings=on nor warnings=default
 lvl'on' { xxx } / { yyy } -- equivalent to `{ lvl'on' { xxx }, -lvl'on' { yyy } }`
-```
-
-For a negative form in an Or or an And, it is necessary to make a call without parameter:
-
-```lua
-And(icc, -windows()) -- And(icc, -windows) not working
 ```
 
 Note: `-opt'name'` isn't allowed
