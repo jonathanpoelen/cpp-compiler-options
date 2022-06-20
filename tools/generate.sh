@@ -95,7 +95,7 @@ while read comp ; do
 
   compname=${comp%-[0-9]*}
   # C and C++
-  gencompopt 2 release                    cpu=native lto optimization=2 linker=native
+  gencompopt 2 release                    cpu=native lto optimization=2 linker=native ndebug
   gencompopt 2 warnings                   shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings
   gencompopt 2 warnings_with_conversions  shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings conversion_warnings
   gencompopt 2 suggestions                suggestions

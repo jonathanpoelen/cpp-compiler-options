@@ -201,6 +201,9 @@ end
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
 
+-- clang-cl
+-- https://clang.llvm.org/docs/UsersManual.html#id9
+
 -- icc, icpc and icl:
 -- icc / icpc (linux) -diag-enable warn -diag-dump
 -- icl (windows) /Qdiag-enable:warn -Qdiag-dump
@@ -214,9 +217,27 @@ end
 -- List of all compiler & linker options: https://emscripten.org/docs/tools_reference/emcc.html
 -- List of all -s options: https://github.com/emscripten-core/emscripten/blob/main/src/settings.js
 
+local ndebug_decl = function(def, undef)
+  return {
+    lvl'off' { undef } /
+    lvl'on' { def } /
+    --[[lvl'with_optimization_1_or_above']] {
+      opt'optimization' {
+        -Or(lvl'0', lvl'g') {
+          def
+        }
+      }
+    }
+  }
+end
+
 return --[[printAST]] {
 
--- https://clang.llvm.org/docs/UsersManual.html#id9
+opt'ndebug' {
+  Or(msvc, icl) { ndebug_decl(flag'/DNDEBUG', flag'/UNDEBUG') }
+                / ndebug_decl(flag'-DNDEBUG', flag'-UNDEBUG')
+},
+
 Or(gcc, clang_like) {
   opt'warnings' {
     lvl'off' {
@@ -752,24 +773,23 @@ clang_emcc {
     lvl'0' { fl'-O0' } /
     lvl'g' { fl'-Og' } /
     {
-      flag'-DNDEBUG',
       lvl'1' { fl'-O1' } /
       lvl'2' { fl'-O2' } /
-      {
-        lvl'3' { fl'-O3' } /
-        lvl'fast' {
-          fl'-O3',
-          -- The LLVM wasm backend avoids traps by adding more code around each possible trap
-          -- (basically clamping the value if it would trap).
-          -- That code may not run in older VMs, though.
-          fl'-mnontrapping-fptoint',
-        } /
-        lvl'size' { fl'-Os' } /
-        lvl'z' { fl'-Oz' },
+      lvl'3' { fl'-O3' } /
+      lvl'fast' {
+        fl'-O3',
+        -- The LLVM wasm backend avoids traps by adding more code around each possible trap
+        -- (basically clamping the value if it would trap).
+        -- That code may not run in older VMs, though.
+        fl'-mnontrapping-fptoint',
+      } /
+      lvl'size' { fl'-Os' } /
+      lvl'z' {
+        fl'-Oz'
         -- -- This greatly reduces the size of the support JavaScript code
         -- -- Note that this increases compile time significantly.
         -- fl'--closure 1',
-      }
+      },
     }
   },
 
@@ -809,7 +829,6 @@ Or(gcc, clang) {
     lvl'0' { flag'-O0' } /
     lvl'g' { flag'-Og' } /
     {
-      flag'-DNDEBUG',
       link'-Wl,-O1',
       lvl'1' { flag'-O1' } /
       lvl'2' { flag'-O2' } /
@@ -1097,7 +1116,6 @@ Or(msvc, clang_cl, icl) {
       } /
       lvl'g' { flag'/Ob1' } /
       {
-        flag'/DNDEBUG',
         -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
         -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
         lvl'1' { flag'/O1', } /
@@ -1459,7 +1477,6 @@ icl {
     } /
     lvl'g' { flag'/Ob1' } /
     {
-      flag'/DNDEBUG',
       flag'/GF',
       lvl'1' { flag'/O1', } /
       lvl'2' { flag'/O2', } /
@@ -1615,7 +1632,6 @@ icc {
     lvl'0' { flag'-O0', } /
     lvl'g' { flag'-O1', } /
     {
-      flag'-DNDEBUG',
       lvl'1' { flag'-O1', } /
       lvl'2' { flag'-O2', } /
       lvl'3' { flag'-O3', } /
@@ -1946,6 +1962,12 @@ Vbase = {
       incidental=true,
     },
 
+    ndebug={
+      values={'off', 'on', 'with_optimization_1_or_above'},
+      default='with_optimization_1_or_above',
+      description='enable NDEBUG macro (disable assert macro)',
+    },
+
     noexcept_warnings={
       values={'off', 'on'},
       description='Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception.',
@@ -2107,6 +2129,7 @@ Vbase = {
       'debug',
       'float_sanitizers',
       'integer_sanitizers',
+      'ndebug',
       'optimization',
       'other_sanitizers',
       'sanitizers',

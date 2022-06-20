@@ -60,7 +60,7 @@ for k,l in pairs(notdefaults) do
     stropt = table.concat(l, '`, `') .. '` and `' .. last
   end
 
-  strnotdefaults[#strnotdefaults + 1] = stropt .. (#l == 0 and '` is `' or '` are `') .. k
+  strnotdefaults[#strnotdefaults + 1] = stropt .. (#l == 1 and '` is `' or '` are `') .. k
 end
 table.sort(strnotdefaults)
 contents = contents
