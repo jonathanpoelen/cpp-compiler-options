@@ -2156,10 +2156,10 @@ Vbase = {
   },
 
   _opts_build_type={
-    debug={debug='on', stl_debug='on', control_flow='on', sanitizers='on'},
-    release={cpu='native', linker='native', lto='on', optimization='2',},
+    debug={debug='on', stl_debug='on', control_flow='on', sanitizers='on',},
+    release={linker='native', lto='on', optimization='3',},
     debug_optimized={linker='native', lto='on', optimization='g', debug='on',},
-    minimum_size_release={cpu='native', linker='native', lto='on', optimization='size',},
+    minimum_size_release={linker='native', lto='on', optimization='size',},
   },
 
   indent = '  ',
