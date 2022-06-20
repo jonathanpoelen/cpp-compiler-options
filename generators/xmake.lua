@@ -143,7 +143,7 @@ local _import_base = ']] .. import_base .. [['
               .. opt .. '", "' .. optname .. '") end,')
       self:print('         })')
     end
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local desc = extra[2]
       local opt = self:tostroption(optname)
@@ -151,8 +151,29 @@ local _import_base = ']] .. import_base .. [['
     end
     self:print('end\n')
 
+    -- create default build types for init_modes()
+    -- @{
+    self:write(funcprefix .. 'default_options_by_modes = {\n')
+    local buildtypes = {
+      debug='debug',
+      release='release',
+      debug_optimized='releasedbg',
+      minimum_size_release='minsizerel',
+    }
+    for buildtypename, opts in self:getbuildtype() do
+      buildtypename = buildtypes[buildtypename] or error('Unknown build type: ' .. buildtypename)
+      self:write('  ' .. buildtypename .. '={\n')
+      for _,opt in pairs(opts) do
+        self:write('    ' .. opt[1] .. '=\'' .. opt[2] .. '\',\n')
+      end
+      self:write('  },\n')
+    end
+    self:write('}\n\n')
+    -- @}
+
     self:print([[
--- Set options for a specific mode (see also ]] .. funcprefix .. [[rule())
+-- Set options for a specific mode (see also ]] .. funcprefix .. [[rule()).
+-- If options_by_modes is nil, a default configuration is used.
 -- `options_by_modes` = {
 --   [modename]: {
 --     function() ... end, -- optional callback
@@ -167,7 +188,7 @@ function ]] .. funcprefix .. [[init_modes(options_by_modes, extra_options)
   extra_options = extra_options or {}
   local rulename = extra_options.rulename or '__]] .. funcprefix .. [[flags__'
 
-  for mode,options in pairs(options_by_modes) do
+  for mode,options in pairs(options_by_modes or ]] .. funcprefix .. [[default_options_by_modes) do
     if is_mode(mode) then
       local callback = options[1]
       if callback then

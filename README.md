@@ -225,6 +225,7 @@ includes'cpp'
 jln_cxx_init_options({warnings='very_strict', warnings_as_error='basic'})
 
 -- Set options for a specific mode (see also jln_cxx_rule())
+-- When the first parameter is nil or unspecified, a default configuration is used.
 jln_cxx_init_modes({
   debug={
     stl_debug='on',
@@ -283,10 +284,14 @@ project('test', 'cpp')
 jln_default_flags = {'rtti': 'off'}
 
 # options for specific buildtype (added to default options)
-# optional
+# optional.
 jln_buildtype_flags = {
   'debug': {'rtti': 'on'},
 }
+
+# Use a default configuration when jln_buildtype_flags is unspecified.
+# optional.
+jln_use_profile_buildtype = true
 
 # optional
 jln_custom_flags = [

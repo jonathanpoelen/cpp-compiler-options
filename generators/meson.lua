@@ -36,9 +36,30 @@ return {
     local prefixfunc = self.is_C and 'jln_c' or 'jln'
     self.prefixfunc = prefixfunc
 
+    -- create default build types
+    -- @{
+    self:write('if get_variable(\'' .. prefixfunc .. '_use_profile_buildtype\', false)\n  '
+            .. '___jln_options_by_modes = {\n')
+    local buildtypes = {
+      debug='debug',
+      release='release',
+      debug_optimized='debugoptimized',
+      minimum_size_release='minsize',
+    }
+    for buildtypename, opts in self:getbuildtype() do
+      buildtypename = buildtypes[buildtypename] or error('Unknown build type: ' .. buildtypename)
+      self:write('    \'' .. buildtypename .. '\': {\n')
+      for _,opt in pairs(opts) do
+        self:write('      \'' .. opt[1] .. '\': \'' .. opt[2] .. '\',\n')
+      end
+      self:write('    },\n')
+    end
+    self:write('  }\nelse\n  ___jln_options_by_modes = {}\nendif\n\n')
+    -- @}
+
     local option_strs = self._option_strs
     self:write([[
-___]] .. prefixfunc .. [[_default_flags = get_variable(']] .. prefixfunc .. [[_default_flags', {}) + get_variable(']] .. prefixfunc .. [[_buildtype_flags', {}).get(get_option('buildtype'), {})
+___]] .. prefixfunc .. [[_default_flags = get_variable(']] .. prefixfunc .. [[_default_flags', {}) + get_variable(']] .. prefixfunc .. [[_buildtype_flags', ___jln_options_by_modes).get(get_option('buildtype'), {})
 if get_option('warning_level') == '0'
   ___]] .. prefixfunc .. [[_warnings = 'off'
 else
