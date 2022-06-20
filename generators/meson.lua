@@ -20,7 +20,11 @@ return {
   _option_strs = {},
 
   start=function(self, optprefix)
+    local prefixfunc = self.is_C and 'jln_c' or 'jln'
+
     self.optprefix = optprefix and optprefix:gsub('-', '_') or ''
+    self.prefixfunc = prefixfunc
+
     self:_vcond_init({
       _not='not',
       _and='and',
@@ -29,12 +33,11 @@ return {
       closeblock='',
       _else='else',
       endif='endif',
+      compiler='___' .. prefixfunc .. '_compiler_id',
+      linker='___' .. prefixfunc .. '_linker_id'
     })
 
     self:print_header('#')
-
-    local prefixfunc = self.is_C and 'jln_c' or 'jln'
-    self.prefixfunc = prefixfunc
 
     -- create default build types
     -- @{
@@ -89,6 +92,13 @@ ___]] .. prefixfunc .. [[_flags = {
       macos="host_machine.system() == 'macos'",
     }
 
+    self.not_platforms = {
+      mingw="not " .. self.platforms['mingw'],
+      windows="host_machine.system() != 'windows'",
+      linux="host_machine.system() != 'linux'",
+      macos="host_machine.system() != 'macos'",
+    }
+
     self:print([[}
 
 ]] .. prefixfunc .. [[_custom_]] .. lang .. [[_flags = []
@@ -112,11 +122,12 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
 ]])
   end,
 
-  _vcond_lvl=function(self, lvl, optname) return  "(___" .. self.prefixfunc .. "_flags.get('" .. optname .. "', 'default') == '" .. lvl .. "')" end,
-  _vcond_verless=function(self, major, minor) return "___" .. self.prefixfunc .. "_compiler_version.version_compare('<" .. major .. '.' .. minor .. "')" end,
-  _vcond_compiler=function(self, compiler) return "(___" .. self.prefixfunc .. "_compiler_id == '" .. (meson_compilers[compiler] or compiler) .. "')" end,
-  _vcond_platform=function(self, platform) return self.platforms[platform] end,
-  _vcond_linker=function(self, linker) return "(___" .. self.prefixfunc .. "_linker_id == '" .. linker .. "')" end,
+  _vcond_to_opt=function(self, optname) return "___" .. self.prefixfunc .. "_flags.get('" .. optname .. "', 'default')" end,
+  _vcond_to_compiler=function(self, compiler) return "'" .. (meson_compilers[compiler] or compiler) .. "'" end,
+  _vcond_version=function(self, op, major, minor) return "___" .. self.prefixfunc .. "_compiler_version.version_compare('" .. op .. major .. '.' .. minor .. "')" end,
+  _vcond_platform=function(self, platform, not_)
+    return (not_ and self.not_platforms or self.platforms)[platform]
+  end,
 
   cxx=function(self, x) return "'" .. x .. "', " end,
   link=function(self, x) return "'" .. x .. "', " end,

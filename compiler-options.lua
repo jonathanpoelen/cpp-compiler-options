@@ -1,6 +1,7 @@
 #!/usr/bin/env lua
 
 local table_insert = table.insert
+local unpack = table.unpack or unpack
 
 function has_value(t)
   for k in pairs(t) do
@@ -92,61 +93,55 @@ function Logical(op, ...)
   return If({[op]=conds})
 end
 
-function Compiler(name)
-  local cond = {compiler=name}
-  return IfFunc(function(x_or_major, minor)
-    if type(x_or_major) == 'number' then
-      return If({_and={
-        cond,
-        (x_or_major < 0)
-        and {_not={version={-x_or_major, minor or 0}}}
-        or {version={x_or_major, minor or 0}}
-      }})
+function _conditional_name(cond)
+  return IfFunc(function(x)
+    local r = If(cond)
+    return x and r(x) or r
+  end)
+end
+
+function _conditional_name_with_version(cond)
+  return IfFunc(function(x_or_op_and_version)
+    if type(x_or_op_and_version) == 'string' then
+      local ret = vers(x_or_op_and_version)
+      ret._if = {_and={cond, ret._if}}
+      return ret
     else
       local r = If(cond)
-      return x_or_major and r(x_or_major) or r
+      return x_or_op_and_version and r(x_or_op_and_version) or r
     end
   end)
+end
+
+function Compiler(name)
+  return _conditional_name_with_version({compiler=name})
 end
 
 function Platform(name)
-  local cond = {platform=name}
-  return IfFunc(function(x)
-    local r = If(cond)
-    return x and r(x) or r
-  end)
+  return _conditional_name({platform=name})
 end
 
 function Linker(name)
-  local cond = {linker=name}
-  return IfFunc(function(x)
-    local r = If(cond)
-    return x and r(x) or r
-  end)
+  return _conditional_name({linker=name})
 end
 
-local unpack = table.unpack or unpack
-
 function CompilerGroup(...)
-  local tools = {...}
-  return IfFunc(function(x_or_major, minor)
-    if type(x_or_major) == 'number' then
-      local conds = {}
-      for _,tool in ipairs(tools) do
-        table_insert(conds, tool(x_or_major, minor)._if)
-      end
-      return If({_or=conds})
-    end
-
-    local r = Or(unpack(tools))
-    return x_or_major and r(x_or_major) or r
-  end)
+  local conds = {}
+  for _,tool in ipairs({...}) do
+    table_insert(conds, tool()._if)
+  end
+  return _conditional_name_with_version({_or=conds})
 end
 
 function Or(...) return Logical('_or', ...) end
 function And(...) return Logical('_and', ...) end
 
-function vers(major, minor) return If({version={major, minor or 0}}) end
+function vers(op_and_version)
+  local op, major, minor = op_and_version:match('^([<>!=]=?)(%d+)%.?(%d*)$')
+  assert(op)
+  return If({op=op, major=tonumber(major), minor=tonumber(minor) or 0})
+end
+
 function lvl(x) return If({lvl=x}) end
 function opt(x) return If({opt=x}) end
 
@@ -284,7 +279,7 @@ Or(gcc, clang_like) {
           { flag'-Wno-switch' }
         },
 
-        vers(4,7) {
+        vers'>=4.7' {
           flag'-Wsuggest-attribute=noreturn',
           cxx'-Wzero-as-null-pointer-constant',
           flag'-Wlogical-op',
@@ -294,28 +289,28 @@ Or(gcc, clang_like) {
           flag'-Wdouble-promotion',
           flag'-Wtrampolines', -- C only with a nested function ?
 
-          vers(4,8) {
+          vers'>=4.8' {
             cxx'-Wuseless-cast',
 
-            vers(4,9) {
+            vers'>=4.9' {
               cxx'-Wconditionally-supported',
               flag'-Wfloat-conversion',
 
-              vers(5,1) {
+              vers'>=5.1' {
                 flag'-Wformat-signedness',
                 flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
              -- flag'-Wctor-dtor-privacy',
                 cxx'-Wstrict-null-sentinel',
                 cxx'-Wsuggest-override',
 
-                vers(6,1) {
+                vers'>=6.1' {
                   flag'-Wduplicated-cond',
                   flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
 
-                  vers(7) {
+                  vers'>=7' {
                     cxx'-Waligned-new',
 
-                    vers(7,1) {
+                    vers'>=7.1' {
                       flag'-Walloc-zero',
                       flag'-Walloca',
                       flag'-Wformat-overflow=2',
@@ -323,7 +318,7 @@ Or(gcc, clang_like) {
                    -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
                       flag'-Wduplicated-branches',
 
-                      vers(8) {
+                      vers'>=8' {
                         cxx'-Wclass-memaccess',
                       }
                     }
@@ -371,19 +366,19 @@ Or(gcc, clang_like) {
           flag'-Wcovered-switch-default'
         },
 
-        vers(3,9) {
+        vers'>=3.9' {
           cxx'-Wno-undefined-var-template',
 
-          vers(5) {
+          vers'>=5' {
             cxx'-Wno-inconsistent-missing-destructor-override',
 
-            vers(9) {
+            vers'>=9' {
               cxx'-Wno-ctad-maybe-unsupported',
 
-              vers(10) {
+              vers'>=10' {
                 cxx'-Wno-c++20-compat',
 
-                vers(11) {
+                vers'>=11' {
                   cxx'-Wno-suggest-destructor-override',
                 }
               }
@@ -393,22 +388,22 @@ Or(gcc, clang_like) {
       },
 
       Or(lvl'strict', lvl'very_strict') {
-        gcc(8) { flag'-Wcast-align=strict', }
+        gcc'>=8' { flag'-Wcast-align=strict', }
       }
     },
   },
 
   opt'diagnostics_show_template_tree' {
-    Or(gcc(8), clang) {
+    Or(gcc'>=8', clang) {
       lvl'on' { cxx'-fdiagnostics-show-template-tree' } / cxx'-fno-diagnostics-show-template-tree',
     },
   },
 
   opt'elide_type' {
     lvl'on' {
-      gcc(8) { cxx'-felide-type' }
+      gcc'>=8' { cxx'-felide-type' }
     } /
-    Or(gcc(8), clang(3,4)) {
+    Or(gcc'>=8', clang'>=3.4') {
       cxx'-fno-elide-type',
     },
   },
@@ -429,11 +424,11 @@ Or(gcc, clang_like) {
 
   opt'var_init' {
     lvl'pattern' {
-      Or(gcc(12), clang(8)) { flag'-ftrivial-auto-var-init=pattern' }, }
+      Or(gcc'>=12', clang'>=8') { flag'-ftrivial-auto-var-init=pattern' }, }
   },
 
   opt'windows_abi_compatibility_warnings' {
-    Or(gcc(10), clang_like) {
+    Or(gcc'>=10', clang_like) {
       lvl'on' { cxx'-Wmismatched-tags' } /
       { cxx'-Wno-mismatched-tags' }
     }
@@ -448,12 +443,12 @@ Or(gcc, clang_like) {
       gcc {
         flag'-Werror=div-by-zero',
 
-        vers(5,1) {
+        vers'>=5.1' {
           flag'-Werror=array-bounds',
           flag'-Werror=logical-op',
           flag'-Werror=logical-not-parentheses',
 
-          vers(7) {
+          vers'>=7' {
             cxx'-Werror=literal-suffix',
           }
         }
@@ -463,16 +458,16 @@ Or(gcc, clang_like) {
         flag'-Werror=array-bounds',
         flag'-Werror=division-by-zero',
 
-        vers(3,4) {
+        vers'>=3.4' {
           flag'-Werror=logical-not-parentheses',
 
-          vers(3,6) {
+          vers'>=3.6' {
             cxx'-Werror=delete-incomplete',
 
-            vers(6) {
+            vers'>=6' {
               cxx'-Werror=user-defined-literals',
 
-              vers(7) {
+              vers'>=7' {
                 cxx'-Werror=dynamic-class-memaccess',
               }
             }
@@ -488,11 +483,11 @@ Or(gcc, clang_like) {
       gcc {
         flag'-Wsuggest-attribute=pure',
         flag'-Wsuggest-attribute=const',
-        vers(5) {
+        vers'>=5' {
           cxx'-Wsuggest-final-types',
           cxx'-Wsuggest-final-methods',
        -- flag'-Wsuggest-attribute=format',
-          vers(5,1) {
+          vers'>=5.1' {
             cxx'-Wnoexcept',
           },
         }
@@ -511,17 +506,17 @@ Or(gcc, clang_like) {
       flag'-fsanitize-address-use-after-scope',
     } /
     Or(clang, clang_emcc) {
-      vers(3,1) {
+      vers'>=3.1' {
         fl'-fsanitize=undefined',
         fl'-fsanitize=address', -- memory, thread are mutually exclusive
         flag'-fsanitize-address-use-after-scope',
         flag'-fno-omit-frame-pointer',
         flag'-fno-optimize-sibling-calls',
         clang {
-          vers(3,4) {
+          vers'>=3.4' {
             fl'-fsanitize=leak', -- requires the address sanitizer
           },
-          vers(6) {
+          vers'>=6' {
             opt'stack_protector' {
               -lvl'off' {
                 flag'-fsanitize-minimal-runtime',
@@ -533,12 +528,12 @@ Or(gcc, clang_like) {
     } /
     -- gcc
     {
-      vers(4,8) {
+      vers'>=4.8' {
         fl'-fsanitize=address', -- memory, thread are mutually exclusive
         flag'-fno-omit-frame-pointer',
         flag'-fno-optimize-sibling-calls',
 
-        vers(4,9) {
+        vers'>=4.9' {
           fl'-fsanitize=undefined',
           fl'-fsanitize=leak', -- requires the address sanitizer
         }
@@ -564,7 +559,7 @@ Or(gcc, clang_like) {
       }
     } /
     lvl'off' {
-      gcc(8) {
+      gcc'>=8' {
         flag'-fcf-protection=none'
       } /
       -- clang, clang_cl
@@ -574,7 +569,7 @@ Or(gcc, clang_like) {
         flag'-fno-sanitize-cfi-cross-dso',
       }
     } /
-    Or(gcc(8), -gcc) {
+    Or(gcc'>=8', -gcc) {
       -- gcc: flag'-mcet',
       -- clang_cl: flag'-fsanitize-cfi-cross-dso',
       lvl'branch' { flag'-fcf-protection=branch' } /
@@ -590,7 +585,7 @@ Or(gcc, clang_like) {
   },
 
   opt'color' {
-    Or(gcc(4,9), -gcc --[[=clang_like]]) {
+    Or(gcc'>=4.9', -gcc --[[=clang_like]]) {
       lvl'auto' { flag'-fdiagnostics-color=auto' } /
       lvl'never' { flag'-fdiagnostics-color=never' } /
       lvl'always' { flag'-fdiagnostics-color=always' },
@@ -598,19 +593,19 @@ Or(gcc, clang_like) {
   },
 
   opt'reproducible_build_warnings' {
-    gcc(4,9) {
+    gcc'>=4.9' {
       lvl'on' { flag'-Wdate-time' } / flag'-Wno-date-time'
     }
   },
 
   opt'diagnostics_format' {
     lvl'fixits' {
-      Or(gcc(7), And(-gcc, vers(5)) --[[=clang_like(5)]]) {
+      Or(gcc'>=7', And(-gcc, vers'>=5') --[[=clang_like'>=5']]) {
         flag'-fdiagnostics-parseable-fixits'
       }
     } /
     lvl'patch' {
-      gcc(7) { flag'-fdiagnostics-generate-patch' }
+      gcc'>=7' { flag'-fdiagnostics-generate-patch' }
     } /
     lvl'print_source_range_info' {
       clang { flag'-fdiagnostics-print-source-range-info' }
@@ -620,10 +615,10 @@ Or(gcc, clang_like) {
   opt'fix_compiler_error' {
     lvl'on' {
       gcc {
-        vers(4,7) {
+        vers'>=4.7' {
           cxx'-Werror=narrowing',
 
-          vers(7,1) {
+          vers'>=7.1' {
             cxx'-Werror=literal-suffix', -- no warning name before 7.1
           }
         }
@@ -642,7 +637,7 @@ Or(gcc, clang_like) {
     } /
     gcc {
       fl'-flto',
-      vers(5) {
+      vers'>=5' {
         opt'warnings' {
           -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
         },
@@ -656,7 +651,7 @@ Or(gcc, clang_like) {
         -- LTO require -fuse-ld=lld (link by default)
         link'-fuse-ld=lld',
       },
-      And(lvl'thin', vers(6)) {
+      And(lvl'thin', vers'>=6') {
         fl'-flto=thin'
       } /
       fl'-flto',
@@ -666,7 +661,7 @@ Or(gcc, clang_like) {
   opt'shadow_warnings' {
     lvl'off' {
       flag'-Wno-shadow',
-      Or(clang_cl, clang(8)) {
+      Or(clang_cl, clang'>=8') {
         flag'-Wno-shadow-field'
       }
     } /
@@ -675,7 +670,7 @@ Or(gcc, clang_like) {
       gcc { flag'-Wshadow' } /
       flag'-Wshadow-all',
     } /
-    gcc(7,1) {
+    gcc'>=7.1' {
       lvl'local' {
         flag'-Wshadow=local'
       } /
@@ -686,7 +681,7 @@ Or(gcc, clang_like) {
   },
 
   opt'float_sanitizers' {
-    Or(gcc(5), clang(5), clang_cl) {
+    Or(gcc'>=5', clang'>=5', clang_cl) {
       lvl'on' {
         flag'-fsanitize=float-divide-by-zero',
         flag'-fsanitize=float-cast-overflow',
@@ -698,11 +693,11 @@ Or(gcc, clang_like) {
   },
 
   opt'integer_sanitizers' {
-    Or(clang(5), clang_cl) {
+    Or(clang'>=5', clang_cl) {
       lvl'on' { flag'-fsanitize=integer', } /
       flag'-fno-sanitize=integer',
     } /
-    gcc(4,9) {
+    gcc'>=4.9' {
       lvl'on' {
         flag'-ftrapv',
         flag'-fsanitize=undefined',
@@ -743,7 +738,7 @@ Or(gcc, clang, clang_emcc) {
       Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
         clang {
           -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
-          Or(vers(8), lvl'allow_broken_abi_and_bugs') {
+          Or(vers'>=8', lvl'allow_broken_abi_and_bugs') {
             cxx'-D_LIBCPP_DEBUG=1',
           },
         },
@@ -852,7 +847,7 @@ Or(gcc, clang) {
     lvl'bfd' {
       link'-fuse-ld=bfd'
     } /
-    Or(lvl'gold', gcc(-9)) {
+    Or(lvl'gold', gcc'<9') {
       link'-fuse-ld=gold'
     } /
     opt'lto' {
@@ -868,7 +863,7 @@ Or(gcc, clang) {
   opt'whole_program' {
     lvl'off' {
       flag'-fno-whole-program',
-      clang(3,9) { fl'-fno-whole-program-vtables' }
+      clang'>=3.9' { fl'-fno-whole-program-vtables' }
     } /
     {
       ld64 {
@@ -886,13 +881,13 @@ Or(gcc, clang) {
         fl'-fwhole-program'
       } /
       clang {
-        vers(3,9) {
+        vers'>=3.9' {
           opt'lto' {
             -lvl'off' {
               fl'-fwhole-program-vtables'
             }
           },
-          vers(7) {
+          vers'>=7' {
             fl'-fforce-emit-vtables',
           }
         }
@@ -910,9 +905,9 @@ Or(gcc, clang) {
       flag'-Wstack-protector',
       lvl'strong' {
         gcc {
-          vers(4,9) {
+          vers'>=4.9' {
             fl'-fstack-protector-strong',
-            vers(8) {
+            vers'>=8' {
               fl'-fstack-clash-protection'
             }
           }
@@ -920,19 +915,19 @@ Or(gcc, clang) {
         clang {
           fl'-fstack-protector-strong',
           fl'-fsanitize=safe-stack',
-          vers(11) {
+          vers'>=11' {
             fl'-fstack-clash-protection'
           }
         }
       } /
       lvl'all' {
         fl'-fstack-protector-all',
-        gcc(8) {
+        gcc'>=8' {
           fl'-fstack-clash-protection'
         } /
         clang {
           fl'-fsanitize=safe-stack',
-          vers(11) {
+          vers'>=11' {
             fl'-fstack-clash-protection'
           }
         }
@@ -953,7 +948,7 @@ Or(gcc, clang) {
     lvl'full'{
       link'-Wl,-z,relro,-z,now,-z,noexecstack',
       opt'linker' {
-        -Or(Or(lvl'gold', gcc(-9)), And(lvl'native', gcc)) {
+        -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
           link'-Wl,-z,separate-code'
         }
       }
@@ -973,12 +968,12 @@ Or(gcc, clang) {
   opt'other_sanitizers' {
     lvl'thread' { flag'-fsanitize=thread', } /
     lvl'memory' {
-      clang(5) {
+      clang'>=5' {
         flag'-fsanitize=memory',
       }
     } /
     lvl'pointer' {
-      gcc(8) {
+      gcc'>=8' {
         -- By default the check is disabled at run time.
         -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
         -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
@@ -992,14 +987,14 @@ Or(gcc, clang) {
   },
 
   opt'noexcept_warnings' {
-    gcc(4,9) {
+    gcc'>=4.9' {
       lvl'on' { cxx'-Wnoexcept' } /
       { cxx'-Wno-noexcept' }
     }
   },
 
   opt'analyzer' {
-    gcc(10) {
+    gcc'>=10' {
       lvl'off' {
         flag'-fno-analyzer'
       } / {
@@ -1164,7 +1159,7 @@ Or(msvc, clang_cl, icl) {
         flag'/sdl',
         lvl'strong' {
           flag'/RTC1', -- /RTCsu
-          msvc(16,7) {
+          msvc'>=16.7' {
             flag'/guard:ehcont',
             link'/CETCOMPAT',
           },
@@ -1190,11 +1185,11 @@ msvc {
       lvl'all' {
         flag'/Zc:throwingNew',
       },
-      vers(15,6) {
+      vers'>=15.6' {
         cxx'/Zc:externConstexpr',
-        vers(16,5) {
+        vers'>=16.5' {
           flag'/Zc:preprocessor',
-          vers(16,8) {
+          vers'>=16.8' {
             cxx'/Zc:lambda',
           }
         },
@@ -1208,7 +1203,7 @@ msvc {
   },
 
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
-  -- vers(19,14)
+  -- vers'>=19.14'
   opt'msvc_isystem' {
     lvl'external_as_include_system_flag' {
       act('msvc_external', {
@@ -1246,7 +1241,7 @@ msvc {
         flag'/wd4710', -- Function not inlined
         flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
 
-        -vers(19,21) {
+        vers'<19.21' {
           flag'/wd4774', -- format not a string literal
         },
 
@@ -1312,7 +1307,7 @@ msvc {
       flag'/wd4668', -- Preprocessor macro not defined
       flag'/wd4710', -- Function not inlined
       flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-      -vers(19,21) {
+      vers'<19.21' {
         flag'/wd4774', -- format not a string literal
       },
       flag'/wd4820', -- Added padding to members
@@ -1397,7 +1392,7 @@ msvc {
   },
 
   opt'sanitizers' {
-    vers(16,9) {
+    vers'>=16.9' {
       flag'/fsanitize=address',
       flag'/fsanitize-address-use-after-return'
     } / {
@@ -2202,11 +2197,28 @@ Vbase = {
      close = ')',
      openblock = '{',
      closeblock = '}',
+     eq = ' == ',
+     not_eq = ' != ',
+     less = ' < ',
+     less_eq = ' <= ',
+     greater = ' > ',
+     greater_eq = ' >= ',
+     version = 'compversion',
+     compiler = 'compiler',
+     linker = 'linker',
+     platform = 'platform',
+     options = 'options',
     }) do
       if not self._vcondkeyword[k] then
         self._vcondkeyword[k] = v
       end
     end
+    self._vcondkeyword['='] = self._vcondkeyword.eq
+    self._vcondkeyword['!='] = self._vcondkeyword.not_eq
+    self._vcondkeyword['<'] = self._vcondkeyword.less
+    self._vcondkeyword['<='] = self._vcondkeyword.less_eq
+    self._vcondkeyword['>'] = self._vcondkeyword.greater
+    self._vcondkeyword['>='] = self._vcondkeyword.greater_eq
     self._vcondkeyword.ifopen = self._vcondkeyword.ifopen or self._vcondkeyword.open
     self._vcondkeyword.ifclose = self._vcondkeyword.ifclose or self._vcondkeyword.close
     self._vcondkeyword.endif = self._vcondkeyword.endif or self._vcondkeyword.closeblock
@@ -2223,34 +2235,108 @@ Vbase = {
       self:write(' ' .. self._vcondkeyword.close)
     end
 
+    local reverse_ops = {
+      ['=']='!=',
+      ['<']='>=',
+      ['>']='<=',
+      ['<=']='>',
+      ['>=']='<',
+      ['!=']='=',
+    }
+
     self._vcond = function(self, v, optname)
           if v._or      then write_logical(self, v._or, self._vcondkeyword._or, optname)
       elseif v._and     then write_logical(self, v._and, self._vcondkeyword._and, optname)
-      elseif v._not     then self:write(' ' .. self._vcondkeyword._not
-                                     .. ' ' .. self._vcondkeyword.open)
-                             self:_vcond(v._not, optname)
-                             self:write(' ' .. self._vcondkeyword.close)
-      elseif v.lvl      then self:write(' ' .. self:_vcond_lvl(v.lvl, optname))
-      elseif v.version  then self:write(' ' .. self._vcondkeyword._not
-                                     .. ' ' .. self._vcondkeyword.open
-                                     .. ' ' .. self._vcond_verless(self, v.version[1], v.version[2])
-                                     .. ' ' .. self._vcondkeyword.close)
-      elseif v.compiler then self:write(' ' .. self:_vcond_compiler(v.compiler))
-      elseif v.platform then self:write(' ' .. self:_vcond_platform(v.platform))
-      elseif v.linker   then self:write(' ' .. self:_vcond_linker(v.linker))
+      elseif v._not     then
+        local notv = v._not
+            if notv.lvl      then self:write(' ' .. self:_vcond_lvl(notv.lvl, optname, true))
+        elseif notv.major    then self:write(' ' .. self._vcond_version(self, reverse_ops[notv.op], notv.major, notv.minor))
+        elseif notv.compiler then self:write(' ' .. self:_vcond_compiler(notv.compiler, true))
+        elseif notv.platform then self:write(' ' .. self:_vcond_platform(notv.platform, true))
+        elseif notv.linker   then self:write(' ' .. self:_vcond_linker(notv.linker, true))
+        else                      self:write(' ' .. self._vcondkeyword._not
+                                          .. ' ' .. self._vcondkeyword.open)
+                                  self:_vcond(notv, optname)
+                                  self:write(' ' .. self._vcondkeyword.close)
+        end
+      elseif v.lvl      then self:write(' ' .. self:_vcond_lvl(v.lvl, optname), false)
+      elseif v.major    then self:write(' ' .. self._vcond_version(self, v.op, v.major, v.minor))
+      elseif v.compiler then self:write(' ' .. self:_vcond_compiler(v.compiler), false)
+      elseif v.platform then self:write(' ' .. self:_vcond_platform(v.platform), false)
+      elseif v.linker   then self:write(' ' .. self:_vcond_linker(v.linker), false)
       else error('Unknown cond ', ipairs(v))
       end
     end
 
-    self._vcond_hasopt = self._vcond_hasopt or function(self, optname)
-      return self._vcondkeyword._not .. ' ' .. self._vcondkeyword.open
-          .. ' ' .. self:_vcond_lvl('default', optname) .. self._vcondkeyword.close
+    self.eq_op = function(self, not_)
+      if not_ then
+        return self._vcondkeyword.not_eq
+      end
+      return self._vcondkeyword.eq
+    end
+
+    self._vcond_to_opt = self._vcond_to_opt or function(self, optname)
+      return self._vcondkeyword.options .. "['" .. optname .. "']"
+    end
+
+    self._vcond_to_lvl = self._vcond_to_lvl or function(self, lvl, optname)
+      return "'" .. lvl .. "'"
+    end
+
+    self._vcond_to_version = self._vcond_to_version or function(self, major, minor)
+      return "'" .. tostring(major) .. '.' .. tostring(minor) .. "'"
+    end
+
+    self._vcond_to_compiler = self._vcond_to_compiler or function(self, compiler)
+      return "'" .. compiler .. "'"
+    end
+
+    self._vcond_to_linker = self._vcond_to_linker or function(self, linker)
+      return "'" .. linker .. "'"
+    end
+
+    self._vcond_to_platform = self._vcond_to_platform or function(self, platform)
+      return "'" .. platform .. "'"
+    end
+
+    self._vcond_lvl = self._vcond_lvl or function(self, lvl, optname, not_)
+      return self:_vcond_to_opt(optname) .. self:eq_op(not_) .. self:_vcond_to_lvl(lvl, optname)
+    end
+
+    self._vcond_version = self._vcond_version or function(self, op, major, minor)
+      return self._vcondkeyword.version .. self._vcondkeyword[op] .. self:_vcond_to_version(major, minor)
+    end
+
+    self._vcond_compiler = self._vcond_compiler or function(self, compiler, not_)
+      return self._vcondkeyword.compiler .. self:eq_op(not_) .. self:_vcond_to_compiler(compiler)
+    end
+
+    self._vcond_linker = self._vcond_linker or function(self, linker, not_)
+      return self._vcondkeyword.linker .. self:eq_op(not_) .. self:_vcond_to_linker(linker)
+    end
+
+    self._vcond_platform = self._vcond_platform or function(self, platform, not_)
+      return self._vcondkeyword.platform .. self:eq_op(not_) .. self:_vcond_to_platform(platform)
+    end
+
+    self.propagate_not = function(self, string_expr, not_)
+      if not_ then
+        return self:not_expr(string_expr)
+      end
+      return string_expr
+    end
+
+    self.not_expr = self.not_expr or function(self, string_expr)
+      return ' ' .. self._vcondkeyword._not
+          .. ' ' .. self._vcondkeyword.open
+          .. ' ' .. string_expr
+          .. ' ' .. self._vcondkeyword.close
     end
 
     self.startoptcond = function(self, optname)
       self:_vcond_printflags()
       self:print(self.indent .. self._vcondkeyword._if .. self._vcondkeyword.ifopen
-              .. ' ' .. self:_vcond_hasopt(optname) .. self._vcondkeyword.ifclose)
+              .. ' ' .. self:_vcond_lvl('default', optname, true) .. self._vcondkeyword.ifclose)
       if #self._vcondkeyword.openblock ~= 0 then
         self:print(self.indent .. self._vcondkeyword.openblock)
       end

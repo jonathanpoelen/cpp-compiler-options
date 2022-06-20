@@ -21,6 +21,9 @@ return {
       ifopen='',
       ifclose='then',
       endif='end',
+      platform='os.target()',
+      options='values',
+      not_eq='~=',
     })
 
     self:print_header('--')
@@ -260,7 +263,7 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
       printf("WARNING: wrong version format")
       return {buildoptions={}, linkoptions={}}
     end
-    compversion = compversion[1] * 100 + (compversion[2] or 0)
+    compversion = compversion[1] * 100000 + (compversion[2] or 0)
 
     cache[original_compiler] = {compiler, version, compversion}
   end
@@ -273,11 +276,7 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
 ]])
   end,
 
-  _vcond_lvl=function(self, lvl, optname) return 'values["' .. optname .. '"] == "' .. lvl .. '"' end,
-  _vcond_verless=function(self, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
-  _vcond_compiler=function(self, compiler) return 'compiler == "' .. compiler .. '"' end,
-  _vcond_platform=function(self, platform) return 'os.target() == "' .. platform .. '"' end,
-  _vcond_linker=function(self, linker) return 'linker == "' .. linker .. '"' end,
+  _vcond_to_version=function(self, major, minor) return tostring(major * 100000 + minor) end,
 
   cxx=function(self, x) return self.indent .. 'table_insert(jln_buildoptions, "' .. x .. '")\n' end,
   link=function(self, x) return self.indent .. 'table_insert(jln_linkoptions, "' .. x .. '")\n' end,

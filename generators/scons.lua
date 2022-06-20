@@ -135,11 +135,9 @@ def get_flags(options, env=None):
     compiler = _compiler
 
   version = version or (0,0)
+  compversion = version[0] * 100000 + version[1]
 
   options = options if type(options) == dict else variables_to_options(options)
-
-  def verless(major, minor):
-    return version[0] < major or (version[0] == major and version[1] < minor)
 
   flags=[]
   linkflags=[]
@@ -148,11 +146,8 @@ def get_flags(options, env=None):
     self:write('\n\n')
   end,
 
-  _vcond_lvl=function(self, lvl, optname) return  "x_" .. optname .. " == '" .. lvl .. "'" end,
-  _vcond_verless=function(self, major, minor) return "verless(" .. major .. ', ' .. minor .. ")" end,
-  _vcond_compiler=function(self, compiler) return "compiler == '" .. compiler .. "'" end,
-  _vcond_platform=function(self, platform) return "platform == '" .. platform .. "'" end,
-  _vcond_linker=function(self, linker) return "linker == '" .. linker .. "'" end,
+  _vcond_to_version=function(self, major, minor) return tostring(major * 100000 + minor) end,
+  _vcond_to_opt=function(self, optname) return  "x_" .. optname end,
 
   cxx=function(self, x) return "'" .. x .. "', " end,
   link=function(self, x) return "'" .. x .. "', " end,

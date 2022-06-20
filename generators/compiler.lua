@@ -20,11 +20,11 @@ return {
             currcomp[1][x.compiler] = true
             currcomp[2] = true
             return {[x.compiler]=true}
-          elseif x.version then
-            local vers = '-' .. x.version[1] .. '.' .. x.version[2]
+          elseif x.major then
+            local vers = '-' .. x.major .. '.' .. x.minor
             for comp in pairs(currcomp[2] and currcomp[1] or stackcomp[#stackcomp]) do
-              local intversion = x.version[1] * 1000000 + x.version[2]
-              versions_by_compiler[comp][intversion] = {x.version[1], x.version[2], comp..vers, comp}
+              local intversion = x.major * 1000000 + x.minor
+              versions_by_compiler[comp][intversion] = {x.major, x.minor, comp..vers, comp}
             end
           elseif x._not then
             return self:_startcond(x._not, currcomp)
@@ -285,8 +285,7 @@ return {
         elseif v._and then return self:_cond(v._and, false)
         elseif v._not then return not self:cond(v._not)
         elseif v.lvl  then return v.lvl == opts[current_optname]
-        elseif v.version then return major > v.version[1]
-                                  or (major == v.version[1] and minor >= v.version[2])
+        elseif v.major    then return major > v.major or (major == v.major and minor >= v.minor)
         elseif v.compiler then return compiler == v.compiler
         elseif v.platform then return platform == v.platform
         elseif v.linker or v.linker_version then return false

@@ -14,9 +14,6 @@ end
 local compiler_table = {
   msvc='cl',
 }
-local tocomp = function(comp)
-  return compiler_table[comp] or comp
-end
 
 return {
   ignore = {
@@ -39,6 +36,7 @@ return {
       ifopen='',
       ifclose='then',
       endif='end',
+      not_eq='~=',
     })
 
     local funcprefix = (self.is_C and 'jln_c_' or 'jln_cxx_')
@@ -495,11 +493,18 @@ function get_flags(options, extra_options)
 ]])
   end,
 
-  _vcond_lvl=function(self, lvl, optname) return 'options.' .. optname .. ' == "' .. todefault(lvl) .. '"' end,
-  _vcond_verless=function(self, major, minor) return 'compversion < ' .. tostring(major * 100000 + minor) end,
-  _vcond_compiler=function(self, compiler) return 'compiler == "' .. tocomp(compiler) .. '"' end,
-  _vcond_platform=function(self, platform) return 'is_plat("' .. toplatform(platform) .. '")' end,
-  _vcond_linker=function(self, linker) return 'linker == "' .. linker .. '"' end,
+  _vcond_lvl=function(self, lvl, optname, not_)
+    return 'options.' .. optname .. self:eq_op(not_) .. '"' .. todefault(lvl) .. '"'
+  end,
+  _vcond_to_version=function(self, major, minor)
+    return tostring(major * 100000 + minor)
+  end,
+  _vcond_to_compiler=function(self, compiler)
+    return "'" .. (compiler_table[compiler] or compiler) .. "'"
+  end,
+  _vcond_platform=function(self, platform, not_)
+    return (not_ and 'not ' or '') .. 'is_plat("' .. toplatform(platform) .. '")'
+  end,
 
   cxx=function(self, x) return self.indent .. 'insert(jln_cxflags, "' .. x .. '")\n' end,
   link=function(self, x) return self.indent .. 'insert(jln_ldflags, "' .. x .. '")\n' end,

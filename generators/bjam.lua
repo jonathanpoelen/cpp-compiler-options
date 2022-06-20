@@ -38,19 +38,37 @@ return {
     return opt, iopt, env
   end,
 
-  _vcond_lvl=function(self, lvl, optname)
-    return '( $(x_' .. optname .. ') = "' .. jamlvl(lvl) .. '" )'
-  end,
-  _vcond_hasopt=function(self, optname)
-    return '( $(x_' .. optname .. ') != "default" )'
+
+  _vcond_lvl=function(self, lvl, optname, not_)
+    return '$(x_' .. optname .. ')' .. self:eq_op(not_) .. '"' .. jamlvl(lvl) .. '"'
   end,
 
-  _vcond_verless=function(self, major, minor)
-    return '[ numbers.less $(NORMALIZED_' .. self.prefixcomp .. '_COMP_VERSION) ' .. tostring(major * 100000 + minor) .. ' ]'
+  _vcond_version=function(self, op, major, minor)
+    local version = tostring(major * 100000 + minor)
+    local var = '$(JLN_NORMALIZED_' .. self.prefixcomp .. '_COMP_VERSION)'
+    if op == '>=' then
+      return '! [ numbers.less ' .. var .. ' ' .. version .. ' ]'
+    elseif op == '<=' then
+      return '! [ numbers.less ' .. version .. ' ' .. var .. ' ]'
+    elseif op == '<' then
+      return '[ numbers.less ' .. var .. ' ' .. version .. ' ]'
+    elseif op == '>' then
+      return '[ numbers.less ' .. version .. ' ' .. var .. ' ]'
+    elseif op == '=' then
+      return var .. ' = ' .. version
+    elseif op == '!=' then
+      return var .. ' != ' .. version
+    end
+    assert('Unknown operator '.. op)
   end,
-  _vcond_compiler=function(self, compiler) return '$(NORMALIZED_' .. self.prefixcomp .. '_COMP) = "' .. (jamcompilers[compiler] or compiler) .. '"' end,
-  _vcond_platform=function(self, platform) return '[ os.name ] = ' .. jamplatforms[platform] end,
-  _vcond_linker=function(self, linker) return '$(linker) = "' .. linker .. '"' end,
+
+  _vcond_to_compiler=function(self, compiler)
+    return '"' .. (jamcompilers[compiler] or compiler) .. '"'
+  end,
+
+  _vcond_to_platform=function(self, platform)
+    return jamplatforms[platform]
+  end,
 
   cxx=function(self, x) return self.indent .. '  <' .. self.prefixflag .. 'flags>"' .. x .. '"\n' end,
   link=function(self, x) return self.indent .. '  <linkflags>"' .. x .. '"\n' end,
@@ -69,7 +87,14 @@ return {
     self.optprefix = (optprefix or ''):gsub('_', '-')
     self.optenvprefix = (optenvprefix or self.optprefix):gsub('-', '_')
 
-    self:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
+    self.prefixcomp = self.is_C and 'C' or 'CXX'
+
+    self:_vcond_init({
+      ifopen='', ifclose='', eq=' = ', no_eq=' != ',
+      compiler='$(JLN_NORMALIZED_' .. self.prefixcomp .. '_COMP)',
+      linker='$(linker)',
+      platform='[ os.name ]',
+    })
 
     self:print_header('#')
     self:print([[
@@ -97,8 +122,6 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     local locals = ''
     local defaults = ''
     local prefixfunc = self.is_C and 'jln_c' or 'jln'
-
-    self.prefixcomp = self.is_C and 'C' or 'CXX'
 
     for option in self:getoptions() do
       local opt, iopt, env = self:tobjamoption(option)
@@ -163,15 +186,15 @@ rule ]] .. prefixfunc .. [[-get-env ( env : values * )
     self:print('}')
     self:print([[
 
-local ORIGINAL_TOOLSET = 0 ;
-local NORMALIZED_]] .. self.prefixcomp .. [[_COMP = "" ;
-local NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 100000 ;
+JLN_ORIGINAL_]] .. self.prefixcomp .. [[_TOOLSET = "" ;
+JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = "" ;
+JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 100000 ;
 
 rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
 {
-  if $(ORIGINAL_TOOLSET) != $(toolset)
+  if $(JLN_ORIGINAL_]] .. self.prefixcomp .. [[_TOOLSET) != $(toolset)
   {
-    ORIGINAL_TOOLSET = $(toolset) ;
+    JLN_ORIGINAL_]] .. self.prefixcomp .. [[_TOOLSET = $(toolset) ;
 
     local is_emcc = 0 ;
     local is_intel = 0 ;
@@ -185,30 +208,30 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
     }
 
     if $(is_emcc) = 1 {
-      NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang-emcc ;
+      JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang-emcc ;
       # get clang version. Assume emcc exists
       version = [ MATCH "clang version ([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "emcc -v 2>&1" ] ] ;
     }
     # icx / icpx
     else if $(is_intel) = 1 {
-      NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang ;
+      JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang ;
       switch $(version)  {
-        case 2021* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1200000 ;
-        case 2022* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1400000 ;
-        case 2023* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1600000 ;
-        case 2024* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1800000 ;
-        case 2025* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2000000 ;
-        case 2026* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2200000 ;
-        case 2027* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2400000 ;
-        case 2028* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2600000 ;
-        case 2029* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2800000 ;
-        case 2030* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 3000000 ;
+        case 2021* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1200000 ;
+        case 2022* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1400000 ;
+        case 2023* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1600000 ;
+        case 2024* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1800000 ;
+        case 2025* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2000000 ;
+        case 2026* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2200000 ;
+        case 2027* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2400000 ;
+        case 2028* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2600000 ;
+        case 2029* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2800000 ;
+        case 2030* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 3000000 ;
       }
     }
     else {
       # TODO `version` is not the real version.
       # For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
-      NORMALIZED_]] .. self.prefixcomp .. [[_COMP = $(toolset) ;
+      JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = $(toolset) ;
       version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
       if ! $(version) {
         version = [ MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "$(toolset) --version" ] ] ;
@@ -219,7 +242,7 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
       local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
       local major = $(match[1]) ;
       local minor = [ MATCH "(.....)$" : [ string.join 00000 $(match[3]) ] ] ;
-      NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = $(major)$(minor) ;
+      JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = $(major)$(minor) ;
     }
   }
 }

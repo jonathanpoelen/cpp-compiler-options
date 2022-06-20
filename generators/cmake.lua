@@ -1,5 +1,13 @@
 local table_insert = table.insert
 
+local version_ops = {
+  ['=']='VERSION_EQUAL',
+  ['<']='VERSION_LESS',
+  ['>']='VERSION_GREATER',
+  ['<=']='VERSION_LESS_EQUAL',
+  ['>=']='VERSION_GREATER_EQUAL',
+}
+
 return {
   --ignore={
   --  optimization=true,
@@ -264,8 +272,9 @@ endif()
       linux='CMAKE_HOST_UNIX',
       macos='CMAKE_HOST_APPLE',
     }
-    local vcond_tool = function(self, toolname)
-      return tool_ids[toolname] or error('Unknown ' .. toolname .. ' tool')
+    local vcond_tool = function(self, toolname, not_)
+      local expr = tool_ids[toolname] or error('Unknown ' .. toolname .. ' tool')
+      return self:propagate_not(expr, not_)
     end
 
     self._vcond_compiler = vcond_tool
@@ -320,8 +329,16 @@ endif()
     end
   end,
 
-  _vcond_lvl=function(self, lvl, optname) return 'JLN_FLAGS_' .. optname:upper() .. ' STREQUAL "' .. lvl .. '"' end,
-  _vcond_verless=function(self, major, minor) return 'JLN_' .. self.compiler_type .. '_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
+  _vcond_lvl=function(self, lvl, optname, not_)
+    local expr = 'JLN_FLAGS_' .. optname:upper() .. ' STREQUAL "' .. lvl .. '"'
+    return self:propagate_not(expr, not_)
+  end,
+  _vcond_version=function(self, op, major, minor)
+    op = version_ops[op]
+    local expr = 'JLN_' .. self.compiler_type .. '_COMPILER_VERSION '
+              .. (op or 'VERSION_EQUAL') .. ' "' .. major .. '.' .. minor .. '"'
+    return self:propagate_not(expr, not op)
+  end,
 
   cxx=function(self, x) return ' "' .. x .. '"' end,
   link=function(self, x) return ' "' .. x .. '"' end,
