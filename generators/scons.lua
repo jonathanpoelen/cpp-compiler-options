@@ -9,8 +9,8 @@ return {
 
   _option_strs = {},
 
-  start=function(_, optprefix)
-    _:_vcond_init({
+  start=function(self, optprefix)
+    self:_vcond_init({
       _not='not',
       _and='and',
       _or='or',
@@ -22,13 +22,13 @@ return {
       endif='',
     })
 
-    _:print_header('#')
+    self:print_header('#')
 
     local optprefix = optprefix and optprefix:gsub('-', '_') or ''
-    local prefixenv = _.is_C and 'CC' or 'CXX'
+    local prefixenv = self.is_C and 'CC' or 'CXX'
 
     local enums, flags, var2opts, opt2vars, xvalues = {}, {}, {}, {}, {}
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local optname = option.name
       local name = optprefix .. optname
       table_insert(flags, "  '" .. optname .. "': '" .. option.default .. "',\n")
@@ -43,7 +43,7 @@ return {
         .. table.concat(option.values, "', '") .. "'))")
     end
 
-    _:write([[
+    self:write([[
 from SCons.Environment import Environment
 from SCons.Variables.EnumVariable import EnumVariable
 import os
@@ -144,32 +144,32 @@ def get_flags(options, env=None):
   flags=[]
   linkflags=[]
 ]])
-    _:write(table.concat(xvalues, '\n'))
-    _:write('\n\n')
+    self:write(table.concat(xvalues, '\n'))
+    self:write('\n\n')
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return  "x_" .. optname .. " == '" .. lvl .. "'" end,
-  _vcond_verless=function(_, major, minor) return "verless(" .. major .. ', ' .. minor .. ")" end,
-  _vcond_compiler=function(_, compiler) return "compiler == '" .. compiler .. "'" end,
-  _vcond_platform=function(_, platform) return "platform == '" .. platform .. "'" end,
-  _vcond_linker=function(_, linker) return "linker == '" .. linker .. "'" end,
+  _vcond_lvl=function(self, lvl, optname) return  "x_" .. optname .. " == '" .. lvl .. "'" end,
+  _vcond_verless=function(self, major, minor) return "verless(" .. major .. ', ' .. minor .. ")" end,
+  _vcond_compiler=function(self, compiler) return "compiler == '" .. compiler .. "'" end,
+  _vcond_platform=function(self, platform) return "platform == '" .. platform .. "'" end,
+  _vcond_linker=function(self, linker) return "linker == '" .. linker .. "'" end,
 
-  cxx=function(_, x) return "'" .. x .. "', " end,
-  link=function(_, x) return "'" .. x .. "', " end,
+  cxx=function(self, x) return "'" .. x .. "', " end,
+  link=function(self, x) return "'" .. x .. "', " end,
 
-  act=function(_, name, datas, optname)
-    _:print(_.indent .. '# unimplementable')
-    _:print(_.indent .. 'pass')
+  act=function(self, name, datas, optname)
+    self:print(self.indent .. '# unimplementable')
+    self:print(self.indent .. 'pass')
     return true
   end,
 
-  _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. 'flags += (' .. cxx .. ')\n' or '')
-        .. (#links ~= 0 and _.indent .. 'linkflags += (' .. links .. ')\n' or '')
+  _vcond_toflags=function(self, cxx, links)
+    return (#cxx ~= 0 and self.indent .. 'flags += (' .. cxx .. ')\n' or '')
+        .. (#links ~= 0 and self.indent .. 'linkflags += (' .. links .. ')\n' or '')
   end,
 
-  stop=function(_, filebase)
-    _:write('  return {"flags": flags, "linkflags": linkflags}\n')
-    return _:get_output()
+  stop=function(self, filebase)
+    self:write('  return {"flags": flags, "linkflags": linkflags}\n')
+    return self:get_output()
   end
 }

@@ -6,14 +6,14 @@ return {
   --  debug=true,
   --},
 
-  tocmakeoption=function(_, optname)
-    return _.optprefix .. optname:upper()
+  tocmakeoption=function(self, optname)
+    return self.optprefix .. optname:upper()
   end,
 
-  start=function(_, optprefix)
+  start=function(self, optprefix)
     optprefix = optprefix and optprefix:upper():gsub('-', '_') or ''
-    _.optprefix = optprefix
-    _:_vcond_init({
+    self.optprefix = optprefix
+    self:_vcond_init({
       _not='NOT',
       _and='AND',
       _or='OR',
@@ -23,48 +23,48 @@ return {
       endif='endif()',
     })
 
-    _:print_header('#')
+    self:print_header('#')
 
-    for option in _:getoptions() do
-      _:print('set(_JLN_' .. option.name:upper() .. '_VALUES '.. table.concat(option.values, ' ') .. ')')
+    for option in self:getoptions() do
+      self:print('set(_JLN_' .. option.name:upper() .. '_VALUES '.. table.concat(option.values, ' ') .. ')')
     end
-    _:print[[
+    self:print[[
 set(_JLN_VERBOSE_VALUES on off)
 set(_JLN_AUTO_PROFILE_VALUES on off)
 set(_JLN_DISABLE_OTHERS_VALUES on off)
 
 ]]
 
-    for option in _:getoptions() do
-      local opt = _:tocmakeoption(option.name)
-      _:print('set(' .. opt .. ' "${' .. opt .. '}" CACHE STRING "'
+    for option in self:getoptions() do
+      local opt = self:tocmakeoption(option.name)
+      self:print('set(' .. opt .. ' "${' .. opt .. '}" CACHE STRING "'
               .. quotable_desc(option, '\\n', '"') .. '")')
-      _:print('set_property(CACHE ' .. opt .. ' PROPERTY STRINGS "'
+      self:print('set_property(CACHE ' .. opt .. ' PROPERTY STRINGS "'
               .. table.concat(option.values, '" "') .. '")')
-      _:print('if(NOT("${' .. opt .. '}" STREQUAL ""))')
-      _:print('  string(TOLOWER "${' .. opt .. '}" ' .. opt .. ')')
-      _:print('  if(NOT(("' .. table.concat(option.values, '" STREQUAL ' .. opt .. ') OR ("')
+      self:print('if(NOT("${' .. opt .. '}" STREQUAL ""))')
+      self:print('  string(TOLOWER "${' .. opt .. '}" ' .. opt .. ')')
+      self:print('  if(NOT(("' .. table.concat(option.values, '" STREQUAL ' .. opt .. ') OR ("')
               .. '" STREQUAL ' .. opt .. ')))')
-      _:print('    message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for '
+      self:print('    message(FATAL_ERROR "Unknow value \\\"${' .. opt .. '}\\\" for '
               .. opt .. ', expected: ' .. table.concat(option.values, ', ') .. '")')
-      _:print('  endif()')
-      _:print('endif()')
+      self:print('  endif()')
+      self:print('endif()')
     end
 
     local extraopts = {'verbose', 'auto_profile'}
 
     for _k, optname in ipairs(extraopts) do
-      local opt = _:tocmakeoption(optname)
-      _:print('set(' .. opt .. ' ${' .. opt .. '} CACHE STRING "")')
+      local opt = self:tocmakeoption(optname)
+      self:print('set(' .. opt .. ' ${' .. opt .. '} CACHE STRING "")')
     end
 
-    local compiler_type = _.is_C and 'C' or 'CXX'
-    local prefixfunc = _.is_C and 'jln_c' or 'jln'
-    local cvar = _.is_C and 'C_VAR' or 'CXX_VAR'
-    _.cvar = cvar
-    _.compiler_type = compiler_type
+    local compiler_type = self.is_C and 'C' or 'CXX'
+    local prefixfunc = self.is_C and 'jln_c' or 'jln'
+    local cvar = self.is_C and 'C_VAR' or 'CXX_VAR'
+    self.cvar = cvar
+    self.compiler_type = compiler_type
 
-    _:print[[
+    self:print[[
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
   set(_JLN_BUILD_TYPE "Debug")
   set(_JLN_BUILD_TYPE_PARSER "Debug")
@@ -73,8 +73,8 @@ else()
   string(TOLOWER ${CMAKE_BUILD_TYPE} _JLN_BUILD_TYPE_PARSER)
 endif()
 ]]
-    _:print('function('.. prefixfunc .. '_parse_arguments prefix one_value_keywords)')
-    _:print([[
+    self:print('function('.. prefixfunc .. '_parse_arguments prefix one_value_keywords)')
+    self:print([[
   if(${ARGC} LESS 3)
     return()
   endif()
@@ -115,100 +115,100 @@ endif()
   endforeach()
 endfunction()
 ]])
-    _:print('set(JLN_' .. compiler_type .. '_IS_INITIALIZED 0 CACHE BOOL "private" FORCE)\n\n')
-    _:print('# init default values')
-    _:print('# '.. prefixfunc .. '_init_flags(')
-    _:print('#     ['.. prefixfunc .. '-option> <default_value>]...')
-    _:print('#     [AUTO_PROFILE on]')
-    _:print('#     [VERBOSE on]')
-    _:print('#     [BUILD_TYPE type ['.. prefixfunc .. '-option> <default_value>]...]...')
-    _:print('# )')
-    _:print('# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)')
-    _:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
-    _:print('# Example:')
-    _:print('#   '.. prefixfunc .. '_init_flags(')
-    _:print('#       SUGGESTIONS on')
-    _:print('#')
-    _:print('#       BUILD_TYPE debug SANITIZERS on')
-    _:print('#       BUILD_TYPE release LTO on')
-    _:print('#   )')
-    _:print('function('.. prefixfunc .. '_init_flags)')
-    _:write('  '.. prefixfunc .. '_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE')
+    self:print('set(JLN_' .. compiler_type .. '_IS_INITIALIZED 0 CACHE BOOL "private" FORCE)\n\n')
+    self:print('# init default values')
+    self:print('# '.. prefixfunc .. '_init_flags(')
+    self:print('#     ['.. prefixfunc .. '-option> <default_value>]...')
+    self:print('#     [AUTO_PROFILE on]')
+    self:print('#     [VERBOSE on]')
+    self:print('#     [BUILD_TYPE type ['.. prefixfunc .. '-option> <default_value>]...]...')
+    self:print('# )')
+    self:print('# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)')
+    self:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
+    self:print('# Example:')
+    self:print('#   '.. prefixfunc .. '_init_flags(')
+    self:print('#       SUGGESTIONS on')
+    self:print('#')
+    self:print('#       BUILD_TYPE debug SANITIZERS on')
+    self:print('#       BUILD_TYPE release LTO on')
+    self:print('#   )')
+    self:print('function('.. prefixfunc .. '_init_flags)')
+    self:write('  '.. prefixfunc .. '_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE')
     local names = {}
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local name = option.name:upper()
       table_insert(names, name)
-      _:write(';' .. name)
+      self:write(';' .. name)
     end
-    if _._koptions.auto_profile then
+    if self._koptions.auto_profile then
       error('"auto_profile" option is reserved')
     end
-    _:write(';AUTO_PROFILE')
-    _:print('" ${ARGN})\n')
+    self:write(';AUTO_PROFILE')
+    self:print('" ${ARGN})\n')
 
     for _k, optname in ipairs(extraopts) do
-      local opt = _:tocmakeoption(optname)
+      local opt = self:tocmakeoption(optname)
       local localname = optname:upper()
       local cmake_opt = 'JLN_DEFAULT_FLAG_' .. localname;
-      _:print('  if(DEFINED ' .. cmake_opt .. ')')
-      _:print('    set(' .. opt .. '_D ${' .. cmake_opt .. '})')
-      _:print('  elseif("${' .. opt .. '}" STREQUAL "")')
-      _:print('    set(' .. opt .. '_D "")')
-      _:print('  else()')
-      _:print('    string(TOLOWER "${' .. opt .. '}" ' .. opt .. '_D)')
-      _:print('  endif()\n')
+      self:print('  if(DEFINED ' .. cmake_opt .. ')')
+      self:print('    set(' .. opt .. '_D ${' .. cmake_opt .. '})')
+      self:print('  elseif("${' .. opt .. '}" STREQUAL "")')
+      self:print('    set(' .. opt .. '_D "")')
+      self:print('  else()')
+      self:print('    string(TOLOWER "${' .. opt .. '}" ' .. opt .. '_D)')
+      self:print('  endif()\n')
     end
 
-    _:print('  if("${JLN_AUTO_PROFILE_D}" STREQUAL "on")')
+    self:print('  if("${JLN_AUTO_PROFILE_D}" STREQUAL "on")')
     local buildtypes = {
       debug='Debug',
       release='Release',
       debug_optimized='RelWithDebInfo',
       minimum_size_release='MinSizeRel',
     }
-    for buildtypename, opts in _:getbuildtype() do
+    for buildtypename, opts in self:getbuildtype() do
       buildtypename = buildtypes[buildtypename] or error('Unknown build type: ' .. buildtypename)
-      _:print('\n    if("' .. buildtypename .. '" STREQUAL "${_JLN_BUILD_TYPE}")')
+      self:print('\n    if("' .. buildtypename .. '" STREQUAL "${_JLN_BUILD_TYPE}")')
       for i,xs in pairs(opts) do
         local cmake_opt = 'JLN_DEFAULT_FLAG_' .. xs[1]:upper()
-        _:print('      if(NOT DEFINED ' .. cmake_opt .. ')')
-        _:print('        set(' .. cmake_opt .. ' "' .. xs[2] .. '")')
-        _:print('      endif()')
+        self:print('      if(NOT DEFINED ' .. cmake_opt .. ')')
+        self:print('        set(' .. cmake_opt .. ' "' .. xs[2] .. '")')
+        self:print('      endif()')
       end
-      _:print('    endif()')
+      self:print('    endif()')
     end
-    _:print('  endif()\n')
+    self:print('  endif()\n')
 
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local localname = option.name:upper()
       local cmake_opt = 'JLN_DEFAULT_FLAG_' .. localname;
-      local opt = _:tocmakeoption(option.name)
-      _:print('  if(DEFINED ' .. cmake_opt .. ')')
-      _:print('    set(' .. opt .. '_D ${' .. cmake_opt .. '} CACHE STRING "private" FORCE)')
-      _:print('  elseif("${' .. opt .. '}" STREQUAL "")')
-      _:print('    set(' .. opt .. '_D "' .. option.default .. '" CACHE STRING "private" FORCE)')
-      _:print('  else()')
-      _:print('    set(' .. opt .. '_D "${' .. opt .. '}" CACHE STRING "private" FORCE)')
-      _:print('  endif()\n')
+      local opt = self:tocmakeoption(option.name)
+      self:print('  if(DEFINED ' .. cmake_opt .. ')')
+      self:print('    set(' .. opt .. '_D ${' .. cmake_opt .. '} CACHE STRING "private" FORCE)')
+      self:print('  elseif("${' .. opt .. '}" STREQUAL "")')
+      self:print('    set(' .. opt .. '_D "' .. option.default .. '" CACHE STRING "private" FORCE)')
+      self:print('  else()')
+      self:print('    set(' .. opt .. '_D "${' .. opt .. '}" CACHE STRING "private" FORCE)')
+      self:print('  endif()\n')
     end
 
-    _:print('  if("${JLN_VERBOSE_D}" STREQUAL "on" OR "${JLN_VERBOSE_D}" STREQUAL "1")')
-    _:print('    message(STATUS "' .. _:tocmakeoption('auto_profile') .. ' = ${JLN_AUTO_PROFILE_D}\t[off, on]")')
-    for option in _:getoptions() do
-      local opt = _:tocmakeoption(option.name)
-      _:print('    message(STATUS "' .. opt .. ' = ${' .. opt .. '_D}\t[' .. table.concat(option.values, ', ') .. ']")')
+    self:print('  if("${JLN_VERBOSE_D}" STREQUAL "on" OR "${JLN_VERBOSE_D}" STREQUAL "1")')
+    self:print('    message(STATUS "' .. self:tocmakeoption('auto_profile') .. ' = ${JLN_AUTO_PROFILE_D}\t[off, on]")')
+    for option in self:getoptions() do
+      local opt = self:tocmakeoption(option.name)
+      self:print('    message(STATUS "' .. opt .. ' = ${' .. opt .. '_D}\t[' .. table.concat(option.values, ', ') .. ']")')
     end
-    _:print('  endif()\n')
-    _:print('  set(JLN_' .. compiler_type .. '_IS_INITIALIZED 1 CACHE BOOL "private" FORCE)\n')
-    _:print('endfunction()\n')
+    self:print('  endif()\n')
+    self:print('  set(JLN_' .. compiler_type .. '_IS_INITIALIZED 1 CACHE BOOL "private" FORCE)\n')
+    self:print('endfunction()\n')
 
-    _:print([[
+    self:print([[
 set(JLN_]].. compiler_type .. [[_COMPILER_VERSION ${CMAKE_]].. compiler_type .. [[_COMPILER_VERSION})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(JLN_GCC_]].. compiler_type .. [[_COMPILER 1)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if (CMAKE_CXX_COMPILER MATCHES ]] .. (_.is_C and '/emcc' or '/em\\\\+\\\\+') .. [[)
+  if (CMAKE_CXX_COMPILER MATCHES ]] .. (self.is_C and '/emcc' or '/em\\\\+\\\\+') .. [[)
     set(JLN_CLANG_EMCC_]].. compiler_type .. [[_COMPILER 1)
   elseif(MSVC)
     set(JLN_CLANG_CL_]].. compiler_type .. [[_COMPILER 1)
@@ -264,87 +264,87 @@ endif()
       linux='CMAKE_HOST_UNIX',
       macos='CMAKE_HOST_APPLE',
     }
-    local vcond_tool = function(_, toolname)
+    local vcond_tool = function(self, toolname)
       return tool_ids[toolname] or error('Unknown ' .. toolname .. ' tool')
     end
 
-    _._vcond_compiler = vcond_tool
-    _._vcond_platform = vcond_tool
-    _._vcond_linker = vcond_tool
+    self._vcond_compiler = vcond_tool
+    self._vcond_platform = vcond_tool
+    self._vcond_linker = vcond_tool
 
-    _:print('# '.. prefixfunc .. '_target_interface(')
-    _:print('#     <libname> {INTERFACE|PUBLIC|PRIVATE}')
-    _:print('#     [<'.. prefixfunc .. '-option> <value>]...')
-    _:print('#     [DISABLE_OTHERS {on|off}]')
-    _:print('#     [BUILD_TYPE type ['.. prefixfunc .. '-option> <value>]...]...')
-    _:print('# )')
-    _:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
-    _:print('function('.. prefixfunc .. '_target_interface name type)')
-    _:print('  '.. prefixfunc .. '_flags(' .. cvar .. ' cxx LINK_VAR link ${ARGN})')
-    _:print('  add_library(${name} ${type})')
-    _:print('  target_link_options(${name} ${type} ${link})')
-    _:print('  target_compile_options(${name} ${type} ${cxx})')
-    _:print('endfunction()\n')
+    self:print('# '.. prefixfunc .. '_target_interface(')
+    self:print('#     <libname> {INTERFACE|PUBLIC|PRIVATE}')
+    self:print('#     [<'.. prefixfunc .. '-option> <value>]...')
+    self:print('#     [DISABLE_OTHERS {on|off}]')
+    self:print('#     [BUILD_TYPE type ['.. prefixfunc .. '-option> <value>]...]...')
+    self:print('# )')
+    self:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
+    self:print('function('.. prefixfunc .. '_target_interface name type)')
+    self:print('  '.. prefixfunc .. '_flags(' .. cvar .. ' cxx LINK_VAR link ${ARGN})')
+    self:print('  add_library(${name} ${type})')
+    self:print('  target_link_options(${name} ${type} ${link})')
+    self:print('  target_compile_options(${name} ${type} ${cxx})')
+    self:print('endfunction()\n')
 
-    _:print('# '.. prefixfunc .. '_flags(')
-    _:print('#     ' .. cvar .. ' <out-variable>')
-    _:print('#     LINK_VAR <out-variable>')
-    _:print('#     [<'.. prefixfunc .. '-option> <value>]...')
-    _:print('#     [DISABLE_OTHERS {on|off}]')
-    _:print('#     [BUILD_TYPE type ['.. prefixfunc .. '-option> <value>]...]...')
-    _:print('# )')
-    _:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
-    _:print('function('.. prefixfunc .. '_flags)')
-    _:print('  if(NOT JLN_' .. compiler_type .. '_IS_INITIALIZED)')
-    _:print('    '.. prefixfunc .. '_init_flags()')
-    _:print('  endif()')
-    _:print('  set(CXX_FLAGS "")')
-    _:print('  set(LINK_LINK "")')
-    _:write('  '.. prefixfunc .. '_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;' .. cvar .. ';LINK_VAR')
-    for option in _:getoptions() do
-       _:write(';' .. option.name:upper())
+    self:print('# '.. prefixfunc .. '_flags(')
+    self:print('#     ' .. cvar .. ' <out-variable>')
+    self:print('#     LINK_VAR <out-variable>')
+    self:print('#     [<'.. prefixfunc .. '-option> <value>]...')
+    self:print('#     [DISABLE_OTHERS {on|off}]')
+    self:print('#     [BUILD_TYPE type ['.. prefixfunc .. '-option> <value>]...]...')
+    self:print('# )')
+    self:print('# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)')
+    self:print('function('.. prefixfunc .. '_flags)')
+    self:print('  if(NOT JLN_' .. compiler_type .. '_IS_INITIALIZED)')
+    self:print('    '.. prefixfunc .. '_init_flags()')
+    self:print('  endif()')
+    self:print('  set(CXX_FLAGS "")')
+    self:print('  set(LINK_LINK "")')
+    self:write('  '.. prefixfunc .. '_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;' .. cvar .. ';LINK_VAR')
+    for option in self:getoptions() do
+       self:write(';' .. option.name:upper())
     end
-    _:print('" ${ARGN})\n')
+    self:print('" ${ARGN})\n')
 
-    for option in _:getoptions() do
-      local opt = _:tocmakeoption(option.name)
+    for option in self:getoptions() do
+      local opt = self:tocmakeoption(option.name)
       local localname = option.name:upper()
       local cmake_opt = 'JLN_FLAGS_' .. localname;
-      _:print('  if(NOT DEFINED ' .. cmake_opt .. ')')
-      _:print('    if(JLN_FLAGS_DISABLE_OTHERS)')
-      _:print('      set(' .. cmake_opt .. ' "' .. option.default .. '")')
-      _:print('    else()')
-      _:print('      set(' .. cmake_opt .. ' "${' .. opt .. '_D}")')
-      _:print('    endif()')
-      _:print('  endif()\n')
+      self:print('  if(NOT DEFINED ' .. cmake_opt .. ')')
+      self:print('    if(JLN_FLAGS_DISABLE_OTHERS)')
+      self:print('      set(' .. cmake_opt .. ' "' .. option.default .. '")')
+      self:print('    else()')
+      self:print('      set(' .. cmake_opt .. ' "${' .. opt .. '_D}")')
+      self:print('    endif()')
+      self:print('  endif()\n')
     end
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return 'JLN_FLAGS_' .. optname:upper() .. ' STREQUAL "' .. lvl .. '"' end,
-  _vcond_verless=function(_, major, minor) return 'JLN_' .. _.compiler_type .. '_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
+  _vcond_lvl=function(self, lvl, optname) return 'JLN_FLAGS_' .. optname:upper() .. ' STREQUAL "' .. lvl .. '"' end,
+  _vcond_verless=function(self, major, minor) return 'JLN_' .. self.compiler_type .. '_COMPILER_VERSION VERSION_LESS "' .. major .. '.' .. minor .. '"' end,
 
-  cxx=function(_, x) return ' "' .. x .. '"' end,
-  link=function(_, x) return ' "' .. x .. '"' end,
+  cxx=function(self, x) return ' "' .. x .. '"' end,
+  link=function(self, x) return ' "' .. x .. '"' end,
 
-  act=function(_, name, datas, optname)
+  act=function(self, name, datas, optname)
     if name == 'msvc_external' then
       local cxx_flags,isystem_flag
 
-      local cat = _.is_C and 'C' or 'CXX'
+      local cat = self.is_C and 'C' or 'CXX'
       for k,d in pairs(datas) do
         if k == 'cxx' then
-          cxx_flags = _.indent .. 'set(CMAKE_' .. cat .. '_FLAGS "${CMAKE_' .. cat .. '_FLAGS} '
+          cxx_flags = self.indent .. 'set(CMAKE_' .. cat .. '_FLAGS "${CMAKE_' .. cat .. '_FLAGS} '
                       .. table.concat(d, ' ') .. ' " CACHE INTERNAL "")'
         elseif k == 'SYSTEM_FLAG' then
-          isystem_flag = _.indent .. 'set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "' .. d .. ' " CACHE INTERNAL "")'
+          isystem_flag = self.indent .. 'set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "' .. d .. ' " CACHE INTERNAL "")'
         else
           return 'Unknow ' .. k
         end
       end
 
       if cxx_flags and isystem_flag then
-        _:print(cxx_flags)
-        _:print(isystem_flag)
+        self:print(cxx_flags)
+        self:print(isystem_flag)
       else
         return 'Missing key: ' .. (cxx_flags and 'flags' or 'cxx')
       end
@@ -353,15 +353,15 @@ endif()
     end
   end,
 
-  _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. 'list(APPEND CXX_FLAGS ' .. cxx .. ')\n' or '')
-        .. (#links ~= 0 and _.indent .. 'list(APPEND LINK_FLAGS ' .. links .. ')\n' or '')
+  _vcond_toflags=function(self, cxx, links)
+    return (#cxx ~= 0 and self.indent .. 'list(APPEND CXX_FLAGS ' .. cxx .. ')\n' or '')
+        .. (#links ~= 0 and self.indent .. 'list(APPEND LINK_FLAGS ' .. links .. ')\n' or '')
   end,
 
-  stop=function(_)
-    return _:get_output() .. [[
-  if(JLN_FLAGS_]] .. _.cvar .. [[)
-    set(${JLN_FLAGS_]] .. _.cvar .. [[} ${CXX_FLAGS} PARENT_SCOPE)
+  stop=function(self)
+    return self:get_output() .. [[
+  if(JLN_FLAGS_]] .. self.cvar .. [[)
+    set(${JLN_FLAGS_]] .. self.cvar .. [[} ${CXX_FLAGS} PARENT_SCOPE)
   endif()
   if(JLN_FLAGS_LINK_VAR)
     set(${JLN_FLAGS_LINK_VAR} ${LINK_FLAGS} PARENT_SCOPE)

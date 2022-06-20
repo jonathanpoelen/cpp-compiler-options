@@ -29,50 +29,50 @@ return {
     msvc_isystem={external_as_include_system_flag=true},
   },
 
-  tobjamoption=function(_, option)
+  tobjamoption=function(self, option)
     local optname = option.name
     local norm = optname:gsub('_', '-')
-    local opt = _.optprefix .. norm
-    local iopt = not option.incidental and _.optprefix .. norm .. '-incidental'
-    local env = _.optenvprefix .. optname
+    local opt = self.optprefix .. norm
+    local iopt = not option.incidental and self.optprefix .. norm .. '-incidental'
+    local env = self.optenvprefix .. optname
     return opt, iopt, env
   end,
 
-  _vcond_lvl=function(_, lvl, optname)
+  _vcond_lvl=function(self, lvl, optname)
     return '( $(x_' .. optname .. ') = "' .. jamlvl(lvl) .. '" )'
   end,
-  _vcond_hasopt=function(_, optname)
+  _vcond_hasopt=function(self, optname)
     return '( $(x_' .. optname .. ') != "default" )'
   end,
 
-  _vcond_verless=function(_, major, minor)
-    return '[ numbers.less $(NORMALIZED_' .. _.prefixcomp .. '_COMP_VERSION) ' .. tostring(major * 100000 + minor) .. ' ]'
+  _vcond_verless=function(self, major, minor)
+    return '[ numbers.less $(NORMALIZED_' .. self.prefixcomp .. '_COMP_VERSION) ' .. tostring(major * 100000 + minor) .. ' ]'
   end,
-  _vcond_compiler=function(_, compiler) return '$(NORMALIZED_' .. _.prefixcomp .. '_COMP) = "' .. (jamcompilers[compiler] or compiler) .. '"' end,
-  _vcond_platform=function(_, platform) return '[ os.name ] = ' .. jamplatforms[platform] end,
-  _vcond_linker=function(_, linker) return '$(linker) = "' .. linker .. '"' end,
+  _vcond_compiler=function(self, compiler) return '$(NORMALIZED_' .. self.prefixcomp .. '_COMP) = "' .. (jamcompilers[compiler] or compiler) .. '"' end,
+  _vcond_platform=function(self, platform) return '[ os.name ] = ' .. jamplatforms[platform] end,
+  _vcond_linker=function(self, linker) return '$(linker) = "' .. linker .. '"' end,
 
-  cxx=function(_, x) return _.indent .. '  <' .. _.prefixflag .. 'flags>"' .. x .. '"\n' end,
-  link=function(_, x) return _.indent .. '  <linkflags>"' .. x .. '"\n' end,
+  cxx=function(self, x) return self.indent .. '  <' .. self.prefixflag .. 'flags>"' .. x .. '"\n' end,
+  link=function(self, x) return self.indent .. '  <linkflags>"' .. x .. '"\n' end,
 
-  act=function(_, name, datas, optname)
-    _:print(_.indent .. '# unimplementable')
+  act=function(self, name, datas, optname)
+    self:print(self.indent .. '# unimplementable')
     return true
   end,
 
-  _vcond_toflags=function(_, cxx, links)
-    return _.indent .. 'flags +=\n' .. cxx .. links .. _.indent .. ';\n'
+  _vcond_toflags=function(self, cxx, links)
+    return self.indent .. 'flags +=\n' .. cxx .. links .. self.indent .. ';\n'
   end,
 
-  start=function(_, optprefix, optenvprefix)
-    _.prefixflag = _.is_C and 'c' or 'cxx'
-    _.optprefix = (optprefix or ''):gsub('_', '-')
-    _.optenvprefix = (optenvprefix or _.optprefix):gsub('-', '_')
+  start=function(self, optprefix, optenvprefix)
+    self.prefixflag = self.is_C and 'c' or 'cxx'
+    self.optprefix = (optprefix or ''):gsub('_', '-')
+    self.optenvprefix = (optenvprefix or self.optprefix):gsub('-', '_')
 
-    _:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
+    self:_vcond_init({ifopen='', ifclose='', open='( ', close=' )'})
 
-    _:print_header('#')
-    _:print([[
+    self:print_header('#')
+    self:print([[
 # jam reference: https://www.boost.org/build/doc/html/index.html
 
 import feature : feature ;
@@ -86,8 +86,8 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 ]])
 
     -- for optname,k in pairs({'compiler', 'compiler-version'}) do
-    --   local opt = _:tobjamoption(optname)
-    --   _:print('feature <' .. opt .. '> : : free ;')
+    --   local opt = self:tobjamoption(optname)
+    --   self:print('feature <' .. opt .. '> : : free ;')
     -- end
 
     local relevants = ''
@@ -96,18 +96,18 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
     local constants = ''
     local locals = ''
     local defaults = ''
-    local prefixfunc = _.is_C and 'jln_c' or 'jln'
+    local prefixfunc = self.is_C and 'jln_c' or 'jln'
 
-    _.prefixcomp = _.is_C and 'C' or 'CXX'
+    self.prefixcomp = self.is_C and 'C' or 'CXX'
 
-    for option in _:getoptions() do
-      local opt, iopt, env = _:tobjamoption(option)
+    for option in self:getoptions() do
+      local opt, iopt, env = self:tobjamoption(option)
       local defaultjoined = jamlvl(table.concat(option.ordered_values, ' '))
 
       if option.description then
-        _:print('# ' .. quotable_desc(option, '\n# ', ''))
+        self:print('# ' .. quotable_desc(option, '\n# ', ''))
       end
-      _:print('feature <' .. opt .. '> : _ ' .. defaultjoined
+      self:print('feature <' .. opt .. '> : _ ' .. defaultjoined
               .. (iopt and ' : incidental ;' or ' : propagated ;'))
 
       defaults = defaults .. 'feature <' .. opt .. '-default> : '
@@ -131,10 +131,10 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
       end
     end
 
-    _:print()
-    _:print(incidentals)
-    _:print(defaults)
-    _:print([[
+    self:print()
+    self:print(incidentals)
+    self:print(defaults)
+    self:print([[
 
 rule ]] .. prefixfunc .. [[-get-env ( env : values * )
 {
@@ -156,16 +156,16 @@ rule ]] .. prefixfunc .. [[-get-env ( env : values * )
   }
 }
 ]])
-    _:print(constants)
-    _:print('if $(JLN_BJAM_YEAR_VERSION) < 2016.00\n{')
-    _:print('  import toolset ;')
-    _:print(toolsetflags)
-    _:print('}')
-    _:print([[
+    self:print(constants)
+    self:print('if $(JLN_BJAM_YEAR_VERSION) < 2016.00\n{')
+    self:print('  import toolset ;')
+    self:print(toolsetflags)
+    self:print('}')
+    self:print([[
 
 local ORIGINAL_TOOLSET = 0 ;
-local NORMALIZED_]] .. _.prefixcomp .. [[_COMP = "" ;
-local NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 100000 ;
+local NORMALIZED_]] .. self.prefixcomp .. [[_COMP = "" ;
+local NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 100000 ;
 
 rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
 {
@@ -185,30 +185,30 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
     }
 
     if $(is_emcc) = 1 {
-      NORMALIZED_]] .. _.prefixcomp .. [[_COMP = clang-emcc ;
+      NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang-emcc ;
       # get clang version. Assume emcc exists
       version = [ MATCH "clang version ([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "emcc -v 2>&1" ] ] ;
     }
     # icx / icpx
     else if $(is_intel) = 1 {
-      NORMALIZED_]] .. _.prefixcomp .. [[_COMP = clang ;
+      NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang ;
       switch $(version)  {
-        case 2021* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1200000 ;
-        case 2022* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1400000 ;
-        case 2023* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1600000 ;
-        case 2024* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 1800000 ;
-        case 2025* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2000000 ;
-        case 2026* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2200000 ;
-        case 2027* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2400000 ;
-        case 2028* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2600000 ;
-        case 2029* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 2800000 ;
-        case 2030* : NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = 3000000 ;
+        case 2021* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1200000 ;
+        case 2022* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1400000 ;
+        case 2023* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1600000 ;
+        case 2024* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1800000 ;
+        case 2025* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2000000 ;
+        case 2026* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2200000 ;
+        case 2027* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2400000 ;
+        case 2028* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2600000 ;
+        case 2029* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 2800000 ;
+        case 2030* : NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 3000000 ;
       }
     }
     else {
       # TODO `version` is not the real version.
       # For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
-      NORMALIZED_]] .. _.prefixcomp .. [[_COMP = $(toolset) ;
+      NORMALIZED_]] .. self.prefixcomp .. [[_COMP = $(toolset) ;
       version = [ MATCH "^[^0-9]*(.*)$" : $(version) ] ;
       if ! $(version) {
         version = [ MATCH "([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "$(toolset) --version" ] ] ;
@@ -219,7 +219,7 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
       local match = [ MATCH "^([0-9]+)(\\.([0-9]+))?" : $(version) ] ;
       local major = $(match[1]) ;
       local minor = [ MATCH "(.....)$" : [ string.join 00000 $(match[3]) ] ] ;
-      NORMALIZED_]] .. _.prefixcomp .. [[_COMP_VERSION = $(major)$(minor) ;
+      NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = $(major)$(minor) ;
     }
   }
 }
@@ -272,12 +272,12 @@ rule ]] .. prefixfunc .. [[_flags ( properties * )
     ;
   }
 ]])
-    _:print(locals)
+    self:print(locals)
 
-    _.indent = '  '
+    self.indent = '  '
   end,
 
-  stop=function(_)
-    return _:get_output() .. '  return $(flags) ;\n}\n'
+  stop=function(self)
+    return self:get_output() .. '  return $(flags) ;\n}\n'
   end,
 }

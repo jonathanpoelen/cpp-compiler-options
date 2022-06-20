@@ -30,36 +30,36 @@ end
 
 local if_mt -- referenced by __unm
 if_mt = {
-  __call = function(_, x)
-    assert(not _._t, '`_t` is not nil')
+  __call = function(self, x)
+    assert(not self._t, '`_t` is not nil')
 
-    _._t = ramify(x)
-    return _
+    self._t = ramify(x)
+    return self
   end,
-  __div = function(_, x)
-    local subelse = _._subelse or _
+  __div = function(self, x)
+    local subelse = self._subelse or self
     assert(subelse._if and not subelse._else, 'replace `x / y / z` with `x / { y / z }`')
 
     x = x and ramify(x)
 
-    _._subelse = x
+    self._subelse = x
     subelse._else = x
-    return _
+    return self
   end,
-  __unm = function(_)
-    return setmetatable({ _if={_not=_._if}, _t=_._t, _subelse=_._subelse }, if_mt)
+  __unm = function(self)
+    return setmetatable({ _if={_not=self._if}, _t=self._t, _subelse=self._subelse }, if_mt)
   end,
 }
 
 local if_mt_func = {
-  __call = function(_, ...)
-    return _._impl(...)
+  __call = function(self, ...)
+    return self._impl(...)
   end,
-  __div = function(_, x)
-    return _._impl() / x
+  __div = function(self, x)
+    return self._impl() / x
   end,
-  __unm = function(_)
-    return -_._impl()
+  __unm = function(self)
+    return -self._impl()
   end,
 }
 
@@ -2133,33 +2133,33 @@ Vbase = {
   indent = '  ',
   if_prefix = '',
   -- table of optname=true or {optname={optvalue=true}}
-  ignore={},
+  ignore = {},
 
-  start=noop, -- function(_) end,
-  stop=function(_, filebase) return _:get_output() end,
+  start = noop, -- function(self) end,
+  stop = function(self, filebase) return self:get_output() end,
 
-  _strs={},
-  print=function(_, s) _:write(s) _:write('\n') end,
-  print_header=function(_, prefix)
-    _:write(prefix)
-    _:write(' File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n\n')
+  _strs = {},
+  print = function(self, s) self:write(s) self:write('\n') end,
+  print_header = function(self, prefix)
+    self:write(prefix)
+    self:write(' File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n\n')
   end,
-  write=function(_, s) table_insert(_._strs, s) end,
-  get_output=function(_) return table.concat(_._strs) end,
+  write = function(self, s) table_insert(self._strs, s) end,
+  get_output = function(self) return table.concat(self._strs) end,
 
-  startoptcond=noop, -- function(_, name) end,
-  stopopt=noop, -- function(_) end,
+  startoptcond = noop, -- function(self, name) end,
+  stopopt = noop, -- function(self) end,
 
-  startcond=noop, -- function(_, x, optname) end,
-  elsecond=noop, -- function(_, optname) end,
-  stopcond=noop, -- function(_, optname) end,
+  startcond = noop, -- function(self, x, optname) end,
+  elsecond = noop, -- function(self, optname) end,
+  stopcond = noop, -- function(self, optname) end,
 
-  cxx=noop,
-  link=noop,
-  act=function(_, name, datas, optname) error('Unknown action: ' .. name) end,
+  cxx = noop,
+  link = noop,
+  act = function(self, name, datas, optname) error('Unknown action: ' .. name) end,
 
-  _vcond_init=function(_, keywords)
-    _._vcondkeyword = keywords or {}
+  _vcond_init = function(self, keywords)
+    self._vcondkeyword = keywords or {}
     for k,v in pairs({
      _or = '||',
      _and = '&&',
@@ -2171,111 +2171,114 @@ Vbase = {
      openblock = '{',
      closeblock = '}',
     }) do
-      if not _._vcondkeyword[k] then
-        _._vcondkeyword[k] = v
+      if not self._vcondkeyword[k] then
+        self._vcondkeyword[k] = v
       end
     end
-    _._vcondkeyword.ifopen = _._vcondkeyword.ifopen or _._vcondkeyword.open
-    _._vcondkeyword.ifclose = _._vcondkeyword.ifclose or _._vcondkeyword.close
-    _._vcondkeyword.endif = _._vcondkeyword.endif or _._vcondkeyword.closeblock
-    if #_._vcondkeyword.ifopen ~= 0 then _._vcondkeyword.ifopen = ' ' .. _._vcondkeyword.ifopen .. ' ' end
-    if #_._vcondkeyword.ifclose ~= 0 then _._vcondkeyword.ifclose = ' ' .. _._vcondkeyword.ifclose end
+    self._vcondkeyword.ifopen = self._vcondkeyword.ifopen or self._vcondkeyword.open
+    self._vcondkeyword.ifclose = self._vcondkeyword.ifclose or self._vcondkeyword.close
+    self._vcondkeyword.endif = self._vcondkeyword.endif or self._vcondkeyword.closeblock
+    if #self._vcondkeyword.ifopen ~= 0 then self._vcondkeyword.ifopen = ' ' .. self._vcondkeyword.ifopen .. ' ' end
+    if #self._vcondkeyword.ifclose ~= 0 then self._vcondkeyword.ifclose = ' ' .. self._vcondkeyword.ifclose end
 
-    local write_logical=function(_,a,k,optname)
-      _:write(' '.._._vcondkeyword.open)
-      _:_vcond(a[1], optname)
+    local write_logical = function(self, a, k, optname)
+      self:write(' ' .. self._vcondkeyword.open)
+      self:_vcond(a[1], optname)
       for i=2,#a do
-        _:write(' '..k)
-        _:_vcond(a[i], optname)
+        self:write(' ' .. k)
+        self:_vcond(a[i], optname)
       end
-      _:write(' '.._._vcondkeyword.close)
+      self:write(' ' .. self._vcondkeyword.close)
     end
 
-    _._vcond=function(_, v, optname)
-          if v._or      then write_logical(_, v._or, _._vcondkeyword._or, optname)
-      elseif v._and     then write_logical(_, v._and, _._vcondkeyword._and, optname)
-      elseif v._not     then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open)
-                             _:_vcond(v._not, optname)
-                             _:write(' '.._._vcondkeyword.close)
-      elseif v.lvl      then _:write(' '.._:_vcond_lvl(v.lvl, optname))
-      elseif v.version  then _:write(' '.._._vcondkeyword._not..' '.._._vcondkeyword.open..
-                                     ' '.._._vcond_verless(_, v.version[1], v.version[2])..
-                                     ' '.._._vcondkeyword.close)
-      elseif v.compiler then _:write(' '.._:_vcond_compiler(v.compiler))
-      elseif v.platform then _:write(' '.._:_vcond_platform(v.platform))
-      elseif v.linker   then _:write(' '.._:_vcond_linker(v.linker))
+    self._vcond = function(self, v, optname)
+          if v._or      then write_logical(self, v._or, self._vcondkeyword._or, optname)
+      elseif v._and     then write_logical(self, v._and, self._vcondkeyword._and, optname)
+      elseif v._not     then self:write(' ' .. self._vcondkeyword._not
+                                     .. ' ' .. self._vcondkeyword.open)
+                             self:_vcond(v._not, optname)
+                             self:write(' ' .. self._vcondkeyword.close)
+      elseif v.lvl      then self:write(' ' .. self:_vcond_lvl(v.lvl, optname))
+      elseif v.version  then self:write(' ' .. self._vcondkeyword._not
+                                     .. ' ' .. self._vcondkeyword.open
+                                     .. ' ' .. self._vcond_verless(self, v.version[1], v.version[2])
+                                     .. ' ' .. self._vcondkeyword.close)
+      elseif v.compiler then self:write(' ' .. self:_vcond_compiler(v.compiler))
+      elseif v.platform then self:write(' ' .. self:_vcond_platform(v.platform))
+      elseif v.linker   then self:write(' ' .. self:_vcond_linker(v.linker))
       else error('Unknown cond ', ipairs(v))
       end
     end
 
-    _._vcond_hasopt = _._vcond_hasopt or function(_, optname)
-      return _._vcondkeyword._not..' '.._._vcondkeyword.open..' '.._:_vcond_lvl('default', optname).._._vcondkeyword.close
+    self._vcond_hasopt = self._vcond_hasopt or function(self, optname)
+      return self._vcondkeyword._not .. ' ' .. self._vcondkeyword.open
+          .. ' ' .. self:_vcond_lvl('default', optname) .. self._vcondkeyword.close
     end
 
-    _.startoptcond=function(_, optname)
-      _:_vcond_printflags()
-      _:print(_.indent .. _._vcondkeyword._if .. _._vcondkeyword.ifopen
-              .. ' ' .. _:_vcond_hasopt(optname) .. _._vcondkeyword.ifclose)
-      if #_._vcondkeyword.openblock ~= 0 then
-        _:print(_.indent .. _._vcondkeyword.openblock)
+    self.startoptcond = function(self, optname)
+      self:_vcond_printflags()
+      self:print(self.indent .. self._vcondkeyword._if .. self._vcondkeyword.ifopen
+              .. ' ' .. self:_vcond_hasopt(optname) .. self._vcondkeyword.ifclose)
+      if #self._vcondkeyword.openblock ~= 0 then
+        self:print(self.indent .. self._vcondkeyword.openblock)
       end
     end
 
-    _.startcond=function(_, x, optname)
-      _:_vcond_printflags()
-      _:write(_.indent .. _.if_prefix .. _._vcondkeyword._if .. _._vcondkeyword.ifopen)
-      _.if_prefix = ''
-      _:_vcond(x, optname)
-      _:print(_._vcondkeyword.ifclose)
-      if #_._vcondkeyword.openblock ~= 0 then
-        _:print(_.indent .. _._vcondkeyword.openblock)
+    self.startcond = function(self, x, optname)
+      self:_vcond_printflags()
+      self:write(self.indent .. self.if_prefix .. self._vcondkeyword._if .. self._vcondkeyword.ifopen)
+      self.if_prefix = ''
+      self:_vcond(x, optname)
+      self:print(self._vcondkeyword.ifclose)
+      if #self._vcondkeyword.openblock ~= 0 then
+        self:print(self.indent .. self._vcondkeyword.openblock)
       end
     end
 
-    _.elsecond=function(_)
-      _:_vcond_printflags()
-      local oldindent = _.indent
-      _.indent = oldindent:sub(1, #oldindent-2)
-      if #_._vcondkeyword.closeblock ~= 0 then
-        _:print(_.indent .. _._vcondkeyword.closeblock)
+    self.elsecond = function(self)
+      self:_vcond_printflags()
+      local oldindent = self.indent
+      self.indent = oldindent:sub(1, #oldindent-2)
+      if #self._vcondkeyword.closeblock ~= 0 then
+        self:print(self.indent .. self._vcondkeyword.closeblock)
       end
-      _:print(_.indent .. _._vcondkeyword._else)
-      if #_._vcondkeyword.openblock ~= 0 then
-        _:print(_.indent .. _._vcondkeyword.openblock)
+      self:print(self.indent .. self._vcondkeyword._else)
+      if #self._vcondkeyword.openblock ~= 0 then
+        self:print(self.indent .. self._vcondkeyword.openblock)
       end
-      _.indent = oldindent
+      self.indent = oldindent
     end
 
-    _.stopcond=function(_)
-      _:_vcond_printflags()
-      _.indent = _.indent:sub(1, #_.indent-2)
-      if #_._vcondkeyword.endif ~= 0 then
-        _:print(_.indent .. _._vcondkeyword.endif)
+    self.stopcond = function(self)
+      self:_vcond_printflags()
+      self.indent = self.indent:sub(1, #self.indent-2)
+      if #self._vcondkeyword.endif ~= 0 then
+        self:print(self.indent .. self._vcondkeyword.endif)
       end
     end
 
-    _._vcond_flags_cxx = ''
-    _._vcond_flags_link = ''
-    _._vcond_toflags = _._vcond_toflags or function(_, cxx, link)
+    self._vcond_flags_cxx = ''
+    self._vcond_flags_link = ''
+    self._vcond_toflags = self._vcond_toflags or function(self, cxx, link)
       return cxx and link and cxx .. link or cxx or link
     end
-    _._vcond_printflags=function(_)
-      if #_._vcond_flags_cxx ~= 0 or #_._vcond_flags_link ~= 0 then
-        local s = _:_vcond_toflags(_._vcond_flags_cxx, _._vcond_flags_link)
-        if s and #s ~= 0 then _:write(s) end
+    self._vcond_printflags = function(self)
+      if #self._vcond_flags_cxx ~= 0 or #self._vcond_flags_link ~= 0 then
+        local s = self:_vcond_toflags(self._vcond_flags_cxx, self._vcond_flags_link)
+        if s and #s ~= 0 then self:write(s) end
       end
-      _._vcond_flags_cxx = ''
-      _._vcond_flags_link = ''
+      self._vcond_flags_cxx = ''
+      self._vcond_flags_link = ''
     end
 
-    local accu=function(k, f)
-      return function(_, x)
-        _[k] = _[k] .. f(_, x)
+    local accu = function(k, f)
+      return function(t, x)
+        t[k] = t[k] .. f(t, x)
       end
     end
 
-    _.cxx = accu('_vcond_flags_cxx', _.cxx)
-    _.link = accu('_vcond_flags_link', _.link)
+    self.cxx = accu('_vcond_flags_cxx', self.cxx)
+    self.link = accu('_vcond_flags_link', self.link)
   end,
 
   _computed_options = nil,
@@ -2289,18 +2292,18 @@ Vbase = {
   --   value_descriptions=table[string]
   --   incidental=bool,
   -- }
-  getoptions=function(_)
-    local computed_options = _.__computed_options
+  getoptions=function(self)
+    local computed_options = self.__computed_options
 
     if not computed_options then
       computed_options = {}
-      _._computed_options = computed_options
-      local ignore = _.ignore
-      local lang = _.lang
+      self._computed_options = computed_options
+      local ignore = self.ignore
+      local lang = self.lang
 
-      for i,k in ipairs(create_ordered_keys(_._koptions)) do
+      for i,k in ipairs(create_ordered_keys(self._koptions)) do
         local filter = ignore[k]
-        local option = _._koptions[k]
+        local option = self._koptions[k]
         if filter ~= true and lang ~= option.unavailable then
           if filter then
             local newvalues = {}
@@ -2343,14 +2346,14 @@ Vbase = {
   _computed_build_types = nil,
 
   -- iterator of (catname, option_names)
-  getbuildtype=function(_)
-    local computed_build_types = _._computed_build_types
+  getbuildtype=function(self)
+    local computed_build_types = self._computed_build_types
     if not computed_build_types then
       computed_build_types = {}
-      _._computed_build_types = computed_build_types
-      for i,k in pairs(create_ordered_keys(_._opts_build_type)) do
+      self._computed_build_types = computed_build_types
+      for i,k in pairs(create_ordered_keys(self._opts_build_type)) do
         local values = {}
-        local profile = _._opts_build_type[k]
+        local profile = self._opts_build_type[k]
         for i,kv in pairs(create_ordered_keys(profile)) do
           table_insert(values, {kv, profile[kv]})
         end

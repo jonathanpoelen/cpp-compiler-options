@@ -13,15 +13,15 @@ return {
     msvc_isystem={external_as_include_system_flag=true},
   },
 
-  tobuildoption=function(_, optname)
-    return _.optprefix .. optname
+  tobuildoption=function(self, optname)
+    return self.optprefix .. optname
   end,
 
   _option_strs = {},
 
-  start=function(_, optprefix)
-    _.optprefix = optprefix and optprefix:gsub('-', '_') or ''
-    _:_vcond_init({
+  start=function(self, optprefix)
+    self.optprefix = optprefix and optprefix:gsub('-', '_') or ''
+    self:_vcond_init({
       _not='not',
       _and='and',
       _or='or',
@@ -31,44 +31,44 @@ return {
       endif='endif',
     })
 
-    _:print_header('#')
+    self:print_header('#')
 
-    local prefixfunc = _.is_C and 'jln_c' or 'jln'
-    _.prefixfunc = prefixfunc
+    local prefixfunc = self.is_C and 'jln_c' or 'jln'
+    self.prefixfunc = prefixfunc
 
-    local option_strs = _._option_strs
-    _:write([[
+    local option_strs = self._option_strs
+    self:write([[
 ___]] .. prefixfunc .. [[_default_flags = get_variable(']] .. prefixfunc .. [[_default_flags', {}) + get_variable(']] .. prefixfunc .. [[_buildtype_flags', {}).get(get_option('buildtype'), {})
 if get_option('warning_level') == '0'
   ___]] .. prefixfunc .. [[_warnings = 'off'
 else
-  ___]] .. prefixfunc .. [[_warnings = ___]] .. prefixfunc .. [[_default_flags.get('warnings', get_option(']] .. _:tobuildoption('warnings') .. [['))
+  ___]] .. prefixfunc .. [[_warnings = ___]] .. prefixfunc .. [[_default_flags.get('warnings', get_option(']] .. self:tobuildoption('warnings') .. [['))
 endif
 ___]] .. prefixfunc .. [[_flags = {
 ]])
-    for option in _:getoptions() do
-      local name = _:tobuildoption(option.name)
+    for option in self:getoptions() do
+      local name = self:tobuildoption(option.name)
       table_insert(option_strs, "option('" .. name .. "', type : 'combo', choices : ['"
         .. table.concat(option.values, "', '") .. "'], value : '" .. option.default
         .. "', description : '" .. quotable_desc(option) .. "')")
       if option.name == 'warnings' then
-        _:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_warnings,\n")
+        self:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_warnings,\n")
       else
-        _:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_default_flags.get('" .. option.name .. "', get_option('" .. name .. "')),\n")
+        self:write("  '" .. option.name .. "': ___" .. prefixfunc .. "_default_flags.get('" .. option.name .. "', get_option('" .. name .. "')),\n")
       end
     end
 
-    local lang = _.lang
+    local lang = self.lang
 
-    _.platforms = {
+    self.platforms = {
       mingw="(host_machine.system() == 'windows' and ___"
-            .. _.prefixfunc .. "_compiler_id == 'gcc')",
+            .. self.prefixfunc .. "_compiler_id == 'gcc')",
       windows="host_machine.system() == 'windows'",
       linux="host_machine.system() == 'linux'",
       macos="host_machine.system() == 'macos'",
     }
 
-    _:print([[}
+    self:print([[}
 
 ]] .. prefixfunc .. [[_custom_]] .. lang .. [[_flags = []
 ]] .. prefixfunc .. [[_custom_link_flags = []
@@ -91,31 +91,31 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
 ]])
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return  "(___" .. _.prefixfunc .. "_flags.get('" .. optname .. "', 'default') == '" .. lvl .. "')" end,
-  _vcond_verless=function(_, major, minor) return "___" .. _.prefixfunc .. "_compiler_version.version_compare('<" .. major .. '.' .. minor .. "')" end,
-  _vcond_compiler=function(_, compiler) return "(___" .. _.prefixfunc .. "_compiler_id == '" .. (meson_compilers[compiler] or compiler) .. "')" end,
-  _vcond_platform=function(_, platform) return _.platforms[platform] end,
-  _vcond_linker=function(_, linker) return "(___" .. _.prefixfunc .. "_linker_id == '" .. linker .. "')" end,
+  _vcond_lvl=function(self, lvl, optname) return  "(___" .. self.prefixfunc .. "_flags.get('" .. optname .. "', 'default') == '" .. lvl .. "')" end,
+  _vcond_verless=function(self, major, minor) return "___" .. self.prefixfunc .. "_compiler_version.version_compare('<" .. major .. '.' .. minor .. "')" end,
+  _vcond_compiler=function(self, compiler) return "(___" .. self.prefixfunc .. "_compiler_id == '" .. (meson_compilers[compiler] or compiler) .. "')" end,
+  _vcond_platform=function(self, platform) return self.platforms[platform] end,
+  _vcond_linker=function(self, linker) return "(___" .. self.prefixfunc .. "_linker_id == '" .. linker .. "')" end,
 
-  cxx=function(_, x) return "'" .. x .. "', " end,
-  link=function(_, x) return "'" .. x .. "', " end,
+  cxx=function(self, x) return "'" .. x .. "', " end,
+  link=function(self, x) return "'" .. x .. "', " end,
 
-  act=function(_, name, datas, optname)
-    _:print(_.indent .. '# unimplementable')
+  act=function(self, name, datas, optname)
+    self:print(self.indent .. '# unimplementable')
     return true
   end,
 
-  _vcond_toflags=function(_, cxx, links)
-    return (#cxx ~= 0 and _.indent .. _.prefixfunc .. '_' .. _.lang .. '_flags += [' .. cxx .. ']\n' or '')
-        .. (#links ~= 0 and _.indent .. _.prefixfunc .. '_link_flags += [' .. links .. ']\n' or '')
+  _vcond_toflags=function(self, cxx, links)
+    return (#cxx ~= 0 and self.indent .. self.prefixfunc .. '_' .. self.lang .. '_flags += [' .. cxx .. ']\n' or '')
+        .. (#links ~= 0 and self.indent .. self.prefixfunc .. '_link_flags += [' .. links .. ']\n' or '')
   end,
 
-  stop=function(_, filebase)
-    local meson_options = table.concat(_._option_strs, '\n') .. '\n'
-    local meson_build = _:get_output() .. [[
+  stop=function(self, filebase)
+    local meson_options = table.concat(self._option_strs, '\n') .. '\n'
+    local meson_build = self:get_output() .. [[
 
-  ]] .. _.prefixfunc .. [[_custom_]] .. _.lang .. [[_flags += []] .. _.prefixfunc .. [[_]] .. _.lang .. [[_flags]
-  ]] .. _.prefixfunc .. [[_custom_link_flags += []] .. _.prefixfunc .. [[_link_flags]
+  ]] .. self.prefixfunc .. [[_custom_]] .. self.lang .. [[_flags += []] .. self.prefixfunc .. [[_]] .. self.lang .. [[_flags]
+  ]] .. self.prefixfunc .. [[_custom_link_flags += []] .. self.prefixfunc .. [[_link_flags]
 endforeach
 ]]
 

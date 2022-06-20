@@ -3,7 +3,7 @@ local table_insert = table.insert
 return {
   -- ignore={ },
 
-  start=function(_, compiler, ...)
+  start=function(self, compiler, ...)
     -- list compilers
     if not compiler then
       -- compilers for current depth
@@ -14,7 +14,7 @@ return {
 
       return {
         -- currcomp = {kcompilers, has_comp:bool}
-        _startcond=function(_, x, currcomp)
+        _startcond=function(self, x, currcomp)
           if x.compiler then
             versions_by_compiler[x.compiler] = versions_by_compiler[x.compiler] or {}
             currcomp[1][x.compiler] = true
@@ -27,7 +27,7 @@ return {
               versions_by_compiler[comp][intversion] = {x.version[1], x.version[2], comp..vers, comp}
             end
           elseif x._not then
-            return _:_startcond(x._not, currcomp)
+            return self:_startcond(x._not, currcomp)
           else
             local sub = x._and or x._or
             if sub then
@@ -36,7 +36,7 @@ return {
 
               currcomp = {{}, false}
               for k,y in ipairs(sub) do
-                for comp in pairs(_:_startcond(y, currcomp) or {}) do
+                for comp in pairs(self:_startcond(y, currcomp) or {}) do
                   compilers[comp] = true
                   has_value = true
                 end
@@ -47,23 +47,23 @@ return {
           end
         end,
 
-        stopcond=function(_)
+        stopcond=function(self)
           stackcomp[#stackcomp] = nil
           stackifcomp[#stackifcomp] = nil
         end,
 
-        startoptcond=function(_)
+        startoptcond=function(self)
           table_insert(stackcomp, stackcomp[#stackcomp])
           table_insert(stackifcomp, false)
         end,
 
-        startcond=function(_, x)
-          local r = _:_startcond(x, {{}, false})
+        startcond=function(self, x)
+          local r = self:_startcond(x, {{}, false})
           table_insert(stackifcomp, r or false)
           table_insert(stackcomp, r or stackcomp[#stackcomp])
         end,
 
-        elsecond=function(_)
+        elsecond=function(self)
           -- exclude `if` compilers from the parent's active compilers
           if stackifcomp[#stackifcomp] then
             local old = stackifcomp[#stackifcomp]
@@ -77,7 +77,7 @@ return {
           end
         end,
 
-        stop=function(_)
+        stop=function(self)
           local comps = {}
           for comp, t in pairs(versions_by_compiler) do
             local versions = {}
@@ -140,7 +140,7 @@ return {
 
     local opts = {}
 
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       if option.default ~= 'default' then
         opts[option.name] = option.default
       end
@@ -160,8 +160,8 @@ return {
       end
     end
     if has_help then
-      print(_.generator_name .. ' [-h] | [ {compiler|compiler-version} [[{+|-}]{option}[={level}] ...]] ]')
-      print('\nsample:\n  ' .. _.generator_name .. ' gcc warnings=strict')
+      print(self.generator_name .. ' [-h] | [ {compiler|compiler-version} [[{+|-}]{option}[={level}] ...]] ]')
+      print('\nsample:\n  ' .. self.generator_name .. ' gcc warnings=strict')
       print('\nBy default:')
       local lines={}
       for k,v in pairs(opts) do
@@ -171,7 +171,7 @@ return {
       print(table.concat(lines, '\n'))
       lines={}
       print('\nOptions:')
-      for option in _:getoptions() do
+      for option in self:getoptions() do
         table_insert(lines, '  ' .. option.name .. ' = ' .. table.concat(option.values, ', '))
       end
       print(table.concat(lines, '\n'))
@@ -226,7 +226,7 @@ return {
           else name = name:gsub('-', '_')
           end
 
-          local option = _._koptions[name]
+          local option = self._koptions[name]
           if not option then
             error('Unknown `' .. name .. '` option')
           end
@@ -263,16 +263,16 @@ return {
     local current_optname
     local flags = {}
     return {
-      _cond=function(_, v, r)
+      _cond=function(self, v, r)
         for k,x in ipairs(v) do
-          if _:cond(x) == r then
+          if self:cond(x) == r then
             return r
           end
         end
         return not r
       end,
 
-      cond=function(_, v)
+      cond=function(self, v)
         -- for k,x in pairs(v) do
         --   if k == 'version' then
         --     print(k, x[1],x[2])
@@ -281,9 +281,9 @@ return {
         --   end
         -- end
 
-            if v._or  then return _:_cond(v._or, true)
-        elseif v._and then return _:_cond(v._and, false)
-        elseif v._not then return not _:cond(v._not)
+            if v._or  then return self:_cond(v._or, true)
+        elseif v._and then return self:_cond(v._and, false)
+        elseif v._not then return not self:cond(v._not)
         elseif v.lvl  then return v.lvl == opts[current_optname]
         elseif v.version then return major > v.version[1]
                                   or (major == v.version[1] and minor >= v.version[2])
@@ -299,16 +299,16 @@ return {
         error('Unknown cond ' .. ks)
       end,
 
-      startcond=function(_, x, optname)
+      startcond=function(self, x, optname)
         current_optname = optname
-        return _:cond(x)
+        return self:cond(x)
       end,
 
-      startoptcond=function(_, optname)
+      startoptcond=function(self, optname)
         return opts[optname] and true or false
       end,
 
-      stop=function(_)
+      stop=function(self)
         local l = {}
         for k,v in pairs(flags) do
           table_insert(l, k)
@@ -322,10 +322,10 @@ return {
         return ''
       end,
 
-      cxx=function(_, x) flags[x] = true end,
-      link=function(_, x) flags[x] = true end,
+      cxx=function(self, x) flags[x] = true end,
+      link=function(self, x) flags[x] = true end,
 
-      act=function(_, name, datas)
+      act=function(self, name, datas)
         for _,k in ipairs({'cxx','link'}) do
           for _,x in ipairs(datas[k] or {}) do
             flags[x] = true

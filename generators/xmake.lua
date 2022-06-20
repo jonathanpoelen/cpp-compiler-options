@@ -24,13 +24,13 @@ return {
     msvc_isystem={external_as_include_system_flag=true},
   },
 
-  tostroption=function(_, optname)
-    return _.optprefix .. optname:gsub('_', '-')
+  tostroption=function(self, optname)
+    return self.optprefix .. optname:gsub('_', '-')
   end,
 
-  start=function(_, optprefix)
-    _.optprefix = optprefix or ''
-    _:_vcond_init({
+  start=function(self, optprefix)
+    self.optprefix = optprefix or ''
+    self:_vcond_init({
       _not='not',
       _and='and',
       _or='or',
@@ -41,11 +41,11 @@ return {
       endif='end',
     })
 
-    local funcprefix = (_.is_C and 'jln_c_' or 'jln_cxx_')
-    local compprefix = (_.is_C and 'cc' or 'cxx')
-    local cxflags = _.is_C and 'cflags' or 'cxxflags'
-    local import_base = _.is_C and 'c' or 'cpp'
-    _.cxflags_name = cxflags
+    local funcprefix = (self.is_C and 'jln_c_' or 'jln_cxx_')
+    local compprefix = (self.is_C and 'cc' or 'cxx')
+    local cxflags = self.is_C and 'cflags' or 'cxxflags'
+    local import_base = self.is_C and 'c' or 'cpp'
+    self.cxflags_name = cxflags
 
     local extraopts = {
       {compprefix, 'Path or name of the compiler for jln functions'},
@@ -53,35 +53,35 @@ return {
       {'ld', 'Path or name of the linker for jln functions'},
     }
 
-    _:print('local _extraopt_flag_names = {')
+    self:print('local _extraopt_flag_names = {')
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
-      local opt = _:tostroption(optname)
-      _:print('  ["' .. opt .. '"] = true,')
-      _:print('  ["' .. optname .. '"] = true,')
+      local opt = self:tostroption(optname)
+      self:print('  ["' .. opt .. '"] = true,')
+      self:print('  ["' .. optname .. '"] = true,')
     end
-    _:print('}\n')
+    self:print('}\n')
 
-    _:print('local _flag_names = {')
-    for option in _:getoptions() do
-      local opt = _:tostroption(option.name)
+    self:print('local _flag_names = {')
+    for option in self:getoptions() do
+      local opt = self:tostroption(option.name)
       local list = {}
       for _,arg in ipairs(option.values) do
         table_insert(list, '["' .. arg .. '"]="' .. todefault(arg) .. '", ')
       end
       local allowed = table.concat(list)
-      _:print('  ["' .. opt .. '"] = {' .. allowed .. '[""]=""},')
+      self:print('  ["' .. opt .. '"] = {' .. allowed .. '[""]=""},')
       if opt ~= option.name then
-        _:print('  ["' .. option.name .. '"] = {' .. allowed .. '[""]=""},')
+        self:print('  ["' .. option.name .. '"] = {' .. allowed .. '[""]=""},')
       end
     end
-    _:print('}\n')
+    self:print('}\n')
 
-    local common_code = _:get_output()
-    _._strs = {}
+    local common_code = self:get_output()
+    self._strs = {}
 
-    _:print_header('--')
-    _:print([[
+    self:print_header('--')
+    self:print([[
 local _import_base = ']] .. import_base .. [['
 
 -- Registers new command-line options and set default values
@@ -91,9 +91,9 @@ local _import_base = ']] .. import_base .. [['
 --   import_base: string = ']] .. import_base .. [[' -- default value for ]] .. funcprefix .. [[rule()
 -- }
 ]])
-    _:print('\nfunction ' .. funcprefix .. 'init_options(default_options, extra_options)')
-    _:print(common_code)
-    _:print([[
+    self:print('\nfunction ' .. funcprefix .. 'init_options(default_options, extra_options)')
+    self:print(common_code)
+    self:print([[
   if default_options then
     for k,v in pairs(default_options) do
       local ref = _flag_names[k]
@@ -128,30 +128,30 @@ local _import_base = ']] .. import_base .. [['
           or category
           or nil
     ]])
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local optname = option.name
-      local opt = _:tostroption(optname)
-      _:print('  option("' .. opt .. '", {')
-      _:print('           showmenu=true,')
-      _:print('           category=category,')
-      _:print('           description="' .. quotable_desc(option) .. '",')
-      _:print('           values={"' .. table.concat(option.values, '", "') .. '"},')
-      _:print('           default=default_options["' .. optname .. '"] '
+      local opt = self:tostroption(optname)
+      self:print('  option("' .. opt .. '", {')
+      self:print('           showmenu=true,')
+      self:print('           category=category,')
+      self:print('           description="' .. quotable_desc(option) .. '",')
+      self:print('           values={"' .. table.concat(option.values, '", "') .. '"},')
+      self:print('           default=default_options["' .. optname .. '"] '
               .. (opt ~= optname and 'or default_options["' .. opt .. '"] ' or '')
               .. 'or "' .. option.default .. '",')
-      _:print('           after_check=function(option) check_option("'
+      self:print('           after_check=function(option) check_option("'
               .. opt .. '", "' .. optname .. '") end,')
-      _:print('         })')
+      self:print('         })')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
       local desc = extra[2]
-      local opt = _:tostroption(optname)
-      _:print('  option("' .. opt .. '", {showmenu=true, description="' .. desc .. '", default=""})')
+      local opt = self:tostroption(optname)
+      self:print('  option("' .. opt .. '", {showmenu=true, description="' .. desc .. '", default=""})')
     end
-    _:print('end\n')
+    self:print('end\n')
 
-    _:print([[
+    self:print([[
 -- Set options for a specific mode (see also ]] .. funcprefix .. [[rule())
 -- `options_by_modes` = {
 --   [modename]: {
@@ -228,12 +228,12 @@ function ]] .. funcprefix .. [[rule(rulename, options, extra_options)
 end
 ]])
 
-    _._options_str = _:get_output()
-    _._strs = {}
-    _:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
-    _:print(common_code)
+    self._options_str = self:get_output()
+    self._strs = {}
+    self:print('-- File generated with https://github.com/jonathanpoelen/cpp-compiler-options\n')
+    self:print(common_code)
 
-    _:print([[
+    self:print([[
 import'core.platform.platform'
 import'lib.detect'
 
@@ -269,37 +269,37 @@ function create_options(options, extra_options)
     _check_flags(options)
     local disable_other_options = extra_options and extra_options.disable_other_options
     return {]])
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local optname = option.name
-      local opt = _:tostroption(optname)
+      local opt = self:tostroption(optname)
       local isnotsamename = (opt ~= optname)
-      _:print('      ' .. optname .. ' = options.' .. optname .. ' '
+      self:print('      ' .. optname .. ' = options.' .. optname .. ' '
               .. (isnotsamename and 'or options["' .. opt .. '"] ' or '')
               .. 'or (disable_other_options and "" or _flag_names.' .. optname
               .. '[get_config("' .. opt .. '")]),')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
-      local opt = _:tostroption(optname)
-      _:print('      ' .. optname .. ' = options.' .. optname .. ' '
+      local opt = self:tostroption(optname)
+      self:print('      ' .. optname .. ' = options.' .. optname .. ' '
               .. (isnotsamename and 'or options["' .. opt .. '"] ' or '')
               .. 'or (not disable_other_options and _get_extra("' .. opt .. '")) or nil,')
     end
-    _:print([[    }
+    self:print([[    }
   else
     return {]])
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local optname = option.name
-      local opt = _:tostroption(optname)
-      _:print('      ["' .. optname .. '"] = _flag_names["' .. optname
+      local opt = self:tostroption(optname)
+      self:print('      ["' .. optname .. '"] = _flag_names["' .. optname
               .. '"][get_config("' .. opt .. '")],')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
-      local opt = _:tostroption(optname)
-      _:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
+      local opt = self:tostroption(optname)
+      self:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
     end
-    _:print([[    }
+    self:print([[    }
   end
 end
 
@@ -422,7 +422,7 @@ function get_flags(options, extra_options)
       version = restored_version or version
     else
       local toolname
-      compiler, toolname = platform.tool(']] .. (_.is_C and "cc" or "cxx") .. [[')
+      compiler, toolname = platform.tool(']] .. (self.is_C and "cc" or "cxx") .. [[')
       if not compiler then
         -- wprint("Unknown compiler")
         add_comp_cache(original_compiler, original_version, {})
@@ -474,25 +474,25 @@ function get_flags(options, extra_options)
 ]])
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return 'options.' .. optname .. ' == "' .. todefault(lvl) .. '"' end,
-  _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100000 + minor) end,
-  _vcond_compiler=function(_, compiler) return 'compiler == "' .. tocomp(compiler) .. '"' end,
-  _vcond_platform=function(_, platform) return 'is_plat("' .. toplatform(platform) .. '")' end,
-  _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
+  _vcond_lvl=function(self, lvl, optname) return 'options.' .. optname .. ' == "' .. todefault(lvl) .. '"' end,
+  _vcond_verless=function(self, major, minor) return 'compversion < ' .. tostring(major * 100000 + minor) end,
+  _vcond_compiler=function(self, compiler) return 'compiler == "' .. tocomp(compiler) .. '"' end,
+  _vcond_platform=function(self, platform) return 'is_plat("' .. toplatform(platform) .. '")' end,
+  _vcond_linker=function(self, linker) return 'linker == "' .. linker .. '"' end,
 
-  cxx=function(_, x) return _.indent .. 'insert(jln_cxflags, "' .. x .. '")\n' end,
-  link=function(_, x) return _.indent .. 'insert(jln_ldflags, "' .. x .. '")\n' end,
+  cxx=function(self, x) return self.indent .. 'insert(jln_cxflags, "' .. x .. '")\n' end,
+  link=function(self, x) return self.indent .. 'insert(jln_ldflags, "' .. x .. '")\n' end,
 
-  act=function(_, name, datas, optname)
-    _:print(_.indent .. '-- unimplementable')
+  act=function(self, name, datas, optname)
+    self:print(self.indent .. '-- unimplementable')
     return true
   end,
 
-  stop=function(_, filebase)
-    _:print('  return {' .. _.cxflags_name .. '=jln_cxflags, ldflags=jln_ldflags}\nend\n')
+  stop=function(self, filebase)
+    self:print('  return {' .. self.cxflags_name .. '=jln_cxflags, ldflags=jln_ldflags}\nend\n')
     return filebase and {
-      {filebase .. '_options.lua', _._options_str},
-      {filebase, _:get_output()}
-    } or _:get_output()
+      {filebase .. '_options.lua', self._options_str},
+      {filebase, self:get_output()}
+    } or self:get_output()
   end,
 }

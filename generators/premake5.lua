@@ -6,13 +6,13 @@ return {
     msvc_isystem={external_as_include_system_flag=true},
   },
 
-  tostroption=function(_, optname)
-    return _.optprefix .. optname:gsub('_', '-')
+  tostroption=function(self, optname)
+    return self.optprefix .. optname:gsub('_', '-')
   end,
 
-  start=function(_, optprefix)
-    _.optprefix = optprefix or ''
-    _:_vcond_init({
+  start=function(self, optprefix)
+    self.optprefix = optprefix or ''
+    self:_vcond_init({
       _not='not',
       _and='and',
       _or='or',
@@ -23,14 +23,14 @@ return {
       endif='end',
     })
 
-    _:print_header('--')
+    self:print_header('--')
 
-    local compprefix = (_.is_C and 'cc' or 'cxx')
-    local prefixfunc = _.is_C and 'jln_c' or 'jln'
-    local comp_gcc = _.is_C and "'gcc'" or "'g++'"
-    local comp_clang = _.is_C and "'clang'" or "'clang++'"
-    local comp_icc = _.is_C and "'icc'" or "'icp'"
-    local comp_icx = _.is_C and "'icx'" or "'icpx'"
+    local compprefix = (self.is_C and 'cc' or 'cxx')
+    local prefixfunc = self.is_C and 'jln_c' or 'jln'
+    local comp_gcc = self.is_C and "'gcc'" or "'g++'"
+    local comp_clang = self.is_C and "'clang'" or "'clang++'"
+    local comp_icc = self.is_C and "'icc'" or "'icp'"
+    local comp_icx = self.is_C and "'icx'" or "'icpx'"
 
     local extraopts = {
       {compprefix, 'Path or name of the compiler for jln functions'},
@@ -38,27 +38,27 @@ return {
       {'ld', 'Path or name of the linker for jln functions'},
     }
 
-    _:print('local _' .. prefixfunc .. '_extraopt_flag_names = {')
+    self:print('local _' .. prefixfunc .. '_extraopt_flag_names = {')
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
-      local opt = _:tostroption(optname)
-      _:print('  ["' .. opt .. '"] = true,')
-      _:print('  ["' .. optname .. '"] = true,')
+      local opt = self:tostroption(optname)
+      self:print('  ["' .. opt .. '"] = true,')
+      self:print('  ["' .. optname .. '"] = true,')
     end
-    _:print('}\n')
+    self:print('}\n')
 
-    _:print('local _' .. prefixfunc .. '_flag_names = {')
-    for option in _:getoptions() do
+    self:print('local _' .. prefixfunc .. '_flag_names = {')
+    for option in self:getoptions() do
       local optname = option.name
-      local opt = _:tostroption(optname)
-      _:print('  ["' .. opt .. '"] = true,')
+      local opt = self:tostroption(optname)
+      self:print('  ["' .. opt .. '"] = true,')
       if opt ~= optname then
-        _:print('  ["' .. optname .. '"] = true,')
+        self:print('  ["' .. optname .. '"] = true,')
       end
     end
-    _:print('}\n')
+    self:print('}\n')
 
-    _:print([[
+    self:print([[
 local _]] .. prefixfunc .. [[_check_flag_names = function(t)
   for k in pairs(t) do
     if not _]] .. prefixfunc .. [[_flag_names[k]
@@ -68,15 +68,15 @@ local _]] .. prefixfunc .. [[_check_flag_names = function(t)
   end
 end]])
 
-    _:print('\nfunction ' .. prefixfunc .. '_newoptions(defaults)')
-    _:print('  if defaults then')
-    _:print('    _' .. prefixfunc .. '_check_flag_names(defaults)')
-    _:print('  else')
-    _:print('    defaults = {}')
-    _:print('  end')
-    for option in _:getoptions() do
+    self:print('\nfunction ' .. prefixfunc .. '_newoptions(defaults)')
+    self:print('  if defaults then')
+    self:print('    _' .. prefixfunc .. '_check_flag_names(defaults)')
+    self:print('  else')
+    self:print('    defaults = {}')
+    self:print('  end')
+    for option in self:getoptions() do
       local optname = option.name
-      local opt = _:tostroption(optname)
+      local opt = self:tostroption(optname)
       local values = {}
       for i,v in ipairs(option.values) do
         local desc = option.value_descriptions[i]
@@ -86,18 +86,18 @@ end]])
           table_insert(values, "{'" .. v .. "'}")
         end
       end
-      _:print('\n  newoption{trigger="' .. opt .. '", allowed={' ..  table.concat(values, ', ') .. '}, description="' .. quotable(option.description) .. '"}')
-      _:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. option.default .. '") end')
+      self:print('\n  newoption{trigger="' .. opt .. '", allowed={' ..  table.concat(values, ', ') .. '}, description="' .. quotable(option.description) .. '"}')
+      self:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. option.default .. '") end')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
       local desc = extra[2]
-      local opt = _:tostroption(optname)
-      _:print('  newoption{trigger="' .. opt .. '", description="' .. desc .. '"}')
+      local opt = self:tostroption(optname)
+      self:print('  newoption{trigger="' .. opt .. '", description="' .. desc .. '"}')
     end
-    _:print('end\n')
+    self:print('end\n')
 
-    _:print([[
+    self:print([[
 -- same as ]] .. prefixfunc .. [[_getoptions
 function ]] .. prefixfunc .. [[_setoptions(compiler, version, values, disable_others, print_compiler)
   local options = ]] .. prefixfunc .. [[_getoptions(compiler, version, values, disable_others, print_compiler)
@@ -135,35 +135,35 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
   if values then
     _]] .. prefixfunc .. [[_check_flag_names(values)
     return {]])
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local optname = option.name
-      local opt = _:tostroption(optname)
+      local opt = self:tostroption(optname)
       local isnotsamename = (opt ~= optname)
-      _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
+      self:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
               .. 'or (disable_others and "default" or _OPTIONS["' .. opt .. '"]),')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
-      local opt = _:tostroption(optname)
-      _:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
+      local opt = self:tostroption(optname)
+      self:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
               .. 'or (not disable_others and _get_extra("' .. opt .. '")) or nil,')
     end
-    _:print([[}
+    self:print([[}
   else
     return {]])
-    for option in _:getoptions() do
+    for option in self:getoptions() do
       local optname = option.name
-      local opt = _:tostroption(optname)
-      _:print('      ["' .. optname .. '"] = _OPTIONS["' .. opt .. '"],')
+      local opt = self:tostroption(optname)
+      self:print('      ["' .. optname .. '"] = _OPTIONS["' .. opt .. '"],')
     end
     for i,extra in ipairs(extraopts) do
       local optname = extra[1]
-      local opt = _:tostroption(optname)
-      _:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
+      local opt = self:tostroption(optname)
+      self:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
     end
-    _:print([[}
+    self:print([[}
   end
 end
 
@@ -198,11 +198,11 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
     cache[original_compiler] = {}
 
     if not compiler then
-      compiler = _OPTIONS[']] .. _:tostroption'compiler' .. [[']
+      compiler = _OPTIONS[']] .. self:tostroption'compiler' .. [[']
               or _OPTIONS['cc']
               or _]] .. prefixfunc .. [[_compiler_by_os[os.target()]
               or _]] .. prefixfunc .. [[_default_compiler
-      version = _OPTIONS[']] .. _:tostroption'compiler-version' .. [['] or nil
+      version = _OPTIONS[']] .. self:tostroption'compiler-version' .. [['] or nil
     end
 
     local compiler_path = compiler
@@ -273,22 +273,22 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
 ]])
   end,
 
-  _vcond_lvl=function(_, lvl, optname) return 'values["' .. optname .. '"] == "' .. lvl .. '"' end,
-  _vcond_verless=function(_, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
-  _vcond_compiler=function(_, compiler) return 'compiler == "' .. compiler .. '"' end,
-  _vcond_platform=function(_, platform) return 'os.target() == "' .. platform .. '"' end,
-  _vcond_linker=function(_, linker) return 'linker == "' .. linker .. '"' end,
+  _vcond_lvl=function(self, lvl, optname) return 'values["' .. optname .. '"] == "' .. lvl .. '"' end,
+  _vcond_verless=function(self, major, minor) return 'compversion < ' .. tostring(major * 100 + minor) end,
+  _vcond_compiler=function(self, compiler) return 'compiler == "' .. compiler .. '"' end,
+  _vcond_platform=function(self, platform) return 'os.target() == "' .. platform .. '"' end,
+  _vcond_linker=function(self, linker) return 'linker == "' .. linker .. '"' end,
 
-  cxx=function(_, x) return _.indent .. 'table_insert(jln_buildoptions, "' .. x .. '")\n' end,
-  link=function(_, x) return _.indent .. 'table_insert(jln_linkoptions, "' .. x .. '")\n' end,
+  cxx=function(self, x) return self.indent .. 'table_insert(jln_buildoptions, "' .. x .. '")\n' end,
+  link=function(self, x) return self.indent .. 'table_insert(jln_linkoptions, "' .. x .. '")\n' end,
 
-  act=function(_, name, datas, optname)
-    _:print(_.indent .. '-- unimplementable')
+  act=function(self, name, datas, optname)
+    self:print(self.indent .. '-- unimplementable')
     return true
   end,
 
-  stop=function(_)
-    _:print('  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\n')
-    return _:get_output()
+  stop=function(self)
+    self:print('  return {buildoptions=jln_buildoptions, linkoptions=jln_linkoptions}\nend\n')
+    return self:get_output()
   end,
 }
