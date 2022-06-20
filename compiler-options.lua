@@ -489,22 +489,24 @@ Or(gcc, clang_like) {
       flag'-fsanitize=address', -- memory, thread are mutually exclusive
       flag'-fsanitize-address-use-after-scope',
     } /
-    clang {
+    Or(clang, clang_emcc) {
       vers(3,1) {
         fl'-fsanitize=undefined',
         fl'-fsanitize=address', -- memory, thread are mutually exclusive
         flag'-fsanitize-address-use-after-scope',
         flag'-fno-omit-frame-pointer',
         flag'-fno-optimize-sibling-calls',
-        vers(3,4) {
-          fl'-fsanitize=leak', -- requires the address sanitizer
-        },
-        vers(6) {
-          opt'stack_protector' {
-            -lvl'off' {
-              flag'-fsanitize-minimal-runtime',
+        clang {
+          vers(3,4) {
+            fl'-fsanitize=leak', -- requires the address sanitizer
+          },
+          vers(6) {
+            opt'stack_protector' {
+              -lvl'off' {
+                flag'-fsanitize-minimal-runtime',
+              }
             }
-          }
+          },
         },
       }
     } /
@@ -524,6 +526,22 @@ Or(gcc, clang_like) {
   },
 
   opt'control_flow' {
+    clang_emcc {
+      lvl'off' {
+        link'-sASSERTIONS=0',
+        link'-sSAFE_HEAP=0',
+      } / {
+        -- Building with ASSERTIONS=1 causes STACK_OVERFLOW_CHECK=1
+        link'-sASSERTIONS=1',
+        link'-sDEMANGLE_SUPPORT=1',
+        -- ASan does not work with SAFE_HEAP
+        opt'sanitizers' {
+          -lvl'on' { link'-sSAFE_HEAP=1' },
+        } / {
+          link'-sSAFE_HEAP=1'
+        },
+      }
+    } /
     lvl'off' {
       gcc(8) {
         flag'-fcf-protection=none'
@@ -728,6 +746,38 @@ Or(gcc, clang, clang_emcc) {
     },
   },
 },
+
+clang_emcc {
+  opt'optimization' {
+    lvl'0' { fl'-O0' } /
+    lvl'g' { fl'-Og' } /
+    {
+      flag'-DNDEBUG',
+      lvl'1' { fl'-O1' } /
+      lvl'2' { fl'-O2' } /
+      {
+        lvl'3' { fl'-O3' } /
+        lvl'fast' {
+          fl'-O3',
+          -- The LLVM wasm backend avoids traps by adding more code around each possible trap
+          -- (basically clamping the value if it would trap).
+          -- That code may not run in older VMs, though.
+          fl'-mnontrapping-fptoint',
+        } /
+        lvl'size' { fl'-Os' } /
+        lvl'z' { fl'-Oz' },
+        -- -- This greatly reduces the size of the support JavaScript code
+        -- -- Note that this increases compile time significantly.
+        -- fl'--closure 1',
+      }
+    }
+  },
+
+  opt'debug' {
+    lvl'off' { flag'-g0' } /
+    flag'-g',
+  },
+} /
 
 Or(gcc, clang) {
   opt'coverage' {
@@ -1006,12 +1056,12 @@ Or(msvc, clang_cl, icl) {
     }
   },
 
+  opt'stl_fix' {
+    lvl'on' { flag'/DNOMINMAX', },
+  },
+
   -- msvc and clang_cl
   -icl {
-    opt'stl_fix' {
-      lvl'on' { flag'/DNOMINMAX', },
-    },
-
     opt'debug' {
       lvl'off' { flag'/DEBUG:NONE' } / {
         flag'/RTC1',
@@ -1678,47 +1728,6 @@ icc {
 mingw {
   opt'windows_bigobj' {
     flag'-Wa,-mbig-obj',
-  },
-} /
-
-clang_emcc {
-  opt'optimization' {
-    lvl'0' { fl'-O0' } /
-    lvl'g' { fl'-Og' } /
-    {
-      flag'-DNDEBUG',
-      lvl'1' { fl'-O1' } /
-      lvl'2' { fl'-O2' } /
-      {
-        lvl'3' { fl'-O3' } /
-        lvl'fast' {
-          fl'-O3',
-          -- The LLVM wasm backend avoids traps by adding more code around each possible trap
-          -- (basically clamping the value if it would trap).
-          -- That code may not run in older VMs, though.
-          fl'-mnontrapping-fptoint',
-        } /
-        lvl'size' { fl'-Os' } /
-        lvl'z' { fl'-Oz' },
-        -- -- This greatly reduces the size of the support JavaScript code
-        -- -- Note that this increases compile time significantly.
-        -- fl'--closure 1',
-      }
-    }
-  },
-
-  opt'debug' {
-    -lvl'off' {
-      -- Building with ASSERTIONS=1 causes STACK_OVERFLOW_CHECK=1
-      link'-sASSERTIONS=1',
-      link'-sDEMANGLE_SUPPORT=1',
-      -- ASan does not work with SAFE_HEAP
-      opt'sanitizers' {
-        -lvl'on' { link'-sSAFE_HEAP=1' },
-      } / {
-        link'-sSAFE_HEAP=1'
-      },
-    }
   },
 },
 
