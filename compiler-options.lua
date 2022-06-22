@@ -352,7 +352,7 @@ Or(gcc, clang_like) {
           Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
             flag'-Wswitch-enum',
           } /
-          lvl'off' {
+          --[[lvl'off']] {
             flag'-Wno-switch',
             flag'-Wno-switch-enum',
           }
@@ -588,7 +588,7 @@ Or(gcc, clang_like) {
     Or(gcc'>=4.9', -gcc --[[=clang_like]]) {
       lvl'auto' { flag'-fdiagnostics-color=auto' } /
       lvl'never' { flag'-fdiagnostics-color=never' } /
-      lvl'always' { flag'-fdiagnostics-color=always' },
+      --[[lvl'always']] { flag'-fdiagnostics-color=always' },
     },
   },
 
@@ -607,7 +607,7 @@ Or(gcc, clang_like) {
     lvl'patch' {
       gcc'>=7' { flag'-fdiagnostics-generate-patch' }
     } /
-    lvl'print_source_range_info' {
+    --[[lvl'print_source_range_info']] {
       clang { flag'-fdiagnostics-print-source-range-info' }
     }
   },
@@ -674,7 +674,7 @@ Or(gcc, clang_like) {
       lvl'local' {
         flag'-Wshadow=local'
       } /
-      lvl'compatible_local' {
+      --[[lvl'compatible_local']] {
         flag'-Wshadow=compatible-local'
       }
     }
@@ -721,7 +721,7 @@ opt'conversion_warnings' {
       flag'-Wsign-compare',
       flag'-Wsign-conversion',
     } /
-    {
+    --[[lvl'off']] {
       flag'-Wno-conversion',
       flag'-Wno-sign-compare',
       flag'-Wno-sign-conversion',
@@ -779,7 +779,7 @@ clang_emcc {
         fl'-mnontrapping-fptoint',
       } /
       lvl'size' { fl'-Os' } /
-      lvl'z' {
+      --[[lvl'z']] {
         fl'-Oz'
         -- -- This greatly reduces the size of the support JavaScript code
         -- -- Note that this increases compile time significantly.
@@ -830,7 +830,7 @@ Or(gcc, clang) {
       lvl'3' { flag'-O3' } /
       lvl'size' { flag'-Os' } /
       lvl'z' { clang { flag'-Oz' } / flag'-Os' } /
-      lvl'fast' { flag'-Ofast' }
+      --[[lvl'fast']] { flag'-Ofast' }
     }
   },
 
@@ -945,7 +945,8 @@ Or(gcc, clang) {
   opt'relro' {
     lvl'off' { link'-Wl,-z,norelro', } /
     lvl'on'  { link'-Wl,-z,relro', } /
-    lvl'full'{
+    --[[lvl'full']]
+    {
       link'-Wl,-z,relro,-z,now,-z,noexecstack',
       opt'linker' {
         -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
@@ -956,13 +957,13 @@ Or(gcc, clang) {
   },
 
   opt'pie' {
-    lvl'off'{ link'-no-pic', } /
-    lvl'on' { link'-pie', } /
-    lvl'static' { link'-static-pie', } /
+    lvl'off' { link'-no-pic', } /
+    lvl'on'  { link'-pie', } /
     lvl'fpie'{ flag'-fpie', } /
     lvl'fpic'{ flag'-fpic', } /
     lvl'fPIE'{ flag'-fPIE', } /
-    lvl'fPIC'{ flag'-fPIC', },
+    lvl'fPIC'{ flag'-fPIC', } /
+    --[[lvl'static']] { link'-static-pie', }
   },
 
   opt'other_sanitizers' {
@@ -1117,7 +1118,7 @@ Or(msvc, clang_cl, icl) {
         lvl'2' { flag'/O2', } /
         lvl'3' { flag'/O2', } /
         Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' } /
-        lvl'fast' { flag'/O2', flag'/fp:fast' }
+        --[[lvl'fast']] { flag'/O2', flag'/fp:fast' }
       }
     },
 
@@ -1282,7 +1283,7 @@ msvc {
         flag'/w14061',
         flag'/w14062',
       } /
-      lvl'off' { flag'/wd4061', flag'/wd4062' }
+      --[[lvl'off']] { flag'/wd4061', flag'/wd4062' }
     },
   } /
   opt'warnings' {
@@ -1478,7 +1479,7 @@ icl {
       lvl'3' { flag'/O2', } /
       lvl'z' { flag'/O3', } /
       lvl'size' { flag'/Os', } /
-      lvl'fast' { flag'/fast' }
+      --[[lvl'fast']] { flag'/fast' }
     }
   },
 
@@ -1632,7 +1633,7 @@ icc {
       lvl'3' { flag'-O3', } /
       lvl'z' { flag'-fast', } /
       lvl'size' { flag'-Os', } /
-      lvl'fast' { flag'-Ofast' }
+      --[[lvl'fast']] { flag'-Ofast' }
     }
   },
 
@@ -1656,7 +1657,7 @@ icc {
   opt'relro' {
     lvl'off' { link'-Xlinker-znorelro', } /
     lvl'on'  { link'-Xlinker-zrelro', } /
-    lvl'full'{
+    --[[lvl'full']] {
       link'-Xlinker-zrelro',
       link'-Xlinker-znow',
       link'-Xlinker-znoexecstack',
@@ -1710,15 +1711,14 @@ icc {
     lvl'off' {
       flag'-mconditional-branch=keep',
       flag'-fcf-protection=none',
-    } / {
-      lvl'branch' {
-        flag'-mconditional-branch=all-fix',
-        flag'-fcf-protection=branch',
-      } /
-      lvl'on' {
-        flag'-mconditional-branch=all-fix',
-        flag'-fcf-protection=full',
-      }
+    } /
+    lvl'branch' {
+      flag'-mconditional-branch=all-fix',
+      flag'-fcf-protection=branch',
+    } /
+    lvl'on' {
+      flag'-mconditional-branch=all-fix',
+      flag'-fcf-protection=full',
     }
   },
 
