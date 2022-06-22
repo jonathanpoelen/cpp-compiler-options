@@ -10,6 +10,12 @@ local _jln_extraopt_flag_names = {
 }
 
 local _jln_flag_names = {
+  ["jln-analyzer"] = true,
+  ["analyzer"] = true,
+  ["jln-analyzer-too-complex-warning"] = true,
+  ["analyzer_too_complex_warning"] = true,
+  ["jln-analyzer-verbosity"] = true,
+  ["analyzer_verbosity"] = true,
   ["jln-color"] = true,
   ["color"] = true,
   ["jln-control-flow"] = true,
@@ -50,6 +56,8 @@ local _jln_flag_names = {
   ["msvc_isystem"] = true,
   ["jln-msvc-isystem-with-template-from-non-external"] = true,
   ["msvc_isystem_with_template_from_non_external"] = true,
+  ["jln-ndebug"] = true,
+  ["ndebug"] = true,
   ["jln-noexcept-warnings"] = true,
   ["noexcept_warnings"] = true,
   ["jln-optimization"] = true,
@@ -110,6 +118,15 @@ function jln_newoptions(defaults)
     defaults = {}
   end
 
+  newoption{trigger="jln-analyzer", allowed={{'default'}, {'off'}, {'on'}, {'taint'}}, description="enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)"}
+  if not _OPTIONS["jln-analyzer"] then _OPTIONS["jln-analyzer"] = (defaults["analyzer"] or defaults["jln-analyzer"] or "default") end
+
+  newoption{trigger="jln-analyzer-too-complex-warning", allowed={{'default'}, {'off'}, {'on'}}, description="By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs."}
+  if not _OPTIONS["jln-analyzer-too-complex-warning"] then _OPTIONS["jln-analyzer-too-complex-warning"] = (defaults["analyzer_too_complex_warning"] or defaults["jln-analyzer-too-complex-warning"] or "default") end
+
+  newoption{trigger="jln-analyzer-verbosity", allowed={{'default'}, {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'}, {'1', 'As per the previous level, but also show events for the entry to each function.'}, {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'}, {'3', 'As per the previous level, but show all control flow events, not just significant ones.'}}, description="controls the complexity of the control flow paths that are emitted for analyzer diagnostics"}
+  if not _OPTIONS["jln-analyzer-verbosity"] then _OPTIONS["jln-analyzer-verbosity"] = (defaults["analyzer_verbosity"] or defaults["jln-analyzer-verbosity"] or "default") end
+
   newoption{trigger="jln-color", allowed={{'default'}, {'auto'}, {'never'}, {'always'}}, description=""}
   if not _OPTIONS["jln-color"] then _OPTIONS["jln-color"] = (defaults["color"] or defaults["jln-color"] or "default") end
 
@@ -169,6 +186,9 @@ function jln_newoptions(defaults)
 
   newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{'default'}, {'off'}, {'on'}}, description="warnings concerning template in an external header (requires msvc_isystem)"}
   if not _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] then _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] = (defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default") end
+
+  newoption{trigger="jln-ndebug", allowed={{'default'}, {'off'}, {'on'}, {'with_optimization_1_or_above'}}, description="enable NDEBUG macro (disable assert macro)"}
+  if not _OPTIONS["jln-ndebug"] then _OPTIONS["jln-ndebug"] = (defaults["ndebug"] or defaults["jln-ndebug"] or "with_optimization_1_or_above") end
 
   newoption{trigger="jln-noexcept-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception."}
   if not _OPTIONS["jln-noexcept-warnings"] then _OPTIONS["jln-noexcept-warnings"] = (defaults["noexcept_warnings"] or defaults["jln-noexcept-warnings"] or "default") end
@@ -273,6 +293,9 @@ function jln_tovalues(values, disable_others)
   if values then
     _jln_check_flag_names(values)
     return {
+      ["analyzer"] = values["analyzer"] or values["jln-analyzer"] or (disable_others and "default" or _OPTIONS["jln-analyzer"]),
+      ["analyzer_too_complex_warning"] = values["analyzer_too_complex_warning"] or values["jln-analyzer-too-complex-warning"] or (disable_others and "default" or _OPTIONS["jln-analyzer-too-complex-warning"]),
+      ["analyzer_verbosity"] = values["analyzer_verbosity"] or values["jln-analyzer-verbosity"] or (disable_others and "default" or _OPTIONS["jln-analyzer-verbosity"]),
       ["color"] = values["color"] or values["jln-color"] or (disable_others and "default" or _OPTIONS["jln-color"]),
       ["control_flow"] = values["control_flow"] or values["jln-control-flow"] or (disable_others and "default" or _OPTIONS["jln-control-flow"]),
       ["conversion_warnings"] = values["conversion_warnings"] or values["jln-conversion-warnings"] or (disable_others and "default" or _OPTIONS["jln-conversion-warnings"]),
@@ -293,6 +316,7 @@ function jln_tovalues(values, disable_others)
       ["msvc_crt_secure_no_warnings"] = values["msvc_crt_secure_no_warnings"] or values["jln-msvc-crt-secure-no-warnings"] or (disable_others and "default" or _OPTIONS["jln-msvc-crt-secure-no-warnings"]),
       ["msvc_isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem"]),
       ["msvc_isystem_with_template_from_non_external"] = values["msvc_isystem_with_template_from_non_external"] or values["jln-msvc-isystem-with-template-from-non-external"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem-with-template-from-non-external"]),
+      ["ndebug"] = values["ndebug"] or values["jln-ndebug"] or (disable_others and "default" or _OPTIONS["jln-ndebug"]),
       ["noexcept_warnings"] = values["noexcept_warnings"] or values["jln-noexcept-warnings"] or (disable_others and "default" or _OPTIONS["jln-noexcept-warnings"]),
       ["optimization"] = values["optimization"] or values["jln-optimization"] or (disable_others and "default" or _OPTIONS["jln-optimization"]),
       ["other_sanitizers"] = values["other_sanitizers"] or values["jln-other-sanitizers"] or (disable_others and "default" or _OPTIONS["jln-other-sanitizers"]),
@@ -320,6 +344,9 @@ function jln_tovalues(values, disable_others)
 }
   else
     return {
+      ["analyzer"] = _OPTIONS["jln-analyzer"],
+      ["analyzer_too_complex_warning"] = _OPTIONS["jln-analyzer-too-complex-warning"],
+      ["analyzer_verbosity"] = _OPTIONS["jln-analyzer-verbosity"],
       ["color"] = _OPTIONS["jln-color"],
       ["control_flow"] = _OPTIONS["jln-control-flow"],
       ["conversion_warnings"] = _OPTIONS["jln-conversion-warnings"],
@@ -340,6 +367,7 @@ function jln_tovalues(values, disable_others)
       ["msvc_crt_secure_no_warnings"] = _OPTIONS["jln-msvc-crt-secure-no-warnings"],
       ["msvc_isystem"] = _OPTIONS["jln-msvc-isystem"],
       ["msvc_isystem_with_template_from_non_external"] = _OPTIONS["jln-msvc-isystem-with-template-from-non-external"],
+      ["ndebug"] = _OPTIONS["jln-ndebug"],
       ["noexcept_warnings"] = _OPTIONS["jln-noexcept-warnings"],
       ["optimization"] = _OPTIONS["jln-optimization"],
       ["other_sanitizers"] = _OPTIONS["jln-other-sanitizers"],
@@ -460,7 +488,7 @@ function jln_getoptions(values, disable_others, print_compiler)
       printf("WARNING: wrong version format")
       return {buildoptions={}, linkoptions={}}
     end
-    compversion = compversion[1] * 100 + (compversion[2] or 0)
+    compversion = compversion[1] * 100000 + (compversion[2] or 0)
 
     cache[original_compiler] = {compiler, version, compversion}
   end
@@ -471,12 +499,43 @@ function jln_getoptions(values, disable_others, print_compiler)
 
   local jln_buildoptions, jln_linkoptions = {}, {}
 
-  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" ) then
-    if not ( values["warnings"] == "default") then
-      if values["warnings"] == "off" then
+  if values['ndebug']~='default' then
+    if ( compiler == 'msvc' or compiler == 'icl' ) then
+      if values['ndebug'] == 'off' then
+        table_insert(jln_buildoptions, "/UNDEBUG")
+      else
+        if values['ndebug'] == 'on' then
+          table_insert(jln_buildoptions, "/DNDEBUG")
+        else
+          if values['optimization']~='default' then
+            if not ( ( values['optimization'] == '0' or values['optimization'] == 'g' ) ) then
+              table_insert(jln_buildoptions, "/DNDEBUG")
+            end
+          end
+        end
+      end
+    else
+      if values['ndebug'] == 'off' then
+        table_insert(jln_buildoptions, "-UNDEBUG")
+      else
+        if values['ndebug'] == 'on' then
+          table_insert(jln_buildoptions, "-DNDEBUG")
+        else
+          if values['optimization']~='default' then
+            if not ( ( values['optimization'] == '0' or values['optimization'] == 'g' ) ) then
+              table_insert(jln_buildoptions, "-DNDEBUG")
+            end
+          end
+        end
+      end
+    end
+  end
+  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) then
+    if values['warnings']~='default' then
+      if values['warnings'] == 'off' then
         table_insert(jln_buildoptions, "-w")
       else
-        if compiler == "gcc" then
+        if compiler == 'gcc' then
           table_insert(jln_buildoptions, "-Wall")
           table_insert(jln_buildoptions, "-Wextra")
           table_insert(jln_buildoptions, "-Wcast-align")
@@ -496,17 +555,17 @@ function jln_getoptions(values, disable_others, print_compiler)
           table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
           table_insert(jln_buildoptions, "-Wold-style-cast")
           table_insert(jln_buildoptions, "-Woverloaded-virtual")
-          if not ( values["switch_warnings"] == "default") then
-            if values["switch_warnings"] == "on" then
+          if values['switch_warnings']~='default' then
+            if values['switch_warnings'] == 'on' then
               table_insert(jln_buildoptions, "-Wswitch")
             else
-              if values["switch_warnings"] == "exhaustive_enum" then
+              if values['switch_warnings'] == 'exhaustive_enum' then
                 table_insert(jln_buildoptions, "-Wswitch-enum")
               else
-                if values["switch_warnings"] == "mandatory_default" then
+                if values['switch_warnings'] == 'mandatory_default' then
                   table_insert(jln_buildoptions, "-Wswitch-default")
                 else
-                  if values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" then
+                  if values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' then
                     table_insert(jln_buildoptions, "-Wswitch-default")
                     table_insert(jln_buildoptions, "-Wswitch-enum")
                   else
@@ -516,34 +575,34 @@ function jln_getoptions(values, disable_others, print_compiler)
               end
             end
           end
-          if not ( compversion < 407 ) then
+          if compversion >= 400007 then
             table_insert(jln_buildoptions, "-Wsuggest-attribute=noreturn")
             table_insert(jln_buildoptions, "-Wzero-as-null-pointer-constant")
             table_insert(jln_buildoptions, "-Wlogical-op")
             table_insert(jln_buildoptions, "-Wvector-operation-performance")
             table_insert(jln_buildoptions, "-Wdouble-promotion")
             table_insert(jln_buildoptions, "-Wtrampolines")
-            if not ( compversion < 408 ) then
+            if compversion >= 400008 then
               table_insert(jln_buildoptions, "-Wuseless-cast")
-              if not ( compversion < 409 ) then
+              if compversion >= 400009 then
                 table_insert(jln_buildoptions, "-Wconditionally-supported")
                 table_insert(jln_buildoptions, "-Wfloat-conversion")
-                if not ( compversion < 501 ) then
+                if compversion >= 500001 then
                   table_insert(jln_buildoptions, "-Wformat-signedness")
                   table_insert(jln_buildoptions, "-Warray-bounds=2")
                   table_insert(jln_buildoptions, "-Wstrict-null-sentinel")
                   table_insert(jln_buildoptions, "-Wsuggest-override")
-                  if not ( compversion < 601 ) then
+                  if compversion >= 600001 then
                     table_insert(jln_buildoptions, "-Wduplicated-cond")
                     table_insert(jln_buildoptions, "-Wnull-dereference")
-                    if not ( compversion < 700 ) then
+                    if compversion >= 700000 then
                       table_insert(jln_buildoptions, "-Waligned-new")
-                      if not ( compversion < 701 ) then
+                      if compversion >= 700001 then
                         table_insert(jln_buildoptions, "-Walloc-zero")
                         table_insert(jln_buildoptions, "-Walloca")
                         table_insert(jln_buildoptions, "-Wformat-overflow=2")
                         table_insert(jln_buildoptions, "-Wduplicated-branches")
-                        if not ( compversion < 800 ) then
+                        if compversion >= 800000 then
                           table_insert(jln_buildoptions, "-Wclass-memaccess")
                         end
                       end
@@ -564,39 +623,37 @@ function jln_getoptions(values, disable_others, print_compiler)
           table_insert(jln_buildoptions, "-Wno-global-constructors")
           table_insert(jln_buildoptions, "-Wno-weak-vtables")
           table_insert(jln_buildoptions, "-Wno-exit-time-destructors")
-          if not ( values["switch_warnings"] == "default") then
-            if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
+          if values['switch_warnings']~='default' then
+            if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'mandatory_default' ) then
               table_insert(jln_buildoptions, "-Wno-switch-enum")
             else
-              if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
+              if ( values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) then
                 table_insert(jln_buildoptions, "-Wswitch-enum")
               else
-                if values["switch_warnings"] == "off" then
-                  table_insert(jln_buildoptions, "-Wno-switch")
-                  table_insert(jln_buildoptions, "-Wno-switch-enum")
-                end
+                table_insert(jln_buildoptions, "-Wno-switch")
+                table_insert(jln_buildoptions, "-Wno-switch-enum")
               end
             end
           else
             table_insert(jln_buildoptions, "-Wno-switch")
             table_insert(jln_buildoptions, "-Wno-switch-enum")
           end
-          if not ( values["covered_switch_default_warnings"] == "default") then
-            if values["covered_switch_default_warnings"] == "off" then
+          if values['covered_switch_default_warnings']~='default' then
+            if values['covered_switch_default_warnings'] == 'off' then
               table_insert(jln_buildoptions, "-Wno-covered-switch-default")
             else
               table_insert(jln_buildoptions, "-Wcovered-switch-default")
             end
           end
-          if not ( compversion < 309 ) then
+          if compversion >= 300009 then
             table_insert(jln_buildoptions, "-Wno-undefined-var-template")
-            if not ( compversion < 500 ) then
+            if compversion >= 500000 then
               table_insert(jln_buildoptions, "-Wno-inconsistent-missing-destructor-override")
-              if not ( compversion < 900 ) then
+              if compversion >= 900000 then
                 table_insert(jln_buildoptions, "-Wno-ctad-maybe-unsupported")
-                if not ( compversion < 1000 ) then
+                if compversion >= 1000000 then
                   table_insert(jln_buildoptions, "-Wno-c++20-compat")
-                  if not ( compversion < 1100 ) then
+                  if compversion >= 1100000 then
                     table_insert(jln_buildoptions, "-Wno-suggest-destructor-override")
                   end
                 end
@@ -604,59 +661,94 @@ function jln_getoptions(values, disable_others, print_compiler)
             end
           end
         end
-        if ( values["warnings"] == "strict" or values["warnings"] == "very_strict" ) then
-          if ( compiler == "gcc" and not ( compversion < 800 ) ) then
+        if ( values['warnings'] == 'strict' or values['warnings'] == 'very_strict' ) then
+          if ( compiler == 'gcc' and compversion >= 800000 ) then
             table_insert(jln_buildoptions, "-Wcast-align=strict")
           end
         end
       end
     end
-    if not ( values["var_init"] == "default") then
-      if values["var_init"] == "pattern" then
-        if ( ( compiler == "gcc" and not ( compversion < 1200 ) ) or ( compiler == "clang" and not ( compversion < 800 ) ) ) then
+    if values['diagnostics_show_template_tree']~='default' then
+      if ( ( compiler == 'gcc' and compversion >= 800000 ) or compiler == 'clang' ) then
+        if values['diagnostics_show_template_tree'] == 'on' then
+          table_insert(jln_buildoptions, "-fdiagnostics-show-template-tree")
+        else
+          table_insert(jln_buildoptions, "-fno-diagnostics-show-template-tree")
+        end
+      end
+    end
+    if values['elide_type']~='default' then
+      if values['elide_type'] == 'on' then
+        if ( compiler == 'gcc' and compversion >= 800000 ) then
+          table_insert(jln_buildoptions, "-felide-type")
+        end
+      else
+        if ( ( compiler == 'gcc' and compversion >= 800000 ) or ( compiler == 'clang' and compversion >= 300004 ) ) then
+          table_insert(jln_buildoptions, "-fno-elide-type")
+        end
+      end
+    end
+    if values['exceptions']~='default' then
+      if values['exceptions'] == 'on' then
+        table_insert(jln_buildoptions, "-fexceptions")
+        if compiler == 'clang-emcc' then
+          table_insert(jln_buildoptions, "-sDISABLE_EXCEPTION_CATCHING=0")
+        end
+      else
+        table_insert(jln_buildoptions, "-fno-exceptions")
+      end
+    end
+    if values['rtti']~='default' then
+      if values['rtti'] == 'on' then
+        table_insert(jln_buildoptions, "-frtti")
+      else
+        table_insert(jln_buildoptions, "-fno-rtti")
+      end
+    end
+    if values['var_init']~='default' then
+      if values['var_init'] == 'pattern' then
+        if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
           table_insert(jln_buildoptions, "-ftrivial-auto-var-init=pattern")
         end
       end
     end
-    if not ( values["windows_abi_compatibility_warnings"] == "default") then
-      if ( ( compiler == "gcc" and not ( compversion < 1000 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
-        if values["windows_abi_compatibility_warnings"] == "on" then
+    if values['windows_abi_compatibility_warnings']~='default' then
+      if ( ( compiler == 'gcc' and compversion >= 1000000 ) or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) then
+        if values['windows_abi_compatibility_warnings'] == 'on' then
           table_insert(jln_buildoptions, "-Wmismatched-tags")
         else
           table_insert(jln_buildoptions, "-Wno-mismatched-tags")
         end
       end
     end
-    if not ( values["warnings_as_error"] == "default") then
-      if values["warnings_as_error"] == "on" then
+    if values['warnings_as_error']~='default' then
+      if values['warnings_as_error'] == 'on' then
         table_insert(jln_buildoptions, "-Werror")
       else
-        if values["warnings_as_error"] == "basic" then
+        if values['warnings_as_error'] == 'basic' then
           table_insert(jln_buildoptions, "-Werror=return-type")
           table_insert(jln_buildoptions, "-Werror=init-self")
-          if compiler == "gcc" then
+          if compiler == 'gcc' then
             table_insert(jln_buildoptions, "-Werror=div-by-zero")
-            if not ( compversion < 501 ) then
+            if compversion >= 500001 then
               table_insert(jln_buildoptions, "-Werror=array-bounds")
               table_insert(jln_buildoptions, "-Werror=logical-op")
               table_insert(jln_buildoptions, "-Werror=logical-not-parentheses")
-              if not ( compversion < 700 ) then
+              if compversion >= 700000 then
                 table_insert(jln_buildoptions, "-Werror=literal-suffix")
               end
             end
           else
-            if ( compiler == "clang" or compiler == "clang-cl" ) then
-              table_insert(jln_buildoptions, "-Werror=array-bounds")
-              table_insert(jln_buildoptions, "-Werror=division-by-zero")
-              if not ( compversion < 304 ) then
-                table_insert(jln_buildoptions, "-Werror=logical-not-parentheses")
-                if not ( compversion < 306 ) then
-                  table_insert(jln_buildoptions, "-Werror=delete-incomplete")
-                  if not ( compversion < 600 ) then
-                    table_insert(jln_buildoptions, "-Werror=user-defined-literals")
-                    if not ( compversion < 700 ) then
-                      table_insert(jln_buildoptions, "-Werror=dynamic-class-memaccess")
-                    end
+            table_insert(jln_buildoptions, "-Werror=array-bounds")
+            table_insert(jln_buildoptions, "-Werror=division-by-zero")
+            if compversion >= 300004 then
+              table_insert(jln_buildoptions, "-Werror=logical-not-parentheses")
+              if compversion >= 300006 then
+                table_insert(jln_buildoptions, "-Werror=delete-incomplete")
+                if compversion >= 600000 then
+                  table_insert(jln_buildoptions, "-Werror=user-defined-literals")
+                  if compversion >= 700000 then
+                    table_insert(jln_buildoptions, "-Werror=dynamic-class-memaccess")
                   end
                 end
               end
@@ -667,33 +759,33 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["suggestions"] == "default") then
-      if not ( values["suggestions"] == "off" ) then
-        if compiler == "gcc" then
+    if values['suggestions']~='default' then
+      if values['suggestions']~='off' then
+        if compiler == 'gcc' then
           table_insert(jln_buildoptions, "-Wsuggest-attribute=pure")
           table_insert(jln_buildoptions, "-Wsuggest-attribute=const")
-          if not ( compversion < 500 ) then
+          if compversion >= 500000 then
             table_insert(jln_buildoptions, "-Wsuggest-final-types")
             table_insert(jln_buildoptions, "-Wsuggest-final-methods")
-            if not ( compversion < 501 ) then
+            if compversion >= 500001 then
               table_insert(jln_buildoptions, "-Wnoexcept")
             end
           end
         end
       end
     end
-    if not ( values["sanitizers"] == "default") then
-      if values["sanitizers"] == "off" then
+    if values['sanitizers']~='default' then
+      if values['sanitizers'] == 'off' then
         table_insert(jln_buildoptions, "-fno-sanitize=all")
         table_insert(jln_linkoptions, "-fno-sanitize=all")
       else
-        if compiler == "clang-cl" then
+        if compiler == 'clang-cl' then
           table_insert(jln_buildoptions, "-fsanitize=undefined")
           table_insert(jln_buildoptions, "-fsanitize=address")
           table_insert(jln_buildoptions, "-fsanitize-address-use-after-scope")
         else
-          if compiler == "clang" then
-            if not ( compversion < 301 ) then
+          if ( compiler == 'clang' or compiler == 'clang-emcc' ) then
+            if compversion >= 300001 then
               table_insert(jln_buildoptions, "-fsanitize=undefined")
               table_insert(jln_buildoptions, "-fsanitize=address")
               table_insert(jln_buildoptions, "-fsanitize-address-use-after-scope")
@@ -701,25 +793,27 @@ function jln_getoptions(values, disable_others, print_compiler)
               table_insert(jln_buildoptions, "-fno-optimize-sibling-calls")
               table_insert(jln_linkoptions, "-fsanitize=undefined")
               table_insert(jln_linkoptions, "-fsanitize=address")
-              if not ( compversion < 304 ) then
-                table_insert(jln_buildoptions, "-fsanitize=leak")
-                table_insert(jln_linkoptions, "-fsanitize=leak")
-              end
-              if not ( compversion < 600 ) then
-                if not ( values["stack_protector"] == "default") then
-                  if not ( values["stack_protector"] == "off" ) then
-                    table_insert(jln_buildoptions, "-fsanitize-minimal-runtime")
+              if compiler == 'clang' then
+                if compversion >= 300004 then
+                  table_insert(jln_buildoptions, "-fsanitize=leak")
+                  table_insert(jln_linkoptions, "-fsanitize=leak")
+                end
+                if compversion >= 600000 then
+                  if values['stack_protector']~='default' then
+                    if values['stack_protector']~='off' then
+                      table_insert(jln_buildoptions, "-fsanitize-minimal-runtime")
+                    end
                   end
                 end
               end
             end
           else
-            if not ( compversion < 408 ) then
+            if compversion >= 400008 then
               table_insert(jln_buildoptions, "-fsanitize=address")
               table_insert(jln_buildoptions, "-fno-omit-frame-pointer")
               table_insert(jln_buildoptions, "-fno-optimize-sibling-calls")
               table_insert(jln_linkoptions, "-fsanitize=address")
-              if not ( compversion < 409 ) then
+              if compversion >= 400009 then
                 table_insert(jln_buildoptions, "-fsanitize=undefined")
                 table_insert(jln_buildoptions, "-fsanitize=leak")
                 table_insert(jln_linkoptions, "-fsanitize=undefined")
@@ -730,153 +824,139 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["control_flow"] == "default") then
-      if values["control_flow"] == "off" then
-        if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-          table_insert(jln_buildoptions, "-fcf-protection=none")
+    if values['control_flow']~='default' then
+      if compiler == 'clang-emcc' then
+        if values['control_flow'] == 'off' then
+          table_insert(jln_linkoptions, "-sASSERTIONS=0")
+          table_insert(jln_linkoptions, "-sSAFE_HEAP=0")
         else
-          table_insert(jln_buildoptions, "-fno-sanitize=cfi")
-          table_insert(jln_buildoptions, "-fcf-protection=none")
-          table_insert(jln_buildoptions, "-fno-sanitize-cfi-cross-dso")
-          table_insert(jln_linkoptions, "-fno-sanitize=cfi")
+          table_insert(jln_linkoptions, "-sASSERTIONS=1")
+          table_insert(jln_linkoptions, "-sDEMANGLE_SUPPORT=1")
+          if values['sanitizers']~='default' then
+            if values['sanitizers']~='on' then
+              table_insert(jln_linkoptions, "-sSAFE_HEAP=1")
+            end
+          else
+            table_insert(jln_linkoptions, "-sSAFE_HEAP=1")
+          end
         end
       else
-        if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or not ( compiler == "gcc" ) ) then
-          if values["control_flow"] == "branch" then
-            table_insert(jln_buildoptions, "-fcf-protection=branch")
+        if values['control_flow'] == 'off' then
+          if ( compiler == 'gcc' and compversion >= 800000 ) then
+            table_insert(jln_buildoptions, "-fcf-protection=none")
           else
-            if values["control_flow"] == "return" then
-              table_insert(jln_buildoptions, "-fcf-protection=return")
-            else
-              table_insert(jln_buildoptions, "-fcf-protection=full")
-            end
+            table_insert(jln_buildoptions, "-fno-sanitize=cfi")
+            table_insert(jln_buildoptions, "-fcf-protection=none")
+            table_insert(jln_buildoptions, "-fno-sanitize-cfi-cross-dso")
+            table_insert(jln_linkoptions, "-fno-sanitize=cfi")
           end
-          if ( values["control_flow"] == "allow_bugs" and compiler == "clang" ) then
-            table_insert(jln_buildoptions, "-fsanitize=cfi")
-            table_insert(jln_buildoptions, "-fvisibility=hidden")
-            table_insert(jln_buildoptions, "-flto")
-            table_insert(jln_linkoptions, "-fsanitize=cfi")
-            table_insert(jln_linkoptions, "-flto")
+        else
+          if ( ( compiler == 'gcc' and compversion >= 800000 ) or compiler~='gcc' ) then
+            if values['control_flow'] == 'branch' then
+              table_insert(jln_buildoptions, "-fcf-protection=branch")
+            else
+              if values['control_flow'] == 'return' then
+                table_insert(jln_buildoptions, "-fcf-protection=return")
+              else
+                table_insert(jln_buildoptions, "-fcf-protection=full")
+              end
+            end
+            if ( values['control_flow'] == 'allow_bugs' and compiler == 'clang' ) then
+              table_insert(jln_buildoptions, "-fsanitize=cfi")
+              table_insert(jln_buildoptions, "-fvisibility=hidden")
+              table_insert(jln_buildoptions, "-flto")
+              table_insert(jln_linkoptions, "-fsanitize=cfi")
+              table_insert(jln_linkoptions, "-flto")
+            end
           end
         end
       end
     end
-    if not ( values["color"] == "default") then
-      if ( ( compiler == "gcc" and not ( compversion < 409 ) ) or compiler == "clang" or compiler == "clang-cl" ) then
-        if values["color"] == "auto" then
+    if values['color']~='default' then
+      if ( ( compiler == 'gcc' and compversion >= 400009 ) or compiler~='gcc' ) then
+        if values['color'] == 'auto' then
           table_insert(jln_buildoptions, "-fdiagnostics-color=auto")
         else
-          if values["color"] == "never" then
+          if values['color'] == 'never' then
             table_insert(jln_buildoptions, "-fdiagnostics-color=never")
           else
-            if values["color"] == "always" then
-              table_insert(jln_buildoptions, "-fdiagnostics-color=always")
-            end
+            table_insert(jln_buildoptions, "-fdiagnostics-color=always")
           end
         end
       end
     end
-    if not ( values["reproducible_build_warnings"] == "default") then
-      if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-        if values["reproducible_build_warnings"] == "on" then
+    if values['reproducible_build_warnings']~='default' then
+      if ( compiler == 'gcc' and compversion >= 400009 ) then
+        if values['reproducible_build_warnings'] == 'on' then
           table_insert(jln_buildoptions, "-Wdate-time")
         else
           table_insert(jln_buildoptions, "-Wno-date-time")
         end
       end
     end
-    if not ( values["diagnostics_format"] == "default") then
-      if values["diagnostics_format"] == "fixits" then
-        if ( ( compiler == "gcc" and not ( compversion < 700 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or ( compiler == "clang-cl" and not ( compversion < 500 ) ) ) then
+    if values['diagnostics_format']~='default' then
+      if values['diagnostics_format'] == 'fixits' then
+        if ( ( compiler == 'gcc' and compversion >= 700000 ) or ( compiler~='gcc' and compversion >= 500000 ) ) then
           table_insert(jln_buildoptions, "-fdiagnostics-parseable-fixits")
         end
       else
-        if values["diagnostics_format"] == "patch" then
-          if ( compiler == "gcc" and not ( compversion < 700 ) ) then
+        if values['diagnostics_format'] == 'patch' then
+          if ( compiler == 'gcc' and compversion >= 700000 ) then
             table_insert(jln_buildoptions, "-fdiagnostics-generate-patch")
           end
         else
-          if values["diagnostics_format"] == "print_source_range_info" then
-            if compiler == "clang" then
-              table_insert(jln_buildoptions, "-fdiagnostics-print-source-range-info")
-            end
+          if compiler == 'clang' then
+            table_insert(jln_buildoptions, "-fdiagnostics-print-source-range-info")
           end
         end
       end
     end
-    if not ( values["fix_compiler_error"] == "default") then
-      if values["fix_compiler_error"] == "on" then
-        if compiler == "gcc" then
-          if not ( compversion < 407 ) then
+    if values['fix_compiler_error']~='default' then
+      if values['fix_compiler_error'] == 'on' then
+        if compiler == 'gcc' then
+          if compversion >= 400007 then
             table_insert(jln_buildoptions, "-Werror=narrowing")
-            if not ( compversion < 701 ) then
+            if compversion >= 700001 then
               table_insert(jln_buildoptions, "-Werror=literal-suffix")
             end
           end
         end
         table_insert(jln_buildoptions, "-Werror=write-strings")
       else
-        if ( compiler == "clang" or compiler == "clang-cl" ) then
+        if compiler~='gcc' then
           table_insert(jln_buildoptions, "-Wno-error=c++11-narrowing")
           table_insert(jln_buildoptions, "-Wno-reserved-user-defined-literal")
         end
       end
     end
-    if not ( values["linker"] == "default") then
-      if values["linker"] == "native" then
-        if compiler == "gcc" then
-          table_insert(jln_linkoptions, "-fuse-ld=gold")
-        else
-          table_insert(jln_linkoptions, "-fuse-ld=lld")
-        end
-      else
-        if values["linker"] == "bfd" then
-          table_insert(jln_linkoptions, "-fuse-ld=bfd")
-        else
-          if ( values["linker"] == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900 ) ) ) ) then
-            table_insert(jln_linkoptions, "-fuse-ld=gold")
-          else
-            if not ( values["lto"] == "default") then
-              if ( not ( values["lto"] == "off" ) and compiler == "gcc" ) then
-                table_insert(jln_linkoptions, "-fuse-ld=gold")
-              else
-                table_insert(jln_linkoptions, "-fuse-ld=lld")
-              end
-            else
-              table_insert(jln_linkoptions, "-fuse-ld=lld")
-            end
-          end
-        end
-      end
-    end
-    if not ( values["lto"] == "default") then
-      if values["lto"] == "off" then
+    if values['lto']~='default' then
+      if values['lto'] == 'off' then
         table_insert(jln_buildoptions, "-fno-lto")
         table_insert(jln_linkoptions, "-fno-lto")
       else
-        if compiler == "gcc" then
+        if compiler == 'gcc' then
           table_insert(jln_buildoptions, "-flto")
           table_insert(jln_linkoptions, "-flto")
-          if not ( compversion < 500 ) then
-            if not ( values["warnings"] == "default") then
-              if not ( values["warnings"] == "off" ) then
+          if compversion >= 500000 then
+            if values['warnings']~='default' then
+              if values['warnings']~='off' then
                 table_insert(jln_buildoptions, "-flto-odr-type-merging")
                 table_insert(jln_linkoptions, "-flto-odr-type-merging")
               end
             end
-            if values["lto"] == "fat" then
+            if values['lto'] == 'fat' then
               table_insert(jln_buildoptions, "-ffat-lto-objects")
             else
-              if values["lto"] == "thin" then
+              if values['lto'] == 'thin' then
                 table_insert(jln_linkoptions, "-fuse-linker-plugin")
               end
             end
           end
         else
-          if compiler == "clang-cl" then
+          if compiler == 'clang-cl' then
             table_insert(jln_linkoptions, "-fuse-ld=lld")
           end
-          if ( values["lto"] == "thin" and not ( compversion < 600 ) ) then
+          if ( values['lto'] == 'thin' and compversion >= 600000 ) then
             table_insert(jln_buildoptions, "-flto=thin")
             table_insert(jln_linkoptions, "-flto=thin")
           else
@@ -886,39 +966,37 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["shadow_warnings"] == "default") then
-      if values["shadow_warnings"] == "off" then
+    if values['shadow_warnings']~='default' then
+      if values['shadow_warnings'] == 'off' then
         table_insert(jln_buildoptions, "-Wno-shadow")
-        if ( compiler == "clang-cl" or ( compiler == "clang" and not ( compversion < 800 ) ) ) then
+        if ( compiler == 'clang-cl' or ( compiler == 'clang' and compversion >= 800000 ) ) then
           table_insert(jln_buildoptions, "-Wno-shadow-field")
         end
       else
-        if values["shadow_warnings"] == "on" then
+        if values['shadow_warnings'] == 'on' then
           table_insert(jln_buildoptions, "-Wshadow")
         else
-          if values["shadow_warnings"] == "all" then
-            if compiler == "gcc" then
+          if values['shadow_warnings'] == 'all' then
+            if compiler == 'gcc' then
               table_insert(jln_buildoptions, "-Wshadow")
             else
               table_insert(jln_buildoptions, "-Wshadow-all")
             end
           else
-            if ( compiler == "gcc" and not ( compversion < 701 ) ) then
-              if values["shadow_warnings"] == "local" then
+            if ( compiler == 'gcc' and compversion >= 700001 ) then
+              if values['shadow_warnings'] == 'local' then
                 table_insert(jln_buildoptions, "-Wshadow=local")
               else
-                if values["shadow_warnings"] == "compatible_local" then
-                  table_insert(jln_buildoptions, "-Wshadow=compatible-local")
-                end
+                table_insert(jln_buildoptions, "-Wshadow=compatible-local")
               end
             end
           end
         end
       end
     end
-    if not ( values["float_sanitizers"] == "default") then
-      if ( ( compiler == "gcc" and not ( compversion < 500 ) ) or ( compiler == "clang" and not ( compversion < 500 ) ) or compiler == "clang-cl" ) then
-        if values["float_sanitizers"] == "on" then
+    if values['float_sanitizers']~='default' then
+      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) then
+        if values['float_sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "-fsanitize=float-divide-by-zero")
           table_insert(jln_buildoptions, "-fsanitize=float-cast-overflow")
         else
@@ -927,16 +1005,16 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["integer_sanitizers"] == "default") then
-      if ( ( compiler == "clang" and not ( compversion < 500 ) ) or compiler == "clang-cl" ) then
-        if values["integer_sanitizers"] == "on" then
+    if values['integer_sanitizers']~='default' then
+      if ( ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) then
+        if values['integer_sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "-fsanitize=integer")
         else
           table_insert(jln_buildoptions, "-fno-sanitize=integer")
         end
       else
-        if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-          if values["integer_sanitizers"] == "on" then
+        if ( compiler == 'gcc' and compversion >= 400009 ) then
+          if values['integer_sanitizers'] == 'on' then
             table_insert(jln_buildoptions, "-ftrapv")
             table_insert(jln_buildoptions, "-fsanitize=undefined")
           end
@@ -944,17 +1022,17 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if ( compiler == "gcc" or compiler == "clang" or compiler == "clang-cl" or compiler == "icc" ) then
-    if not ( values["conversion_warnings"] == "default") then
-      if values["conversion_warnings"] == "on" then
+  if values['conversion_warnings']~='default' then
+    if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' or compiler == 'icc' ) then
+      if values['conversion_warnings'] == 'on' then
         table_insert(jln_buildoptions, "-Wconversion")
         table_insert(jln_buildoptions, "-Wsign-compare")
         table_insert(jln_buildoptions, "-Wsign-conversion")
       else
-        if values["conversion_warnings"] == "conversion" then
+        if values['conversion_warnings'] == 'conversion' then
           table_insert(jln_buildoptions, "-Wconversion")
         else
-          if values["conversion_warnings"] == "sign" then
+          if values['conversion_warnings'] == 'sign' then
             table_insert(jln_buildoptions, "-Wsign-compare")
             table_insert(jln_buildoptions, "-Wsign-conversion")
           else
@@ -966,82 +1044,153 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if ( compiler == "gcc" or compiler == "clang" ) then
-    if not ( values["coverage"] == "default") then
-      if values["coverage"] == "on" then
-        table_insert(jln_buildoptions, "--coverage")
-        table_insert(jln_linkoptions, "--coverage")
-        if compiler == "clang" then
-          table_insert(jln_linkoptions, "-lprofile_rt")
+  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-emcc' ) then
+    if values['stl_debug']~='default' then
+      if values['stl_debug']~='off' then
+        if values['stl_debug'] == 'assert_as_exception' then
+          table_insert(jln_buildoptions, "-D_LIBCPP_DEBUG_USE_EXCEPTIONS")
         end
-      end
-    end
-    if not ( values["debug"] == "default") then
-      if values["debug"] == "off" then
-        table_insert(jln_buildoptions, "-g0")
-      else
-        if values["debug"] == "gdb" then
-          table_insert(jln_buildoptions, "-ggdb")
-        else
-          if compiler == "clang" then
-            if values["debug"] == "line_tables_only" then
-              table_insert(jln_buildoptions, "-gline-tables-only")
-            else
-              if values["debug"] == "lldb" then
-                table_insert(jln_buildoptions, "-glldb")
-              else
-                if values["debug"] == "sce" then
-                  table_insert(jln_buildoptions, "-gsce")
-                else
-                  table_insert(jln_buildoptions, "-g")
-                end
-              end
+        if ( values['stl_debug'] == 'allow_broken_abi' or values['stl_debug'] == 'allow_broken_abi_and_bugs' ) then
+          if compiler == 'clang' then
+            if ( compversion >= 800000 or values['stl_debug'] == 'allow_broken_abi_and_bugs' ) then
+              table_insert(jln_buildoptions, "-D_LIBCPP_DEBUG=1")
             end
-          else
-            table_insert(jln_buildoptions, "-g")
+          end
+          table_insert(jln_buildoptions, "-D_GLIBCXX_DEBUG")
+        else
+          table_insert(jln_buildoptions, "-D_GLIBCXX_ASSERTIONS")
+        end
+        if values['pedantic']~='default' then
+          if values['pedantic']~='off' then
+            table_insert(jln_buildoptions, "-D_GLIBCXX_DEBUG_PEDANTIC")
           end
         end
       end
     end
-    if not ( values["optimization"] == "default") then
-      if values["optimization"] == "0" then
+    if values['pedantic']~='default' then
+      if values['pedantic']~='off' then
+        table_insert(jln_buildoptions, "-pedantic")
+        if values['pedantic'] == 'as_error' then
+          table_insert(jln_buildoptions, "-pedantic-errors")
+        end
+      end
+    end
+  end
+  if compiler == 'clang-emcc' then
+    if values['optimization']~='default' then
+      if values['optimization'] == '0' then
         table_insert(jln_buildoptions, "-O0")
         table_insert(jln_linkoptions, "-O0")
       else
-        if values["optimization"] == "g" then
+        if values['optimization'] == 'g' then
           table_insert(jln_buildoptions, "-Og")
           table_insert(jln_linkoptions, "-Og")
         else
-          table_insert(jln_buildoptions, "-DNDEBUG")
-          table_insert(jln_linkoptions, "-Wl,-O1")
-          if values["optimization"] == "size" then
-            table_insert(jln_buildoptions, "-Os")
-            table_insert(jln_linkoptions, "-Os")
+          if values['optimization'] == '1' then
+            table_insert(jln_buildoptions, "-O1")
+            table_insert(jln_linkoptions, "-O1")
           else
-            if values["optimization"] == "z" then
-              if ( compiler == "clang" or compiler == "clang-cl" ) then
-                table_insert(jln_buildoptions, "-Oz")
-                table_insert(jln_linkoptions, "-Oz")
+            if values['optimization'] == '2' then
+              table_insert(jln_buildoptions, "-O2")
+              table_insert(jln_linkoptions, "-O2")
+            else
+              if values['optimization'] == '3' then
+                table_insert(jln_buildoptions, "-O3")
+                table_insert(jln_linkoptions, "-O3")
               else
-                table_insert(jln_buildoptions, "-Os")
-                table_insert(jln_linkoptions, "-Os")
+                if values['optimization'] == 'fast' then
+                  table_insert(jln_buildoptions, "-O3")
+                  table_insert(jln_buildoptions, "-mnontrapping-fptoint")
+                  table_insert(jln_linkoptions, "-O3")
+                  table_insert(jln_linkoptions, "-mnontrapping-fptoint")
+                else
+                  if values['optimization'] == 'size' then
+                    table_insert(jln_buildoptions, "-Os")
+                    table_insert(jln_linkoptions, "-Os")
+                  else
+                    table_insert(jln_buildoptions, "-Oz")
+                    table_insert(jln_linkoptions, "-Oz")
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    if values['debug']~='default' then
+      if values['debug'] == 'off' then
+        table_insert(jln_buildoptions, "-g0")
+      else
+        table_insert(jln_buildoptions, "-g")
+      end
+    end
+  else
+    if ( compiler == 'gcc' or compiler == 'clang' ) then
+      if values['coverage']~='default' then
+        if values['coverage'] == 'on' then
+          table_insert(jln_buildoptions, "--coverage")
+          table_insert(jln_linkoptions, "--coverage")
+          if compiler == 'clang' then
+            table_insert(jln_linkoptions, "-lprofile_rt")
+          end
+        end
+      end
+      if values['debug']~='default' then
+        if values['debug'] == 'off' then
+          table_insert(jln_buildoptions, "-g0")
+        else
+          if values['debug'] == 'gdb' then
+            table_insert(jln_buildoptions, "-ggdb")
+          else
+            if compiler == 'clang' then
+              if values['debug'] == 'line_tables_only' then
+                table_insert(jln_buildoptions, "-gline-tables-only")
+              else
+                if values['debug'] == 'lldb' then
+                  table_insert(jln_buildoptions, "-glldb")
+                else
+                  if values['debug'] == 'sce' then
+                    table_insert(jln_buildoptions, "-gsce")
+                  else
+                    table_insert(jln_buildoptions, "-g")
+                  end
+                end
               end
             else
-              if values["optimization"] == "fast" then
-                table_insert(jln_buildoptions, "-Ofast")
-                table_insert(jln_linkoptions, "-Ofast")
+              table_insert(jln_buildoptions, "-g")
+            end
+          end
+        end
+      end
+      if values['optimization']~='default' then
+        if values['optimization'] == '0' then
+          table_insert(jln_buildoptions, "-O0")
+        else
+          if values['optimization'] == 'g' then
+            table_insert(jln_buildoptions, "-Og")
+          else
+            table_insert(jln_linkoptions, "-Wl,-O1")
+            if values['optimization'] == '1' then
+              table_insert(jln_buildoptions, "-O1")
+            else
+              if values['optimization'] == '2' then
+                table_insert(jln_buildoptions, "-O2")
               else
-                if values["optimization"] == "1" then
-                  table_insert(jln_buildoptions, "-O1")
-                  table_insert(jln_linkoptions, "-O1")
+                if values['optimization'] == '3' then
+                  table_insert(jln_buildoptions, "-O3")
                 else
-                  if values["optimization"] == "2" then
-                    table_insert(jln_buildoptions, "-O2")
-                    table_insert(jln_linkoptions, "-O2")
+                  if values['optimization'] == 'size' then
+                    table_insert(jln_buildoptions, "-Os")
                   else
-                    if values["optimization"] == "3" then
-                      table_insert(jln_buildoptions, "-O3")
-                      table_insert(jln_linkoptions, "-O3")
+                    if values['optimization'] == 'z' then
+                      if compiler == 'clang' then
+                        table_insert(jln_buildoptions, "-Oz")
+                      else
+                        table_insert(jln_buildoptions, "-Os")
+                      end
+                    else
+                      table_insert(jln_buildoptions, "-Ofast")
                     end
                   end
                 end
@@ -1050,162 +1199,238 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-    end
-    if not ( values["cpu"] == "default") then
-      if values["cpu"] == "generic" then
-        table_insert(jln_buildoptions, "-mtune=generic")
-        table_insert(jln_linkoptions, "-mtune=generic")
-      else
-        table_insert(jln_buildoptions, "-march=native")
-        table_insert(jln_buildoptions, "-mtune=native")
-        table_insert(jln_linkoptions, "-march=native")
-        table_insert(jln_linkoptions, "-mtune=native")
-      end
-    end
-    if not ( values["whole_program"] == "default") then
-      if values["whole_program"] == "off" then
-        table_insert(jln_buildoptions, "-fno-whole-program")
-        if ( compiler == "clang" and not ( compversion < 309 ) ) then
-          table_insert(jln_buildoptions, "-fno-whole-program-vtables")
-          table_insert(jln_linkoptions, "-fno-whole-program-vtables")
-        end
-      else
-        if linker == "ld64" then
-          table_insert(jln_linkoptions, "-Wl,-dead_strip")
-          table_insert(jln_linkoptions, "-Wl,-S")
+      if values['cpu']~='default' then
+        if values['cpu'] == 'generic' then
+          table_insert(jln_buildoptions, "-mtune=generic")
+          table_insert(jln_linkoptions, "-mtune=generic")
         else
-          table_insert(jln_linkoptions, "-s")
-          if values["whole_program"] == "strip_all" then
-            table_insert(jln_linkoptions, "-Wl,--gc-sections")
-            table_insert(jln_linkoptions, "-Wl,--strip-all")
+          table_insert(jln_buildoptions, "-march=native")
+          table_insert(jln_buildoptions, "-mtune=native")
+          table_insert(jln_linkoptions, "-march=native")
+          table_insert(jln_linkoptions, "-mtune=native")
+        end
+      end
+      if values['linker']~='default' then
+        if values['linker'] == 'native' then
+          if compiler == 'gcc' then
+            table_insert(jln_linkoptions, "-fuse-ld=gold")
+          else
+            table_insert(jln_linkoptions, "-fuse-ld=lld")
+          end
+        else
+          if values['linker'] == 'bfd' then
+            table_insert(jln_linkoptions, "-fuse-ld=bfd")
+          else
+            if ( values['linker'] == 'gold' or ( compiler == 'gcc' and compversion < 900000 ) ) then
+              table_insert(jln_linkoptions, "-fuse-ld=gold")
+            else
+              if values['lto']~='default' then
+                if ( values['lto']~='off' and compiler == 'gcc' ) then
+                  table_insert(jln_linkoptions, "-fuse-ld=gold")
+                else
+                  table_insert(jln_linkoptions, "-fuse-ld=lld")
+                end
+              else
+                table_insert(jln_linkoptions, "-fuse-ld=lld")
+              end
+            end
           end
         end
-        if compiler == "gcc" then
-          table_insert(jln_buildoptions, "-fwhole-program")
-          table_insert(jln_linkoptions, "-fwhole-program")
+      end
+      if values['whole_program']~='default' then
+        if values['whole_program'] == 'off' then
+          table_insert(jln_buildoptions, "-fno-whole-program")
+          if ( compiler == 'clang' and compversion >= 300009 ) then
+            table_insert(jln_buildoptions, "-fno-whole-program-vtables")
+            table_insert(jln_linkoptions, "-fno-whole-program-vtables")
+          end
         else
-          if compiler == "clang" then
-            if not ( compversion < 309 ) then
-              if not ( values["lto"] == "default") then
-                if not ( values["lto"] == "off" ) then
-                  table_insert(jln_buildoptions, "-fwhole-program-vtables")
-                  table_insert(jln_linkoptions, "-fwhole-program-vtables")
+          if linker == 'ld64' then
+            table_insert(jln_linkoptions, "-Wl,-dead_strip")
+            table_insert(jln_linkoptions, "-Wl,-S")
+          else
+            table_insert(jln_linkoptions, "-s")
+            if values['whole_program'] == 'strip_all' then
+              table_insert(jln_linkoptions, "-Wl,--gc-sections")
+              table_insert(jln_linkoptions, "-Wl,--strip-all")
+            end
+          end
+          if compiler == 'gcc' then
+            table_insert(jln_buildoptions, "-fwhole-program")
+            table_insert(jln_linkoptions, "-fwhole-program")
+          else
+            if compiler == 'clang' then
+              if compversion >= 300009 then
+                if values['lto']~='default' then
+                  if values['lto']~='off' then
+                    table_insert(jln_buildoptions, "-fwhole-program-vtables")
+                    table_insert(jln_linkoptions, "-fwhole-program-vtables")
+                  end
+                end
+                if compversion >= 700000 then
+                  table_insert(jln_buildoptions, "-fforce-emit-vtables")
+                  table_insert(jln_linkoptions, "-fforce-emit-vtables")
                 end
               end
-              if not ( compversion < 700 ) then
-                table_insert(jln_buildoptions, "-fforce-emit-vtables")
-                table_insert(jln_linkoptions, "-fforce-emit-vtables")
-              end
             end
           end
         end
       end
-    end
-    if not ( values["pedantic"] == "default") then
-      if not ( values["pedantic"] == "off" ) then
-        table_insert(jln_buildoptions, "-pedantic")
-        if values["pedantic"] == "as_error" then
-          table_insert(jln_buildoptions, "-pedantic-errors")
-        end
-      end
-    end
-    if not ( values["stack_protector"] == "default") then
-      if values["stack_protector"] == "off" then
-        table_insert(jln_buildoptions, "-Wno-stack-protector")
-        table_insert(jln_buildoptions, "-U_FORTIFY_SOURCE")
-        table_insert(jln_linkoptions, "-Wno-stack-protector")
-      else
-        table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=2")
-        table_insert(jln_buildoptions, "-Wstack-protector")
-        if values["stack_protector"] == "strong" then
-          if compiler == "gcc" then
-            if not ( compversion < 409 ) then
-              table_insert(jln_buildoptions, "-fstack-protector-strong")
-              table_insert(jln_linkoptions, "-fstack-protector-strong")
-              if not ( compversion < 800 ) then
-                table_insert(jln_buildoptions, "-fstack-clash-protection")
-                table_insert(jln_linkoptions, "-fstack-clash-protection")
-              end
-            end
-          else
-            if compiler == "clang" then
-              table_insert(jln_buildoptions, "-fstack-protector-strong")
-              table_insert(jln_buildoptions, "-fsanitize=safe-stack")
-              table_insert(jln_linkoptions, "-fstack-protector-strong")
-              table_insert(jln_linkoptions, "-fsanitize=safe-stack")
-              if not ( compversion < 1100 ) then
-                table_insert(jln_buildoptions, "-fstack-clash-protection")
-                table_insert(jln_linkoptions, "-fstack-clash-protection")
-              end
-            end
-          end
+      if values['stack_protector']~='default' then
+        if values['stack_protector'] == 'off' then
+          table_insert(jln_buildoptions, "-Wno-stack-protector")
+          table_insert(jln_buildoptions, "-U_FORTIFY_SOURCE")
+          table_insert(jln_linkoptions, "-Wno-stack-protector")
         else
-          if values["stack_protector"] == "all" then
-            table_insert(jln_buildoptions, "-fstack-protector-all")
-            table_insert(jln_linkoptions, "-fstack-protector-all")
-            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-              table_insert(jln_buildoptions, "-fstack-clash-protection")
-              table_insert(jln_linkoptions, "-fstack-clash-protection")
+          table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=2")
+          table_insert(jln_buildoptions, "-Wstack-protector")
+          if values['stack_protector'] == 'strong' then
+            if compiler == 'gcc' then
+              if compversion >= 400009 then
+                table_insert(jln_buildoptions, "-fstack-protector-strong")
+                table_insert(jln_linkoptions, "-fstack-protector-strong")
+                if compversion >= 800000 then
+                  table_insert(jln_buildoptions, "-fstack-clash-protection")
+                  table_insert(jln_linkoptions, "-fstack-clash-protection")
+                end
+              end
             else
-              if compiler == "clang" then
+              if compiler == 'clang' then
+                table_insert(jln_buildoptions, "-fstack-protector-strong")
                 table_insert(jln_buildoptions, "-fsanitize=safe-stack")
+                table_insert(jln_linkoptions, "-fstack-protector-strong")
                 table_insert(jln_linkoptions, "-fsanitize=safe-stack")
-                if not ( compversion < 1100 ) then
+                if compversion >= 1100000 then
                   table_insert(jln_buildoptions, "-fstack-clash-protection")
                   table_insert(jln_linkoptions, "-fstack-clash-protection")
                 end
               end
             end
           else
-            table_insert(jln_buildoptions, "-fstack-protector")
-            table_insert(jln_linkoptions, "-fstack-protector")
+            if values['stack_protector'] == 'all' then
+              table_insert(jln_buildoptions, "-fstack-protector-all")
+              table_insert(jln_linkoptions, "-fstack-protector-all")
+              if ( compiler == 'gcc' and compversion >= 800000 ) then
+                table_insert(jln_buildoptions, "-fstack-clash-protection")
+                table_insert(jln_linkoptions, "-fstack-clash-protection")
+              else
+                if compiler == 'clang' then
+                  table_insert(jln_buildoptions, "-fsanitize=safe-stack")
+                  table_insert(jln_linkoptions, "-fsanitize=safe-stack")
+                  if compversion >= 1100000 then
+                    table_insert(jln_buildoptions, "-fstack-clash-protection")
+                    table_insert(jln_linkoptions, "-fstack-clash-protection")
+                  end
+                end
+              end
+            else
+              table_insert(jln_buildoptions, "-fstack-protector")
+              table_insert(jln_linkoptions, "-fstack-protector")
+            end
+          end
+          if compiler == 'clang' then
+            table_insert(jln_buildoptions, "-fsanitize=shadow-call-stack")
+            table_insert(jln_linkoptions, "-fsanitize=shadow-call-stack")
           end
         end
-        if compiler == "clang" then
-          table_insert(jln_buildoptions, "-fsanitize=shadow-call-stack")
-          table_insert(jln_linkoptions, "-fsanitize=shadow-call-stack")
-        end
       end
-    end
-    if not ( values["relro"] == "default") then
-      if values["relro"] == "off" then
-        table_insert(jln_linkoptions, "-Wl,-z,norelro")
-      else
-        if values["relro"] == "on" then
-          table_insert(jln_linkoptions, "-Wl,-z,relro")
+      if values['relro']~='default' then
+        if values['relro'] == 'off' then
+          table_insert(jln_linkoptions, "-Wl,-z,norelro")
         else
-          if values["relro"] == "full" then
+          if values['relro'] == 'on' then
+            table_insert(jln_linkoptions, "-Wl,-z,relro")
+          else
             table_insert(jln_linkoptions, "-Wl,-z,relro,-z,now,-z,noexecstack")
-            if not ( values["linker"] == "default") then
-              if not ( ( values["linker"] == "gold" or ( compiler == "gcc" and not ( not ( compversion < 900 ) ) ) or ( values["linker"] == "native" and compiler == "gcc" ) ) ) then
+            if values['linker']~='default' then
+              if not ( ( values['linker'] == 'gold' or ( compiler == 'gcc' and compversion < 900000 ) or ( values['linker'] == 'native' and compiler == 'gcc' ) ) ) then
                 table_insert(jln_linkoptions, "-Wl,-z,separate-code")
               end
             end
           end
         end
       end
-    end
-    if not ( values["pie"] == "default") then
-      if values["pie"] == "off" then
-        table_insert(jln_linkoptions, "-no-pic")
-      else
-        if values["pie"] == "on" then
-          table_insert(jln_linkoptions, "-pie")
+      if values['pie']~='default' then
+        if values['pie'] == 'off' then
+          table_insert(jln_linkoptions, "-no-pic")
         else
-          if values["pie"] == "static" then
-            table_insert(jln_linkoptions, "-static-pie")
+          if values['pie'] == 'on' then
+            table_insert(jln_linkoptions, "-pie")
           else
-            if values["pie"] == "fpie" then
+            if values['pie'] == 'fpie' then
               table_insert(jln_buildoptions, "-fpie")
             else
-              if values["pie"] == "fpic" then
+              if values['pie'] == 'fpic' then
                 table_insert(jln_buildoptions, "-fpic")
               else
-                if values["pie"] == "fPIE" then
+                if values['pie'] == 'fPIE' then
                   table_insert(jln_buildoptions, "-fPIE")
                 else
-                  if values["pie"] == "fPIC" then
+                  if values['pie'] == 'fPIC' then
                     table_insert(jln_buildoptions, "-fPIC")
+                  else
+                    table_insert(jln_linkoptions, "-static-pie")
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+      if values['other_sanitizers']~='default' then
+        if values['other_sanitizers'] == 'thread' then
+          table_insert(jln_buildoptions, "-fsanitize=thread")
+        else
+          if values['other_sanitizers'] == 'memory' then
+            if ( compiler == 'clang' and compversion >= 500000 ) then
+              table_insert(jln_buildoptions, "-fsanitize=memory")
+            end
+          else
+            if values['other_sanitizers'] == 'pointer' then
+              if ( compiler == 'gcc' and compversion >= 800000 ) then
+                table_insert(jln_buildoptions, "-fsanitize=pointer-compare")
+                table_insert(jln_buildoptions, "-fsanitize=pointer-subtract")
+              end
+            end
+          end
+        end
+      end
+      if values['noexcept_warnings']~='default' then
+        if ( compiler == 'gcc' and compversion >= 400009 ) then
+          if values['noexcept_warnings'] == 'on' then
+            table_insert(jln_buildoptions, "-Wnoexcept")
+          else
+            table_insert(jln_buildoptions, "-Wno-noexcept")
+          end
+        end
+      end
+      if values['analyzer']~='default' then
+        if ( compiler == 'gcc' and compversion >= 1000000 ) then
+          if values['analyzer'] == 'off' then
+            table_insert(jln_buildoptions, "-fno-analyzer")
+          else
+            table_insert(jln_buildoptions, "-fanalyzer")
+            if values['analyzer'] == 'taint' then
+              table_insert(jln_buildoptions, "-fanalyzer-checker=taint")
+            end
+            if values['analyzer_too_complex_warning']~='default' then
+              if values['analyzer_too_complex_warning'] == 'on' then
+                table_insert(jln_buildoptions, "-Wanalyzer-too-complex")
+              else
+                table_insert(jln_buildoptions, "-Wno-analyzer-too-complex")
+              end
+            end
+            if values['analyzer_verbosity']~='default' then
+              if values['analyzer_verbosity'] == '0' then
+                table_insert(jln_buildoptions, "-fanalyzer-verbosity=0")
+              else
+                if values['analyzer_verbosity'] == '1' then
+                  table_insert(jln_buildoptions, "-fanalyzer-verbosity=1")
+                else
+                  if values['analyzer_verbosity'] == '2' then
+                    table_insert(jln_buildoptions, "-fanalyzer-verbosity=2")
+                  else
+                    table_insert(jln_buildoptions, "-fanalyzer-verbosity=3")
                   end
                 end
               end
@@ -1214,96 +1439,13 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["stl_debug"] == "default") then
-      if not ( values["stl_debug"] == "off" ) then
-        if values["stl_debug"] == "assert_as_exception" then
-          table_insert(jln_buildoptions, "-D_LIBCPP_DEBUG_USE_EXCEPTIONS")
-        end
-        if ( values["stl_debug"] == "allow_broken_abi" or values["stl_debug"] == "allow_broken_abi_and_bugs" ) then
-          if compiler == "clang" then
-            if ( not ( compversion < 800 ) or values["stl_debug"] == "allow_broken_abi_and_bugs" ) then
-              table_insert(jln_buildoptions, "-D_LIBCPP_DEBUG=1")
-            end
-          end
-          table_insert(jln_buildoptions, "-D_GLIBCXX_DEBUG")
-        else
-          table_insert(jln_buildoptions, "-D_GLIBCXX_ASSERTIONS")
-        end
-        if not ( values["pedantic"] == "default") then
-          if not ( values["pedantic"] == "off" ) then
-            table_insert(jln_buildoptions, "-D_GLIBCXX_DEBUG_PEDANTIC")
-          end
-        end
-      end
-    end
-    if not ( values["elide_type"] == "default") then
-      if values["elide_type"] == "on" then
-        if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-          table_insert(jln_buildoptions, "-felide-type")
-        end
-      else
-        if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or ( compiler == "clang" and not ( compversion < 304 ) ) ) then
-          table_insert(jln_buildoptions, "-fno-elide-type")
-        end
-      end
-    end
-    if not ( values["exceptions"] == "default") then
-      if values["exceptions"] == "on" then
-        table_insert(jln_buildoptions, "-fexceptions")
-      else
-        table_insert(jln_buildoptions, "-fno-exceptions")
-      end
-    end
-    if not ( values["rtti"] == "default") then
-      if values["rtti"] == "on" then
-        table_insert(jln_buildoptions, "-frtti")
-      else
-        table_insert(jln_buildoptions, "-fno-rtti")
-      end
-    end
-    if not ( values["diagnostics_show_template_tree"] == "default") then
-      if ( ( compiler == "gcc" and not ( compversion < 800 ) ) or compiler == "clang" ) then
-        if values["diagnostics_show_template_tree"] == "on" then
-          table_insert(jln_buildoptions, "-fdiagnostics-show-template-tree")
-        else
-          table_insert(jln_buildoptions, "-fno-diagnostics-show-template-tree")
-        end
-      end
-    end
-    if not ( values["other_sanitizers"] == "default") then
-      if values["other_sanitizers"] == "thread" then
-        table_insert(jln_buildoptions, "-fsanitize=thread")
-      else
-        if values["other_sanitizers"] == "memory" then
-          if ( compiler == "clang" and not ( compversion < 500 ) ) then
-            table_insert(jln_buildoptions, "-fsanitize=memory")
-          end
-        else
-          if values["other_sanitizers"] == "pointer" then
-            if ( compiler == "gcc" and not ( compversion < 800 ) ) then
-              table_insert(jln_buildoptions, "-fsanitize=pointer-compare")
-              table_insert(jln_buildoptions, "-fsanitize=pointer-subtract")
-            end
-          end
-        end
-      end
-    end
-    if not ( values["noexcept_warnings"] == "default") then
-      if ( compiler == "gcc" and not ( compversion < 409 ) ) then
-        if values["noexcept_warnings"] == "on" then
-          table_insert(jln_buildoptions, "-Wnoexcept")
-        else
-          table_insert(jln_buildoptions, "-Wno-noexcept")
-        end
-      end
-    end
   end
-  if linker == "lld-link" then
-    if not ( values["lto"] == "default") then
-      if values["lto"] == "off" then
+  if linker == 'lld-link' then
+    if values['lto']~='default' then
+      if values['lto'] == 'off' then
         table_insert(jln_buildoptions, "-fno-lto")
       else
-        if values["lto"] == "thin" then
+        if values['lto'] == 'thin' then
           table_insert(jln_buildoptions, "-flto=thin")
         else
           table_insert(jln_buildoptions, "-flto")
@@ -1311,12 +1453,12 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["whole_program"] == "default") then
-      if values["whole_program"] == "off" then
+    if values['whole_program']~='default' then
+      if values['whole_program'] == 'off' then
         table_insert(jln_buildoptions, "-fno-whole-program")
       else
-        if not ( values["lto"] == "default") then
-          if not ( values["lto"] == "off" ) then
+        if values['lto']~='default' then
+          if values['lto']~='off' then
             table_insert(jln_buildoptions, "-fwhole-program-vtables")
             table_insert(jln_linkoptions, "-fwhole-program-vtables")
           end
@@ -1324,9 +1466,9 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if ( compiler == "msvc" or compiler == "clang-cl" or compiler == "icl" ) then
-    if not ( values["exceptions"] == "default") then
-      if values["exceptions"] == "on" then
+  if ( compiler == 'msvc' or compiler == 'clang-cl' or compiler == 'icl' ) then
+    if values['exceptions']~='default' then
+      if values['exceptions'] == 'on' then
         table_insert(jln_buildoptions, "/EHsc")
         table_insert(jln_buildoptions, "/D_HAS_EXCEPTIONS=1")
       else
@@ -1334,49 +1476,49 @@ function jln_getoptions(values, disable_others, print_compiler)
         table_insert(jln_buildoptions, "/D_HAS_EXCEPTIONS=0")
       end
     end
-    if not ( values["rtti"] == "default") then
-      if values["rtti"] == "on" then
+    if values['rtti']~='default' then
+      if values['rtti'] == 'on' then
         table_insert(jln_buildoptions, "/GR")
       else
         table_insert(jln_buildoptions, "/GR-")
       end
     end
-    if not ( values["stl_debug"] == "default") then
-      if values["stl_debug"] == "off" then
+    if values['stl_debug']~='default' then
+      if values['stl_debug'] == 'off' then
         table_insert(jln_buildoptions, "/D_HAS_ITERATOR_DEBUGGING=0")
       else
         table_insert(jln_buildoptions, "/D_DEBUG")
         table_insert(jln_buildoptions, "/D_HAS_ITERATOR_DEBUGGING=1")
       end
     end
-    if not ( compiler == "icl" ) then
-      if not ( values["stl_fix"] == "default") then
-        if values["stl_fix"] == "on" then
-          table_insert(jln_buildoptions, "/DNOMINMAX")
-        end
+    if values['stl_fix']~='default' then
+      if values['stl_fix'] == 'on' then
+        table_insert(jln_buildoptions, "/DNOMINMAX")
       end
-      if not ( values["debug"] == "default") then
-        if values["debug"] == "off" then
+    end
+    if compiler~='icl' then
+      if values['debug']~='default' then
+        if values['debug'] == 'off' then
           table_insert(jln_buildoptions, "/DEBUG:NONE")
         else
           table_insert(jln_buildoptions, "/RTC1")
           table_insert(jln_buildoptions, "/Od")
-          if values["debug"] == "on" then
+          if values['debug'] == 'on' then
             table_insert(jln_buildoptions, "/DEBUG")
           else
-            if values["debug"] == "line_tables_only" then
-              if compiler == "clang-cl" then
+            if values['debug'] == 'line_tables_only' then
+              if compiler == 'clang-cl' then
                 table_insert(jln_buildoptions, "-gline-tables-only")
               end
               table_insert(jln_buildoptions, "/DEBUG:FASTLINK")
             end
           end
-          if not ( values["optimization"] == "default") then
-            if values["optimization"] == "g" then
+          if values['optimization']~='default' then
+            if values['optimization'] == 'g' then
               table_insert(jln_buildoptions, "/Zi")
             else
-              if not ( values["whole_program"] == "default") then
-                if values["whole_program"] == "off" then
+              if values['whole_program']~='default' then
+                if values['whole_program'] == 'off' then
                   table_insert(jln_buildoptions, "/ZI")
                 else
                   table_insert(jln_buildoptions, "/Zi")
@@ -1386,8 +1528,8 @@ function jln_getoptions(values, disable_others, print_compiler)
               end
             end
           else
-            if not ( values["whole_program"] == "default") then
-              if values["whole_program"] == "off" then
+            if values['whole_program']~='default' then
+              if values['whole_program'] == 'off' then
                 table_insert(jln_buildoptions, "/ZI")
               else
                 table_insert(jln_buildoptions, "/Zi")
@@ -1398,35 +1540,32 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["optimization"] == "default") then
-        if values["optimization"] == "0" then
+      if values['optimization']~='default' then
+        if values['optimization'] == '0' then
           table_insert(jln_buildoptions, "/Ob0")
           table_insert(jln_buildoptions, "/Od")
           table_insert(jln_buildoptions, "/Oi-")
           table_insert(jln_buildoptions, "/Oy-")
         else
-          if values["optimization"] == "g" then
+          if values['optimization'] == 'g' then
             table_insert(jln_buildoptions, "/Ob1")
           else
-            table_insert(jln_buildoptions, "/DNDEBUG")
-            if values["optimization"] == "1" then
+            if values['optimization'] == '1' then
               table_insert(jln_buildoptions, "/O1")
             else
-              if values["optimization"] == "2" then
+              if values['optimization'] == '2' then
                 table_insert(jln_buildoptions, "/O2")
               else
-                if values["optimization"] == "3" then
+                if values['optimization'] == '3' then
                   table_insert(jln_buildoptions, "/O2")
                 else
-                  if ( values["optimization"] == "size" or values["optimization"] == "z" ) then
+                  if ( values['optimization'] == 'size' or values['optimization'] == 'z' ) then
                     table_insert(jln_buildoptions, "/O1")
                     table_insert(jln_buildoptions, "/GL")
                     table_insert(jln_buildoptions, "/Gw")
                   else
-                    if values["optimization"] == "fast" then
-                      table_insert(jln_buildoptions, "/O2")
-                      table_insert(jln_buildoptions, "/fp:fast")
-                    end
+                    table_insert(jln_buildoptions, "/O2")
+                    table_insert(jln_buildoptions, "/fp:fast")
                   end
                 end
               end
@@ -1434,45 +1573,45 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["control_flow"] == "default") then
-        if values["control_flow"] == "off" then
+      if values['control_flow']~='default' then
+        if values['control_flow'] == 'off' then
           table_insert(jln_buildoptions, "/guard:cf-")
         else
           table_insert(jln_buildoptions, "/guard:cf")
         end
       end
-      if not ( values["whole_program"] == "default") then
-        if values["whole_program"] == "off" then
+      if values['whole_program']~='default' then
+        if values['whole_program'] == 'off' then
           table_insert(jln_buildoptions, "/GL-")
         else
           table_insert(jln_buildoptions, "/GL")
           table_insert(jln_buildoptions, "/Gw")
           table_insert(jln_linkoptions, "/LTCG")
-          if values["whole_program"] == "strip_all" then
+          if values['whole_program'] == 'strip_all' then
             table_insert(jln_linkoptions, "/OPT:REF")
           end
         end
       end
-      if not ( values["pedantic"] == "default") then
-        if not ( values["pedantic"] == "off" ) then
+      if values['pedantic']~='default' then
+        if values['pedantic']~='off' then
           table_insert(jln_buildoptions, "/permissive-")
           table_insert(jln_buildoptions, "/Zc:__cplusplus")
         end
       end
-      if not ( values["stack_protector"] == "default") then
-        if values["stack_protector"] == "off" then
+      if values['stack_protector']~='default' then
+        if values['stack_protector'] == 'off' then
           table_insert(jln_buildoptions, "/GS-")
         else
           table_insert(jln_buildoptions, "/GS")
           table_insert(jln_buildoptions, "/sdl")
-          if values["stack_protector"] == "strong" then
+          if values['stack_protector'] == 'strong' then
             table_insert(jln_buildoptions, "/RTC1")
-            if ( compiler == "msvc" and not ( compversion < 1607 ) ) then
+            if ( compiler == 'msvc' and compversion >= 1600007 ) then
               table_insert(jln_buildoptions, "/guard:ehcont")
               table_insert(jln_linkoptions, "/CETCOMPAT")
             end
           else
-            if values["stack_protector"] == "all" then
+            if values['stack_protector'] == 'all' then
               table_insert(jln_buildoptions, "/RTC1")
               table_insert(jln_buildoptions, "/RTCc")
             end
@@ -1481,67 +1620,67 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if compiler == "msvc" then
-    if not ( values["windows_bigobj"] == "default") then
+  if compiler == 'msvc' then
+    if values['windows_bigobj']~='default' then
       table_insert(jln_buildoptions, "/bigobj")
     end
-    if not ( values["msvc_conformance"] == "default") then
-      if ( values["msvc_conformance"] == "all" or values["msvc_conformance"] == "all_without_throwing_new" ) then
+    if values['msvc_conformance']~='default' then
+      if ( values['msvc_conformance'] == 'all' or values['msvc_conformance'] == 'all_without_throwing_new' ) then
         table_insert(jln_buildoptions, "/Zc:inline")
         table_insert(jln_buildoptions, "/Zc:referenceBinding")
-        if values["msvc_conformance"] == "all" then
+        if values['msvc_conformance'] == 'all' then
           table_insert(jln_buildoptions, "/Zc:throwingNew")
         end
-        if not ( compversion < 1506 ) then
+        if compversion >= 1500006 then
           table_insert(jln_buildoptions, "/Zc:externConstexpr")
-          if not ( compversion < 1605 ) then
+          if compversion >= 1600005 then
             table_insert(jln_buildoptions, "/Zc:preprocessor")
-            if not ( compversion < 1608 ) then
+            if compversion >= 1600008 then
               table_insert(jln_buildoptions, "/Zc:lambda")
             end
           end
         end
       end
     end
-    if not ( values["msvc_crt_secure_no_warnings"] == "default") then
-      if values["msvc_crt_secure_no_warnings"] == "on" then
+    if values['msvc_crt_secure_no_warnings']~='default' then
+      if values['msvc_crt_secure_no_warnings'] == 'on' then
         table_insert(jln_buildoptions, "/D_CRT_SECURE_NO_WARNINGS=1")
       else
-        if values["msvc_crt_secure_no_warnings"] == "off" then
+        if values['msvc_crt_secure_no_warnings'] == 'off' then
           table_insert(jln_buildoptions, "/U_CRT_SECURE_NO_WARNINGS")
         end
       end
     end
-    if not ( values["msvc_isystem"] == "default") then
-      if values["msvc_isystem"] == "external_as_include_system_flag" then
+    if values['msvc_isystem']~='default' then
+      if values['msvc_isystem'] == 'external_as_include_system_flag' then
         -- unimplementable
       else
         table_insert(jln_buildoptions, "/experimental:external")
         table_insert(jln_buildoptions, "/external:W0")
-        if values["msvc_isystem"] == "anglebrackets" then
+        if values['msvc_isystem'] == 'anglebrackets' then
           table_insert(jln_buildoptions, "/external:anglebrackets")
         else
           table_insert(jln_buildoptions, "/external:env:INCLUDE")
           table_insert(jln_buildoptions, "/external:env:CAExcludePath")
         end
       end
-      if not ( values["msvc_isystem_with_template_from_non_external"] == "default") then
-        if values["msvc_isystem_with_template_from_non_external"] == "off" then
+      if values['msvc_isystem_with_template_from_non_external']~='default' then
+        if values['msvc_isystem_with_template_from_non_external'] == 'off' then
           table_insert(jln_buildoptions, "/external:template")
         else
           table_insert(jln_buildoptions, "/external:template-")
         end
       end
-      if not ( values["warnings"] == "default") then
-        if values["warnings"] == "off" then
+      if values['warnings']~='default' then
+        if values['warnings'] == 'off' then
           table_insert(jln_buildoptions, "/W0")
         else
           table_insert(jln_buildoptions, "/wd4710")
           table_insert(jln_buildoptions, "/wd4711")
-          if not ( not ( compversion < 1921 ) ) then
+          if compversion < 1900021 then
             table_insert(jln_buildoptions, "/wd4774")
           end
-          if values["warnings"] == "on" then
+          if values['warnings'] == 'on' then
             table_insert(jln_buildoptions, "/W4")
             table_insert(jln_buildoptions, "/wd4514")
           else
@@ -1556,34 +1695,32 @@ function jln_getoptions(values, disable_others, print_compiler)
             table_insert(jln_buildoptions, "/wd4464")
             table_insert(jln_buildoptions, "/wd4868")
             table_insert(jln_buildoptions, "/wd5045")
-            if values["warnings"] == "strict" then
+            if values['warnings'] == 'strict' then
               table_insert(jln_buildoptions, "/wd4583")
               table_insert(jln_buildoptions, "/wd4619")
             end
           end
         end
       end
-      if not ( values["switch_warnings"] == "default") then
-        if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "mandatory_default" ) then
+      if values['switch_warnings']~='default' then
+        if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'mandatory_default' ) then
           table_insert(jln_buildoptions, "/w14062")
         else
-          if ( values["switch_warnings"] == "exhaustive_enum" or values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" ) then
+          if ( values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) then
             table_insert(jln_buildoptions, "/w14061")
             table_insert(jln_buildoptions, "/w14062")
           else
-            if values["switch_warnings"] == "off" then
-              table_insert(jln_buildoptions, "/wd4061")
-              table_insert(jln_buildoptions, "/wd4062")
-            end
+            table_insert(jln_buildoptions, "/wd4061")
+            table_insert(jln_buildoptions, "/wd4062")
           end
         end
       end
     else
-      if not ( values["warnings"] == "default") then
-        if values["warnings"] == "off" then
+      if values['warnings']~='default' then
+        if values['warnings'] == 'off' then
           table_insert(jln_buildoptions, "/W0")
         else
-          if values["warnings"] == "on" then
+          if values['warnings'] == 'on' then
             table_insert(jln_buildoptions, "/W4")
             table_insert(jln_buildoptions, "/wd4514")
             table_insert(jln_buildoptions, "/wd4711")
@@ -1599,7 +1736,7 @@ function jln_getoptions(values, disable_others, print_compiler)
             table_insert(jln_buildoptions, "/wd4668")
             table_insert(jln_buildoptions, "/wd4710")
             table_insert(jln_buildoptions, "/wd4711")
-            if not ( not ( compversion < 1921 ) ) then
+            if compversion < 1900021 then
               table_insert(jln_buildoptions, "/wd4774")
             end
             table_insert(jln_buildoptions, "/wd4820")
@@ -1609,7 +1746,7 @@ function jln_getoptions(values, disable_others, print_compiler)
             table_insert(jln_buildoptions, "/wd4464")
             table_insert(jln_buildoptions, "/wd4868")
             table_insert(jln_buildoptions, "/wd5045")
-            if values["warnings"] == "strict" then
+            if values['warnings'] == 'strict' then
               table_insert(jln_buildoptions, "/wd4061")
               table_insert(jln_buildoptions, "/wd4266")
               table_insert(jln_buildoptions, "/wd4583")
@@ -1621,18 +1758,18 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["conversion_warnings"] == "default") then
-      if values["conversion_warnings"] == "on" then
+    if values['conversion_warnings']~='default' then
+      if values['conversion_warnings'] == 'on' then
         table_insert(jln_buildoptions, "/w14244")
         table_insert(jln_buildoptions, "/w14245")
         table_insert(jln_buildoptions, "/w14388")
         table_insert(jln_buildoptions, "/w14365")
       else
-        if values["conversion_warnings"] == "conversion" then
+        if values['conversion_warnings'] == 'conversion' then
           table_insert(jln_buildoptions, "/w14244")
           table_insert(jln_buildoptions, "/w14365")
         else
-          if values["conversion_warnings"] == "sign" then
+          if values['conversion_warnings'] == 'sign' then
             table_insert(jln_buildoptions, "/w14388")
             table_insert(jln_buildoptions, "/w14245")
           else
@@ -1644,28 +1781,27 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["shadow_warnings"] == "default") then
-      if values["shadow_warnings"] == "off" then
+    if values['shadow_warnings']~='default' then
+      if values['shadow_warnings'] == 'off' then
         table_insert(jln_buildoptions, "/wd4456")
         table_insert(jln_buildoptions, "/wd4459")
       else
-        if ( values["shadow_warnings"] == "on" or values["shadow_warnings"] == "all" ) then
+        if ( values['shadow_warnings'] == 'on' or values['shadow_warnings'] == 'all' ) then
           table_insert(jln_buildoptions, "/w4456")
           table_insert(jln_buildoptions, "/w4459")
         else
-          if values["shadow_warnings"] == "local" then
+          if values['shadow_warnings'] == 'local' then
             table_insert(jln_buildoptions, "/w4456")
             table_insert(jln_buildoptions, "/wd4459")
           end
         end
       end
     end
-    if not ( values["warnings_as_error"] == "default") then
-      if values["warnings_as_error"] == "on" then
+    if values['warnings_as_error']~='default' then
+      if values['warnings_as_error'] == 'on' then
         table_insert(jln_buildoptions, "/WX")
-        table_insert(jln_linkoptions, "/WX")
       else
-        if values["warnings_as_error"] == "off" then
+        if values['warnings_as_error'] == 'off' then
           table_insert(jln_buildoptions, "/WX-")
         else
           table_insert(jln_buildoptions, "/we4455")
@@ -1675,24 +1811,24 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["lto"] == "default") then
-      if values["lto"] == "off" then
+    if values['lto']~='default' then
+      if values['lto'] == 'off' then
         table_insert(jln_buildoptions, "/LTCG:OFF")
       else
         table_insert(jln_buildoptions, "/GL")
         table_insert(jln_linkoptions, "/LTCG")
       end
     end
-    if not ( values["sanitizers"] == "default") then
-      if not ( compversion < 1609 ) then
+    if values['sanitizers']~='default' then
+      if compversion >= 1600009 then
         table_insert(jln_buildoptions, "/fsanitize=address")
         table_insert(jln_buildoptions, "/fsanitize-address-use-after-return")
       else
-        if values["sanitizers"] == "on" then
+        if values['sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "/sdl")
         else
-          if not ( values["stack_protector"] == "default") then
-            if not ( values["stack_protector"] == "off" ) then
+          if values['stack_protector']~='default' then
+            if values['stack_protector']~='off' then
               table_insert(jln_buildoptions, "/sdl-")
             end
           end
@@ -1700,55 +1836,55 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if compiler == "icl" then
-    if not ( values["warnings"] == "default") then
-      if values["warnings"] == "off" then
+  if compiler == 'icl' then
+    if values['warnings']~='default' then
+      if values['warnings'] == 'off' then
         table_insert(jln_buildoptions, "/w")
       else
         table_insert(jln_buildoptions, "/W2")
         table_insert(jln_buildoptions, "/Qdiag-disable:1418,2259")
       end
     end
-    if not ( values["warnings_as_error"] == "default") then
-      if values["warnings_as_error"] == "on" then
+    if values['warnings_as_error']~='default' then
+      if values['warnings_as_error'] == 'on' then
         table_insert(jln_buildoptions, "/WX")
       else
-        if values["warnings_as_error"] == "basic" then
+        if values['warnings_as_error'] == 'basic' then
           table_insert(jln_buildoptions, "/Qdiag-error:1079,39,109")
         end
       end
     end
-    if not ( values["windows_bigobj"] == "default") then
+    if values['windows_bigobj']~='default' then
       table_insert(jln_buildoptions, "/bigobj")
     end
-    if not ( values["msvc_conformance"] == "default") then
-      if ( values["msvc_conformance"] == "all" or values["msvc_conformance"] == "all_without_throwing_new" ) then
+    if values['msvc_conformance']~='default' then
+      if ( values['msvc_conformance'] == 'all' or values['msvc_conformance'] == 'all_without_throwing_new' ) then
         table_insert(jln_buildoptions, "/Zc:inline")
         table_insert(jln_buildoptions, "/Zc:strictStrings")
-        if values["msvc_conformance"] == "all" then
+        if values['msvc_conformance'] == 'all' then
           table_insert(jln_buildoptions, "/Zc:throwingNew")
         end
       end
     end
-    if not ( values["debug"] == "default") then
-      if values["debug"] == "off" then
+    if values['debug']~='default' then
+      if values['debug'] == 'off' then
         table_insert(jln_buildoptions, "/debug:NONE")
       else
         table_insert(jln_buildoptions, "/RTC1")
         table_insert(jln_buildoptions, "/Od")
-        if values["debug"] == "on" then
+        if values['debug'] == 'on' then
           table_insert(jln_buildoptions, "/debug:full")
         else
-          if values["debug"] == "line_tables_only" then
+          if values['debug'] == 'line_tables_only' then
             table_insert(jln_buildoptions, "/debug:minimal")
           end
         end
-        if not ( values["optimization"] == "default") then
-          if values["optimization"] == "g" then
+        if values['optimization']~='default' then
+          if values['optimization'] == 'g' then
             table_insert(jln_buildoptions, "/Zi")
           else
-            if not ( values["whole_program"] == "default") then
-              if values["whole_program"] == "off" then
+            if values['whole_program']~='default' then
+              if values['whole_program'] == 'off' then
                 table_insert(jln_buildoptions, "/ZI")
               else
                 table_insert(jln_buildoptions, "/Zi")
@@ -1758,8 +1894,8 @@ function jln_getoptions(values, disable_others, print_compiler)
             end
           end
         else
-          if not ( values["whole_program"] == "default") then
-            if values["whole_program"] == "off" then
+          if values['whole_program']~='default' then
+            if values['whole_program'] == 'off' then
               table_insert(jln_buildoptions, "/ZI")
             else
               table_insert(jln_buildoptions, "/Zi")
@@ -1770,36 +1906,33 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["optimization"] == "default") then
-      if values["optimization"] == "0" then
+    if values['optimization']~='default' then
+      if values['optimization'] == '0' then
         table_insert(jln_buildoptions, "/Ob0")
         table_insert(jln_buildoptions, "/Od")
         table_insert(jln_buildoptions, "/Oi-")
         table_insert(jln_buildoptions, "/Oy-")
       else
-        if values["optimization"] == "g" then
+        if values['optimization'] == 'g' then
           table_insert(jln_buildoptions, "/Ob1")
         else
-          table_insert(jln_buildoptions, "/DNDEBUG")
           table_insert(jln_buildoptions, "/GF")
-          if values["optimization"] == "1" then
+          if values['optimization'] == '1' then
             table_insert(jln_buildoptions, "/O1")
           else
-            if values["optimization"] == "2" then
+            if values['optimization'] == '2' then
               table_insert(jln_buildoptions, "/O2")
             else
-              if values["optimization"] == "3" then
+              if values['optimization'] == '3' then
                 table_insert(jln_buildoptions, "/O2")
               else
-                if values["optimization"] == "z" then
+                if values['optimization'] == 'z' then
                   table_insert(jln_buildoptions, "/O3")
                 else
-                  if values["optimization"] == "size" then
+                  if values['optimization'] == 'size' then
                     table_insert(jln_buildoptions, "/Os")
                   else
-                    if values["optimization"] == "fast" then
-                      table_insert(jln_buildoptions, "/fast")
-                    end
+                    table_insert(jln_buildoptions, "/fast")
                   end
                 end
               end
@@ -1808,51 +1941,51 @@ function jln_getoptions(values, disable_others, print_compiler)
         end
       end
     end
-    if not ( values["stack_protector"] == "default") then
-      if values["stack_protector"] == "off" then
+    if values['stack_protector']~='default' then
+      if values['stack_protector'] == 'off' then
         table_insert(jln_buildoptions, "/GS-")
       else
         table_insert(jln_buildoptions, "/GS")
-        if values["stack_protector"] == "strong" then
+        if values['stack_protector'] == 'strong' then
           table_insert(jln_buildoptions, "/RTC1")
         else
-          if values["stack_protector"] == "all" then
+          if values['stack_protector'] == 'all' then
             table_insert(jln_buildoptions, "/RTC1")
             table_insert(jln_buildoptions, "/RTCc")
           end
         end
       end
     end
-    if not ( values["sanitizers"] == "default") then
-      if values["sanitizers"] == "on" then
+    if values['sanitizers']~='default' then
+      if values['sanitizers'] == 'on' then
         table_insert(jln_buildoptions, "/Qtrapuv")
       end
     end
-    if not ( values["float_sanitizers"] == "default") then
-      if values["float_sanitizers"] == "on" then
+    if values['float_sanitizers']~='default' then
+      if values['float_sanitizers'] == 'on' then
         table_insert(jln_buildoptions, "/Qfp-stack-check")
         table_insert(jln_buildoptions, "/Qfp-trap:common")
       end
     end
-    if not ( values["control_flow"] == "default") then
-      if values["control_flow"] == "off" then
+    if values['control_flow']~='default' then
+      if values['control_flow'] == 'off' then
         table_insert(jln_buildoptions, "/guard:cf-")
         table_insert(jln_buildoptions, "/mconditional-branch=keep")
       else
         table_insert(jln_buildoptions, "/guard:cf")
-        if values["control_flow"] == "branch" then
+        if values['control_flow'] == 'branch' then
           table_insert(jln_buildoptions, "/mconditional-branch:all-fix")
           table_insert(jln_buildoptions, "/Qcf-protection:branch")
         else
-          if values["control_flow"] == "on" then
+          if values['control_flow'] == 'on' then
             table_insert(jln_buildoptions, "/mconditional-branch:all-fix")
             table_insert(jln_buildoptions, "/Qcf-protection:full")
           end
         end
       end
     end
-    if not ( values["cpu"] == "default") then
-      if values["cpu"] == "generic" then
+    if values['cpu']~='default' then
+      if values['cpu'] == 'generic' then
         table_insert(jln_buildoptions, "/Qtune:generic")
         table_insert(jln_linkoptions, "/Qtune:generic")
       else
@@ -1861,9 +1994,9 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   else
-    if compiler == "icc" then
-      if not ( values["warnings"] == "default") then
-        if values["warnings"] == "off" then
+    if compiler == 'icc' then
+      if values['warnings']~='default' then
+        if values['warnings'] == 'off' then
           table_insert(jln_buildoptions, "-w")
         else
           table_insert(jln_buildoptions, "-Wall")
@@ -1895,14 +2028,14 @@ function jln_getoptions(values, disable_others, print_compiler)
           table_insert(jln_buildoptions, "-Wdeprecated")
           table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
           table_insert(jln_buildoptions, "-Woverloaded-virtual")
-          if not ( values["switch_warnings"] == "default") then
-            if ( values["switch_warnings"] == "on" or values["switch_warnings"] == "exhaustive_enum" ) then
+          if values['switch_warnings']~='default' then
+            if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'exhaustive_enum' ) then
               table_insert(jln_buildoptions, "-Wswitch-enum")
             else
-              if values["switch_warnings"] == "mandatory_default" then
+              if values['switch_warnings'] == 'mandatory_default' then
                 table_insert(jln_buildoptions, "-Wswitch-default")
               else
-                if values["switch_warnings"] == "exhaustive_enum_and_mandatory_default" then
+                if values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' then
                   table_insert(jln_buildoptions, "-Wswitch")
                 else
                   table_insert(jln_buildoptions, "-Wno-switch")
@@ -1912,73 +2045,70 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["warnings_as_error"] == "default") then
-        if values["warnings_as_error"] == "on" then
+      if values['warnings_as_error']~='default' then
+        if values['warnings_as_error'] == 'on' then
           table_insert(jln_buildoptions, "-Werror")
         else
-          if values["warnings_as_error"] == "basic" then
+          if values['warnings_as_error'] == 'basic' then
             table_insert(jln_buildoptions, "-diag-error=1079,39,109")
           end
         end
       end
-      if not ( values["pedantic"] == "default") then
-        if values["pedantic"] == "off" then
+      if values['pedantic']~='default' then
+        if values['pedantic'] == 'off' then
           table_insert(jln_buildoptions, "-fgnu-keywords")
         else
           table_insert(jln_buildoptions, "-fno-gnu-keywords")
         end
       end
-      if not ( values["shadow_warnings"] == "default") then
-        if values["shadow_warnings"] == "off" then
+      if values['shadow_warnings']~='default' then
+        if values['shadow_warnings'] == 'off' then
           table_insert(jln_buildoptions, "-Wno-shadow")
         else
-          if ( values["shadow_warnings"] == "on" or values["shadow_warnings"] == "all" ) then
+          if ( values['shadow_warnings'] == 'on' or values['shadow_warnings'] == 'all' ) then
             table_insert(jln_buildoptions, "-Wshadow")
           end
         end
       end
-      if not ( values["stl_debug"] == "default") then
-        if not ( values["stl_debug"] == "off" ) then
-          if ( values["stl_debug"] == "allow_broken_abi" or values["stl_debug"] == "allow_broken_abi_and_bugs" ) then
+      if values['stl_debug']~='default' then
+        if values['stl_debug']~='off' then
+          if ( values['stl_debug'] == 'allow_broken_abi' or values['stl_debug'] == 'allow_broken_abi_and_bugs' ) then
             table_insert(jln_buildoptions, "-D_GLIBCXX_DEBUG")
           else
             table_insert(jln_buildoptions, "-D_GLIBCXX_ASSERTIONS")
           end
         end
       end
-      if not ( values["debug"] == "default") then
-        if values["debug"] == "off" then
+      if values['debug']~='default' then
+        if values['debug'] == 'off' then
           table_insert(jln_buildoptions, "-g0")
         else
           table_insert(jln_buildoptions, "-g")
         end
       end
-      if not ( values["optimization"] == "default") then
-        if values["optimization"] == "0" then
+      if values['optimization']~='default' then
+        if values['optimization'] == '0' then
           table_insert(jln_buildoptions, "-O0")
         else
-          if values["optimization"] == "g" then
+          if values['optimization'] == 'g' then
             table_insert(jln_buildoptions, "-O1")
           else
-            table_insert(jln_buildoptions, "-DNDEBUG")
-            if values["optimization"] == "1" then
+            if values['optimization'] == '1' then
               table_insert(jln_buildoptions, "-O1")
             else
-              if values["optimization"] == "2" then
+              if values['optimization'] == '2' then
                 table_insert(jln_buildoptions, "-O2")
               else
-                if values["optimization"] == "3" then
+                if values['optimization'] == '3' then
                   table_insert(jln_buildoptions, "-O3")
                 else
-                  if values["optimization"] == "z" then
+                  if values['optimization'] == 'z' then
                     table_insert(jln_buildoptions, "-fast")
                   else
-                    if values["optimization"] == "size" then
+                    if values['optimization'] == 'size' then
                       table_insert(jln_buildoptions, "-Os")
                     else
-                      if values["optimization"] == "fast" then
-                        table_insert(jln_buildoptions, "-Ofast")
-                      end
+                      table_insert(jln_buildoptions, "-Ofast")
                     end
                   end
                 end
@@ -1987,18 +2117,18 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["stack_protector"] == "default") then
-        if values["stack_protector"] == "off" then
+      if values['stack_protector']~='default' then
+        if values['stack_protector'] == 'off' then
           table_insert(jln_buildoptions, "-fno-protector-strong")
           table_insert(jln_buildoptions, "-U_FORTIFY_SOURCE")
           table_insert(jln_linkoptions, "-fno-protector-strong")
         else
           table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=2")
-          if values["stack_protector"] == "strong" then
+          if values['stack_protector'] == 'strong' then
             table_insert(jln_buildoptions, "-fstack-protector-strong")
             table_insert(jln_linkoptions, "-fstack-protector-strong")
           else
-            if values["stack_protector"] == "all" then
+            if values['stack_protector'] == 'all' then
               table_insert(jln_buildoptions, "-fstack-protector-all")
               table_insert(jln_linkoptions, "-fstack-protector-all")
             else
@@ -2008,38 +2138,36 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["relro"] == "default") then
-        if values["relro"] == "off" then
+      if values['relro']~='default' then
+        if values['relro'] == 'off' then
           table_insert(jln_linkoptions, "-Xlinker-znorelro")
         else
-          if values["relro"] == "on" then
+          if values['relro'] == 'on' then
             table_insert(jln_linkoptions, "-Xlinker-zrelro")
           else
-            if values["relro"] == "full" then
-              table_insert(jln_linkoptions, "-Xlinker-zrelro")
-              table_insert(jln_linkoptions, "-Xlinker-znow")
-              table_insert(jln_linkoptions, "-Xlinker-znoexecstack")
-            end
+            table_insert(jln_linkoptions, "-Xlinker-zrelro")
+            table_insert(jln_linkoptions, "-Xlinker-znow")
+            table_insert(jln_linkoptions, "-Xlinker-znoexecstack")
           end
         end
       end
-      if not ( values["pie"] == "default") then
-        if values["pie"] == "off" then
+      if values['pie']~='default' then
+        if values['pie'] == 'off' then
           table_insert(jln_linkoptions, "-no-pic")
         else
-          if values["pie"] == "on" then
+          if values['pie'] == 'on' then
             table_insert(jln_linkoptions, "-pie")
           else
-            if values["pie"] == "fpie" then
+            if values['pie'] == 'fpie' then
               table_insert(jln_buildoptions, "-fpie")
             else
-              if values["pie"] == "fpic" then
+              if values['pie'] == 'fpic' then
                 table_insert(jln_buildoptions, "-fpic")
               else
-                if values["pie"] == "fPIE" then
+                if values['pie'] == 'fPIE' then
                   table_insert(jln_buildoptions, "-fPIE")
                 else
-                  if values["pie"] == "fPIC" then
+                  if values['pie'] == 'fPIC' then
                     table_insert(jln_buildoptions, "-fPIC")
                   end
                 end
@@ -2048,82 +2176,82 @@ function jln_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if not ( values["sanitizers"] == "default") then
-        if values["sanitizers"] == "on" then
+      if values['sanitizers']~='default' then
+        if values['sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "-ftrapuv")
         end
       end
-      if not ( values["integer_sanitizers"] == "default") then
-        if values["integer_sanitizers"] == "on" then
+      if values['integer_sanitizers']~='default' then
+        if values['integer_sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "-funsigned-bitfields")
         else
           table_insert(jln_buildoptions, "-fno-unsigned-bitfields")
         end
       end
-      if not ( values["float_sanitizers"] == "default") then
-        if values["float_sanitizers"] == "on" then
+      if values['float_sanitizers']~='default' then
+        if values['float_sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "-fp-stack-check")
           table_insert(jln_buildoptions, "-fp-trap=common")
         end
       end
-      if not ( values["linker"] == "default") then
-        if values["linker"] == "bfd" then
+      if values['linker']~='default' then
+        if values['linker'] == 'bfd' then
           table_insert(jln_linkoptions, "-fuse-ld=bfd")
         else
-          if values["linker"] == "gold" then
+          if values['linker'] == 'gold' then
             table_insert(jln_linkoptions, "-fuse-ld=gold")
           else
             table_insert(jln_linkoptions, "-fuse-ld=lld")
           end
         end
       end
-      if not ( values["lto"] == "default") then
-        if values["lto"] == "off" then
+      if values['lto']~='default' then
+        if values['lto'] == 'off' then
           table_insert(jln_buildoptions, "-no-ipo")
           table_insert(jln_linkoptions, "-no-ipo")
         else
           table_insert(jln_buildoptions, "-ipo")
           table_insert(jln_linkoptions, "-ipo")
-          if values["lto"] == "fat" then
-            if os.target() == "linux" then
+          if values['lto'] == 'fat' then
+            if os.target() == 'linux' then
               table_insert(jln_buildoptions, "-ffat-lto-objects")
               table_insert(jln_linkoptions, "-ffat-lto-objects")
             end
           end
         end
       end
-      if not ( values["control_flow"] == "default") then
-        if values["control_flow"] == "off" then
+      if values['control_flow']~='default' then
+        if values['control_flow'] == 'off' then
           table_insert(jln_buildoptions, "-mconditional-branch=keep")
           table_insert(jln_buildoptions, "-fcf-protection=none")
         else
-          if values["control_flow"] == "branch" then
+          if values['control_flow'] == 'branch' then
             table_insert(jln_buildoptions, "-mconditional-branch=all-fix")
             table_insert(jln_buildoptions, "-fcf-protection=branch")
           else
-            if values["control_flow"] == "on" then
+            if values['control_flow'] == 'on' then
               table_insert(jln_buildoptions, "-mconditional-branch=all-fix")
               table_insert(jln_buildoptions, "-fcf-protection=full")
             end
           end
         end
       end
-      if not ( values["exceptions"] == "default") then
-        if values["exceptions"] == "on" then
+      if values['exceptions']~='default' then
+        if values['exceptions'] == 'on' then
           table_insert(jln_buildoptions, "-fexceptions")
         else
           table_insert(jln_buildoptions, "-fno-exceptions")
         end
       end
-      if not ( values["rtti"] == "default") then
-        if values["rtti"] == "on" then
+      if values['rtti']~='default' then
+        if values['rtti'] == 'on' then
           table_insert(jln_buildoptions, "-frtti")
         else
           table_insert(jln_buildoptions, "-fno-rtti")
         end
       end
-      if not ( values["cpu"] == "default") then
-        if values["cpu"] == "generic" then
+      if values['cpu']~='default' then
+        if values['cpu'] == 'generic' then
           table_insert(jln_buildoptions, "-mtune=generic")
           table_insert(jln_linkoptions, "-mtune=generic")
         else
@@ -2133,8 +2261,8 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if os.target() == "mingw" then
-    if not ( values["windows_bigobj"] == "default") then
+  if os.target() == 'mingw' then
+    if values['windows_bigobj']~='default' then
       table_insert(jln_buildoptions, "-Wa,-mbig-obj")
     end
   end

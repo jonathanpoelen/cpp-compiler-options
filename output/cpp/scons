@@ -6,6 +6,9 @@ import os
 import re
 
 _default_flags = {
+  'analyzer': 'default',
+  'analyzer_too_complex_warning': 'default',
+  'analyzer_verbosity': 'default',
   'color': 'default',
   'control_flow': 'default',
   'conversion_warnings': 'on',
@@ -26,6 +29,7 @@ _default_flags = {
   'msvc_crt_secure_no_warnings': 'on',
   'msvc_isystem': 'default',
   'msvc_isystem_with_template_from_non_external': 'default',
+  'ndebug': 'with_optimization_1_or_above',
   'noexcept_warnings': 'default',
   'optimization': 'default',
   'other_sanitizers': 'default',
@@ -50,6 +54,9 @@ _default_flags = {
 }
 
 _var2opts = {
+  'jln_analyzer': 'analyzer',
+  'jln_analyzer_too_complex_warning': 'analyzer_too_complex_warning',
+  'jln_analyzer_verbosity': 'analyzer_verbosity',
   'jln_color': 'color',
   'jln_control_flow': 'control_flow',
   'jln_conversion_warnings': 'conversion_warnings',
@@ -70,6 +77,7 @@ _var2opts = {
   'jln_msvc_crt_secure_no_warnings': 'msvc_crt_secure_no_warnings',
   'jln_msvc_isystem': 'msvc_isystem',
   'jln_msvc_isystem_with_template_from_non_external': 'msvc_isystem_with_template_from_non_external',
+  'jln_ndebug': 'ndebug',
   'jln_noexcept_warnings': 'noexcept_warnings',
   'jln_optimization': 'optimization',
   'jln_other_sanitizers': 'other_sanitizers',
@@ -94,6 +102,9 @@ _var2opts = {
 }
 
 _opt2vars = {
+  'analyzer': 'jln_analyzer',
+  'analyzer_too_complex_warning': 'jln_analyzer_too_complex_warning',
+  'analyzer_verbosity': 'jln_analyzer_verbosity',
   'color': 'jln_color',
   'control_flow': 'jln_control_flow',
   'conversion_warnings': 'jln_conversion_warnings',
@@ -114,6 +125,7 @@ _opt2vars = {
   'msvc_crt_secure_no_warnings': 'jln_msvc_crt_secure_no_warnings',
   'msvc_isystem': 'jln_msvc_isystem',
   'msvc_isystem_with_template_from_non_external': 'jln_msvc_isystem_with_template_from_non_external',
+  'ndebug': 'jln_ndebug',
   'noexcept_warnings': 'jln_noexcept_warnings',
   'optimization': 'jln_optimization',
   'other_sanitizers': 'jln_other_sanitizers',
@@ -142,6 +154,12 @@ def set_global_flags(default_values):
 
 def add_variables(vars, default_values={}):
   vars.AddVariables(
+    EnumVariable('jln_analyzer', 'enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)', default_values.get('analyzer', _default_flags['analyzer']),
+                 allowed_values=('default', 'off', 'on', 'taint')),
+    EnumVariable('jln_analyzer_too_complex_warning', 'By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.', default_values.get('analyzer_too_complex_warning', _default_flags['analyzer_too_complex_warning']),
+                 allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_analyzer_verbosity', 'controls the complexity of the control flow paths that are emitted for analyzer diagnostics\\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\\n - 1: As per the previous level, but also show events for the entry to each function.\\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.\\n - 3: As per the previous level, but show all control flow events, not just significant ones.', default_values.get('analyzer_verbosity', _default_flags['analyzer_verbosity']),
+                 allowed_values=('default', '0', '1', '2', '3')),
     EnumVariable('jln_color', '', default_values.get('color', _default_flags['color']),
                  allowed_values=('default', 'auto', 'never', 'always')),
     EnumVariable('jln_control_flow', 'insert extra runtime security checks to detect attempts to compromise your code', default_values.get('control_flow', _default_flags['control_flow']),
@@ -182,6 +200,8 @@ def add_variables(vars, default_values={}):
                  allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', 'warnings concerning template in an external header (requires msvc_isystem)', default_values.get('msvc_isystem_with_template_from_non_external', _default_flags['msvc_isystem_with_template_from_non_external']),
                  allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_ndebug', 'enable NDEBUG macro (disable assert macro)', default_values.get('ndebug', _default_flags['ndebug']),
+                 allowed_values=('default', 'off', 'on', 'with_optimization_1_or_above')),
     EnumVariable('jln_noexcept_warnings', 'Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception.', default_values.get('noexcept_warnings', _default_flags['noexcept_warnings']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_optimization', 'optimization level\\n - 0: not optimize\\n - g: enable debugging experience\\n - 1: optimize\\n - 2: optimize even more\\n - 3: optimize yet more\\n - fast: enables all optimization=3 and disregard strict standards compliance\\n - size: optimize for size\\n - z: optimize for size aggressively (/!\\ possible slow compilation)', default_values.get('optimization', _default_flags['optimization']),
@@ -281,14 +301,15 @@ def get_flags(options, env=None):
     compiler = _compiler
 
   version = version or (0,0)
+  compversion = version[0] * 100000 + version[1]
 
   options = options if type(options) == dict else variables_to_options(options)
 
-  def verless(major, minor):
-    return version[0] < major or (version[0] == major and version[1] < minor)
-
   flags=[]
   linkflags=[]
+  x_analyzer = options.get('analyzer', _default_flags['analyzer'])
+  x_analyzer_too_complex_warning = options.get('analyzer_too_complex_warning', _default_flags['analyzer_too_complex_warning'])
+  x_analyzer_verbosity = options.get('analyzer_verbosity', _default_flags['analyzer_verbosity'])
   x_color = options.get('color', _default_flags['color'])
   x_control_flow = options.get('control_flow', _default_flags['control_flow'])
   x_conversion_warnings = options.get('conversion_warnings', _default_flags['conversion_warnings'])
@@ -309,6 +330,7 @@ def get_flags(options, env=None):
   x_msvc_crt_secure_no_warnings = options.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings'])
   x_msvc_isystem = options.get('msvc_isystem', _default_flags['msvc_isystem'])
   x_msvc_isystem_with_template_from_non_external = options.get('msvc_isystem_with_template_from_non_external', _default_flags['msvc_isystem_with_template_from_non_external'])
+  x_ndebug = options.get('ndebug', _default_flags['ndebug'])
   x_noexcept_warnings = options.get('noexcept_warnings', _default_flags['noexcept_warnings'])
   x_optimization = options.get('optimization', _default_flags['optimization'])
   x_other_sanitizers = options.get('other_sanitizers', _default_flags['other_sanitizers'])
@@ -331,14 +353,35 @@ def get_flags(options, env=None):
   x_windows_abi_compatibility_warnings = options.get('windows_abi_compatibility_warnings', _default_flags['windows_abi_compatibility_warnings'])
   x_windows_bigobj = options.get('windows_bigobj', _default_flags['windows_bigobj'])
 
-  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' ) :
-    if not ( x_warnings == 'default') :
+  if x_ndebug != 'default' :
+    if ( compiler == 'msvc' or compiler == 'icl' ) :
+      if x_ndebug == 'off' :
+        flags += ('/UNDEBUG', )
+      else:
+        if x_ndebug == 'on' :
+          flags += ('/DNDEBUG', )
+        else:
+          if x_optimization != 'default' :
+            if not ( ( x_optimization == '0' or x_optimization == 'g' ) ) :
+              flags += ('/DNDEBUG', )
+    else:
+      if x_ndebug == 'off' :
+        flags += ('-UNDEBUG', )
+      else:
+        if x_ndebug == 'on' :
+          flags += ('-DNDEBUG', )
+        else:
+          if x_optimization != 'default' :
+            if not ( ( x_optimization == '0' or x_optimization == 'g' ) ) :
+              flags += ('-DNDEBUG', )
+  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) :
+    if x_warnings != 'default' :
       if x_warnings == 'off' :
         flags += ('-w', )
       else:
         if compiler == 'gcc' :
           flags += ('-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winvalid-pch', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', )
-          if not ( x_switch_warnings == 'default') :
+          if x_switch_warnings != 'default' :
             if x_switch_warnings == 'on' :
               flags += ('-Wswitch', )
             else:
@@ -352,64 +395,88 @@ def get_flags(options, env=None):
                     flags += ('-Wswitch-default', '-Wswitch-enum', )
                   else:
                     flags += ('-Wno-switch', )
-          if not ( verless(4, 7) ) :
+          if compversion >= 400007 :
             flags += ('-Wsuggest-attribute=noreturn', '-Wzero-as-null-pointer-constant', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', )
-            if not ( verless(4, 8) ) :
+            if compversion >= 400008 :
               flags += ('-Wuseless-cast', )
-              if not ( verless(4, 9) ) :
+              if compversion >= 400009 :
                 flags += ('-Wconditionally-supported', '-Wfloat-conversion', )
-                if not ( verless(5, 1) ) :
+                if compversion >= 500001 :
                   flags += ('-Wformat-signedness', '-Warray-bounds=2', '-Wstrict-null-sentinel', '-Wsuggest-override', )
-                  if not ( verless(6, 1) ) :
+                  if compversion >= 600001 :
                     flags += ('-Wduplicated-cond', '-Wnull-dereference', )
-                    if not ( verless(7, 0) ) :
+                    if compversion >= 700000 :
                       flags += ('-Waligned-new', )
-                      if not ( verless(7, 1) ) :
+                      if compversion >= 700001 :
                         flags += ('-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', )
-                        if not ( verless(8, 0) ) :
+                        if compversion >= 800000 :
                           flags += ('-Wclass-memaccess', )
         else:
           flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', )
-          if not ( x_switch_warnings == 'default') :
+          if x_switch_warnings != 'default' :
             if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
               flags += ('-Wno-switch-enum', )
             else:
               if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
                 flags += ('-Wswitch-enum', )
               else:
-                if x_switch_warnings == 'off' :
-                  flags += ('-Wno-switch', '-Wno-switch-enum', )
+                flags += ('-Wno-switch', '-Wno-switch-enum', )
           else:
             flags += ('-Wno-switch', '-Wno-switch-enum', )
-          if not ( x_covered_switch_default_warnings == 'default') :
+          if x_covered_switch_default_warnings != 'default' :
             if x_covered_switch_default_warnings == 'off' :
               flags += ('-Wno-covered-switch-default', )
             else:
               flags += ('-Wcovered-switch-default', )
-          if not ( verless(3, 9) ) :
+          if compversion >= 300009 :
             flags += ('-Wno-undefined-var-template', )
-            if not ( verless(5, 0) ) :
+            if compversion >= 500000 :
               flags += ('-Wno-inconsistent-missing-destructor-override', )
-              if not ( verless(9, 0) ) :
+              if compversion >= 900000 :
                 flags += ('-Wno-ctad-maybe-unsupported', )
-                if not ( verless(10, 0) ) :
+                if compversion >= 1000000 :
                   flags += ('-Wno-c++20-compat', )
-                  if not ( verless(11, 0) ) :
+                  if compversion >= 1100000 :
                     flags += ('-Wno-suggest-destructor-override', )
         if ( x_warnings == 'strict' or x_warnings == 'very_strict' ) :
-          if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
+          if ( compiler == 'gcc' and compversion >= 800000 ) :
             flags += ('-Wcast-align=strict', )
-    if not ( x_var_init == 'default') :
+    if x_diagnostics_show_template_tree != 'default' :
+      if ( ( compiler == 'gcc' and compversion >= 800000 ) or compiler == 'clang' ) :
+        if x_diagnostics_show_template_tree == 'on' :
+          flags += ('-fdiagnostics-show-template-tree', )
+        else:
+          flags += ('-fno-diagnostics-show-template-tree', )
+    if x_elide_type != 'default' :
+      if x_elide_type == 'on' :
+        if ( compiler == 'gcc' and compversion >= 800000 ) :
+          flags += ('-felide-type', )
+      else:
+        if ( ( compiler == 'gcc' and compversion >= 800000 ) or ( compiler == 'clang' and compversion >= 300004 ) ) :
+          flags += ('-fno-elide-type', )
+    if x_exceptions != 'default' :
+      if x_exceptions == 'on' :
+        flags += ('-fexceptions', )
+        if compiler == 'clang-emcc' :
+          flags += ('-sDISABLE_EXCEPTION_CATCHING=0', )
+      else:
+        flags += ('-fno-exceptions', )
+    if x_rtti != 'default' :
+      if x_rtti == 'on' :
+        flags += ('-frtti', )
+      else:
+        flags += ('-fno-rtti', )
+    if x_var_init != 'default' :
       if x_var_init == 'pattern' :
-        if ( ( compiler == 'gcc' and not ( verless(12, 0) ) ) or ( compiler == 'clang' and not ( verless(8, 0) ) ) ) :
+        if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) :
           flags += ('-ftrivial-auto-var-init=pattern', )
-    if not ( x_windows_abi_compatibility_warnings == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(10, 0) ) ) or compiler == 'clang' or compiler == 'clang-cl' ) :
+    if x_windows_abi_compatibility_warnings != 'default' :
+      if ( ( compiler == 'gcc' and compversion >= 1000000 ) or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) :
         if x_windows_abi_compatibility_warnings == 'on' :
           flags += ('-Wmismatched-tags', )
         else:
           flags += ('-Wno-mismatched-tags', )
-    if not ( x_warnings_as_error == 'default') :
+    if x_warnings_as_error != 'default' :
       if x_warnings_as_error == 'on' :
         flags += ('-Werror', )
       else:
@@ -417,32 +484,31 @@ def get_flags(options, env=None):
           flags += ('-Werror=return-type', '-Werror=init-self', )
           if compiler == 'gcc' :
             flags += ('-Werror=div-by-zero', )
-            if not ( verless(5, 1) ) :
+            if compversion >= 500001 :
               flags += ('-Werror=array-bounds', '-Werror=logical-op', '-Werror=logical-not-parentheses', )
-              if not ( verless(7, 0) ) :
+              if compversion >= 700000 :
                 flags += ('-Werror=literal-suffix', )
           else:
-            if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-              flags += ('-Werror=array-bounds', '-Werror=division-by-zero', )
-              if not ( verless(3, 4) ) :
-                flags += ('-Werror=logical-not-parentheses', )
-                if not ( verless(3, 6) ) :
-                  flags += ('-Werror=delete-incomplete', )
-                  if not ( verless(6, 0) ) :
-                    flags += ('-Werror=user-defined-literals', )
-                    if not ( verless(7, 0) ) :
-                      flags += ('-Werror=dynamic-class-memaccess', )
+            flags += ('-Werror=array-bounds', '-Werror=division-by-zero', )
+            if compversion >= 300004 :
+              flags += ('-Werror=logical-not-parentheses', )
+              if compversion >= 300006 :
+                flags += ('-Werror=delete-incomplete', )
+                if compversion >= 600000 :
+                  flags += ('-Werror=user-defined-literals', )
+                  if compversion >= 700000 :
+                    flags += ('-Werror=dynamic-class-memaccess', )
         else:
           flags += ('-Wno-error', )
-    if not ( x_suggestions == 'default') :
-      if not ( x_suggestions == 'off' ) :
+    if x_suggestions != 'default' :
+      if x_suggestions != 'off' :
         if compiler == 'gcc' :
           flags += ('-Wsuggest-attribute=pure', '-Wsuggest-attribute=const', )
-          if not ( verless(5, 0) ) :
+          if compversion >= 500000 :
             flags += ('-Wsuggest-final-types', '-Wsuggest-final-methods', )
-            if not ( verless(5, 1) ) :
+            if compversion >= 500001 :
               flags += ('-Wnoexcept', )
-    if not ( x_sanitizers == 'default') :
+    if x_sanitizers != 'default' :
       if x_sanitizers == 'off' :
         flags += ('-fno-sanitize=all', )
         linkflags += ('-fno-sanitize=all', )
@@ -450,103 +516,93 @@ def get_flags(options, env=None):
         if compiler == 'clang-cl' :
           flags += ('-fsanitize=undefined', '-fsanitize=address', '-fsanitize-address-use-after-scope', )
         else:
-          if compiler == 'clang' :
-            if not ( verless(3, 1) ) :
+          if ( compiler == 'clang' or compiler == 'clang-emcc' ) :
+            if compversion >= 300001 :
               flags += ('-fsanitize=undefined', '-fsanitize=address', '-fsanitize-address-use-after-scope', '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls', )
               linkflags += ('-fsanitize=undefined', '-fsanitize=address', )
-              if not ( verless(3, 4) ) :
-                flags += ('-fsanitize=leak', )
-                linkflags += ('-fsanitize=leak', )
-              if not ( verless(6, 0) ) :
-                if not ( x_stack_protector == 'default') :
-                  if not ( x_stack_protector == 'off' ) :
-                    flags += ('-fsanitize-minimal-runtime', )
+              if compiler == 'clang' :
+                if compversion >= 300004 :
+                  flags += ('-fsanitize=leak', )
+                  linkflags += ('-fsanitize=leak', )
+                if compversion >= 600000 :
+                  if x_stack_protector != 'default' :
+                    if x_stack_protector != 'off' :
+                      flags += ('-fsanitize-minimal-runtime', )
           else:
-            if not ( verless(4, 8) ) :
+            if compversion >= 400008 :
               flags += ('-fsanitize=address', '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls', )
               linkflags += ('-fsanitize=address', )
-              if not ( verless(4, 9) ) :
+              if compversion >= 400009 :
                 flags += ('-fsanitize=undefined', '-fsanitize=leak', )
                 linkflags += ('-fsanitize=undefined', '-fsanitize=leak', )
-    if not ( x_control_flow == 'default') :
-      if x_control_flow == 'off' :
-        if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
-          flags += ('-fcf-protection=none', )
+    if x_control_flow != 'default' :
+      if compiler == 'clang-emcc' :
+        if x_control_flow == 'off' :
+          linkflags += ('-sASSERTIONS=0', '-sSAFE_HEAP=0', )
         else:
-          flags += ('-fno-sanitize=cfi', '-fcf-protection=none', '-fno-sanitize-cfi-cross-dso', )
-          linkflags += ('-fno-sanitize=cfi', )
-      else:
-        if ( ( compiler == 'gcc' and not ( verless(8, 0) ) ) or not ( compiler == 'gcc' ) ) :
-          if x_control_flow == 'branch' :
-            flags += ('-fcf-protection=branch', )
+          linkflags += ('-sASSERTIONS=1', '-sDEMANGLE_SUPPORT=1', )
+          if x_sanitizers != 'default' :
+            if x_sanitizers != 'on' :
+              linkflags += ('-sSAFE_HEAP=1', )
           else:
-            if x_control_flow == 'return' :
-              flags += ('-fcf-protection=return', )
+            linkflags += ('-sSAFE_HEAP=1', )
+      else:
+        if x_control_flow == 'off' :
+          if ( compiler == 'gcc' and compversion >= 800000 ) :
+            flags += ('-fcf-protection=none', )
+          else:
+            flags += ('-fno-sanitize=cfi', '-fcf-protection=none', '-fno-sanitize-cfi-cross-dso', )
+            linkflags += ('-fno-sanitize=cfi', )
+        else:
+          if ( ( compiler == 'gcc' and compversion >= 800000 ) or compiler != 'gcc' ) :
+            if x_control_flow == 'branch' :
+              flags += ('-fcf-protection=branch', )
             else:
-              flags += ('-fcf-protection=full', )
-          if ( x_control_flow == 'allow_bugs' and compiler == 'clang' ) :
-            flags += ('-fsanitize=cfi', '-fvisibility=hidden', '-flto', )
-            linkflags += ('-fsanitize=cfi', '-flto', )
-    if not ( x_color == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(4, 9) ) ) or compiler == 'clang' or compiler == 'clang-cl' ) :
+              if x_control_flow == 'return' :
+                flags += ('-fcf-protection=return', )
+              else:
+                flags += ('-fcf-protection=full', )
+            if ( x_control_flow == 'allow_bugs' and compiler == 'clang' ) :
+              flags += ('-fsanitize=cfi', '-fvisibility=hidden', '-flto', )
+              linkflags += ('-fsanitize=cfi', '-flto', )
+    if x_color != 'default' :
+      if ( ( compiler == 'gcc' and compversion >= 400009 ) or compiler != 'gcc' ) :
         if x_color == 'auto' :
           flags += ('-fdiagnostics-color=auto', )
         else:
           if x_color == 'never' :
             flags += ('-fdiagnostics-color=never', )
           else:
-            if x_color == 'always' :
-              flags += ('-fdiagnostics-color=always', )
-    if not ( x_reproducible_build_warnings == 'default') :
-      if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
+            flags += ('-fdiagnostics-color=always', )
+    if x_reproducible_build_warnings != 'default' :
+      if ( compiler == 'gcc' and compversion >= 400009 ) :
         if x_reproducible_build_warnings == 'on' :
           flags += ('-Wdate-time', )
         else:
           flags += ('-Wno-date-time', )
-    if not ( x_diagnostics_format == 'default') :
+    if x_diagnostics_format != 'default' :
       if x_diagnostics_format == 'fixits' :
-        if ( ( compiler == 'gcc' and not ( verless(7, 0) ) ) or ( compiler == 'clang' and not ( verless(5, 0) ) ) or ( compiler == 'clang-cl' and not ( verless(5, 0) ) ) ) :
+        if ( ( compiler == 'gcc' and compversion >= 700000 ) or ( compiler != 'gcc' and compversion >= 500000 ) ) :
           flags += ('-fdiagnostics-parseable-fixits', )
       else:
         if x_diagnostics_format == 'patch' :
-          if ( compiler == 'gcc' and not ( verless(7, 0) ) ) :
+          if ( compiler == 'gcc' and compversion >= 700000 ) :
             flags += ('-fdiagnostics-generate-patch', )
         else:
-          if x_diagnostics_format == 'print_source_range_info' :
-            if compiler == 'clang' :
-              flags += ('-fdiagnostics-print-source-range-info', )
-    if not ( x_fix_compiler_error == 'default') :
+          if compiler == 'clang' :
+            flags += ('-fdiagnostics-print-source-range-info', )
+    if x_fix_compiler_error != 'default' :
       if x_fix_compiler_error == 'on' :
         if compiler == 'gcc' :
-          if not ( verless(4, 7) ) :
+          if compversion >= 400007 :
             flags += ('-Werror=narrowing', )
-            if not ( verless(7, 1) ) :
+            if compversion >= 700001 :
               flags += ('-Werror=literal-suffix', )
         flags += ('-Werror=write-strings', )
       else:
-        if ( compiler == 'clang' or compiler == 'clang-cl' ) :
+        if compiler != 'gcc' :
           flags += ('-Wno-error=c++11-narrowing', '-Wno-reserved-user-defined-literal', )
-    if not ( x_linker == 'default') :
-      if x_linker == 'native' :
-        if compiler == 'gcc' :
-          linkflags += ('-fuse-ld=gold', )
-        else:
-          linkflags += ('-fuse-ld=lld', )
-      else:
-        if x_linker == 'bfd' :
-          linkflags += ('-fuse-ld=bfd', )
-        else:
-          if ( x_linker == 'gold' or ( compiler == 'gcc' and not ( not ( verless(9, 0) ) ) ) ) :
-            linkflags += ('-fuse-ld=gold', )
-          else:
-            if not ( x_lto == 'default') :
-              if ( not ( x_lto == 'off' ) and compiler == 'gcc' ) :
-                linkflags += ('-fuse-ld=gold', )
-              else:
-                linkflags += ('-fuse-ld=lld', )
-            else:
-              linkflags += ('-fuse-ld=lld', )
-    if not ( x_lto == 'default') :
+    if x_lto != 'default' :
       if x_lto == 'off' :
         flags += ('-fno-lto', )
         linkflags += ('-fno-lto', )
@@ -554,9 +610,9 @@ def get_flags(options, env=None):
         if compiler == 'gcc' :
           flags += ('-flto', )
           linkflags += ('-flto', )
-          if not ( verless(5, 0) ) :
-            if not ( x_warnings == 'default') :
-              if not ( x_warnings == 'off' ) :
+          if compversion >= 500000 :
+            if x_warnings != 'default' :
+              if x_warnings != 'off' :
                 flags += ('-flto-odr-type-merging', )
                 linkflags += ('-flto-odr-type-merging', )
             if x_lto == 'fat' :
@@ -567,16 +623,16 @@ def get_flags(options, env=None):
         else:
           if compiler == 'clang-cl' :
             linkflags += ('-fuse-ld=lld', )
-          if ( x_lto == 'thin' and not ( verless(6, 0) ) ) :
+          if ( x_lto == 'thin' and compversion >= 600000 ) :
             flags += ('-flto=thin', )
             linkflags += ('-flto=thin', )
           else:
             flags += ('-flto', )
             linkflags += ('-flto', )
-    if not ( x_shadow_warnings == 'default') :
+    if x_shadow_warnings != 'default' :
       if x_shadow_warnings == 'off' :
         flags += ('-Wno-shadow', )
-        if ( compiler == 'clang-cl' or ( compiler == 'clang' and not ( verless(8, 0) ) ) ) :
+        if ( compiler == 'clang-cl' or ( compiler == 'clang' and compversion >= 800000 ) ) :
           flags += ('-Wno-shadow-field', )
       else:
         if x_shadow_warnings == 'on' :
@@ -588,30 +644,29 @@ def get_flags(options, env=None):
             else:
               flags += ('-Wshadow-all', )
           else:
-            if ( compiler == 'gcc' and not ( verless(7, 1) ) ) :
+            if ( compiler == 'gcc' and compversion >= 700001 ) :
               if x_shadow_warnings == 'local' :
                 flags += ('-Wshadow=local', )
               else:
-                if x_shadow_warnings == 'compatible_local' :
-                  flags += ('-Wshadow=compatible-local', )
-    if not ( x_float_sanitizers == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(5, 0) ) ) or ( compiler == 'clang' and not ( verless(5, 0) ) ) or compiler == 'clang-cl' ) :
+                flags += ('-Wshadow=compatible-local', )
+    if x_float_sanitizers != 'default' :
+      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) :
         if x_float_sanitizers == 'on' :
           flags += ('-fsanitize=float-divide-by-zero', '-fsanitize=float-cast-overflow', )
         else:
           flags += ('-fno-sanitize=float-divide-by-zero', '-fno-sanitize=float-cast-overflow', )
-    if not ( x_integer_sanitizers == 'default') :
-      if ( ( compiler == 'clang' and not ( verless(5, 0) ) ) or compiler == 'clang-cl' ) :
+    if x_integer_sanitizers != 'default' :
+      if ( ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) :
         if x_integer_sanitizers == 'on' :
           flags += ('-fsanitize=integer', )
         else:
           flags += ('-fno-sanitize=integer', )
       else:
-        if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
+        if ( compiler == 'gcc' and compversion >= 400009 ) :
           if x_integer_sanitizers == 'on' :
             flags += ('-ftrapv', '-fsanitize=undefined', )
-  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'icc' ) :
-    if not ( x_conversion_warnings == 'default') :
+  if x_conversion_warnings != 'default' :
+    if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' or compiler == 'icc' ) :
       if x_conversion_warnings == 'on' :
         flags += ('-Wconversion', '-Wsign-compare', '-Wsign-conversion', )
       else:
@@ -622,34 +677,28 @@ def get_flags(options, env=None):
             flags += ('-Wsign-compare', '-Wsign-conversion', )
           else:
             flags += ('-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', )
-  if ( compiler == 'gcc' or compiler == 'clang' ) :
-    if not ( x_coverage == 'default') :
-      if x_coverage == 'on' :
-        flags += ('--coverage', )
-        linkflags += ('--coverage', )
-        if compiler == 'clang' :
-          linkflags += ('-lprofile_rt', )
-    if not ( x_debug == 'default') :
-      if x_debug == 'off' :
-        flags += ('-g0', )
-      else:
-        if x_debug == 'gdb' :
-          flags += ('-ggdb', )
-        else:
+  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-emcc' ) :
+    if x_stl_debug != 'default' :
+      if x_stl_debug != 'off' :
+        if x_stl_debug == 'assert_as_exception' :
+          flags += ('-D_LIBCPP_DEBUG_USE_EXCEPTIONS', )
+        if ( x_stl_debug == 'allow_broken_abi' or x_stl_debug == 'allow_broken_abi_and_bugs' ) :
           if compiler == 'clang' :
-            if x_debug == 'line_tables_only' :
-              flags += ('-gline-tables-only', )
-            else:
-              if x_debug == 'lldb' :
-                flags += ('-glldb', )
-              else:
-                if x_debug == 'sce' :
-                  flags += ('-gsce', )
-                else:
-                  flags += ('-g', )
-          else:
-            flags += ('-g', )
-    if not ( x_optimization == 'default') :
+            if ( compversion >= 800000 or x_stl_debug == 'allow_broken_abi_and_bugs' ) :
+              flags += ('-D_LIBCPP_DEBUG=1', )
+          flags += ('-D_GLIBCXX_DEBUG', )
+        else:
+          flags += ('-D_GLIBCXX_ASSERTIONS', )
+        if x_pedantic != 'default' :
+          if x_pedantic != 'off' :
+            flags += ('-D_GLIBCXX_DEBUG_PEDANTIC', )
+    if x_pedantic != 'default' :
+      if x_pedantic != 'off' :
+        flags += ('-pedantic', )
+        if x_pedantic == 'as_error' :
+          flags += ('-pedantic-errors', )
+  if compiler == 'clang-emcc' :
+    if x_optimization != 'default' :
       if x_optimization == '0' :
         flags += ('-O0', )
         linkflags += ('-O0', )
@@ -658,597 +707,69 @@ def get_flags(options, env=None):
           flags += ('-Og', )
           linkflags += ('-Og', )
         else:
-          flags += ('-DNDEBUG', )
-          linkflags += ('-Wl,-O1', )
-          if x_optimization == 'size' :
-            flags += ('-Os', )
-            linkflags += ('-Os', )
-          else:
-            if x_optimization == 'z' :
-              if ( compiler == 'clang' or compiler == 'clang-cl' ) :
-                flags += ('-Oz', )
-                linkflags += ('-Oz', )
-              else:
-                flags += ('-Os', )
-                linkflags += ('-Os', )
-            else:
-              if x_optimization == 'fast' :
-                flags += ('-Ofast', )
-                linkflags += ('-Ofast', )
-              else:
-                if x_optimization == '1' :
-                  flags += ('-O1', )
-                  linkflags += ('-O1', )
-                else:
-                  if x_optimization == '2' :
-                    flags += ('-O2', )
-                    linkflags += ('-O2', )
-                  else:
-                    if x_optimization == '3' :
-                      flags += ('-O3', )
-                      linkflags += ('-O3', )
-    if not ( x_cpu == 'default') :
-      if x_cpu == 'generic' :
-        flags += ('-mtune=generic', )
-        linkflags += ('-mtune=generic', )
-      else:
-        flags += ('-march=native', '-mtune=native', )
-        linkflags += ('-march=native', '-mtune=native', )
-    if not ( x_whole_program == 'default') :
-      if x_whole_program == 'off' :
-        flags += ('-fno-whole-program', )
-        if ( compiler == 'clang' and not ( verless(3, 9) ) ) :
-          flags += ('-fno-whole-program-vtables', )
-          linkflags += ('-fno-whole-program-vtables', )
-      else:
-        if linker == 'ld64' :
-          linkflags += ('-Wl,-dead_strip', '-Wl,-S', )
-        else:
-          linkflags += ('-s', )
-          if x_whole_program == 'strip_all' :
-            linkflags += ('-Wl,--gc-sections', '-Wl,--strip-all', )
-        if compiler == 'gcc' :
-          flags += ('-fwhole-program', )
-          linkflags += ('-fwhole-program', )
-        else:
-          if compiler == 'clang' :
-            if not ( verless(3, 9) ) :
-              if not ( x_lto == 'default') :
-                if not ( x_lto == 'off' ) :
-                  flags += ('-fwhole-program-vtables', )
-                  linkflags += ('-fwhole-program-vtables', )
-              if not ( verless(7, 0) ) :
-                flags += ('-fforce-emit-vtables', )
-                linkflags += ('-fforce-emit-vtables', )
-    if not ( x_pedantic == 'default') :
-      if not ( x_pedantic == 'off' ) :
-        flags += ('-pedantic', )
-        if x_pedantic == 'as_error' :
-          flags += ('-pedantic-errors', )
-    if not ( x_stack_protector == 'default') :
-      if x_stack_protector == 'off' :
-        flags += ('-Wno-stack-protector', '-U_FORTIFY_SOURCE', )
-        linkflags += ('-Wno-stack-protector', )
-      else:
-        flags += ('-D_FORTIFY_SOURCE=2', '-Wstack-protector', )
-        if x_stack_protector == 'strong' :
-          if compiler == 'gcc' :
-            if not ( verless(4, 9) ) :
-              flags += ('-fstack-protector-strong', )
-              linkflags += ('-fstack-protector-strong', )
-              if not ( verless(8, 0) ) :
-                flags += ('-fstack-clash-protection', )
-                linkflags += ('-fstack-clash-protection', )
-          else:
-            if compiler == 'clang' :
-              flags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
-              linkflags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
-              if not ( verless(11, 0) ) :
-                flags += ('-fstack-clash-protection', )
-                linkflags += ('-fstack-clash-protection', )
-        else:
-          if x_stack_protector == 'all' :
-            flags += ('-fstack-protector-all', )
-            linkflags += ('-fstack-protector-all', )
-            if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
-              flags += ('-fstack-clash-protection', )
-              linkflags += ('-fstack-clash-protection', )
-            else:
-              if compiler == 'clang' :
-                flags += ('-fsanitize=safe-stack', )
-                linkflags += ('-fsanitize=safe-stack', )
-                if not ( verless(11, 0) ) :
-                  flags += ('-fstack-clash-protection', )
-                  linkflags += ('-fstack-clash-protection', )
-          else:
-            flags += ('-fstack-protector', )
-            linkflags += ('-fstack-protector', )
-        if compiler == 'clang' :
-          flags += ('-fsanitize=shadow-call-stack', )
-          linkflags += ('-fsanitize=shadow-call-stack', )
-    if not ( x_relro == 'default') :
-      if x_relro == 'off' :
-        linkflags += ('-Wl,-z,norelro', )
-      else:
-        if x_relro == 'on' :
-          linkflags += ('-Wl,-z,relro', )
-        else:
-          if x_relro == 'full' :
-            linkflags += ('-Wl,-z,relro,-z,now,-z,noexecstack', )
-            if not ( x_linker == 'default') :
-              if not ( ( x_linker == 'gold' or ( compiler == 'gcc' and not ( not ( verless(9, 0) ) ) ) or ( x_linker == 'native' and compiler == 'gcc' ) ) ) :
-                linkflags += ('-Wl,-z,separate-code', )
-    if not ( x_pie == 'default') :
-      if x_pie == 'off' :
-        linkflags += ('-no-pic', )
-      else:
-        if x_pie == 'on' :
-          linkflags += ('-pie', )
-        else:
-          if x_pie == 'static' :
-            linkflags += ('-static-pie', )
-          else:
-            if x_pie == 'fpie' :
-              flags += ('-fpie', )
-            else:
-              if x_pie == 'fpic' :
-                flags += ('-fpic', )
-              else:
-                if x_pie == 'fPIE' :
-                  flags += ('-fPIE', )
-                else:
-                  if x_pie == 'fPIC' :
-                    flags += ('-fPIC', )
-    if not ( x_stl_debug == 'default') :
-      if not ( x_stl_debug == 'off' ) :
-        if x_stl_debug == 'assert_as_exception' :
-          flags += ('-D_LIBCPP_DEBUG_USE_EXCEPTIONS', )
-        if ( x_stl_debug == 'allow_broken_abi' or x_stl_debug == 'allow_broken_abi_and_bugs' ) :
-          if compiler == 'clang' :
-            if ( not ( verless(8, 0) ) or x_stl_debug == 'allow_broken_abi_and_bugs' ) :
-              flags += ('-D_LIBCPP_DEBUG=1', )
-          flags += ('-D_GLIBCXX_DEBUG', )
-        else:
-          flags += ('-D_GLIBCXX_ASSERTIONS', )
-        if not ( x_pedantic == 'default') :
-          if not ( x_pedantic == 'off' ) :
-            flags += ('-D_GLIBCXX_DEBUG_PEDANTIC', )
-    if not ( x_elide_type == 'default') :
-      if x_elide_type == 'on' :
-        if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
-          flags += ('-felide-type', )
-      else:
-        if ( ( compiler == 'gcc' and not ( verless(8, 0) ) ) or ( compiler == 'clang' and not ( verless(3, 4) ) ) ) :
-          flags += ('-fno-elide-type', )
-    if not ( x_exceptions == 'default') :
-      if x_exceptions == 'on' :
-        flags += ('-fexceptions', )
-      else:
-        flags += ('-fno-exceptions', )
-    if not ( x_rtti == 'default') :
-      if x_rtti == 'on' :
-        flags += ('-frtti', )
-      else:
-        flags += ('-fno-rtti', )
-    if not ( x_diagnostics_show_template_tree == 'default') :
-      if ( ( compiler == 'gcc' and not ( verless(8, 0) ) ) or compiler == 'clang' ) :
-        if x_diagnostics_show_template_tree == 'on' :
-          flags += ('-fdiagnostics-show-template-tree', )
-        else:
-          flags += ('-fno-diagnostics-show-template-tree', )
-    if not ( x_other_sanitizers == 'default') :
-      if x_other_sanitizers == 'thread' :
-        flags += ('-fsanitize=thread', )
-      else:
-        if x_other_sanitizers == 'memory' :
-          if ( compiler == 'clang' and not ( verless(5, 0) ) ) :
-            flags += ('-fsanitize=memory', )
-        else:
-          if x_other_sanitizers == 'pointer' :
-            if ( compiler == 'gcc' and not ( verless(8, 0) ) ) :
-              flags += ('-fsanitize=pointer-compare', '-fsanitize=pointer-subtract', )
-    if not ( x_noexcept_warnings == 'default') :
-      if ( compiler == 'gcc' and not ( verless(4, 9) ) ) :
-        if x_noexcept_warnings == 'on' :
-          flags += ('-Wnoexcept', )
-        else:
-          flags += ('-Wno-noexcept', )
-  if linker == 'lld-link' :
-    if not ( x_lto == 'default') :
-      if x_lto == 'off' :
-        flags += ('-fno-lto', )
-      else:
-        if x_lto == 'thin' :
-          flags += ('-flto=thin', )
-        else:
-          flags += ('-flto', )
-          linkflags += ('-flto', )
-    if not ( x_whole_program == 'default') :
-      if x_whole_program == 'off' :
-        flags += ('-fno-whole-program', )
-      else:
-        if not ( x_lto == 'default') :
-          if not ( x_lto == 'off' ) :
-            flags += ('-fwhole-program-vtables', )
-            linkflags += ('-fwhole-program-vtables', )
-  if ( compiler == 'msvc' or compiler == 'clang-cl' or compiler == 'icl' ) :
-    if not ( x_exceptions == 'default') :
-      if x_exceptions == 'on' :
-        flags += ('/EHsc', '/D_HAS_EXCEPTIONS=1', )
-      else:
-        flags += ('/EHs-', '/D_HAS_EXCEPTIONS=0', )
-    if not ( x_rtti == 'default') :
-      if x_rtti == 'on' :
-        flags += ('/GR', )
-      else:
-        flags += ('/GR-', )
-    if not ( x_stl_debug == 'default') :
-      if x_stl_debug == 'off' :
-        flags += ('/D_HAS_ITERATOR_DEBUGGING=0', )
-      else:
-        flags += ('/D_DEBUG', '/D_HAS_ITERATOR_DEBUGGING=1', )
-    if not ( compiler == 'icl' ) :
-      if not ( x_stl_fix == 'default') :
-        if x_stl_fix == 'on' :
-          flags += ('/DNOMINMAX', )
-      if not ( x_debug == 'default') :
-        if x_debug == 'off' :
-          flags += ('/DEBUG:NONE', )
-        else:
-          flags += ('/RTC1', '/Od', )
-          if x_debug == 'on' :
-            flags += ('/DEBUG', )
-          else:
-            if x_debug == 'line_tables_only' :
-              if compiler == 'clang-cl' :
-                flags += ('-gline-tables-only', )
-              flags += ('/DEBUG:FASTLINK', )
-          if not ( x_optimization == 'default') :
-            if x_optimization == 'g' :
-              flags += ('/Zi', )
-            else:
-              if not ( x_whole_program == 'default') :
-                if x_whole_program == 'off' :
-                  flags += ('/ZI', )
-                else:
-                  flags += ('/Zi', )
-              else:
-                flags += ('/ZI', )
-          else:
-            if not ( x_whole_program == 'default') :
-              if x_whole_program == 'off' :
-                flags += ('/ZI', )
-              else:
-                flags += ('/Zi', )
-            else:
-              flags += ('/ZI', )
-      if not ( x_optimization == 'default') :
-        if x_optimization == '0' :
-          flags += ('/Ob0', '/Od', '/Oi-', '/Oy-', )
-        else:
-          if x_optimization == 'g' :
-            flags += ('/Ob1', )
-          else:
-            flags += ('/DNDEBUG', )
-            if x_optimization == '1' :
-              flags += ('/O1', )
-            else:
-              if x_optimization == '2' :
-                flags += ('/O2', )
-              else:
-                if x_optimization == '3' :
-                  flags += ('/O2', )
-                else:
-                  if ( x_optimization == 'size' or x_optimization == 'z' ) :
-                    flags += ('/O1', '/GL', '/Gw', )
-                  else:
-                    if x_optimization == 'fast' :
-                      flags += ('/O2', '/fp:fast', )
-      if not ( x_control_flow == 'default') :
-        if x_control_flow == 'off' :
-          flags += ('/guard:cf-', )
-        else:
-          flags += ('/guard:cf', )
-      if not ( x_whole_program == 'default') :
-        if x_whole_program == 'off' :
-          flags += ('/GL-', )
-        else:
-          flags += ('/GL', '/Gw', )
-          linkflags += ('/LTCG', )
-          if x_whole_program == 'strip_all' :
-            linkflags += ('/OPT:REF', )
-      if not ( x_pedantic == 'default') :
-        if not ( x_pedantic == 'off' ) :
-          flags += ('/permissive-', '/Zc:__cplusplus', )
-      if not ( x_stack_protector == 'default') :
-        if x_stack_protector == 'off' :
-          flags += ('/GS-', )
-        else:
-          flags += ('/GS', '/sdl', )
-          if x_stack_protector == 'strong' :
-            flags += ('/RTC1', )
-            if ( compiler == 'msvc' and not ( verless(16, 7) ) ) :
-              flags += ('/guard:ehcont', )
-              linkflags += ('/CETCOMPAT', )
-          else:
-            if x_stack_protector == 'all' :
-              flags += ('/RTC1', '/RTCc', )
-  if compiler == 'msvc' :
-    if not ( x_windows_bigobj == 'default') :
-      flags += ('/bigobj', )
-    if not ( x_msvc_conformance == 'default') :
-      if ( x_msvc_conformance == 'all' or x_msvc_conformance == 'all_without_throwing_new' ) :
-        flags += ('/Zc:inline', '/Zc:referenceBinding', )
-        if x_msvc_conformance == 'all' :
-          flags += ('/Zc:throwingNew', )
-        if not ( verless(15, 6) ) :
-          flags += ('/Zc:externConstexpr', )
-          if not ( verless(16, 5) ) :
-            flags += ('/Zc:preprocessor', )
-            if not ( verless(16, 8) ) :
-              flags += ('/Zc:lambda', )
-    if not ( x_msvc_crt_secure_no_warnings == 'default') :
-      if x_msvc_crt_secure_no_warnings == 'on' :
-        flags += ('/D_CRT_SECURE_NO_WARNINGS=1', )
-      else:
-        if x_msvc_crt_secure_no_warnings == 'off' :
-          flags += ('/U_CRT_SECURE_NO_WARNINGS', )
-    if not ( x_msvc_isystem == 'default') :
-      if x_msvc_isystem == 'external_as_include_system_flag' :
-        # unimplementable
-        pass
-      else:
-        flags += ('/experimental:external', '/external:W0', )
-        if x_msvc_isystem == 'anglebrackets' :
-          flags += ('/external:anglebrackets', )
-        else:
-          flags += ('/external:env:INCLUDE', '/external:env:CAExcludePath', )
-      if not ( x_msvc_isystem_with_template_from_non_external == 'default') :
-        if x_msvc_isystem_with_template_from_non_external == 'off' :
-          flags += ('/external:template', )
-        else:
-          flags += ('/external:template-', )
-      if not ( x_warnings == 'default') :
-        if x_warnings == 'off' :
-          flags += ('/W0', )
-        else:
-          flags += ('/wd4710', '/wd4711', )
-          if not ( not ( verless(19, 21) ) ) :
-            flags += ('/wd4774', )
-          if x_warnings == 'on' :
-            flags += ('/W4', '/wd4514', )
-          else:
-            flags += ('/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
-            if x_warnings == 'strict' :
-              flags += ('/wd4583', '/wd4619', )
-      if not ( x_switch_warnings == 'default') :
-        if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
-          flags += ('/w14062', )
-        else:
-          if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
-            flags += ('/w14061', '/w14062', )
-          else:
-            if x_switch_warnings == 'off' :
-              flags += ('/wd4061', '/wd4062', )
-    else:
-      if not ( x_warnings == 'default') :
-        if x_warnings == 'off' :
-          flags += ('/W0', )
-        else:
-          if x_warnings == 'on' :
-            flags += ('/W4', '/wd4514', '/wd4711', )
-          else:
-            flags += ('/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', )
-            if not ( not ( verless(19, 21) ) ) :
-              flags += ('/wd4774', )
-            flags += ('/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
-            if x_warnings == 'strict' :
-              flags += ('/wd4061', '/wd4266', '/wd4583', '/wd4619', '/wd4623', '/wd5204', )
-    if not ( x_conversion_warnings == 'default') :
-      if x_conversion_warnings == 'on' :
-        flags += ('/w14244', '/w14245', '/w14388', '/w14365', )
-      else:
-        if x_conversion_warnings == 'conversion' :
-          flags += ('/w14244', '/w14365', )
-        else:
-          if x_conversion_warnings == 'sign' :
-            flags += ('/w14388', '/w14245', )
-          else:
-            flags += ('/wd4244', '/wd4365', '/wd4388', '/wd4245', )
-    if not ( x_shadow_warnings == 'default') :
-      if x_shadow_warnings == 'off' :
-        flags += ('/wd4456', '/wd4459', )
-      else:
-        if ( x_shadow_warnings == 'on' or x_shadow_warnings == 'all' ) :
-          flags += ('/w4456', '/w4459', )
-        else:
-          if x_shadow_warnings == 'local' :
-            flags += ('/w4456', '/wd4459', )
-    if not ( x_warnings_as_error == 'default') :
-      if x_warnings_as_error == 'on' :
-        flags += ('/WX', )
-        linkflags += ('/WX', )
-      else:
-        if x_warnings_as_error == 'off' :
-          flags += ('/WX-', )
-        else:
-          flags += ('/we4455', '/we4150', '/we4716', '/we2124', )
-    if not ( x_lto == 'default') :
-      if x_lto == 'off' :
-        flags += ('/LTCG:OFF', )
-      else:
-        flags += ('/GL', )
-        linkflags += ('/LTCG', )
-    if not ( x_sanitizers == 'default') :
-      if not ( verless(16, 9) ) :
-        flags += ('/fsanitize=address', '/fsanitize-address-use-after-return', )
-      else:
-        if x_sanitizers == 'on' :
-          flags += ('/sdl', )
-        else:
-          if not ( x_stack_protector == 'default') :
-            if not ( x_stack_protector == 'off' ) :
-              flags += ('/sdl-', )
-  if compiler == 'icl' :
-    if not ( x_warnings == 'default') :
-      if x_warnings == 'off' :
-        flags += ('/w', )
-      else:
-        flags += ('/W2', '/Qdiag-disable:1418,2259', )
-    if not ( x_warnings_as_error == 'default') :
-      if x_warnings_as_error == 'on' :
-        flags += ('/WX', )
-      else:
-        if x_warnings_as_error == 'basic' :
-          flags += ('/Qdiag-error:1079,39,109', )
-    if not ( x_windows_bigobj == 'default') :
-      flags += ('/bigobj', )
-    if not ( x_msvc_conformance == 'default') :
-      if ( x_msvc_conformance == 'all' or x_msvc_conformance == 'all_without_throwing_new' ) :
-        flags += ('/Zc:inline', '/Zc:strictStrings', )
-        if x_msvc_conformance == 'all' :
-          flags += ('/Zc:throwingNew', )
-    if not ( x_debug == 'default') :
-      if x_debug == 'off' :
-        flags += ('/debug:NONE', )
-      else:
-        flags += ('/RTC1', '/Od', )
-        if x_debug == 'on' :
-          flags += ('/debug:full', )
-        else:
-          if x_debug == 'line_tables_only' :
-            flags += ('/debug:minimal', )
-        if not ( x_optimization == 'default') :
-          if x_optimization == 'g' :
-            flags += ('/Zi', )
-          else:
-            if not ( x_whole_program == 'default') :
-              if x_whole_program == 'off' :
-                flags += ('/ZI', )
-              else:
-                flags += ('/Zi', )
-            else:
-              flags += ('/ZI', )
-        else:
-          if not ( x_whole_program == 'default') :
-            if x_whole_program == 'off' :
-              flags += ('/ZI', )
-            else:
-              flags += ('/Zi', )
-          else:
-            flags += ('/ZI', )
-    if not ( x_optimization == 'default') :
-      if x_optimization == '0' :
-        flags += ('/Ob0', '/Od', '/Oi-', '/Oy-', )
-      else:
-        if x_optimization == 'g' :
-          flags += ('/Ob1', )
-        else:
-          flags += ('/DNDEBUG', '/GF', )
           if x_optimization == '1' :
-            flags += ('/O1', )
+            flags += ('-O1', )
+            linkflags += ('-O1', )
           else:
             if x_optimization == '2' :
-              flags += ('/O2', )
+              flags += ('-O2', )
+              linkflags += ('-O2', )
             else:
               if x_optimization == '3' :
-                flags += ('/O2', )
+                flags += ('-O3', )
+                linkflags += ('-O3', )
               else:
-                if x_optimization == 'z' :
-                  flags += ('/O3', )
+                if x_optimization == 'fast' :
+                  flags += ('-O3', '-mnontrapping-fptoint', )
+                  linkflags += ('-O3', '-mnontrapping-fptoint', )
                 else:
                   if x_optimization == 'size' :
-                    flags += ('/Os', )
+                    flags += ('-Os', )
+                    linkflags += ('-Os', )
                   else:
-                    if x_optimization == 'fast' :
-                      flags += ('/fast', )
-    if not ( x_stack_protector == 'default') :
-      if x_stack_protector == 'off' :
-        flags += ('/GS-', )
+                    flags += ('-Oz', )
+                    linkflags += ('-Oz', )
+    if x_debug != 'default' :
+      if x_debug == 'off' :
+        flags += ('-g0', )
       else:
-        flags += ('/GS', )
-        if x_stack_protector == 'strong' :
-          flags += ('/RTC1', )
-        else:
-          if x_stack_protector == 'all' :
-            flags += ('/RTC1', '/RTCc', )
-    if not ( x_sanitizers == 'default') :
-      if x_sanitizers == 'on' :
-        flags += ('/Qtrapuv', )
-    if not ( x_float_sanitizers == 'default') :
-      if x_float_sanitizers == 'on' :
-        flags += ('/Qfp-stack-check', '/Qfp-trap:common', )
-    if not ( x_control_flow == 'default') :
-      if x_control_flow == 'off' :
-        flags += ('/guard:cf-', '/mconditional-branch=keep', )
-      else:
-        flags += ('/guard:cf', )
-        if x_control_flow == 'branch' :
-          flags += ('/mconditional-branch:all-fix', '/Qcf-protection:branch', )
-        else:
-          if x_control_flow == 'on' :
-            flags += ('/mconditional-branch:all-fix', '/Qcf-protection:full', )
-    if not ( x_cpu == 'default') :
-      if x_cpu == 'generic' :
-        flags += ('/Qtune:generic', )
-        linkflags += ('/Qtune:generic', )
-      else:
-        flags += ('/QxHost', )
-        linkflags += ('/QxHost', )
+        flags += ('-g', )
   else:
-    if compiler == 'icc' :
-      if not ( x_warnings == 'default') :
-        if x_warnings == 'off' :
-          flags += ('-w', )
-        else:
-          flags += ('-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wparentheses', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wdeprecated', '-Wnon-virtual-dtor', '-Woverloaded-virtual', )
-          if not ( x_switch_warnings == 'default') :
-            if ( x_switch_warnings == 'on' or x_switch_warnings == 'exhaustive_enum' ) :
-              flags += ('-Wswitch-enum', )
-            else:
-              if x_switch_warnings == 'mandatory_default' :
-                flags += ('-Wswitch-default', )
-              else:
-                if x_switch_warnings == 'exhaustive_enum_and_mandatory_default' :
-                  flags += ('-Wswitch', )
-                else:
-                  flags += ('-Wno-switch', )
-      if not ( x_warnings_as_error == 'default') :
-        if x_warnings_as_error == 'on' :
-          flags += ('-Werror', )
-        else:
-          if x_warnings_as_error == 'basic' :
-            flags += ('-diag-error=1079,39,109', )
-      if not ( x_pedantic == 'default') :
-        if x_pedantic == 'off' :
-          flags += ('-fgnu-keywords', )
-        else:
-          flags += ('-fno-gnu-keywords', )
-      if not ( x_shadow_warnings == 'default') :
-        if x_shadow_warnings == 'off' :
-          flags += ('-Wno-shadow', )
-        else:
-          if ( x_shadow_warnings == 'on' or x_shadow_warnings == 'all' ) :
-            flags += ('-Wshadow', )
-      if not ( x_stl_debug == 'default') :
-        if not ( x_stl_debug == 'off' ) :
-          if ( x_stl_debug == 'allow_broken_abi' or x_stl_debug == 'allow_broken_abi_and_bugs' ) :
-            flags += ('-D_GLIBCXX_DEBUG', )
-          else:
-            flags += ('-D_GLIBCXX_ASSERTIONS', )
-      if not ( x_debug == 'default') :
+    if ( compiler == 'gcc' or compiler == 'clang' ) :
+      if x_coverage != 'default' :
+        if x_coverage == 'on' :
+          flags += ('--coverage', )
+          linkflags += ('--coverage', )
+          if compiler == 'clang' :
+            linkflags += ('-lprofile_rt', )
+      if x_debug != 'default' :
         if x_debug == 'off' :
           flags += ('-g0', )
         else:
-          flags += ('-g', )
-      if not ( x_optimization == 'default') :
+          if x_debug == 'gdb' :
+            flags += ('-ggdb', )
+          else:
+            if compiler == 'clang' :
+              if x_debug == 'line_tables_only' :
+                flags += ('-gline-tables-only', )
+              else:
+                if x_debug == 'lldb' :
+                  flags += ('-glldb', )
+                else:
+                  if x_debug == 'sce' :
+                    flags += ('-gsce', )
+                  else:
+                    flags += ('-g', )
+            else:
+              flags += ('-g', )
+      if x_optimization != 'default' :
         if x_optimization == '0' :
           flags += ('-O0', )
         else:
           if x_optimization == 'g' :
-            flags += ('-O1', )
+            flags += ('-Og', )
           else:
-            flags += ('-DNDEBUG', )
+            linkflags += ('-Wl,-O1', )
             if x_optimization == '1' :
               flags += ('-O1', )
             else:
@@ -1258,40 +779,122 @@ def get_flags(options, env=None):
                 if x_optimization == '3' :
                   flags += ('-O3', )
                 else:
-                  if x_optimization == 'z' :
-                    flags += ('-fast', )
+                  if x_optimization == 'size' :
+                    flags += ('-Os', )
                   else:
-                    if x_optimization == 'size' :
-                      flags += ('-Os', )
+                    if x_optimization == 'z' :
+                      if compiler == 'clang' :
+                        flags += ('-Oz', )
+                      else:
+                        flags += ('-Os', )
                     else:
-                      if x_optimization == 'fast' :
-                        flags += ('-Ofast', )
-      if not ( x_stack_protector == 'default') :
-        if x_stack_protector == 'off' :
-          flags += ('-fno-protector-strong', '-U_FORTIFY_SOURCE', )
-          linkflags += ('-fno-protector-strong', )
+                      flags += ('-Ofast', )
+      if x_cpu != 'default' :
+        if x_cpu == 'generic' :
+          flags += ('-mtune=generic', )
+          linkflags += ('-mtune=generic', )
         else:
-          flags += ('-D_FORTIFY_SOURCE=2', )
+          flags += ('-march=native', '-mtune=native', )
+          linkflags += ('-march=native', '-mtune=native', )
+      if x_linker != 'default' :
+        if x_linker == 'native' :
+          if compiler == 'gcc' :
+            linkflags += ('-fuse-ld=gold', )
+          else:
+            linkflags += ('-fuse-ld=lld', )
+        else:
+          if x_linker == 'bfd' :
+            linkflags += ('-fuse-ld=bfd', )
+          else:
+            if ( x_linker == 'gold' or ( compiler == 'gcc' and compversion < 900000 ) ) :
+              linkflags += ('-fuse-ld=gold', )
+            else:
+              if x_lto != 'default' :
+                if ( x_lto != 'off' and compiler == 'gcc' ) :
+                  linkflags += ('-fuse-ld=gold', )
+                else:
+                  linkflags += ('-fuse-ld=lld', )
+              else:
+                linkflags += ('-fuse-ld=lld', )
+      if x_whole_program != 'default' :
+        if x_whole_program == 'off' :
+          flags += ('-fno-whole-program', )
+          if ( compiler == 'clang' and compversion >= 300009 ) :
+            flags += ('-fno-whole-program-vtables', )
+            linkflags += ('-fno-whole-program-vtables', )
+        else:
+          if linker == 'ld64' :
+            linkflags += ('-Wl,-dead_strip', '-Wl,-S', )
+          else:
+            linkflags += ('-s', )
+            if x_whole_program == 'strip_all' :
+              linkflags += ('-Wl,--gc-sections', '-Wl,--strip-all', )
+          if compiler == 'gcc' :
+            flags += ('-fwhole-program', )
+            linkflags += ('-fwhole-program', )
+          else:
+            if compiler == 'clang' :
+              if compversion >= 300009 :
+                if x_lto != 'default' :
+                  if x_lto != 'off' :
+                    flags += ('-fwhole-program-vtables', )
+                    linkflags += ('-fwhole-program-vtables', )
+                if compversion >= 700000 :
+                  flags += ('-fforce-emit-vtables', )
+                  linkflags += ('-fforce-emit-vtables', )
+      if x_stack_protector != 'default' :
+        if x_stack_protector == 'off' :
+          flags += ('-Wno-stack-protector', '-U_FORTIFY_SOURCE', )
+          linkflags += ('-Wno-stack-protector', )
+        else:
+          flags += ('-D_FORTIFY_SOURCE=2', '-Wstack-protector', )
           if x_stack_protector == 'strong' :
-            flags += ('-fstack-protector-strong', )
-            linkflags += ('-fstack-protector-strong', )
+            if compiler == 'gcc' :
+              if compversion >= 400009 :
+                flags += ('-fstack-protector-strong', )
+                linkflags += ('-fstack-protector-strong', )
+                if compversion >= 800000 :
+                  flags += ('-fstack-clash-protection', )
+                  linkflags += ('-fstack-clash-protection', )
+            else:
+              if compiler == 'clang' :
+                flags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
+                linkflags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
+                if compversion >= 1100000 :
+                  flags += ('-fstack-clash-protection', )
+                  linkflags += ('-fstack-clash-protection', )
           else:
             if x_stack_protector == 'all' :
               flags += ('-fstack-protector-all', )
               linkflags += ('-fstack-protector-all', )
+              if ( compiler == 'gcc' and compversion >= 800000 ) :
+                flags += ('-fstack-clash-protection', )
+                linkflags += ('-fstack-clash-protection', )
+              else:
+                if compiler == 'clang' :
+                  flags += ('-fsanitize=safe-stack', )
+                  linkflags += ('-fsanitize=safe-stack', )
+                  if compversion >= 1100000 :
+                    flags += ('-fstack-clash-protection', )
+                    linkflags += ('-fstack-clash-protection', )
             else:
               flags += ('-fstack-protector', )
               linkflags += ('-fstack-protector', )
-      if not ( x_relro == 'default') :
+          if compiler == 'clang' :
+            flags += ('-fsanitize=shadow-call-stack', )
+            linkflags += ('-fsanitize=shadow-call-stack', )
+      if x_relro != 'default' :
         if x_relro == 'off' :
-          linkflags += ('-Xlinker-znorelro', )
+          linkflags += ('-Wl,-z,norelro', )
         else:
           if x_relro == 'on' :
-            linkflags += ('-Xlinker-zrelro', )
+            linkflags += ('-Wl,-z,relro', )
           else:
-            if x_relro == 'full' :
-              linkflags += ('-Xlinker-zrelro', '-Xlinker-znow', '-Xlinker-znoexecstack', )
-      if not ( x_pie == 'default') :
+            linkflags += ('-Wl,-z,relro,-z,now,-z,noexecstack', )
+            if x_linker != 'default' :
+              if not ( ( x_linker == 'gold' or ( compiler == 'gcc' and compversion < 900000 ) or ( x_linker == 'native' and compiler == 'gcc' ) ) ) :
+                linkflags += ('-Wl,-z,separate-code', )
+      if x_pie != 'default' :
         if x_pie == 'off' :
           linkflags += ('-no-pic', )
         else:
@@ -1309,18 +912,509 @@ def get_flags(options, env=None):
                 else:
                   if x_pie == 'fPIC' :
                     flags += ('-fPIC', )
-      if not ( x_sanitizers == 'default') :
+                  else:
+                    linkflags += ('-static-pie', )
+      if x_other_sanitizers != 'default' :
+        if x_other_sanitizers == 'thread' :
+          flags += ('-fsanitize=thread', )
+        else:
+          if x_other_sanitizers == 'memory' :
+            if ( compiler == 'clang' and compversion >= 500000 ) :
+              flags += ('-fsanitize=memory', )
+          else:
+            if x_other_sanitizers == 'pointer' :
+              if ( compiler == 'gcc' and compversion >= 800000 ) :
+                flags += ('-fsanitize=pointer-compare', '-fsanitize=pointer-subtract', )
+      if x_noexcept_warnings != 'default' :
+        if ( compiler == 'gcc' and compversion >= 400009 ) :
+          if x_noexcept_warnings == 'on' :
+            flags += ('-Wnoexcept', )
+          else:
+            flags += ('-Wno-noexcept', )
+      if x_analyzer != 'default' :
+        if ( compiler == 'gcc' and compversion >= 1000000 ) :
+          if x_analyzer == 'off' :
+            flags += ('-fno-analyzer', )
+          else:
+            flags += ('-fanalyzer', )
+            if x_analyzer == 'taint' :
+              flags += ('-fanalyzer-checker=taint', )
+            if x_analyzer_too_complex_warning != 'default' :
+              if x_analyzer_too_complex_warning == 'on' :
+                flags += ('-Wanalyzer-too-complex', )
+              else:
+                flags += ('-Wno-analyzer-too-complex', )
+            if x_analyzer_verbosity != 'default' :
+              if x_analyzer_verbosity == '0' :
+                flags += ('-fanalyzer-verbosity=0', )
+              else:
+                if x_analyzer_verbosity == '1' :
+                  flags += ('-fanalyzer-verbosity=1', )
+                else:
+                  if x_analyzer_verbosity == '2' :
+                    flags += ('-fanalyzer-verbosity=2', )
+                  else:
+                    flags += ('-fanalyzer-verbosity=3', )
+  if linker == 'lld-link' :
+    if x_lto != 'default' :
+      if x_lto == 'off' :
+        flags += ('-fno-lto', )
+      else:
+        if x_lto == 'thin' :
+          flags += ('-flto=thin', )
+        else:
+          flags += ('-flto', )
+          linkflags += ('-flto', )
+    if x_whole_program != 'default' :
+      if x_whole_program == 'off' :
+        flags += ('-fno-whole-program', )
+      else:
+        if x_lto != 'default' :
+          if x_lto != 'off' :
+            flags += ('-fwhole-program-vtables', )
+            linkflags += ('-fwhole-program-vtables', )
+  if ( compiler == 'msvc' or compiler == 'clang-cl' or compiler == 'icl' ) :
+    if x_exceptions != 'default' :
+      if x_exceptions == 'on' :
+        flags += ('/EHsc', '/D_HAS_EXCEPTIONS=1', )
+      else:
+        flags += ('/EHs-', '/D_HAS_EXCEPTIONS=0', )
+    if x_rtti != 'default' :
+      if x_rtti == 'on' :
+        flags += ('/GR', )
+      else:
+        flags += ('/GR-', )
+    if x_stl_debug != 'default' :
+      if x_stl_debug == 'off' :
+        flags += ('/D_HAS_ITERATOR_DEBUGGING=0', )
+      else:
+        flags += ('/D_DEBUG', '/D_HAS_ITERATOR_DEBUGGING=1', )
+    if x_stl_fix != 'default' :
+      if x_stl_fix == 'on' :
+        flags += ('/DNOMINMAX', )
+    if compiler != 'icl' :
+      if x_debug != 'default' :
+        if x_debug == 'off' :
+          flags += ('/DEBUG:NONE', )
+        else:
+          flags += ('/RTC1', '/Od', )
+          if x_debug == 'on' :
+            flags += ('/DEBUG', )
+          else:
+            if x_debug == 'line_tables_only' :
+              if compiler == 'clang-cl' :
+                flags += ('-gline-tables-only', )
+              flags += ('/DEBUG:FASTLINK', )
+          if x_optimization != 'default' :
+            if x_optimization == 'g' :
+              flags += ('/Zi', )
+            else:
+              if x_whole_program != 'default' :
+                if x_whole_program == 'off' :
+                  flags += ('/ZI', )
+                else:
+                  flags += ('/Zi', )
+              else:
+                flags += ('/ZI', )
+          else:
+            if x_whole_program != 'default' :
+              if x_whole_program == 'off' :
+                flags += ('/ZI', )
+              else:
+                flags += ('/Zi', )
+            else:
+              flags += ('/ZI', )
+      if x_optimization != 'default' :
+        if x_optimization == '0' :
+          flags += ('/Ob0', '/Od', '/Oi-', '/Oy-', )
+        else:
+          if x_optimization == 'g' :
+            flags += ('/Ob1', )
+          else:
+            if x_optimization == '1' :
+              flags += ('/O1', )
+            else:
+              if x_optimization == '2' :
+                flags += ('/O2', )
+              else:
+                if x_optimization == '3' :
+                  flags += ('/O2', )
+                else:
+                  if ( x_optimization == 'size' or x_optimization == 'z' ) :
+                    flags += ('/O1', '/GL', '/Gw', )
+                  else:
+                    flags += ('/O2', '/fp:fast', )
+      if x_control_flow != 'default' :
+        if x_control_flow == 'off' :
+          flags += ('/guard:cf-', )
+        else:
+          flags += ('/guard:cf', )
+      if x_whole_program != 'default' :
+        if x_whole_program == 'off' :
+          flags += ('/GL-', )
+        else:
+          flags += ('/GL', '/Gw', )
+          linkflags += ('/LTCG', )
+          if x_whole_program == 'strip_all' :
+            linkflags += ('/OPT:REF', )
+      if x_pedantic != 'default' :
+        if x_pedantic != 'off' :
+          flags += ('/permissive-', '/Zc:__cplusplus', )
+      if x_stack_protector != 'default' :
+        if x_stack_protector == 'off' :
+          flags += ('/GS-', )
+        else:
+          flags += ('/GS', '/sdl', )
+          if x_stack_protector == 'strong' :
+            flags += ('/RTC1', )
+            if ( compiler == 'msvc' and compversion >= 1600007 ) :
+              flags += ('/guard:ehcont', )
+              linkflags += ('/CETCOMPAT', )
+          else:
+            if x_stack_protector == 'all' :
+              flags += ('/RTC1', '/RTCc', )
+  if compiler == 'msvc' :
+    if x_windows_bigobj != 'default' :
+      flags += ('/bigobj', )
+    if x_msvc_conformance != 'default' :
+      if ( x_msvc_conformance == 'all' or x_msvc_conformance == 'all_without_throwing_new' ) :
+        flags += ('/Zc:inline', '/Zc:referenceBinding', )
+        if x_msvc_conformance == 'all' :
+          flags += ('/Zc:throwingNew', )
+        if compversion >= 1500006 :
+          flags += ('/Zc:externConstexpr', )
+          if compversion >= 1600005 :
+            flags += ('/Zc:preprocessor', )
+            if compversion >= 1600008 :
+              flags += ('/Zc:lambda', )
+    if x_msvc_crt_secure_no_warnings != 'default' :
+      if x_msvc_crt_secure_no_warnings == 'on' :
+        flags += ('/D_CRT_SECURE_NO_WARNINGS=1', )
+      else:
+        if x_msvc_crt_secure_no_warnings == 'off' :
+          flags += ('/U_CRT_SECURE_NO_WARNINGS', )
+    if x_msvc_isystem != 'default' :
+      if x_msvc_isystem == 'external_as_include_system_flag' :
+        # unimplementable
+        pass
+      else:
+        flags += ('/experimental:external', '/external:W0', )
+        if x_msvc_isystem == 'anglebrackets' :
+          flags += ('/external:anglebrackets', )
+        else:
+          flags += ('/external:env:INCLUDE', '/external:env:CAExcludePath', )
+      if x_msvc_isystem_with_template_from_non_external != 'default' :
+        if x_msvc_isystem_with_template_from_non_external == 'off' :
+          flags += ('/external:template', )
+        else:
+          flags += ('/external:template-', )
+      if x_warnings != 'default' :
+        if x_warnings == 'off' :
+          flags += ('/W0', )
+        else:
+          flags += ('/wd4710', '/wd4711', )
+          if compversion < 1900021 :
+            flags += ('/wd4774', )
+          if x_warnings == 'on' :
+            flags += ('/W4', '/wd4514', )
+          else:
+            flags += ('/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
+            if x_warnings == 'strict' :
+              flags += ('/wd4583', '/wd4619', )
+      if x_switch_warnings != 'default' :
+        if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
+          flags += ('/w14062', )
+        else:
+          if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
+            flags += ('/w14061', '/w14062', )
+          else:
+            flags += ('/wd4061', '/wd4062', )
+    else:
+      if x_warnings != 'default' :
+        if x_warnings == 'off' :
+          flags += ('/W0', )
+        else:
+          if x_warnings == 'on' :
+            flags += ('/W4', '/wd4514', '/wd4711', )
+          else:
+            flags += ('/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', )
+            if compversion < 1900021 :
+              flags += ('/wd4774', )
+            flags += ('/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
+            if x_warnings == 'strict' :
+              flags += ('/wd4061', '/wd4266', '/wd4583', '/wd4619', '/wd4623', '/wd5204', )
+    if x_conversion_warnings != 'default' :
+      if x_conversion_warnings == 'on' :
+        flags += ('/w14244', '/w14245', '/w14388', '/w14365', )
+      else:
+        if x_conversion_warnings == 'conversion' :
+          flags += ('/w14244', '/w14365', )
+        else:
+          if x_conversion_warnings == 'sign' :
+            flags += ('/w14388', '/w14245', )
+          else:
+            flags += ('/wd4244', '/wd4365', '/wd4388', '/wd4245', )
+    if x_shadow_warnings != 'default' :
+      if x_shadow_warnings == 'off' :
+        flags += ('/wd4456', '/wd4459', )
+      else:
+        if ( x_shadow_warnings == 'on' or x_shadow_warnings == 'all' ) :
+          flags += ('/w4456', '/w4459', )
+        else:
+          if x_shadow_warnings == 'local' :
+            flags += ('/w4456', '/wd4459', )
+    if x_warnings_as_error != 'default' :
+      if x_warnings_as_error == 'on' :
+        flags += ('/WX', )
+      else:
+        if x_warnings_as_error == 'off' :
+          flags += ('/WX-', )
+        else:
+          flags += ('/we4455', '/we4150', '/we4716', '/we2124', )
+    if x_lto != 'default' :
+      if x_lto == 'off' :
+        flags += ('/LTCG:OFF', )
+      else:
+        flags += ('/GL', )
+        linkflags += ('/LTCG', )
+    if x_sanitizers != 'default' :
+      if compversion >= 1600009 :
+        flags += ('/fsanitize=address', '/fsanitize-address-use-after-return', )
+      else:
+        if x_sanitizers == 'on' :
+          flags += ('/sdl', )
+        else:
+          if x_stack_protector != 'default' :
+            if x_stack_protector != 'off' :
+              flags += ('/sdl-', )
+  if compiler == 'icl' :
+    if x_warnings != 'default' :
+      if x_warnings == 'off' :
+        flags += ('/w', )
+      else:
+        flags += ('/W2', '/Qdiag-disable:1418,2259', )
+    if x_warnings_as_error != 'default' :
+      if x_warnings_as_error == 'on' :
+        flags += ('/WX', )
+      else:
+        if x_warnings_as_error == 'basic' :
+          flags += ('/Qdiag-error:1079,39,109', )
+    if x_windows_bigobj != 'default' :
+      flags += ('/bigobj', )
+    if x_msvc_conformance != 'default' :
+      if ( x_msvc_conformance == 'all' or x_msvc_conformance == 'all_without_throwing_new' ) :
+        flags += ('/Zc:inline', '/Zc:strictStrings', )
+        if x_msvc_conformance == 'all' :
+          flags += ('/Zc:throwingNew', )
+    if x_debug != 'default' :
+      if x_debug == 'off' :
+        flags += ('/debug:NONE', )
+      else:
+        flags += ('/RTC1', '/Od', )
+        if x_debug == 'on' :
+          flags += ('/debug:full', )
+        else:
+          if x_debug == 'line_tables_only' :
+            flags += ('/debug:minimal', )
+        if x_optimization != 'default' :
+          if x_optimization == 'g' :
+            flags += ('/Zi', )
+          else:
+            if x_whole_program != 'default' :
+              if x_whole_program == 'off' :
+                flags += ('/ZI', )
+              else:
+                flags += ('/Zi', )
+            else:
+              flags += ('/ZI', )
+        else:
+          if x_whole_program != 'default' :
+            if x_whole_program == 'off' :
+              flags += ('/ZI', )
+            else:
+              flags += ('/Zi', )
+          else:
+            flags += ('/ZI', )
+    if x_optimization != 'default' :
+      if x_optimization == '0' :
+        flags += ('/Ob0', '/Od', '/Oi-', '/Oy-', )
+      else:
+        if x_optimization == 'g' :
+          flags += ('/Ob1', )
+        else:
+          flags += ('/GF', )
+          if x_optimization == '1' :
+            flags += ('/O1', )
+          else:
+            if x_optimization == '2' :
+              flags += ('/O2', )
+            else:
+              if x_optimization == '3' :
+                flags += ('/O2', )
+              else:
+                if x_optimization == 'z' :
+                  flags += ('/O3', )
+                else:
+                  if x_optimization == 'size' :
+                    flags += ('/Os', )
+                  else:
+                    flags += ('/fast', )
+    if x_stack_protector != 'default' :
+      if x_stack_protector == 'off' :
+        flags += ('/GS-', )
+      else:
+        flags += ('/GS', )
+        if x_stack_protector == 'strong' :
+          flags += ('/RTC1', )
+        else:
+          if x_stack_protector == 'all' :
+            flags += ('/RTC1', '/RTCc', )
+    if x_sanitizers != 'default' :
+      if x_sanitizers == 'on' :
+        flags += ('/Qtrapuv', )
+    if x_float_sanitizers != 'default' :
+      if x_float_sanitizers == 'on' :
+        flags += ('/Qfp-stack-check', '/Qfp-trap:common', )
+    if x_control_flow != 'default' :
+      if x_control_flow == 'off' :
+        flags += ('/guard:cf-', '/mconditional-branch=keep', )
+      else:
+        flags += ('/guard:cf', )
+        if x_control_flow == 'branch' :
+          flags += ('/mconditional-branch:all-fix', '/Qcf-protection:branch', )
+        else:
+          if x_control_flow == 'on' :
+            flags += ('/mconditional-branch:all-fix', '/Qcf-protection:full', )
+    if x_cpu != 'default' :
+      if x_cpu == 'generic' :
+        flags += ('/Qtune:generic', )
+        linkflags += ('/Qtune:generic', )
+      else:
+        flags += ('/QxHost', )
+        linkflags += ('/QxHost', )
+  else:
+    if compiler == 'icc' :
+      if x_warnings != 'default' :
+        if x_warnings == 'off' :
+          flags += ('-w', )
+        else:
+          flags += ('-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wparentheses', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wdeprecated', '-Wnon-virtual-dtor', '-Woverloaded-virtual', )
+          if x_switch_warnings != 'default' :
+            if ( x_switch_warnings == 'on' or x_switch_warnings == 'exhaustive_enum' ) :
+              flags += ('-Wswitch-enum', )
+            else:
+              if x_switch_warnings == 'mandatory_default' :
+                flags += ('-Wswitch-default', )
+              else:
+                if x_switch_warnings == 'exhaustive_enum_and_mandatory_default' :
+                  flags += ('-Wswitch', )
+                else:
+                  flags += ('-Wno-switch', )
+      if x_warnings_as_error != 'default' :
+        if x_warnings_as_error == 'on' :
+          flags += ('-Werror', )
+        else:
+          if x_warnings_as_error == 'basic' :
+            flags += ('-diag-error=1079,39,109', )
+      if x_pedantic != 'default' :
+        if x_pedantic == 'off' :
+          flags += ('-fgnu-keywords', )
+        else:
+          flags += ('-fno-gnu-keywords', )
+      if x_shadow_warnings != 'default' :
+        if x_shadow_warnings == 'off' :
+          flags += ('-Wno-shadow', )
+        else:
+          if ( x_shadow_warnings == 'on' or x_shadow_warnings == 'all' ) :
+            flags += ('-Wshadow', )
+      if x_stl_debug != 'default' :
+        if x_stl_debug != 'off' :
+          if ( x_stl_debug == 'allow_broken_abi' or x_stl_debug == 'allow_broken_abi_and_bugs' ) :
+            flags += ('-D_GLIBCXX_DEBUG', )
+          else:
+            flags += ('-D_GLIBCXX_ASSERTIONS', )
+      if x_debug != 'default' :
+        if x_debug == 'off' :
+          flags += ('-g0', )
+        else:
+          flags += ('-g', )
+      if x_optimization != 'default' :
+        if x_optimization == '0' :
+          flags += ('-O0', )
+        else:
+          if x_optimization == 'g' :
+            flags += ('-O1', )
+          else:
+            if x_optimization == '1' :
+              flags += ('-O1', )
+            else:
+              if x_optimization == '2' :
+                flags += ('-O2', )
+              else:
+                if x_optimization == '3' :
+                  flags += ('-O3', )
+                else:
+                  if x_optimization == 'z' :
+                    flags += ('-fast', )
+                  else:
+                    if x_optimization == 'size' :
+                      flags += ('-Os', )
+                    else:
+                      flags += ('-Ofast', )
+      if x_stack_protector != 'default' :
+        if x_stack_protector == 'off' :
+          flags += ('-fno-protector-strong', '-U_FORTIFY_SOURCE', )
+          linkflags += ('-fno-protector-strong', )
+        else:
+          flags += ('-D_FORTIFY_SOURCE=2', )
+          if x_stack_protector == 'strong' :
+            flags += ('-fstack-protector-strong', )
+            linkflags += ('-fstack-protector-strong', )
+          else:
+            if x_stack_protector == 'all' :
+              flags += ('-fstack-protector-all', )
+              linkflags += ('-fstack-protector-all', )
+            else:
+              flags += ('-fstack-protector', )
+              linkflags += ('-fstack-protector', )
+      if x_relro != 'default' :
+        if x_relro == 'off' :
+          linkflags += ('-Xlinker-znorelro', )
+        else:
+          if x_relro == 'on' :
+            linkflags += ('-Xlinker-zrelro', )
+          else:
+            linkflags += ('-Xlinker-zrelro', '-Xlinker-znow', '-Xlinker-znoexecstack', )
+      if x_pie != 'default' :
+        if x_pie == 'off' :
+          linkflags += ('-no-pic', )
+        else:
+          if x_pie == 'on' :
+            linkflags += ('-pie', )
+          else:
+            if x_pie == 'fpie' :
+              flags += ('-fpie', )
+            else:
+              if x_pie == 'fpic' :
+                flags += ('-fpic', )
+              else:
+                if x_pie == 'fPIE' :
+                  flags += ('-fPIE', )
+                else:
+                  if x_pie == 'fPIC' :
+                    flags += ('-fPIC', )
+      if x_sanitizers != 'default' :
         if x_sanitizers == 'on' :
           flags += ('-ftrapuv', )
-      if not ( x_integer_sanitizers == 'default') :
+      if x_integer_sanitizers != 'default' :
         if x_integer_sanitizers == 'on' :
           flags += ('-funsigned-bitfields', )
         else:
           flags += ('-fno-unsigned-bitfields', )
-      if not ( x_float_sanitizers == 'default') :
+      if x_float_sanitizers != 'default' :
         if x_float_sanitizers == 'on' :
           flags += ('-fp-stack-check', '-fp-trap=common', )
-      if not ( x_linker == 'default') :
+      if x_linker != 'default' :
         if x_linker == 'bfd' :
           linkflags += ('-fuse-ld=bfd', )
         else:
@@ -1328,7 +1422,7 @@ def get_flags(options, env=None):
             linkflags += ('-fuse-ld=gold', )
           else:
             linkflags += ('-fuse-ld=lld', )
-      if not ( x_lto == 'default') :
+      if x_lto != 'default' :
         if x_lto == 'off' :
           flags += ('-no-ipo', )
           linkflags += ('-no-ipo', )
@@ -1339,7 +1433,7 @@ def get_flags(options, env=None):
             if platform == 'linux' :
               flags += ('-ffat-lto-objects', )
               linkflags += ('-ffat-lto-objects', )
-      if not ( x_control_flow == 'default') :
+      if x_control_flow != 'default' :
         if x_control_flow == 'off' :
           flags += ('-mconditional-branch=keep', '-fcf-protection=none', )
         else:
@@ -1348,17 +1442,17 @@ def get_flags(options, env=None):
           else:
             if x_control_flow == 'on' :
               flags += ('-mconditional-branch=all-fix', '-fcf-protection=full', )
-      if not ( x_exceptions == 'default') :
+      if x_exceptions != 'default' :
         if x_exceptions == 'on' :
           flags += ('-fexceptions', )
         else:
           flags += ('-fno-exceptions', )
-      if not ( x_rtti == 'default') :
+      if x_rtti != 'default' :
         if x_rtti == 'on' :
           flags += ('-frtti', )
         else:
           flags += ('-fno-rtti', )
-      if not ( x_cpu == 'default') :
+      if x_cpu != 'default' :
         if x_cpu == 'generic' :
           flags += ('-mtune=generic', )
           linkflags += ('-mtune=generic', )
@@ -1366,6 +1460,6 @@ def get_flags(options, env=None):
           flags += ('-xHost', )
           linkflags += ('-xHost', )
   if platform == 'mingw' :
-    if not ( x_windows_bigobj == 'default') :
+    if x_windows_bigobj != 'default' :
       flags += ('-Wa,-mbig-obj', )
   return {"flags": flags, "linkflags": linkflags}
