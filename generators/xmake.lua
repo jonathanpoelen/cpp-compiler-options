@@ -42,7 +42,6 @@ return {
     local funcprefix = (self.is_C and 'jln_c_' or 'jln_cxx_')
     local compprefix = (self.is_C and 'cc' or 'cxx')
     local cxflags = self.is_C and 'cflags' or 'cxxflags'
-    local import_base = self.is_C and 'c' or 'cpp'
     self.cxflags_name = cxflags
 
     local extraopts = {
@@ -80,13 +79,13 @@ return {
 
     self:print_header('--')
     self:print([[
-local _import_base = ']] .. import_base .. [['
+local _module_name = 'flags'
 
 -- Registers new command-line options and set default values
 -- `default_options` (see create_options())
 -- `extra_options` = {
 --   category :string|boolean = false -- add a category for option()
---   import_base: string = ']] .. import_base .. [[' -- default value for ]] .. funcprefix .. [[rule()
+--   module_name: string = 'flags' -- default value for ]] .. funcprefix .. [[rule()
 -- }
 ]])
     self:print('\nfunction ' .. funcprefix .. 'init_options(default_options, extra_options)')
@@ -119,7 +118,7 @@ local _import_base = ']] .. import_base .. [['
   end
 
   extra_options = extra_options or {}
-  _import_base = extra_options.import_base or _import_base
+  _module_name = extra_options.module_name or _module_name
 
   local category = extra_options.category
   category = category == true and ']] .. funcprefix .. [[flags'
@@ -208,11 +207,12 @@ end
 
 
 local cached_flags = {}
+local current_path = os.scriptdir()
 
 -- Create a new rule. Options are added to the current configuration (see create_options())
 -- `options`: same as create_options()
 -- `extra_options` = {
---   import_base :string = import directory containing flags.lua (default: ']] .. import_base .. [[')
+--   module_name :string = module name used by on_load() in ]] .. funcprefix .. [[rule()
 --   clone_options :boolean = make an internal copy of options
 --                            which prevents changing it after the call to ]] .. funcprefix .. [[rule().
 --                            (default: false)
@@ -220,7 +220,7 @@ local cached_flags = {}
 -- }
 function ]] .. funcprefix .. [[rule(rulename, options, extra_options)
   extra_options = extra_options or {}
-  local import_base = extra_options.import_base or ']] .. import_base .. [['
+  local module_name = extra_options.module_name or _module_name
 
   if extra_options.clone_options then
     local cloned = {}
@@ -234,7 +234,7 @@ function ]] .. funcprefix .. [[rule(rulename, options, extra_options)
     on_load(function(target)
       local cached = cached_flags[rulename]
       if not cached then
-        import(import_base .. '.flags')
+        import(module_name, {rootdir=current_path})
         cached = flags.get_flags(options, extra_options)
         table.insert(cached.cxxflags, {force=true})
         table.insert(cached.ldflags, {force=true})

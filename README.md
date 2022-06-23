@@ -218,7 +218,7 @@ target_compile_options(mytarget2 INTERFACE ${CXX_FLAGS})
 
 ## xmake
 
-Copy `output/cpp/xmake_options.lua` to `myproj/cpp/xmake.lua` and `output/cpp/xmake` to `myproj/cpp/flags.lua`.
+Copy `output/cpp/xmake_options.lua` to `myproj/cpp/xmake.lua` and `output/cpp/xmake` to `myproj/cpp/flags.lua`. `cpp` is an arbitrary directory name, this can be changed.
 
 ```lua
 -- launch example: xmake f --jln-sanitizers=on
