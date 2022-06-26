@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2022-06-20
+
+- add emscripten compiler
+
 ## 2022-06-12
 
 - add `var_init=pattern`
