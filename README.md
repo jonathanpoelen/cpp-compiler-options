@@ -4,9 +4,19 @@
 
 project('test', 'cpp')
 
-# default value (without prefix)
+# default options (without prefix)
 # optional
 jln_default_flags = {'rtti': 'off'}
+
+# options for specific buildtype (added to default options)
+# optional.
+jln_buildtype_flags = {
+  'debug': {'rtti': 'on'},
+}
+
+# Use a default configuration when jln_buildtype_flags is unspecified.
+# optional.
+jln_use_profile_buildtype = true
 
 # optional
 jln_custom_flags = [
@@ -41,6 +51,9 @@ Supported options are (alphabetically in a category):
 ```ini
 # Warning:
 
+analyzer = default off on taint
+analyzer_too_complex_warning = default off on
+analyzer_verbosity = default 0 1 2 3
 conversion_warnings = on default off sign conversion
 covered_switch_default_warnings = on default off
 fix_compiler_error = on default off
@@ -65,9 +78,11 @@ stl_fix = on default off
 debug = default off on line_tables_only gdb lldb sce
 float_sanitizers = default off on
 integer_sanitizers = default off on
+ndebug = with_optimization_1_or_above default off on
 other_sanitizers = default off thread pointer memory
 sanitizers = default off on
 stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
+var_init = default pattern
 
 # Optimization:
 
@@ -104,7 +119,7 @@ windows_bigobj = on default
 
 The value `default` does nothing.
 
-If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` are `all` ; `shadow_warnings` and `windows_abi_compatibility_warnings` are `off`.
+If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` is `all` ; `ndebug` is `with_optimization_1_or_above` ; `shadow_warnings` and `windows_abi_compatibility_warnings` is `off`.
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
