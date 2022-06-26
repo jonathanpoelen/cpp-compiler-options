@@ -1,12 +1,12 @@
 -- File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
-local _import_base = 'c'
+local _module_name = 'flags'
 
 -- Registers new command-line options and set default values
 -- `default_options` (see create_options())
 -- `extra_options` = {
 --   category :string|boolean = false -- add a category for option()
---   import_base: string = 'c' -- default value for jln_c_rule()
+--   module_name: string = 'flags' -- default value for jln_c_rule()
 -- }
 
 
@@ -21,6 +21,12 @@ local _extraopt_flag_names = {
 }
 
 local _flag_names = {
+  ["jln-analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["taint"]="taint", [""]=""},
+  ["analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["taint"]="taint", [""]=""},
+  ["jln-analyzer-too-complex-warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["analyzer_too_complex_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-analyzer-verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
+  ["analyzer_verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
   ["jln-color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["jln-control-flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
@@ -55,6 +61,8 @@ local _flag_names = {
   ["msvc_crt_secure_no_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
   ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
+  ["jln-ndebug"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_optimization_1_or_above"]="with_optimization_1_or_above", [""]=""},
+  ["ndebug"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_optimization_1_or_above"]="with_optimization_1_or_above", [""]=""},
   ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["jln-other-sanitizers"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", ["memory"]="memory", [""]=""},
@@ -79,6 +87,8 @@ local _flag_names = {
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
+  ["jln-var-init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
+  ["var_init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
@@ -117,13 +127,37 @@ local _flag_names = {
   end
 
   extra_options = extra_options or {}
-  _import_base = extra_options.import_base or _import_base
+  _module_name = extra_options.module_name or _module_name
 
   local category = extra_options.category
   category = category == true and 'jln_c_flags'
           or category
           or nil
     
+  option("jln-analyzer", {
+           showmenu=true,
+           category=category,
+           description="enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)",
+           values={"default", "off", "on", "taint"},
+           default=default_options["analyzer"] or default_options["jln-analyzer"] or "default",
+           after_check=function(option) check_option("jln-analyzer", "analyzer") end,
+         })
+  option("jln-analyzer-too-complex-warning", {
+           showmenu=true,
+           category=category,
+           description="By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.",
+           values={"default", "off", "on"},
+           default=default_options["analyzer_too_complex_warning"] or default_options["jln-analyzer-too-complex-warning"] or "default",
+           after_check=function(option) check_option("jln-analyzer-too-complex-warning", "analyzer_too_complex_warning") end,
+         })
+  option("jln-analyzer-verbosity", {
+           showmenu=true,
+           category=category,
+           description="controls the complexity of the control flow paths that are emitted for analyzer diagnostics\\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\\n - 1: As per the previous level, but also show events for the entry to each function.\\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.\\n - 3: As per the previous level, but show all control flow events, not just significant ones.",
+           values={"default", "0", "1", "2", "3"},
+           default=default_options["analyzer_verbosity"] or default_options["jln-analyzer-verbosity"] or "default",
+           after_check=function(option) check_option("jln-analyzer-verbosity", "analyzer_verbosity") end,
+         })
   option("jln-color", {
            showmenu=true,
            category=category,
@@ -260,6 +294,14 @@ local _flag_names = {
            default=default_options["msvc_isystem"] or default_options["jln-msvc-isystem"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem", "msvc_isystem") end,
          })
+  option("jln-ndebug", {
+           showmenu=true,
+           category=category,
+           description="enable NDEBUG macro (disable assert macro)",
+           values={"default", "off", "on", "with_optimization_1_or_above"},
+           default=default_options["ndebug"] or default_options["jln-ndebug"] or "with_optimization_1_or_above",
+           after_check=function(option) check_option("jln-ndebug", "ndebug") end,
+         })
   option("jln-optimization", {
            showmenu=true,
            category=category,
@@ -356,6 +398,14 @@ local _flag_names = {
            default=default_options["switch_warnings"] or default_options["jln-switch-warnings"] or "on",
            after_check=function(option) check_option("jln-switch-warnings", "switch_warnings") end,
          })
+  option("jln-var-init", {
+           showmenu=true,
+           category=category,
+           description="initialize all stack variables implicitly, including padding",
+           values={"default", "pattern"},
+           default=default_options["var_init"] or default_options["jln-var-init"] or "default",
+           after_check=function(option) check_option("jln-var-init", "var_init") end,
+         })
   option("jln-warnings", {
            showmenu=true,
            category=category,
@@ -393,7 +443,33 @@ local _flag_names = {
   option("jln-ld", {showmenu=true, description="Path or name of the linker for jln functions", default=""})
 end
 
--- Set options for a specific mode (see also jln_c_rule())
+jln_c_default_options_by_modes = {
+  debug={
+    control_flow='on',
+    debug='on',
+    sanitizers='on',
+    stl_debug='on',
+  },
+  releasedbg={
+    debug='on',
+    linker='native',
+    lto='on',
+    optimization='g',
+  },
+  minsizerel={
+    linker='native',
+    lto='on',
+    optimization='size',
+  },
+  release={
+    linker='native',
+    lto='on',
+    optimization='3',
+  },
+}
+
+-- Set options for a specific mode (see also jln_c_rule()).
+-- If options_by_modes is nil, a default configuration is used.
 -- `options_by_modes` = {
 --   [modename]: {
 --     function() ... end, -- optional callback
@@ -408,7 +484,7 @@ function jln_c_init_modes(options_by_modes, extra_options)
   extra_options = extra_options or {}
   local rulename = extra_options.rulename or '__jln_c_flags__'
 
-  for mode,options in pairs(options_by_modes) do
+  for mode,options in pairs(options_by_modes or jln_c_default_options_by_modes) do
     if is_mode(mode) then
       local callback = options[1]
       if callback then
@@ -430,11 +506,12 @@ end
 
 
 local cached_flags = {}
+local current_path = os.scriptdir()
 
 -- Create a new rule. Options are added to the current configuration (see create_options())
 -- `options`: same as create_options()
 -- `extra_options` = {
---   import_base :string = import directory containing flags.lua (default: 'c')
+--   module_name :string = module name used by on_load() in jln_c_rule()
 --   clone_options :boolean = make an internal copy of options
 --                            which prevents changing it after the call to jln_c_rule().
 --                            (default: false)
@@ -442,7 +519,7 @@ local cached_flags = {}
 -- }
 function jln_c_rule(rulename, options, extra_options)
   extra_options = extra_options or {}
-  local import_base = extra_options.import_base or 'c'
+  local module_name = extra_options.module_name or _module_name
 
   if extra_options.clone_options then
     local cloned = {}
@@ -456,7 +533,7 @@ function jln_c_rule(rulename, options, extra_options)
     on_load(function(target)
       local cached = cached_flags[rulename]
       if not cached then
-        import(import_base .. '.flags')
+        import(module_name, {rootdir=current_path})
         cached = flags.get_flags(options, extra_options)
         table.insert(cached.cxxflags, {force=true})
         table.insert(cached.ldflags, {force=true})
