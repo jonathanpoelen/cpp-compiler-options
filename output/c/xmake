@@ -241,9 +241,13 @@ local function string_version_to_number(version)
 end
 
 
-local function add_comp_cache(original_compiler, original_version, data)
+local function add_comp_cache(original_compiler, original_version, compcache)
+  -- remove compiler when empty string
+  if compcache[1] == '' then
+    compcache[1] = nil
+  end
   local tmp = _comp_cache[original_compiler] or {}
-  tmp[original_version] = data
+  tmp[original_version] = compcache
   _comp_cache[original_compiler] = tmp
 end
 
@@ -270,6 +274,7 @@ local _compiler_by_toolname = {
   icl='icl',
   icx='icx',
   icpx='icx',
+  ['icx-cl']='icx-cl',
   dpcpp='icx',
   ['dpcpp-cl']='icx-cl',
   ['em++']='emcc',
@@ -318,7 +323,7 @@ function get_flags(options, extra_options)
     compiler = compcache[1]
     version = compcache[2]
     compversion = compcache[3]
-    if not (compiler or primary_compiler) then
+    if not compiler then
       -- wrintf("Unknown compiler")
       return {cflags={}, ldflags={}}
     end
@@ -329,6 +334,13 @@ function get_flags(options, extra_options)
       local restored_version = version
       compiler, version = extract_progname_and_version_from_path(compiler)
       version = restored_version or version
+      if version == '' then
+        local compinfos = detect.find_tool(compiler, {version=true, program=compiler})
+        if compinfos then
+          compiler = compinfos.name
+          version = compinfos.version
+        end
+      end
     else
       local toolname
       compiler, toolname = platform.tool('cc')
