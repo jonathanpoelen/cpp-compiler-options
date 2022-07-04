@@ -646,7 +646,7 @@ Or(gcc, clang_like) {
         -- LTO require -fuse-ld=lld (link by default)
         link'-fuse-ld=lld',
       },
-      And(lvl'thin', vers'>=6') {
+      And(Or(lvl'thin', lvl'on'), vers'>=6') {
         fl'-flto=thin'
       }
     / fl'-flto',
@@ -1025,7 +1025,7 @@ Or(gcc, clang) {
 lld_link {
   opt'lto' {
     lvl'off' { flag'-fno-lto', }
-  / lvl'thin' { flag'-flto=thin' }
+  / Or(lvl'thin', lvl'on') { flag'-flto=thin' }
   / fl'-flto',
   },
 
@@ -1120,6 +1120,14 @@ Or(msvc, clang_cl, icl) {
     / lvl'3' { flag'/O2', }
     / Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' }
     / --[[lvl'fast']] { flag'/O2', flag'/fp:fast' }
+    },
+
+    opt'linker' {
+      clang_cl {
+        Or(lvl'lld', lvl'native') {
+          link'-fuse-ld=lld'
+        }
+      }
     },
 
     opt'control_flow' {
@@ -1931,7 +1939,7 @@ Vbase = {
     },
 
     lto={
-      values={'off', 'on', 'fat', 'thin'},
+      values={'off', 'on', 'normal', 'fat', 'thin'},
       description='enable Link Time Optimization',
     },
 
