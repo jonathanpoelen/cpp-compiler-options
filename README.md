@@ -100,7 +100,7 @@ var_init = default pattern
 
 cpu = default generic native
 linker = default bfd gold lld native
-lto = default off on fat thin
+lto = default off on normal fat thin
 optimization = default 0 g 1 2 3 fast size z
 whole_program = default off on strip_all
 
@@ -522,15 +522,15 @@ fl'xxx' -- is a alias of {flag'xxx',link'xxx'}
 
 With `mingw`, the compiler is `gcc`.
 
-version can be specified with `vers(major, optional_minor)` or `compname(major, optional_minor)`.
+version can be specified with `vers` or a compiler name and a parameter of the form `{operator}{major}.{minor}`.
 
 ```lua
 gcc { ... } -- for gcc only
-gcc(5) { ... } -- for >= gcc-5
-gcc(5, 3) { ... } -- for >= gcc-5.3
-gcc(-5, 3) { ... } -- for < gcc-5.3
+gcc'>=5' { ... } -- for >= gcc-5
+gcc'>=5.3' { ... } -- for >= gcc-5.3
+gcc'<5.3' { ... } -- for < gcc-5.3
 
-gcc(major, minor) { ... } -- equivalent to `gcc { vers(major, minor) { ... } }`
+gcc'>=5.3' { ... } -- equivalent to `gcc { vers'>=5.3' { ... } }`
 ```
 
 ## Platform
@@ -552,6 +552,14 @@ opt'warnings' { -- if warnings is enabled (not `warnings=default`)
 }
 ```
 
+- `reset_opt'name'` for disabled an option
+
+```lua
+vers'<8' {
+  reset_opt'lto' -- disable lto option when version < 8
+}
+```
+
 ## Conditions
 
 - `Or(...)`
@@ -570,7 +578,6 @@ Compilers, linkers, platforms and condition returns a `if_mt`.
 - `xxx {...} / yyy {...}` for `xxx else yyy`
 
 ```lua
--gcc(5,3) { ... } -- < gcc-5.3
 opt'warnings' { -lvl'on' { ... } } -- neither warnings=on nor warnings=default
 lvl'on' { xxx } / { yyy } -- equivalent to `{ lvl'on' { xxx }, -lvl'on' { yyy } }`
 ```
