@@ -122,6 +122,8 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
 ]])
   end,
 
+  _vcond_resetopt=function(self, optname) return "___" .. self.prefixfunc .. "_flags['" .. optname .. "'] = 'default'" end,
+
   _vcond_to_opt=function(self, optname) return "___" .. self.prefixfunc .. "_flags.get('" .. optname .. "', 'default')" end,
   _vcond_to_compiler=function(self, compiler) return "'" .. (meson_compilers[compiler] or compiler) .. "'" end,
   _vcond_version=function(self, op, major, minor) return "___" .. self.prefixfunc .. "_compiler_version.version_compare('" .. op .. major .. '.' .. minor .. "')" end,

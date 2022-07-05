@@ -52,6 +52,8 @@ return {
           stackifcomp[#stackifcomp] = nil
         end,
 
+        resetopt=noop,
+
         startoptcond=function(self)
           table_insert(stackcomp, stackcomp[#stackcomp])
           table_insert(stackifcomp, false)
@@ -301,6 +303,10 @@ return {
       startcond=function(self, x, optname)
         current_optname = optname
         return self:cond(x)
+      end,
+
+      resetopt=function(self, optname)
+        opts[optname] = nil
       end,
 
       startoptcond=function(self, optname)

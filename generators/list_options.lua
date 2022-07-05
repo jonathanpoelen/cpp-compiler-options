@@ -139,6 +139,15 @@ return {
     end
   end,
 
+  resetopt=function(self, optname)
+    local known = knwon_opts[optname]
+    if not known then
+      if is_available(self, optname) then
+        table_insert(errors, '_koptions[' .. optname .. ']: unknown key')
+      end
+    end
+  end,
+
   startoptcond=function(self, optname)
     local known = knwon_opts[optname]
     if not known then

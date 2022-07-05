@@ -36,7 +36,7 @@ return {
       ifopen='',
       ifclose='then',
       endif='end',
-      not_eq='~=',
+      not_eq=' ~= ',
     })
 
     local funcprefix = (self.is_C and 'jln_c_' or 'jln_cxx_')
@@ -505,9 +505,13 @@ function get_flags(options, extra_options)
 ]])
   end,
 
-  _vcond_lvl=function(self, lvl, optname, not_)
-    return 'options.' .. optname .. self:eq_op(not_) .. '"' .. todefault(lvl) .. '"'
+  _vcond_to_lvl=function(self, lvl)
+    return '"' .. todefault(lvl) .. '"'
   end,
+  _vcond_to_opt=function(self, optname)
+    return 'options.' .. optname
+  end,
+
   _vcond_to_version=function(self, major, minor)
     return tostring(major * 100000 + minor)
   end,

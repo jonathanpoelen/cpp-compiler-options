@@ -171,7 +171,12 @@ function link(x) return { link=x } end
 function flag(x) return { cxx=x } end
 function fl(x) return { cxx=x, link=x } end
 function act(id, datas) return { act={id, datas} } end
+function reset_opt(name) return { reset_opt=name } end
 function noop() end
+
+function if_else(condition, f)
+  return condition { f(true) } / f()
+end
 
 function MakeAST(is_C)
 
@@ -1209,20 +1214,26 @@ msvc {
   },
 
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
-  -- vers'>=19.14'
+  vers'<15.16' {
+    reset_opt'msvc_isystem'
+  },
   opt'msvc_isystem' {
     lvl'external_as_include_system_flag' {
-      act('msvc_external', {
-        cxx={
-          '/experimental:external',
-          '/external:env:INCLUDE',
-          '/external:W0',
-        },
-        SYSTEM_FLAG='/external:I',
-      }),
+      if_else(vers'<16.10', function(b)
+        return act('msvc_external', {
+          cxx={
+            '/external:env:INCLUDE',
+            '/external:W0',
+            b and '/experimental:external',
+          },
+          SYSTEM_FLAG='/external:I',
+        })
+      end)
     }
   / {
-      flag'/experimental:external',
+      vers'<16.10' {
+        flag'/experimental:external'
+      },
       flag'/external:W0',
 
       lvl'anglebrackets' {
@@ -1236,7 +1247,11 @@ msvc {
     },
 
     opt'msvc_isystem_with_template_from_non_external' {
-      lvl'off' { flag'/external:template', } / flag'/external:template-',
+      lvl'off' {
+        flag'/external:template',
+      } / {
+        flag'/external:template-',
+      }
     },
 
     opt'warnings' {
@@ -2186,12 +2201,12 @@ Vbase = {
   write = function(self, s) table_insert(self._strs, s) end,
   get_output = function(self) return table.concat(self._strs) end,
 
-  startoptcond = noop, -- function(self, name) end,
-  stopopt = noop, -- function(self) end,
+  startoptcond = noop, -- function(self, name) end
+  stopopt = noop, -- function(self) end
 
-  startcond = noop, -- function(self, x, optname) end,
-  elsecond = noop, -- function(self, optname) end,
-  stopcond = noop, -- function(self, optname) end,
+  startcond = noop, -- function(self, x, optname) end
+  elsecond = noop, -- function(self, optname) end
+  stopcond = noop, -- function(self, optname) end
 
   cxx = noop,
   link = noop,
@@ -2343,6 +2358,14 @@ Vbase = {
           .. ' ' .. self._vcondkeyword.open
           .. ' ' .. string_expr
           .. ' ' .. self._vcondkeyword.close
+    end
+
+    self._vcond_resetopt = self._vcond_resetopt or function(self, optname)
+      return self:_vcond_to_opt(optname) .. ' = ' .. self:_vcond_to_lvl('default', optname)
+    end
+
+    self.resetopt = self.resetopt or function(self, optname)
+      self:print(self.indent .. self:_vcond_resetopt(optname))
     end
 
     self.startoptcond = function(self, optname)
@@ -2594,6 +2617,9 @@ function evalflags(t, v, curropt)
     elseif r ~= true then
       error('Error with Action ' .. t.act[1] .. ': ' .. r)
     end
+
+  elseif t.reset_opt then
+    v:resetopt(t.reset_opt)
 
   else
     for k,x in pairs(t) do

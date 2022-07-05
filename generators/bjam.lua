@@ -38,6 +38,9 @@ return {
     return opt, iopt, env
   end,
 
+  _vcond_resetopt=function(self, optname)
+    return 'x_' .. optname .. ' = "default" ;'
+  end,
 
   _vcond_lvl=function(self, lvl, optname, not_)
     return '$(x_' .. optname .. ')' .. self:eq_op(not_) .. '"' .. jamlvl(lvl) .. '"'

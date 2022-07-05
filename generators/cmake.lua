@@ -318,7 +318,7 @@ endif()
     for option in self:getoptions() do
       local opt = self:tocmakeoption(option.name)
       local localname = option.name:upper()
-      local cmake_opt = 'JLN_FLAGS_' .. localname;
+      local cmake_opt = 'JLN_FLAGS_' .. localname
       self:print('  if(NOT DEFINED ' .. cmake_opt .. ')')
       self:print('    if(JLN_FLAGS_DISABLE_OTHERS)')
       self:print('      set(' .. cmake_opt .. ' "' .. option.default .. '")')
@@ -327,6 +327,10 @@ endif()
       self:print('    endif()')
       self:print('  endif()\n')
     end
+  end,
+
+  _vcond_resetopt=function(self, optname)
+    return 'set(JLN_FLAGS_' .. optname:upper() .. ' "default")'
   end,
 
   _vcond_lvl=function(self, lvl, optname, not_)

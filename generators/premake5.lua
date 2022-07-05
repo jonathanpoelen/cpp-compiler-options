@@ -23,7 +23,7 @@ return {
       endif='end',
       platform='os.target()',
       options='values',
-      not_eq='~=',
+      not_eq=' ~= ',
     })
 
     self:print_header('--')
