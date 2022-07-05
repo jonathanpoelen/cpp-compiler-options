@@ -191,7 +191,7 @@ def add_variables(vars, default_values={}):
     EnumVariable('jln_linker', 'configure linker', default_values.get('linker', _default_flags['linker']),
                  allowed_values=('default', 'bfd', 'gold', 'lld', 'native')),
     EnumVariable('jln_lto', 'enable Link Time Optimization', default_values.get('lto', _default_flags['lto']),
-                 allowed_values=('default', 'off', 'on', 'fat', 'thin')),
+                 allowed_values=('default', 'off', 'on', 'normal', 'fat', 'thin')),
     EnumVariable('jln_msvc_conformance', 'standard conformance options', default_values.get('msvc_conformance', _default_flags['msvc_conformance']),
                  allowed_values=('default', 'all', 'all_without_throwing_new')),
     EnumVariable('jln_msvc_crt_secure_no_warnings', 'disable CRT warnings', default_values.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings']),
@@ -623,7 +623,7 @@ def get_flags(options, env=None):
         else:
           if compiler == 'clang-cl' :
             linkflags += ('-fuse-ld=lld', )
-          if ( x_lto == 'thin' and compversion >= 600000 ) :
+          if ( ( x_lto == 'thin' or x_lto == 'on' ) and compversion >= 600000 ) :
             flags += ('-flto=thin', )
             linkflags += ('-flto=thin', )
           else:
@@ -960,7 +960,7 @@ def get_flags(options, env=None):
       if x_lto == 'off' :
         flags += ('-fno-lto', )
       else:
-        if x_lto == 'thin' :
+        if ( x_lto == 'thin' or x_lto == 'on' ) :
           flags += ('-flto=thin', )
         else:
           flags += ('-flto', )
@@ -1044,6 +1044,10 @@ def get_flags(options, env=None):
                     flags += ('/O1', '/GL', '/Gw', )
                   else:
                     flags += ('/O2', '/fp:fast', )
+      if x_linker != 'default' :
+        if compiler == 'clang-cl' :
+          if ( x_linker == 'lld' or x_linker == 'native' ) :
+            linkflags += ('-fuse-ld=lld', )
       if x_control_flow != 'default' :
         if x_control_flow == 'off' :
           flags += ('/guard:cf-', )
@@ -1093,12 +1097,20 @@ def get_flags(options, env=None):
       else:
         if x_msvc_crt_secure_no_warnings == 'off' :
           flags += ('/U_CRT_SECURE_NO_WARNINGS', )
+    if compversion < 1500016 :
+      x_msvc_isystem = 'default'
     if x_msvc_isystem != 'default' :
       if x_msvc_isystem == 'external_as_include_system_flag' :
-        # unimplementable
-        pass
+        if compversion < 1600010 :
+          # unimplementable
+          pass
+        else:
+          # unimplementable
+          pass
       else:
-        flags += ('/experimental:external', '/external:W0', )
+        if compversion < 1600010 :
+          flags += ('/experimental:external', )
+        flags += ('/external:W0', )
         if x_msvc_isystem == 'anglebrackets' :
           flags += ('/external:anglebrackets', )
         else:

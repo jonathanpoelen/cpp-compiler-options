@@ -402,7 +402,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           if (  ___jln_c_compiler_id == 'clang-cl' )
             jln_c_link_flags += ['-fuse-ld=lld', ]
           endif
-          if (  ( ___jln_c_flags.get('lto', 'default') == 'thin' and ___jln_c_compiler_version.version_compare('>=6.0') ) )
+          if (  ( ( ___jln_c_flags.get('lto', 'default') == 'thin' or ___jln_c_flags.get('lto', 'default') == 'on' ) and ___jln_c_compiler_version.version_compare('>=6.0') ) )
             jln_c_c_flags += ['-flto=thin', ]
             jln_c_link_flags += ['-flto=thin', ]
           else
@@ -841,7 +841,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       if (  ___jln_c_flags.get('lto', 'default') == 'off' )
         jln_c_c_flags += ['-fno-lto', ]
       else
-        if (  ___jln_c_flags.get('lto', 'default') == 'thin' )
+        if (  ( ___jln_c_flags.get('lto', 'default') == 'thin' or ___jln_c_flags.get('lto', 'default') == 'on' ) )
           jln_c_c_flags += ['-flto=thin', ]
         else
           jln_c_c_flags += ['-flto', ]
@@ -959,6 +959,13 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           endif
         endif
       endif
+      if (  ___jln_c_flags.get('linker', 'default') != 'default' )
+        if (  ___jln_c_compiler_id == 'clang-cl' )
+          if (  ( ___jln_c_flags.get('linker', 'default') == 'lld' or ___jln_c_flags.get('linker', 'default') == 'native' ) )
+            jln_c_link_flags += ['-fuse-ld=lld', ]
+          endif
+        endif
+      endif
       if (  ___jln_c_flags.get('control_flow', 'default') != 'default' )
         if (  ___jln_c_flags.get('control_flow', 'default') == 'off' )
           jln_c_c_flags += ['/guard:cf-', ]
@@ -1028,11 +1035,21 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         endif
       endif
     endif
+    if (  ___jln_c_compiler_version.version_compare('<15.16') )
+      ___jln_c_flags['msvc_isystem'] = 'default'
+    endif
     if (  ___jln_c_flags.get('msvc_isystem', 'default') != 'default' )
       if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'external_as_include_system_flag' )
-        # unimplementable
+        if (  ___jln_c_compiler_version.version_compare('<16.10') )
+          # unimplementable
+        else
+          # unimplementable
+        endif
       else
-        jln_c_c_flags += ['/experimental:external', '/external:W0', ]
+        if (  ___jln_c_compiler_version.version_compare('<16.10') )
+          jln_c_c_flags += ['/experimental:external', ]
+        endif
+        jln_c_c_flags += ['/external:W0', ]
         if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'anglebrackets' )
           jln_c_c_flags += ['/external:anglebrackets', ]
         else

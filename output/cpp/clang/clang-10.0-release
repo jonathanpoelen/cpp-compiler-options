@@ -1,7 +1,7 @@
 -DNDEBUG
 -O2
 -Wl,-O1
--flto
+-flto=thin
 -fuse-ld=lld
 -march=native
 -mtune=native

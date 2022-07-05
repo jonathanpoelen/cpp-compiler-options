@@ -1,0 +1,13 @@
+-Wconversion
+-Weverything
+-Wno-documentation
+-Wno-documentation-unknown-command
+-Wno-global-constructors
+-Wno-newline-eof
+-Wno-padded
+-Wno-shadow
+-Wno-switch
+-Wno-switch-enum
+-Wsign-compare
+-Wsign-conversion
+-pedantic
