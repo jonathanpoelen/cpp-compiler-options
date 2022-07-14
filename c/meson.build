@@ -1173,7 +1173,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_compiler_version.version_compare('<15.16') )
-      ___jln_c_flags['msvc_isystem'] = 'default'
+      ___jln_c_flags += {'msvc_isystem': 'default'}
     endif
     if (  ___jln_c_flags.get('msvc_isystem', 'default') != 'default' )
       if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'external_as_include_system_flag' )
