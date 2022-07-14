@@ -122,7 +122,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
 ]])
   end,
 
-  _vcond_resetopt=function(self, optname) return "___" .. self.prefixfunc .. "_flags['" .. optname .. "'] = 'default'" end,
+  _vcond_resetopt=function(self, optname) return "___" .. self.prefixfunc .. "_flags += {'" .. optname .. "': 'default'}" end,
 
   _vcond_to_opt=function(self, optname) return "___" .. self.prefixfunc .. "_flags.get('" .. optname .. "', 'default')" end,
   _vcond_to_compiler=function(self, compiler) return "'" .. (meson_compilers[compiler] or compiler) .. "'" end,
