@@ -291,6 +291,21 @@ return {
         elseif v.compiler then return compiler == v.compiler
         elseif v.platform then return platform == v.platform
         elseif v.linker or v.linker_version then return false
+        elseif v.check_opt then
+          local o = v.check_opt
+          local current_lvl = opts[o.optname]
+
+          if not current_lvl then
+            return false
+          end
+
+          local res = not o.exclude
+          for _,lvl in pairs(o.levels) do
+            if lvl == current_lvl then
+              return res
+            end
+          end
+          return true
         end
 
         local ks = ''

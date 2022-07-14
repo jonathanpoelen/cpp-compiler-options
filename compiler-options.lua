@@ -145,6 +145,39 @@ end
 function lvl(x) return If({lvl=x}) end
 function opt(x) return If({opt=x}) end
 
+local has_opt_mt = {
+  __call = function(self, ...)
+    assert(#self.levels > 0)
+    return If({check_opt={optname=self.optname, levels=levels, exclude=self.exclude}})(...)
+  end,
+  with = function(self, ...)
+    assert(not self._used)
+    self._used = true
+
+    levels = self.levels
+    local set = {}
+    local lvl
+    for _, cond in pairs({...}) do
+      lvl = assert(cond._if.lvl)
+      assert(not set[lvl])
+      table_insert(levels, lvl)
+      set[lvl] = true
+    end
+
+    assert(#levels ~= 0)
+    return self
+  end,
+  without = function(self, ...)
+    self.exclude = true
+    self:with(...)
+  end,
+}
+has_opt_mt.__index = has_opt_mt
+
+function has_opt(optname)
+  return setmetatable({optname=optname, levels={}}, has_opt_mt)
+end
+
 local windows = Platform('windows')
 local linux = Platform('linux')
 local macos = Platform('macos')
@@ -1474,13 +1507,8 @@ icl {
       lvl'on' { flag'/debug:full' }
     / lvl'line_tables_only' { flag'/debug:minimal' },
 
-      opt'optimization' {
-        lvl'g' { flag'/Zi' }
-      -- /ZI cannot be used with /GL
-      / opt'whole_program' {
-          lvl'off' { flag'/ZI' } / flag'/Zi'
-        }
-      / flag'/ZI'
+      has_opt'optimization':with(lvl'g') {
+        flag'/Zi'
       }
     -- /ZI cannot be used with /GL
     / opt'whole_program' {
@@ -2286,12 +2314,15 @@ Vbase = {
                                   self:_vcond(notv, optname)
                                   self:write(' ' .. self._vcondkeyword.close)
         end
-      elseif v.lvl      then self:write(' ' .. self:_vcond_lvl(v.lvl, optname), false)
+      elseif v.lvl      then self:write(' ' .. self:_vcond_lvl(v.lvl, optname))
       elseif v.major    then self:write(' ' .. self._vcond_version(self, v.op, v.major, v.minor))
-      elseif v.compiler then self:write(' ' .. self:_vcond_compiler(v.compiler), false)
-      elseif v.platform then self:write(' ' .. self:_vcond_platform(v.platform), false)
-      elseif v.linker   then self:write(' ' .. self:_vcond_linker(v.linker), false)
-      else error('Unknown cond ', ipairs(v))
+      elseif v.compiler then self:write(' ' .. self:_vcond_compiler(v.compiler))
+      elseif v.platform then self:write(' ' .. self:_vcond_platform(v.platform))
+      elseif v.linker   then self:write(' ' .. self:_vcond_linker(v.linker))
+      elseif v.check_opt then
+        local o = v.check_opt
+        self:write(' ' .. self:_vcond_check_opt(o.optname, o.levels, o.exclude))
+      else error('Unknown cond ' .. pairs(v)(v))
       end
     end
 
@@ -2300,6 +2331,30 @@ Vbase = {
         return self._vcondkeyword.not_eq
       end
       return self._vcondkeyword.eq
+    end
+
+    self._vcond_check_opt = self._vcond_check_opt or function(self, optname, levels, exclude)
+      if #levels == 0 then
+        return self:_vcond_lvl('default', optname, true)
+      end
+
+      local strings = {}
+      for _,lvl in pairs(levels) do
+        table_insert(strings, self:_vcond_lvl(lvl, optname))
+      end
+
+      local cond = self._vcondkeyword.open .. ' '
+                .. table.concat(strings, ' ' .. self._vcondkeyword._or .. ' ')
+                .. ' ' .. self._vcondkeyword.close
+
+      if exclude then
+        return self:_vcond_lvl('default', optname, true)
+            .. ' ' .. self._vcondkeyword._and
+            .. ' ' .. self._vcondkeyword._not
+            .. ' ' .. cond
+      end
+
+      return cond
     end
 
     self._vcond_to_opt = self._vcond_to_opt or function(self, optname)
@@ -2594,16 +2649,28 @@ function evalflags(t, v, curropt)
       elseif t._else then
         evalflags(t._else, v, curropt)
       end
+
     else
-      local r = v:startcond(t._if, curropt)
-      v.indent = v.indent .. '  '
-      if r ~= false and t._t then
-        evalflags(t._t, v, curropt)
+      local check_opt = t._if.check_opt
+      if check_opt then
+        if not v._koptions[check_opt.optname] then
+          error('Unknown "' .. check_opt.optname .. '" option')
+        end
       end
-      if r ~= true then
-        evalflagselse(t, v, curropt)
+
+      if check_opt and v.ignore[check_opt.optname] == true then
+        evalflags(t._else, v, curropt)
+      else
+        local r = v:startcond(t._if, curropt)
+        v.indent = v.indent .. '  '
+        if r ~= false and t._t then
+          evalflags(t._t, v, curropt)
+        end
+        if r ~= true then
+          evalflagselse(t, v, curropt)
+        end
+        v:stopcond(curropt)
       end
-      v:stopcond(curropt)
     end
 
   elseif t.cxx or t.link then
