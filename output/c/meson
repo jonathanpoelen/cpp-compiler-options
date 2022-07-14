@@ -292,11 +292,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           jln_c_link_flags += ['-sASSERTIONS=0', '-sSAFE_HEAP=0', ]
         else
           jln_c_link_flags += ['-sASSERTIONS=1', '-sDEMANGLE_SUPPORT=1', ]
-          if (  ___jln_c_flags.get('sanitizers', 'default') != 'default' )
-            if (  ___jln_c_flags.get('sanitizers', 'default') != 'on' )
-              jln_c_link_flags += ['-sSAFE_HEAP=1', ]
-            endif
-          else
+          if (  not ( ( ___jln_c_flags.get('sanitizers', 'default') == 'on' ) ) )
             jln_c_link_flags += ['-sSAFE_HEAP=1', ]
           endif
         endif
@@ -328,7 +324,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('color', 'default') != 'default' )
-      if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=4.9') ) or ___jln_c_compiler_id != 'gcc' ) )
+      if (  ( ___jln_c_compiler_version.version_compare('>=4.9') or ___jln_c_compiler_id != 'gcc' ) )
         if (  ___jln_c_flags.get('color', 'default') == 'auto' )
           jln_c_c_flags += ['-fdiagnostics-color=auto', ]
         else
@@ -1215,20 +1211,8 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
             jln_c_c_flags += ['/debug:minimal', ]
           endif
         endif
-        if (  ___jln_c_flags.get('optimization', 'default') != 'default' )
-          if (  ___jln_c_flags.get('optimization', 'default') == 'g' )
-            jln_c_c_flags += ['/Zi', ]
-          else
-            if (  ___jln_c_flags.get('whole_program', 'default') != 'default' )
-              if (  ___jln_c_flags.get('whole_program', 'default') == 'off' )
-                jln_c_c_flags += ['/ZI', ]
-              else
-                jln_c_c_flags += ['/Zi', ]
-              endif
-            else
-              jln_c_c_flags += ['/ZI', ]
-            endif
-          endif
+        if (  ( ___jln_c_flags.get('optimization', 'default') == 'g' ) )
+          jln_c_c_flags += ['/Zi', ]
         else
           if (  ___jln_c_flags.get('whole_program', 'default') != 'default' )
             if (  ___jln_c_flags.get('whole_program', 'default') == 'off' )

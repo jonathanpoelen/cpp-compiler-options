@@ -891,16 +891,7 @@ rule jln_c_flags ( properties * )
             <linkflags>"-sASSERTIONS=1"
             <linkflags>"-sDEMANGLE_SUPPORT=1"
           ;
-          if $(x_sanitizers) != "default"
-          {
-            if $(x_sanitizers) != "on"
-            {
-              flags +=
-                <linkflags>"-sSAFE_HEAP=1"
-              ;
-            }
-          }
-          else
+          if ! ( ( $(x_sanitizers) = "on" ) )
           {
             flags +=
               <linkflags>"-sSAFE_HEAP=1"
@@ -969,7 +960,7 @@ rule jln_c_flags ( properties * )
     }
     if $(x_color) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_C_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400009 ] ) || $(JLN_NORMALIZED_C_COMP) != "gcc" )
+      if ( ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400009 ] || $(JLN_NORMALIZED_C_COMP) != "gcc" )
       {
         if $(x_color) = "auto"
         {
@@ -2875,38 +2866,11 @@ rule jln_c_flags ( properties * )
             ;
           }
         }
-        if $(x_optimization) != "default"
+        if ( $(x_optimization) = "g" )
         {
-          if $(x_optimization) = "g"
-          {
-            flags +=
-              <cflags>"/Zi"
-            ;
-          }
-          else
-          {
-            if $(x_whole_program) != "default"
-            {
-              if $(x_whole_program) = "off"
-              {
-                flags +=
-                  <cflags>"/ZI"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <cflags>"/Zi"
-                ;
-              }
-            }
-            else
-            {
-              flags +=
-                <cflags>"/ZI"
-              ;
-            }
-          }
+          flags +=
+            <cflags>"/Zi"
+          ;
         }
         else
         {

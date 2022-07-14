@@ -754,11 +754,7 @@ function get_flags(options, extra_options)
         else
           insert(jln_ldflags, "-sASSERTIONS=1")
           insert(jln_ldflags, "-sDEMANGLE_SUPPORT=1")
-          if options.sanitizers ~= "" then
-            if options.sanitizers ~= "on" then
-              insert(jln_ldflags, "-sSAFE_HEAP=1")
-            end
-          else
+          if not ( ( options.sanitizers == "on" ) ) then
             insert(jln_ldflags, "-sSAFE_HEAP=1")
           end
         end
@@ -795,7 +791,7 @@ function get_flags(options, extra_options)
       end
     end
     if options.color ~= "" then
-      if ( ( compiler == 'gcc' and compversion >= 400009 ) or compiler ~= 'gcc' ) then
+      if ( compversion >= 400009 or compiler ~= 'gcc' ) then
         if options.color == "auto" then
           insert(jln_cxflags, "-fdiagnostics-color=auto")
         else
@@ -1817,20 +1813,8 @@ function get_flags(options, extra_options)
             insert(jln_cxflags, "/debug:minimal")
           end
         end
-        if options.optimization ~= "" then
-          if options.optimization == "g" then
-            insert(jln_cxflags, "/Zi")
-          else
-            if options.whole_program ~= "" then
-              if options.whole_program == "off" then
-                insert(jln_cxflags, "/ZI")
-              else
-                insert(jln_cxflags, "/Zi")
-              end
-            else
-              insert(jln_cxflags, "/ZI")
-            end
-          end
+        if ( options.optimization == "g" ) then
+          insert(jln_cxflags, "/Zi")
         else
           if options.whole_program ~= "" then
             if options.whole_program == "off" then

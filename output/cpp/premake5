@@ -832,11 +832,7 @@ function jln_getoptions(values, disable_others, print_compiler)
         else
           table_insert(jln_linkoptions, "-sASSERTIONS=1")
           table_insert(jln_linkoptions, "-sDEMANGLE_SUPPORT=1")
-          if values['sanitizers'] ~= 'default' then
-            if values['sanitizers'] ~= 'on' then
-              table_insert(jln_linkoptions, "-sSAFE_HEAP=1")
-            end
-          else
+          if not ( ( values['sanitizers'] == 'on' ) ) then
             table_insert(jln_linkoptions, "-sSAFE_HEAP=1")
           end
         end
@@ -873,7 +869,7 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
     if values['color'] ~= 'default' then
-      if ( ( compiler == 'gcc' and compversion >= 400009 ) or compiler ~= 'gcc' ) then
+      if ( compversion >= 400009 or compiler ~= 'gcc' ) then
         if values['color'] == 'auto' then
           table_insert(jln_buildoptions, "-fdiagnostics-color=auto")
         else
@@ -1895,20 +1891,8 @@ function jln_getoptions(values, disable_others, print_compiler)
             table_insert(jln_buildoptions, "/debug:minimal")
           end
         end
-        if values['optimization'] ~= 'default' then
-          if values['optimization'] == 'g' then
-            table_insert(jln_buildoptions, "/Zi")
-          else
-            if values['whole_program'] ~= 'default' then
-              if values['whole_program'] == 'off' then
-                table_insert(jln_buildoptions, "/ZI")
-              else
-                table_insert(jln_buildoptions, "/Zi")
-              end
-            else
-              table_insert(jln_buildoptions, "/ZI")
-            end
-          end
+        if ( values['optimization'] == 'g' ) then
+          table_insert(jln_buildoptions, "/Zi")
         else
           if values['whole_program'] ~= 'default' then
             if values['whole_program'] == 'off' then
