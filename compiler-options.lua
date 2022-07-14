@@ -169,7 +169,7 @@ local has_opt_mt = {
   end,
   without = function(self, ...)
     self.exclude = true
-    self:with(...)
+    return self:with(...)
   end,
 }
 has_opt_mt.__index = has_opt_mt
@@ -209,6 +209,14 @@ function noop() end
 
 function if_else(condition, f)
   return condition { f(true) } / f()
+end
+
+function match(t)
+  local x = t[1]
+  for i=2,#t do
+    x = x / t[i]
+  end
+  return x
 end
 
 function MakeAST(is_C)
@@ -273,188 +281,208 @@ opt'ndebug' {
 
 Or(gcc, clang_like) {
   opt'warnings' {
-    lvl'off' { flag'-w' }
-  / {
-      gcc {
-        flag'-Wall',
-     -- flag'-Weffc++',
-        flag'-Wextra',
-        flag'-Wcast-align',
-        flag'-Wcast-qual',
-        flag'-Wdisabled-optimization',
-        flag'-Wfloat-equal',
-        flag'-Wformat-security',
-        flag'-Wformat=2',
-     -- flag'-Winline',
-        flag'-Winvalid-pch',
-        flag'-Wmissing-include-dirs',
-        flag'-Wpacked',
-        flag'-Wredundant-decls',
-        flag'-Wundef',
-        flag'-Wunused-macros',
-        flag'-Wpointer-arith',
-        cxx'-Wmissing-declarations',
-        cxx'-Wnon-virtual-dtor',
-        cxx'-Wold-style-cast',
-        cxx'-Woverloaded-virtual',
-        c'-Wbad-function-cast',
-        c'-Winit-self', -- enabled by -Wall in C++
-        c'-Wjump-misses-init',
-        c'-Wnested-externs',
-        c'-Wold-style-definition',
-        c'-Wstrict-prototypes',
-        c'-Wwrite-strings',
+    match {
+      lvl'off' { flag'-w' },
+      {
+        match {
+          gcc {
+            flag'-Wall',
+        -- flag'-Weffc++',
+            flag'-Wextra',
+            flag'-Wcast-align',
+            flag'-Wcast-qual',
+            flag'-Wdisabled-optimization',
+            flag'-Wfloat-equal',
+            flag'-Wformat-security',
+            flag'-Wformat=2',
+        -- flag'-Winline',
+            flag'-Winvalid-pch',
+            flag'-Wmissing-include-dirs',
+            flag'-Wpacked',
+            flag'-Wredundant-decls',
+            flag'-Wundef',
+            flag'-Wunused-macros',
+            flag'-Wpointer-arith',
+            cxx'-Wmissing-declarations',
+            cxx'-Wnon-virtual-dtor',
+            cxx'-Wold-style-cast',
+            cxx'-Woverloaded-virtual',
+            c'-Wbad-function-cast',
+            c'-Winit-self', -- enabled by -Wall in C++
+            c'-Wjump-misses-init',
+            c'-Wnested-externs',
+            c'-Wold-style-definition',
+            c'-Wstrict-prototypes',
+            c'-Wwrite-strings',
 
-        opt'switch_warnings' {
-          lvl'on' { flag'-Wswitch' } -- enabled by -Wall
-        / lvl'exhaustive_enum' { flag'-Wswitch-enum' }
-        / lvl'mandatory_default' { flag'-Wswitch-default' }
-        / lvl'exhaustive_enum_and_mandatory_default' {
-            flag'-Wswitch-default',
-            flag'-Wswitch-enum',
-          }
-        / flag'-Wno-switch'
-        },
+            opt'switch_warnings' {
+              match {
+                lvl'on' { flag'-Wswitch' }, -- enabled by -Wall
+                lvl'exhaustive_enum' { flag'-Wswitch-enum' },
+                lvl'mandatory_default' { flag'-Wswitch-default' },
+                lvl'exhaustive_enum_and_mandatory_default' {
+                  flag'-Wswitch-default',
+                  flag'-Wswitch-enum',
+                },
+                flag'-Wno-switch',
+              }
+            },
 
-        vers'>=4.7' {
-          flag'-Wsuggest-attribute=noreturn',
-          cxx'-Wzero-as-null-pointer-constant',
-          flag'-Wlogical-op',
-       -- flag'-Wno-aggressive-loop-optimizations',
-       -- flag'-Wnormalized=nfc',
-          flag'-Wvector-operation-performance',
-          flag'-Wdouble-promotion',
-          flag'-Wtrampolines', -- C only with a nested function ?
+            vers'>=4.7' {
+              flag'-Wsuggest-attribute=noreturn',
+              cxx'-Wzero-as-null-pointer-constant',
+              flag'-Wlogical-op',
+          -- flag'-Wno-aggressive-loop-optimizations',
+          -- flag'-Wnormalized=nfc',
+              flag'-Wvector-operation-performance',
+              flag'-Wdouble-promotion',
+              flag'-Wtrampolines', -- C only with a nested function ?
 
-          vers'>=4.8' {
-            cxx'-Wuseless-cast',
+              vers'>=4.8' {
+                cxx'-Wuseless-cast',
 
-            vers'>=4.9' {
-              cxx'-Wconditionally-supported',
-              flag'-Wfloat-conversion',
+                vers'>=4.9' {
+                  cxx'-Wconditionally-supported',
+                  flag'-Wfloat-conversion',
 
-              vers'>=5.1' {
-                flag'-Wformat-signedness',
-                flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
-             -- flag'-Wctor-dtor-privacy',
-                cxx'-Wstrict-null-sentinel',
-                cxx'-Wsuggest-override',
+                  vers'>=5.1' {
+                    flag'-Wformat-signedness',
+                    flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
+                -- flag'-Wctor-dtor-privacy',
+                    cxx'-Wstrict-null-sentinel',
+                    cxx'-Wsuggest-override',
 
-                vers'>=6.1' {
-                  flag'-Wduplicated-cond',
-                  flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
+                    vers'>=6.1' {
+                      flag'-Wduplicated-cond',
+                      flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
 
-                  vers'>=7' {
-                    cxx'-Waligned-new',
+                      vers'>=7' {
+                        cxx'-Waligned-new',
 
-                    vers'>=7.1' {
-                      flag'-Walloc-zero',
-                      flag'-Walloca',
-                      flag'-Wformat-overflow=2',
-                   -- flag'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
-                   -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
-                      flag'-Wduplicated-branches',
+                        vers'>=7.1' {
+                          flag'-Walloc-zero',
+                          flag'-Walloca',
+                          flag'-Wformat-overflow=2',
+                      -- flag'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
+                      -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
+                          flag'-Wduplicated-branches',
 
-                      vers'>=8' {
-                        cxx'-Wclass-memaccess',
+                          vers'>=8' {
+                            cxx'-Wclass-memaccess',
+                          }
+                        }
                       }
                     }
                   }
                 }
               }
             }
-          }
-        }
-      }
-    / { --[[clang_like]]
-        flag'-Weverything',
-        flag'-Wno-documentation',
-        flag'-Wno-documentation-unknown-command',
-        flag'-Wno-newline-eof',
-     -- flag'-Wno-range-loop-analysis',
-     -- flag'-Wno-disabled-macro-expansion',
-        cxx'-Wno-c++98-compat',
-        cxx'-Wno-c++98-compat-pedantic',
-        flag'-Wno-padded',
-        flag'-Wno-global-constructors',
-        cxx'-Wno-weak-vtables',
-        cxx'-Wno-exit-time-destructors',
-     -- cxx'-Qunused-arguments',
+          },
+          { --[[clang_like]]
+            flag'-Weverything',
+            flag'-Wno-documentation',
+            flag'-Wno-documentation-unknown-command',
+            flag'-Wno-newline-eof',
+        -- flag'-Wno-range-loop-analysis',
+        -- flag'-Wno-disabled-macro-expansion',
+            cxx'-Wno-c++98-compat',
+            cxx'-Wno-c++98-compat-pedantic',
+            flag'-Wno-padded',
+            flag'-Wno-global-constructors',
+            cxx'-Wno-weak-vtables',
+            cxx'-Wno-exit-time-destructors',
+        -- cxx'-Qunused-arguments',
 
-        opt'switch_warnings' {
-          Or(lvl'on', lvl'mandatory_default') {
-            flag'-Wno-switch-enum',
-          }
-        / Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
-            flag'-Wswitch-enum',
-          }
-        / { --[[lvl'off']]
-            flag'-Wno-switch',
-            flag'-Wno-switch-enum',
-          }
-        }
-      / {
-          flag'-Wno-switch',
-          flag'-Wno-switch-enum',
-        },
+            match {
+              opt'switch_warnings' {
+                match {
+                  Or(lvl'on', lvl'mandatory_default') {
+                    flag'-Wno-switch-enum',
+                  },
+                  Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
+                    flag'-Wswitch-enum',
+                  },
+                  { --[[lvl'off']]
+                    flag'-Wno-switch',
+                    flag'-Wno-switch-enum',
+                  }
+                }
+              },
+              {
+                flag'-Wno-switch',
+                flag'-Wno-switch-enum',
+              },
+            },
 
-        opt'covered_switch_default_warnings' {
-          lvl'off' { flag'-Wno-covered-switch-default' }
-        / flag'-Wcovered-switch-default'
-        },
+            opt'covered_switch_default_warnings' {
+              match {
+                lvl'off' { flag'-Wno-covered-switch-default' },
+                flag'-Wcovered-switch-default',
+              }
+            },
 
-        vers'>=3.9' {
-          cxx'-Wno-undefined-var-template',
+            vers'>=3.9' {
+              cxx'-Wno-undefined-var-template',
 
-          vers'>=5' {
-            cxx'-Wno-inconsistent-missing-destructor-override',
+              vers'>=5' {
+                cxx'-Wno-inconsistent-missing-destructor-override',
 
-            vers'>=9' {
-              cxx'-Wno-ctad-maybe-unsupported',
+                vers'>=9' {
+                  cxx'-Wno-ctad-maybe-unsupported',
 
-              vers'>=10' {
-                cxx'-Wno-c++20-compat',
+                  vers'>=10' {
+                    cxx'-Wno-c++20-compat',
 
-                vers'>=11' {
-                  cxx'-Wno-suggest-destructor-override',
+                    vers'>=11' {
+                      cxx'-Wno-suggest-destructor-override',
+                    }
+                  }
                 }
               }
             }
-          }
-        }
-      },
+          },
+        },
 
-      Or(lvl'strict', lvl'very_strict') {
-        gcc'>=8' { flag'-Wcast-align=strict' }
+        Or(lvl'strict', lvl'very_strict') {
+          gcc'>=8' { flag'-Wcast-align=strict' }
+        }
       }
     },
   },
 
   opt'diagnostics_show_template_tree' {
     Or(gcc'>=8', clang) {
-      lvl'on' { cxx'-fdiagnostics-show-template-tree' }
-    / cxx'-fno-diagnostics-show-template-tree',
+      match {
+        lvl'on' { cxx'-fdiagnostics-show-template-tree' },
+        cxx'-fno-diagnostics-show-template-tree',
+      }
     },
   },
 
   opt'elide_type' {
-    lvl'on' { gcc'>=8' { cxx'-felide-type' } }
-  / Or(gcc'>=8', clang'>=3.4') { cxx'-fno-elide-type', },
+    match {
+      lvl'on' { gcc'>=8' { cxx'-felide-type' } },
+      Or(gcc'>=8', clang'>=3.4') { cxx'-fno-elide-type', },
+    }
   },
 
   opt'exceptions' {
-    lvl'on' {
-      flag'-fexceptions',
-      clang_emcc {
-        flag'-sDISABLE_EXCEPTION_CATCHING=0',
-      }
+    match {
+      lvl'on' {
+        flag'-fexceptions',
+        clang_emcc {
+          flag'-sDISABLE_EXCEPTION_CATCHING=0',
+        }
+      },
+      flag'-fno-exceptions',
     }
-  / flag'-fno-exceptions',
   },
 
   opt'rtti' {
-    lvl'on' { cxx'-frtti' }
-  / cxx'-fno-rtti',
+    match {
+      lvl'on' { cxx'-frtti' },
+      cxx'-fno-rtti',
+    }
   },
 
   opt'var_init' {
@@ -467,52 +495,58 @@ Or(gcc, clang_like) {
 
   opt'windows_abi_compatibility_warnings' {
     Or(gcc'>=10', clang_like) {
-      lvl'on' { cxx'-Wmismatched-tags' }
-    / cxx'-Wno-mismatched-tags'
+      match {
+        lvl'on' { cxx'-Wmismatched-tags' },
+        cxx'-Wno-mismatched-tags'
+      }
     }
   },
 
   opt'warnings_as_error' {
-    lvl'on' { flag'-Werror', }
-  / lvl'basic' {
-      -- flag'-Werror=non-virtual-dtor',
-      flag'-Werror=return-type',
-      flag'-Werror=init-self',
-      gcc {
-        flag'-Werror=div-by-zero',
+    match {
+      lvl'on' { flag'-Werror', },
+      lvl'basic' {
+        -- flag'-Werror=non-virtual-dtor',
+        flag'-Werror=return-type',
+        flag'-Werror=init-self',
+        match {
+          gcc {
+            flag'-Werror=div-by-zero',
 
-        vers'>=5.1' {
-          flag'-Werror=array-bounds',
-          flag'-Werror=logical-op',
-          flag'-Werror=logical-not-parentheses',
-
-          vers'>=7' {
-            cxx'-Werror=literal-suffix',
-          }
-        }
-      }
-    / { --[[clang_like]]
-        flag'-Werror=array-bounds',
-        flag'-Werror=division-by-zero',
-
-        vers'>=3.4' {
-          flag'-Werror=logical-not-parentheses',
-
-          vers'>=3.6' {
-            cxx'-Werror=delete-incomplete',
-
-            vers'>=6' {
-              cxx'-Werror=user-defined-literals',
+            vers'>=5.1' {
+              flag'-Werror=array-bounds',
+              flag'-Werror=logical-op',
+              flag'-Werror=logical-not-parentheses',
 
               vers'>=7' {
-                cxx'-Werror=dynamic-class-memaccess',
+                cxx'-Werror=literal-suffix',
+              }
+            }
+          },
+          { --[[clang_like]]
+            flag'-Werror=array-bounds',
+            flag'-Werror=division-by-zero',
+
+            vers'>=3.4' {
+              flag'-Werror=logical-not-parentheses',
+
+              vers'>=3.6' {
+                cxx'-Werror=delete-incomplete',
+
+                vers'>=6' {
+                  cxx'-Werror=user-defined-literals',
+
+                  vers'>=7' {
+                    cxx'-Werror=dynamic-class-memaccess',
+                  }
+                }
               }
             }
           }
         }
-      }
+      },
+      flag'-Wno-error',
     }
-  / flag'-Wno-error',
   },
 
   opt'suggestions' {
@@ -534,208 +568,244 @@ Or(gcc, clang_like) {
 
   -- ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
   opt'sanitizers' {
-    lvl'off' {
-      fl'-fno-sanitize=all'
-    }
-  / clang_cl {
-      flag'-fsanitize=undefined',
-      flag'-fsanitize=address', -- memory, thread are mutually exclusive
-      flag'-fsanitize-address-use-after-scope',
-    }
-  / Or(clang, clang_emcc) {
-      vers'>=3.1' {
-        fl'-fsanitize=undefined',
-        fl'-fsanitize=address', -- memory, thread are mutually exclusive
+    match {
+      lvl'off' {
+        fl'-fno-sanitize=all'
+      },
+      clang_cl {
+        flag'-fsanitize=undefined',
+        flag'-fsanitize=address', -- memory, thread are mutually exclusive
         flag'-fsanitize-address-use-after-scope',
-        flag'-fno-omit-frame-pointer',
-        flag'-fno-optimize-sibling-calls',
-        clang {
-          vers'>=3.4' {
-            fl'-fsanitize=leak', -- requires the address sanitizer
-          },
-          vers'>=6' {
-            opt'stack_protector' {
-              -lvl'off' {
-                flag'-fsanitize-minimal-runtime',
-              }
-            }
-          },
-        },
-      }
-    }
-  / { --[[gcc]]
-      vers'>=4.8' {
-        fl'-fsanitize=address', -- memory, thread are mutually exclusive
-        flag'-fno-omit-frame-pointer',
-        flag'-fno-optimize-sibling-calls',
-
-        vers'>=4.9' {
+      },
+      Or(clang, clang_emcc) {
+        vers'>=3.1' {
           fl'-fsanitize=undefined',
-          fl'-fsanitize=leak', -- requires the address sanitizer
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          flag'-fsanitize-address-use-after-scope',
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
+          clang {
+            vers'>=3.4' {
+              fl'-fsanitize=leak', -- requires the address sanitizer
+            },
+            vers'>=6' {
+              opt'stack_protector' {
+                -lvl'off' {
+                  flag'-fsanitize-minimal-runtime',
+                }
+              }
+            },
+          },
+        }
+      },
+      { --[[gcc]]
+        vers'>=4.8' {
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
+
+          vers'>=4.9' {
+            fl'-fsanitize=undefined',
+            fl'-fsanitize=leak', -- requires the address sanitizer
+          }
         }
       }
     }
   },
 
   opt'control_flow' {
-    clang_emcc {
-      lvl'off' {
-        link'-sASSERTIONS=0',
-        link'-sSAFE_HEAP=0',
-      }
-    / {
-        -- Building with ASSERTIONS=1 causes STACK_OVERFLOW_CHECK=1
-        link'-sASSERTIONS=1',
-        link'-sDEMANGLE_SUPPORT=1',
-        -- ASan does not work with SAFE_HEAP
-        opt'sanitizers' {
-          -lvl'on' { link'-sSAFE_HEAP=1' },
+    match {
+      clang_emcc {
+        match {
+          lvl'off' {
+            link'-sASSERTIONS=0',
+            link'-sSAFE_HEAP=0',
+          },
+          {
+            -- Building with ASSERTIONS=1 causes STACK_OVERFLOW_CHECK=1
+            link'-sASSERTIONS=1',
+            link'-sDEMANGLE_SUPPORT=1',
+            -- ASan does not work with SAFE_HEAP
+            -has_opt'sanitizers':with(lvl'on') {
+              link'-sSAFE_HEAP=1',
+            },
+          }
         }
-      / link'-sSAFE_HEAP=1',
-      }
-    }
-  / lvl'off' {
-      gcc'>=8' {
-        flag'-fcf-protection=none'
-      }
-    / { -- clang, clang_cl
-        fl'-fno-sanitize=cfi',
-        flag'-fcf-protection=none',
-        flag'-fno-sanitize-cfi-cross-dso',
-      }
-    }
-  / Or(gcc'>=8', -gcc) {
-      -- gcc: flag'-mcet',
-      -- clang_cl: flag'-fsanitize-cfi-cross-dso',
-      lvl'branch' { flag'-fcf-protection=branch' }
-    / lvl'return' { flag'-fcf-protection=return' }
-    / flag'-fcf-protection=full',
+      },
+      lvl'off' {
+        match {
+          gcc'>=8' {
+            flag'-fcf-protection=none'
+          },
+          { -- clang, clang_cl
+            fl'-fno-sanitize=cfi',
+            flag'-fcf-protection=none',
+            flag'-fno-sanitize-cfi-cross-dso',
+          }
+        }
+      },
+      Or(gcc'>=8', -gcc) {
+        match {
+          -- gcc: flag'-mcet',
+          -- clang_cl: flag'-fsanitize-cfi-cross-dso',
+          lvl'branch' { flag'-fcf-protection=branch' },
+          lvl'return' { flag'-fcf-protection=return' },
+          flag'-fcf-protection=full',
+        },
 
-      And(lvl'allow_bugs', clang) {
-        fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
-        flag'-fvisibility=hidden',
-        fl'-flto',
+        And(lvl'allow_bugs', clang) {
+          fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
+          flag'-fvisibility=hidden',
+          fl'-flto',
+        }
       }
     }
   },
 
   opt'color' {
-    Or(gcc'>=4.9', -gcc --[[=clang_like]]) {
-      lvl'auto' { flag'-fdiagnostics-color=auto' }
-    / lvl'never' { flag'-fdiagnostics-color=never' }
-    / --[[lvl'always']] { flag'-fdiagnostics-color=always' },
+    Or(vers'>=4.9', -gcc --[[=clang_like]]) {
+      match {
+        lvl'auto' { flag'-fdiagnostics-color=auto' },
+        lvl'never' { flag'-fdiagnostics-color=never' },
+        --[[lvl'always']] { flag'-fdiagnostics-color=always' },
+      }
     },
   },
 
   opt'reproducible_build_warnings' {
     gcc'>=4.9' {
-      lvl'on' { flag'-Wdate-time' }
-    / flag'-Wno-date-time'
+      match {
+        lvl'on' { flag'-Wdate-time' },
+        flag'-Wno-date-time',
+      }
     }
   },
 
   opt'diagnostics_format' {
-    lvl'fixits' {
-      Or(gcc'>=7', And(-gcc, vers'>=5') --[[=clang_like'>=5']]) {
-        flag'-fdiagnostics-parseable-fixits'
+    match {
+      lvl'fixits' {
+        Or(gcc'>=7', And(-gcc, vers'>=5') --[[=clang_like'>=5']]) {
+          flag'-fdiagnostics-parseable-fixits'
+        }
+      },
+      lvl'patch' {
+        gcc'>=7' { flag'-fdiagnostics-generate-patch' }
+      },
+      { --[[lvl'print_source_range_info']]
+        clang { flag'-fdiagnostics-print-source-range-info' }
       }
-    }
-  / lvl'patch' {
-      gcc'>=7' { flag'-fdiagnostics-generate-patch' }
-    }
-  / { --[[lvl'print_source_range_info']]
-      clang { flag'-fdiagnostics-print-source-range-info' }
     }
   },
 
   opt'fix_compiler_error' {
-    lvl'on' {
-      gcc {
-        vers'>=4.7' {
-          cxx'-Werror=narrowing',
+    match {
+      lvl'on' {
+        gcc {
+          vers'>=4.7' {
+            cxx'-Werror=narrowing',
 
-          vers'>=7.1' {
-            cxx'-Werror=literal-suffix', -- no warning name before 7.1
+            vers'>=7.1' {
+              cxx'-Werror=literal-suffix', -- no warning name before 7.1
+            }
           }
-        }
+        },
+        flag'-Werror=write-strings'
       },
-      flag'-Werror=write-strings'
-    }
-  / -gcc --[[=clang_like]] {
-      flag'-Wno-error=c++11-narrowing',
-      flag'-Wno-reserved-user-defined-literal',
+      -gcc --[[=clang_like]] {
+        flag'-Wno-error=c++11-narrowing',
+        flag'-Wno-reserved-user-defined-literal',
+      }
     }
   },
 
   opt'lto' {
-    lvl'off' { fl'-fno-lto' }
-  / gcc {
-      fl'-flto',
-      vers'>=5' {
-        opt'warnings' {
-          -lvl'off' { fl'-flto-odr-type-merging' }, -- increases size of LTO object files, but enables diagnostics about ODR violations
-        },
-        lvl'fat' { flag'-ffat-lto-objects', }
-      / lvl'thin' { link'-fuse-linker-plugin' }
-      }
-    }
-  / { --[[clang_like]]
-      clang_cl {
-        -- LTO require -fuse-ld=lld (link by default)
-        link'-fuse-ld=lld',
+    match {
+      lvl'off' { fl'-fno-lto' },
+      gcc {
+        fl'-flto',
+        vers'>=5' {
+          opt'warnings' {
+            -- increases size of LTO object files, but enables diagnostics about ODR violations
+            -lvl'off' { fl'-flto-odr-type-merging' },
+          },
+          match {
+            lvl'fat' { flag'-ffat-lto-objects', },
+            lvl'thin' { link'-fuse-linker-plugin' },
+          }
+        }
       },
-      And(Or(lvl'thin', lvl'on'), vers'>=6') {
-        fl'-flto=thin'
+      { --[[clang_like]]
+        clang_cl {
+          -- LTO require -fuse-ld=lld (link by default)
+          link'-fuse-ld=lld',
+        },
+        match {
+          And(Or(lvl'thin', lvl'on'), vers'>=6') {
+            fl'-flto=thin'
+          },
+          fl'-flto',
+        }
       }
-    / fl'-flto',
     }
   },
 
   opt'shadow_warnings' {
-    lvl'off' {
-      flag'-Wno-shadow',
-      Or(clang_cl, clang'>=8') {
-        flag'-Wno-shadow-field'
-      }
-    }
-  / lvl'on' { flag'-Wshadow' }
-  / lvl'all' {
-      gcc { flag'-Wshadow' }
-    / flag'-Wshadow-all',
-    }
-  / gcc'>=7.1' {
-      lvl'local' {
-        flag'-Wshadow=local'
-      }
-    / { --[[lvl'compatible_local']]
-        flag'-Wshadow=compatible-local'
+    match {
+      lvl'off' {
+        flag'-Wno-shadow',
+        Or(clang_cl, clang'>=8') {
+          flag'-Wno-shadow-field'
+        }
+      },
+      lvl'on' { flag'-Wshadow' },
+      lvl'all' {
+        match {
+          gcc { flag'-Wshadow' },
+          flag'-Wshadow-all',
+        }
+      },
+      gcc'>=7.1' {
+        match {
+          lvl'local' {
+            flag'-Wshadow=local'
+          },
+          { --[[lvl'compatible_local']]
+            flag'-Wshadow=compatible-local'
+          }
+        }
       }
     }
   },
 
   opt'float_sanitizers' {
     Or(gcc'>=5', clang'>=5', clang_cl) {
-      lvl'on' {
-        flag'-fsanitize=float-divide-by-zero',
-        flag'-fsanitize=float-cast-overflow',
+      match {
+        lvl'on' {
+          flag'-fsanitize=float-divide-by-zero',
+          flag'-fsanitize=float-cast-overflow',
+        },
+        {
+          flag'-fno-sanitize=float-divide-by-zero',
+          flag'-fno-sanitize=float-cast-overflow',
+        },
       }
-    / {
-        flag'-fno-sanitize=float-divide-by-zero',
-        flag'-fno-sanitize=float-cast-overflow',
-      },
     },
   },
 
   opt'integer_sanitizers' {
-    Or(clang'>=5', clang_cl) {
-      lvl'on' { flag'-fsanitize=integer', }
-    / flag'-fno-sanitize=integer',
-    }
-  / gcc'>=4.9' {
-      lvl'on' {
-        flag'-ftrapv',
-        flag'-fsanitize=undefined',
+    match {
+      Or(clang'>=5', clang_cl) {
+        match {
+          lvl'on' { flag'-fsanitize=integer', },
+          flag'-fno-sanitize=integer',
+        }
       },
+      gcc'>=4.9' {
+        lvl'on' {
+          flag'-ftrapv',
+          flag'-fsanitize=undefined',
+        },
+      }
     }
   },
 
@@ -743,23 +813,25 @@ Or(gcc, clang_like) {
 
 opt'conversion_warnings' {
   Or(gcc, clang_like, icc) {
-    lvl'on' {
-      flag'-Wconversion',
-      flag'-Wsign-compare',
-      flag'-Wsign-conversion',
+    match {
+      lvl'on' {
+        flag'-Wconversion',
+        flag'-Wsign-compare',
+        flag'-Wsign-conversion',
+      },
+      lvl'conversion'{
+        flag'-Wconversion',
+      },
+      lvl'sign'{
+        flag'-Wsign-compare',
+        flag'-Wsign-conversion',
+      },
+      { --[[lvl'off']]
+        flag'-Wno-conversion',
+        flag'-Wno-sign-compare',
+        flag'-Wno-sign-conversion',
+      },
     }
-  / lvl'conversion'{
-      flag'-Wconversion',
-    }
-  / lvl'sign'{
-      flag'-Wsign-compare',
-      flag'-Wsign-conversion',
-    }
-  / { --[[lvl'off']]
-      flag'-Wno-conversion',
-      flag'-Wno-sign-compare',
-      flag'-Wno-sign-conversion',
-    },
   },
 },
 
@@ -769,23 +841,26 @@ Or(gcc, clang, clang_emcc) {
       lvl'assert_as_exception' {
         cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
       },
-      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
-        clang {
-          -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
-          Or(vers'>=8', lvl'allow_broken_abi_and_bugs') {
-            cxx'-D_LIBCPP_DEBUG=1',
+
+      match {
+        Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
+          clang {
+            -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
+            Or(vers'>=8', lvl'allow_broken_abi_and_bugs') {
+              cxx'-D_LIBCPP_DEBUG=1',
+            },
           },
+          cxx'-D_GLIBCXX_DEBUG',
         },
-        cxx'-D_GLIBCXX_DEBUG',
-      }
-    / cxx'-D_GLIBCXX_ASSERTIONS',
+        cxx'-D_GLIBCXX_ASSERTIONS',
+      },
 
       opt'pedantic' {
         -lvl'off' {
           cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
         },
       },
-    },
+    }
   },
 
   opt'pedantic' {
@@ -800,30 +875,34 @@ Or(gcc, clang, clang_emcc) {
 
 clang_emcc {
   opt'optimization' {
-    lvl'0' { fl'-O0' }
-  / lvl'g' { fl'-Og' }
-  / lvl'1' { fl'-O1' }
-  / lvl'2' { fl'-O2' }
-  / lvl'3' { fl'-O3' }
-  / lvl'fast' {
-      fl'-O3',
-      -- The LLVM wasm backend avoids traps by adding more code around each possible trap
-      -- (basically clamping the value if it would trap).
-      -- That code may not run in older VMs, though.
-      fl'-mnontrapping-fptoint',
+    match {
+      lvl'0' { fl'-O0' },
+      lvl'g' { fl'-Og' },
+      lvl'1' { fl'-O1' },
+      lvl'2' { fl'-O2' },
+      lvl'3' { fl'-O3' },
+      lvl'fast' {
+        fl'-O3',
+        -- The LLVM wasm backend avoids traps by adding more code around each possible trap
+        -- (basically clamping the value if it would trap).
+        -- That code may not run in older VMs, though.
+        fl'-mnontrapping-fptoint',
+      },
+      lvl'size' { fl'-Os' },
+      { --[[lvl'z']]
+        fl'-Oz'
+        -- -- This greatly reduces the size of the support JavaScript code
+        -- -- Note that this increases compile time significantly.
+        -- fl'--closure 1',
+      },
     }
-  / lvl'size' { fl'-Os' }
-  / { --[[lvl'z']]
-      fl'-Oz'
-      -- -- This greatly reduces the size of the support JavaScript code
-      -- -- Note that this increases compile time significantly.
-      -- fl'--closure 1',
-    },
   },
 
   opt'debug' {
-    lvl'off' { flag'-g0' }
-  / flag'-g',
+    match {
+      lvl'off' { flag'-g0' },
+      flag'-g',
+    }
   },
 }
 
@@ -843,88 +922,110 @@ Or(gcc, clang) {
   },
 
   opt'debug' {
-    lvl'off' { flag'-g0' }
-  / lvl'gdb' { flag'-ggdb' }
-  / clang {
-      lvl'line_tables_only' { flag'-gline-tables-only' }
-    / lvl'lldb' { flag'-glldb' }
-    / lvl'sce' { flag'-gsce' }
-    / flag'-g'
+    match {
+      lvl'off' { flag'-g0' },
+      lvl'gdb' { flag'-ggdb' },
+      clang {
+        match {
+          lvl'line_tables_only' { flag'-gline-tables-only' },
+          lvl'lldb' { flag'-glldb' },
+          lvl'sce' { flag'-gsce' },
+          flag'-g',
+        }
+      },
+      flag'-g',
+      -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
     }
-  / flag'-g',
-    -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
   },
 
   opt'optimization' {
-    lvl'0' { flag'-O0' }
-  / lvl'g' { flag'-Og' }
-  / {
-      link'-Wl,-O1',
-      lvl'1' { flag'-O1' }
-    / lvl'2' { flag'-O2' }
-    / lvl'3' { flag'-O3' }
-    / lvl'size' { flag'-Os' }
-    / lvl'z' { clang { flag'-Oz' } / flag'-Os' }
-    / --[[lvl'fast']] { flag'-Ofast' }
+    match {
+      lvl'0' { flag'-O0' },
+      lvl'g' { flag'-Og' },
+      {
+        link'-Wl,-O1',
+        match {
+          lvl'1' { flag'-O1' },
+          lvl'2' { flag'-O2' },
+          lvl'3' { flag'-O3' },
+          lvl'size' { flag'-Os' },
+          lvl'z' { clang { flag'-Oz' } / flag'-Os' },
+          --[[lvl'fast']] { flag'-Ofast' }
+        }
+      }
     }
   },
 
   opt'cpu' {
-    lvl'generic' { fl'-mtune=generic' }
-  / { fl'-march=native', fl'-mtune=native', }
+    match {
+      lvl'generic' { fl'-mtune=generic' },
+      { fl'-march=native', fl'-mtune=native', }
+    }
   },
 
   opt'linker' {
-    lvl'native' {
-      gcc { link'-fuse-ld=gold' }
-    / link'-fuse-ld=lld'
-    }
-  / lvl'bfd' {
-      link'-fuse-ld=bfd'
-    }
-  / Or(lvl'gold', gcc'<9') {
-      link'-fuse-ld=gold'
-    }
-  / opt'lto' {
-      -- -flto is incompatible with -fuse-ld=lld
-      And(-lvl'off', gcc) {
+    match {
+      lvl'native' {
+        match {
+          gcc { link'-fuse-ld=gold' },
+          link'-fuse-ld=lld'
+        }
+      },
+      lvl'bfd' {
+        link'-fuse-ld=bfd'
+      },
+      Or(lvl'gold', gcc'<9') {
         link'-fuse-ld=gold'
-      }
-    / link'-fuse-ld=lld',
+      },
+      opt'lto' {
+        match {
+          -- -flto is incompatible with -fuse-ld=lld
+          And(-lvl'off', gcc) {
+            link'-fuse-ld=gold'
+          },
+          link'-fuse-ld=lld',
+        }
+      },
+      link'-fuse-ld=lld',
     }
-  / link'-fuse-ld=lld',
   },
 
   opt'whole_program' {
-    lvl'off' {
-      flag'-fno-whole-program',
-      clang'>=3.9' { fl'-fno-whole-program-vtables' }
-    }
-  / {
-      ld64 {
-        link'-Wl,-dead_strip',
-        link'-Wl,-S', -- Remove debug information
-      }
-    / {
-        link'-s',
-        lvl'strip_all'{
-          link'-Wl,--gc-sections', -- Remove unused sections
-          link'-Wl,--strip-all',
-        }
+    match {
+      lvl'off' {
+        flag'-fno-whole-program',
+        clang'>=3.9' { fl'-fno-whole-program-vtables' }
       },
-
-      gcc {
-        fl'-fwhole-program'
-      }
-    / clang {
-        vers'>=3.9' {
-          opt'lto' {
-            -lvl'off' {
-              fl'-fwhole-program-vtables'
-            }
+      {
+        match {
+          ld64 {
+            link'-Wl,-dead_strip',
+            link'-Wl,-S', -- Remove debug information
           },
-          vers'>=7' {
-            fl'-fforce-emit-vtables',
+          {
+            link'-s',
+            lvl'strip_all'{
+              link'-Wl,--gc-sections', -- Remove unused sections
+              link'-Wl,--strip-all',
+            }
+          }
+        },
+
+        match {
+          gcc {
+            fl'-fwhole-program'
+          },
+          clang {
+            vers'>=3.9' {
+              opt'lto' {
+                -lvl'off' {
+                  fl'-fwhole-program-vtables'
+                }
+              },
+              vers'>=7' {
+                fl'-fforce-emit-vtables',
+              }
+            }
           }
         }
       }
@@ -932,148 +1033,175 @@ Or(gcc, clang) {
   },
 
   opt'stack_protector' {
-    lvl'off' {
-      fl'-Wno-stack-protector',
-      flag'-U_FORTIFY_SOURCE'
-    }
-  / {
-      flag'-D_FORTIFY_SOURCE=2',
-      flag'-Wstack-protector',
-      lvl'strong' {
-        gcc {
-          vers'>=4.9' {
-            fl'-fstack-protector-strong',
-            vers'>=8' {
-              fl'-fstack-clash-protection'
+    match {
+      lvl'off' {
+        fl'-Wno-stack-protector',
+        flag'-U_FORTIFY_SOURCE'
+      },
+      {
+        flag'-D_FORTIFY_SOURCE=2',
+        flag'-Wstack-protector',
+        match {
+          lvl'strong' {
+            match {
+              gcc {
+                vers'>=4.9' {
+                  fl'-fstack-protector-strong',
+                  vers'>=8' {
+                    fl'-fstack-clash-protection'
+                  }
+                }
+              },
+              clang {
+                fl'-fstack-protector-strong',
+                fl'-fsanitize=safe-stack',
+                vers'>=11' {
+                  fl'-fstack-clash-protection'
+                }
+              }
             }
-          }
+          },
+          lvl'all' {
+            fl'-fstack-protector-all',
+            match {
+              gcc'>=8' {
+                fl'-fstack-clash-protection'
+              },
+              clang {
+                fl'-fsanitize=safe-stack',
+                vers'>=11' {
+                  fl'-fstack-clash-protection'
+                }
+              }
+            }
+          },
+          fl'-fstack-protector',
+        },
+
+        -- ShadowCallStack is an instrumentation pass, currently only implemented for aarch64
+        -- ShadowCallStack is intended to be a stronger alternative to -fstack-protector
+        -- On aarch64, you also need to pass -ffixed-x18 unless your target already reserves x18.
+        clang {
+          fl'-fsanitize=shadow-call-stack',
         }
-      / clang {
-          fl'-fstack-protector-strong',
-          fl'-fsanitize=safe-stack',
-          vers'>=11' {
-            fl'-fstack-clash-protection'
-          }
-        }
-      } /
-      lvl'all' {
-        fl'-fstack-protector-all',
-        gcc'>=8' {
-          fl'-fstack-clash-protection'
-        }
-      / clang {
-          fl'-fsanitize=safe-stack',
-          vers'>=11' {
-            fl'-fstack-clash-protection'
-          }
-        }
-      }
-    / fl'-fstack-protector',
-      -- ShadowCallStack is an instrumentation pass, currently only implemented for aarch64
-      -- ShadowCallStack is intended to be a stronger alternative to -fstack-protector
-      -- On aarch64, you also need to pass -ffixed-x18 unless your target already reserves x18.
-      clang {
-        fl'-fsanitize=shadow-call-stack',
-      }
-    },
+      },
+    }
   },
 
   opt'relro' {
-    lvl'off' { link'-Wl,-z,norelro', }
-  / lvl'on'  { link'-Wl,-z,relro', }
-  / { --[[lvl'full']]
-      link'-Wl,-z,relro,-z,now,-z,noexecstack',
-      opt'linker' {
-        -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
-          link'-Wl,-z,separate-code'
+    match {
+      lvl'off' { link'-Wl,-z,norelro', },
+      lvl'on'  { link'-Wl,-z,relro', },
+      { --[[lvl'full']]
+        link'-Wl,-z,relro,-z,now,-z,noexecstack',
+        opt'linker' {
+          -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
+            link'-Wl,-z,separate-code'
+          }
         }
       }
-    },
+    }
   },
 
   opt'pie' {
-    lvl'off' { link'-no-pic' }
-  / lvl'on'  { link'-pie' }
-  / lvl'fpie'{ flag'-fpie' }
-  / lvl'fpic'{ flag'-fpic' }
-  / lvl'fPIE'{ flag'-fPIE' }
-  / lvl'fPIC'{ flag'-fPIC' }
-  / --[[lvl'static']] { link'-static-pie' }
+    match {
+      lvl'off' { link'-no-pic' },
+      lvl'on'  { link'-pie' },
+      lvl'fpie'{ flag'-fpie' },
+      lvl'fpic'{ flag'-fpic' },
+      lvl'fPIE'{ flag'-fPIE' },
+      lvl'fPIC'{ flag'-fPIC' },
+      --[[lvl'static']] { link'-static-pie' }
+    }
   },
 
   opt'other_sanitizers' {
-    lvl'thread' { flag'-fsanitize=thread', }
-  / lvl'memory' {
-      clang'>=5' {
-        flag'-fsanitize=memory',
-      }
-    }
-  / lvl'pointer' {
-      gcc'>=8' {
-        -- By default the check is disabled at run time.
-        -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
-        -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
-        -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
-        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
-        -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
-        flag'-fsanitize=pointer-compare',
-        flag'-fsanitize=pointer-subtract',
+    match {
+      lvl'thread' { flag'-fsanitize=thread', },
+      lvl'memory' {
+        clang'>=5' {
+          flag'-fsanitize=memory',
+        }
+      },
+      lvl'pointer' {
+        gcc'>=8' {
+          -- By default the check is disabled at run time.
+          -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
+          -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
+          -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
+          -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
+          -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
+          flag'-fsanitize=pointer-compare',
+          flag'-fsanitize=pointer-subtract',
+        }
       }
     }
   },
 
   opt'noexcept_warnings' {
     gcc'>=4.9' {
-      lvl'on' { cxx'-Wnoexcept' }
-    / { cxx'-Wno-noexcept' }
+      match {
+        lvl'on' { cxx'-Wnoexcept' },
+        { cxx'-Wno-noexcept' }
+      }
     }
   },
 
   opt'analyzer' {
     gcc'>=10' {
-      lvl'off' {
-        flag'-fno-analyzer'
+      match {
+        lvl'off' {
+          flag'-fno-analyzer'
+        },
+        {
+          flag'-fanalyzer',
+          lvl'taint' {
+            flag'-fanalyzer-checker=taint'
+          },
+
+          opt'analyzer_too_complex_warning' {
+            match {
+              lvl'on' {
+                flag'-Wanalyzer-too-complex'
+              },
+              { --[[lvl'off']]
+                flag'-Wno-analyzer-too-complex'
+              }
+            }
+          },
+
+          opt'analyzer_verbosity' {
+            match {
+              lvl'0' { flag'-fanalyzer-verbosity=0' },
+              lvl'1' { flag'-fanalyzer-verbosity=1' },
+              lvl'2' { flag'-fanalyzer-verbosity=2' },
+              --[[lvl'3']] { flag'-fanalyzer-verbosity=3' }
+            }
+          },
+        },
       }
-    / {
-        flag'-fanalyzer',
-        lvl'taint' {
-          flag'-fanalyzer-checker=taint'
-        },
-
-        opt'analyzer_too_complex_warning' {
-          lvl'on' {
-            flag'-Wanalyzer-too-complex'
-          }
-        / { --[[lvl'off']]
-            flag'-Wno-analyzer-too-complex'
-          }
-        },
-
-        opt'analyzer_verbosity' {
-          lvl'0' { flag'-fanalyzer-verbosity=0' }
-        / lvl'1' { flag'-fanalyzer-verbosity=1' }
-        / lvl'2' { flag'-fanalyzer-verbosity=2' }
-        / --[[lvl'3']] { flag'-fanalyzer-verbosity=3' }
-        },
-      },
     }
   },
 },
 
 lld_link {
   opt'lto' {
-    lvl'off' { flag'-fno-lto', }
-  / Or(lvl'thin', lvl'on') { flag'-flto=thin' }
-  / fl'-flto',
+    match {
+      lvl'off' { flag'-fno-lto' },
+      Or(lvl'thin', lvl'on') { flag'-flto=thin' },
+      fl'-flto',
+    }
   },
 
   opt'whole_program' {
-    lvl'off' { flag'-fno-whole-program' }
-  / opt'lto'{
-      -lvl'off' {
-        fl'-fwhole-program-vtables'
+    match {
+      lvl'off' { flag'-fno-whole-program' },
+      opt'lto' {
+        -lvl'off' {
+          fl'-fwhole-program-vtables'
+        }
       }
-    },
+    }
   },
 },
 
@@ -1082,31 +1210,37 @@ lld_link {
 -- https://clang.llvm.org/docs/UsersManual.html#id9
 -- or clang --driver-mode=cl -help
 Or(msvc, clang_cl, icl) {
-  opt'exceptions'{
-    lvl'on' {
-      flag'/EHsc',
-      flag'/D_HAS_EXCEPTIONS=1',
-    }
-  / {
-      flag'/EHs-',
-      flag'/D_HAS_EXCEPTIONS=0',
+  opt'exceptions' {
+    match {
+      lvl'on' {
+        flag'/EHsc',
+        flag'/D_HAS_EXCEPTIONS=1',
+      },
+      {
+        flag'/EHs-',
+        flag'/D_HAS_EXCEPTIONS=0',
+      }
     }
   },
 
   opt'rtti' {
-    lvl'on' {
-      flag'/GR'
+    match {
+      lvl'on' {
+        flag'/GR'
+      },
+      flag'/GR-'
     }
-  / flag'/GR-'
   },
 
   opt'stl_debug' {
-    lvl'off' {
-      flag'/D_HAS_ITERATOR_DEBUGGING=0'
-    }
-  / {
-      flag'/D_DEBUG', -- set by /MDd /MTd or /LDd
-      flag'/D_HAS_ITERATOR_DEBUGGING=1',
+    match {
+      lvl'off' {
+        flag'/D_HAS_ITERATOR_DEBUGGING=0'
+      },
+      {
+        flag'/D_DEBUG', -- set by /MDd /MTd or /LDd
+        flag'/D_HAS_ITERATOR_DEBUGGING=1',
+      }
     }
   },
 
@@ -1117,47 +1251,57 @@ Or(msvc, clang_cl, icl) {
   -- msvc and clang_cl
   -icl {
     opt'debug' {
-      lvl'off' { flag'/DEBUG:NONE' }
-    / {
-        flag'/RTC1',
-        flag'/Od',
-        lvl'on' { flag'/DEBUG' } -- /DEBUG:FULL
-      / lvl'line_tables_only' {
-          clang_cl { flag'-gline-tables-only' },
-          flag'/DEBUG:FASTLINK'
-        },
+      match {
+        lvl'off' { flag'/DEBUG:NONE' },
+        {
+          flag'/RTC1',
+          flag'/Od',
+          match {
+            lvl'on' { flag'/DEBUG' }, -- /DEBUG:FULL
+            lvl'line_tables_only' {
+              clang_cl { flag'-gline-tables-only' },
+              flag'/DEBUG:FASTLINK'
+            }
+          },
 
-        opt'optimization' {
-          lvl'g' { flag'/Zi' }
-        -- /ZI cannot be used with /GL
-        / opt'whole_program' {
-            lvl'off' { flag'/ZI' } / flag'/Zi'
+          match {
+            opt'optimization' {
+              match {
+                lvl'g' { flag'/Zi' },
+                -- /ZI cannot be used with /GL
+                opt'whole_program' {
+                  lvl'off' { flag'/ZI' } / flag'/Zi'
+                },
+                flag'/ZI'
+              }
+            },
+            -- /ZI cannot be used with /GL
+            opt'whole_program' {
+              lvl'off' { flag'/ZI' } / flag'/Zi'
+            },
+            flag'/ZI',
           }
-        / flag'/ZI'
         }
-      -- /ZI cannot be used with /GL
-      / opt'whole_program' {
-          lvl'off' { flag'/ZI' } / flag'/Zi'
-        }
-      / flag'/ZI',
       }
     },
 
     opt'optimization' {
-      lvl'0' {
-        flag'/Ob0',
-        flag'/Od',
-        flag'/Oi-',
-        flag'/Oy-',
+      match {
+        lvl'0' {
+          flag'/Ob0',
+          flag'/Od',
+          flag'/Oi-',
+          flag'/Oy-',
+        },
+        lvl'g' { flag'/Ob1' },
+        -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
+        -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
+        lvl'1' { flag'/O1', },
+        lvl'2' { flag'/O2', },
+        lvl'3' { flag'/O2', },
+        Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' },
+        --[[lvl'fast']] { flag'/O2', flag'/fp:fast' }
       }
-    / lvl'g' { flag'/Ob1' }
-    -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
-    -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-    / lvl'1' { flag'/O1', }
-    / lvl'2' { flag'/O2', }
-    / lvl'3' { flag'/O2', }
-    / Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' }
-    / --[[lvl'fast']] { flag'/O2', flag'/fp:fast' }
     },
 
     opt'linker' {
@@ -1173,16 +1317,18 @@ Or(msvc, clang_cl, icl) {
     },
 
     opt'whole_program' {
-      lvl'off' {
-        flag'/GL-'
-      }
-    / {
-        flag'/GL',
-        flag'/Gw',
-        link'/LTCG',
-        lvl'strip_all'{
-          link'/OPT:REF',
+      match {
+        lvl'off' {
+          flag'/GL-'
         },
+        {
+          flag'/GL',
+          flag'/Gw',
+          link'/LTCG',
+          lvl'strip_all'{
+            link'/OPT:REF',
+          },
+        }
       }
     },
 
@@ -1195,21 +1341,25 @@ Or(msvc, clang_cl, icl) {
     },
 
     opt'stack_protector' {
-      lvl'off' {
-        flag'/GS-',
-      }
-    / {
-        flag'/GS',
-        flag'/sdl',
-        lvl'strong' {
-          flag'/RTC1', -- /RTCsu
-          msvc'>=16.7' {
-            flag'/guard:ehcont',
-            link'/CETCOMPAT',
-          },
+      match {
+        lvl'off' {
+          flag'/GS-',
+        },
+        {
+          flag'/GS',
+          flag'/sdl',
+          match {
+            lvl'strong' {
+              flag'/RTC1', -- /RTCsu
+              msvc'>=16.7' {
+                flag'/guard:ehcont',
+                link'/CETCOMPAT',
+              },
+            },
+            lvl'all' { flag'/RTC1', flag'/RTCc', },
+          }
         }
-      / lvl'all' { flag'/RTC1', flag'/RTCc', },
-      },
+      }
     },
   }
 },
@@ -1242,246 +1392,278 @@ msvc {
   },
 
   opt'msvc_crt_secure_no_warnings' {
-    lvl'on' { flag'/D_CRT_SECURE_NO_WARNINGS=1' }
-  / lvl'off' { flag'/U_CRT_SECURE_NO_WARNINGS' }
+    match {
+      lvl'on' { flag'/D_CRT_SECURE_NO_WARNINGS=1' },
+      lvl'off' { flag'/U_CRT_SECURE_NO_WARNINGS' }
+    }
   },
 
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
   vers'<15.16' {
     reset_opt'msvc_isystem'
   },
-  opt'msvc_isystem' {
-    lvl'external_as_include_system_flag' {
-      if_else(vers'<16.10', function(b)
-        return act('msvc_external', {
-          cxx={
-            '/external:env:INCLUDE',
-            '/external:W0',
-            b and '/experimental:external',
-          },
-          SYSTEM_FLAG='/external:I',
-        })
-      end)
-    }
-  / {
-      vers'<16.10' {
-        flag'/experimental:external'
-      },
-      flag'/external:W0',
-
-      lvl'anglebrackets' {
-        flag'/external:anglebrackets',
-      }
-    -- include_and_caexcludepath
-    / {
-        flag'/external:env:INCLUDE',
-        flag'/external:env:CAExcludePath',
-      },
-    },
-
-    opt'msvc_isystem_with_template_from_non_external' {
-      lvl'off' {
-        flag'/external:template',
-      } / {
-        flag'/external:template-',
-      }
-    },
-
-    opt'warnings' {
-      lvl'off' {
-        flag'/W0'
-      }
-    / {
-        -- /external:... ignores warnings start with C47XX
-        flag'/wd4710', -- Function not inlined
-        flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-
-        vers'<19.21' {
-          flag'/wd4774', -- format not a string literal
+  match {
+    opt'msvc_isystem' {
+      match {
+        lvl'external_as_include_system_flag' {
+          if_else(vers'<16.10', function(b)
+            return act('msvc_external', {
+              cxx={
+                '/external:env:INCLUDE',
+                '/external:W0',
+                b and '/experimental:external',
+              },
+              SYSTEM_FLAG='/external:I',
+            })
+          end)
         },
+        {
+          vers'<16.10' {
+            flag'/experimental:external'
+          },
+          flag'/external:W0',
 
+          match {
+            lvl'anglebrackets' {
+              flag'/external:anglebrackets',
+            },
+            -- include_and_caexcludepath
+            {
+              flag'/external:env:INCLUDE',
+              flag'/external:env:CAExcludePath',
+            },
+          }
+        }
+      },
+
+      opt'msvc_isystem_with_template_from_non_external' {
+        match {
+          lvl'off' {
+            flag'/external:template',
+          }, {
+            flag'/external:template-',
+          }
+        }
+      },
+
+      opt'warnings' {
+        match {
+          lvl'off' {
+            flag'/W0'
+          },
+          {
+            -- /external:... ignores warnings start with C47XX
+            flag'/wd4710', -- Function not inlined
+            flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+
+            vers'<19.21' {
+              flag'/wd4774', -- format not a string literal
+            },
+
+            match {
+              lvl'on' {
+                flag'/W4',
+                flag'/wd4514', -- Unreferenced inline function has been removed
+              },
+              -- strict / very_strict
+              {
+                flag'/Wall',
+
+                flag'/wd4514', -- Unreferenced inline function has been removed
+
+                flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
+                flag'/wd4355', -- 'this' used in base member initializing list
+                flag'/wd4548', -- Expression before comma has no effect
+                flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
+                flag'/wd4820', -- Added padding to members
+                flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
+
+                flag'/wd4464', -- relative include path contains '..'
+                flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
+                flag'/wd5045', -- Spectre mitigation
+
+                lvl'strict' {
+                  flag'/wd4583', -- Destructor not implicitly called
+                  flag'/wd4619', -- Unknown warning number
+                },
+              }
+            }
+          }
+        }
+      },
+
+      opt'switch_warnings' {
+        match {
+          Or(lvl'on', lvl'mandatory_default') {
+            flag'/w14062',
+          },
+          Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
+            flag'/w14061',
+            flag'/w14062',
+          },
+          { --[[lvl'off']]
+            flag'/wd4061',
+            flag'/wd4062',
+          }
+        }
+      },
+    },
+    opt'warnings' {
+      match {
+        lvl'off' { flag'/W0' },
         lvl'on' {
           flag'/W4',
           flag'/wd4514', -- Unreferenced inline function has been removed
-        }
-      / -- strict / very_strict
+          flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+        },
+        -- strict / very_strict
         {
           flag'/Wall',
 
-          flag'/wd4514', -- Unreferenced inline function has been removed
-
-          flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
+          -- Warnings in MSVC's std
           flag'/wd4355', -- 'this' used in base member initializing list
+          flag'/wd4514', -- Unreferenced inline function has been removed
           flag'/wd4548', -- Expression before comma has no effect
+          flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
           flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
+          flag'/wd4625', -- Copy constructor implicitly deleted
+          flag'/wd4626', -- Copy assignment operator implicitly deleted
+          flag'/wd4668', -- Preprocessor macro not defined
+          flag'/wd4710', -- Function not inlined
+          flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+          vers'<19.21' {
+            flag'/wd4774', -- format not a string literal
+          },
           flag'/wd4820', -- Added padding to members
+          flag'/wd5026', -- Move constructor implicitly deleted
+          flag'/wd5027', -- Move assignment operator implicitly deleted
           flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
 
+          -- Warnings in other libs
           flag'/wd4464', -- relative include path contains '..'
           flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
           flag'/wd5045', -- Spectre mitigation
 
           lvl'strict' {
+            flag'/wd4061', -- Enum value in a switch not explicitly handled by a case label
+            flag'/wd4266', -- No override available (function is hidden)
             flag'/wd4583', -- Destructor not implicitly called
             flag'/wd4619', -- Unknown warning number
+            flag'/wd4623', -- Default constructor implicitly deleted
+            flag'/wd5204', -- Class with virtual functions but no virtual destructor
           },
         }
       }
-    },
-
-    opt'switch_warnings' {
-      Or(lvl'on', lvl'mandatory_default') {
-        flag'/w14062',
-      }
-    / Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
-        flag'/w14061',
-        flag'/w14062',
-      }
-    / { --[[lvl'off']]
-        flag'/wd4061',
-        flag'/wd4062',
-      }
-    },
-  } /
-  opt'warnings' {
-    lvl'off' { flag'/W0' }
-  / lvl'on' {
-      flag'/W4',
-      flag'/wd4514', -- Unreferenced inline function has been removed
-      flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-    }
-  -- strict / very_strict
-  / {
-      flag'/Wall',
-
-      -- Warnings in MSVC's std
-      flag'/wd4355', -- 'this' used in base member initializing list
-      flag'/wd4514', -- Unreferenced inline function has been removed
-      flag'/wd4548', -- Expression before comma has no effect
-      flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
-      flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
-      flag'/wd4625', -- Copy constructor implicitly deleted
-      flag'/wd4626', -- Copy assignment operator implicitly deleted
-      flag'/wd4668', -- Preprocessor macro not defined
-      flag'/wd4710', -- Function not inlined
-      flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-      vers'<19.21' {
-        flag'/wd4774', -- format not a string literal
-      },
-      flag'/wd4820', -- Added padding to members
-      flag'/wd5026', -- Move constructor implicitly deleted
-      flag'/wd5027', -- Move assignment operator implicitly deleted
-      flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
-
-      -- Warnings in other libs
-      flag'/wd4464', -- relative include path contains '..'
-      flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
-      flag'/wd5045', -- Spectre mitigation
-
-      lvl'strict' {
-        flag'/wd4061', -- Enum value in a switch not explicitly handled by a case label
-        flag'/wd4266', -- No override available (function is hidden)
-        flag'/wd4583', -- Destructor not implicitly called
-        flag'/wd4619', -- Unknown warning number
-        flag'/wd4623', -- Default constructor implicitly deleted
-        flag'/wd5204', -- Class with virtual functions but no virtual destructor
-      },
     }
   },
 
   opt'conversion_warnings' {
-    lvl'on' {
-      flag'/w14244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
-      flag'/w14245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
-      flag'/w14388', -- Signed/unsigned mismatch (equality comparison)
-      flag'/w14365', -- Signed/unsigned mismatch (implicit conversion)
+    match {
+      lvl'on' {
+        flag'/w14244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
+        flag'/w14245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
+        flag'/w14388', -- Signed/unsigned mismatch (equality comparison)
+        flag'/w14365', -- Signed/unsigned mismatch (implicit conversion)
+      },
+      lvl'conversion'{
+        flag'/w14244',
+        flag'/w14365',
+      },
+      lvl'sign'{
+        flag'/w14388',
+        flag'/w14245',
+      },
+      {
+        flag'/wd4244',
+        flag'/wd4365',
+        flag'/wd4388',
+        flag'/wd4245',
+      },
     }
-  / lvl'conversion'{
-      flag'/w14244',
-      flag'/w14365',
-    }
-  / lvl'sign'{
-      flag'/w14388',
-      flag'/w14245',
-    }
-  / {
-      flag'/wd4244',
-      flag'/wd4365',
-      flag'/wd4388',
-      flag'/wd4245',
-    },
   },
 
   opt'shadow_warnings' {
-    lvl'off' {
-      flag'/wd4456', -- declaration of 'identifier' hides previous local declaration
-      flag'/wd4459', -- declaration of 'identifier' hides global declaration
-    }
-  / Or(lvl'on', lvl'all') {
-      flag'/w4456',
-      flag'/w4459',
-    }
-  / lvl'local' {
-      flag'/w4456',
-      flag'/wd4459'
+    match {
+      lvl'off' {
+        flag'/wd4456', -- declaration of 'identifier' hides previous local declaration
+        flag'/wd4459', -- declaration of 'identifier' hides global declaration
+      },
+      Or(lvl'on', lvl'all') {
+        flag'/w4456',
+        flag'/w4459',
+      },
+      lvl'local' {
+        flag'/w4456',
+        flag'/wd4459'
+      }
     }
   },
 
   opt'warnings_as_error' {
-    lvl'on' { flag'/WX' }
-  / lvl'off' { flag'/WX-' }
-  / { -- lvl'basic'
-      cxx'/we4455', -- Wliteral-suffix
-      cxx'/we4150', -- Wdelete-incomplete
-      flag'/we4716', -- Wreturn-type
-      flag'/we2124', -- Wdivision-by-zero
+    match {
+      lvl'on' { flag'/WX' },
+      lvl'off' { flag'/WX-' },
+      { -- lvl'basic'
+        cxx'/we4455', -- Wliteral-suffix
+        cxx'/we4150', -- Wdelete-incomplete
+        flag'/we4716', -- Wreturn-type
+        flag'/we2124', -- Wdivision-by-zero
+      }
     }
   },
 
   opt'lto' {
-    lvl'off' {
-      flag'/LTCG:OFF'
-    }
-  / {
-      flag'/GL',
-      link'/LTCG'
+    match {
+      lvl'off' {
+        flag'/LTCG:OFF'
+      },
+      {
+        flag'/GL',
+        link'/LTCG'
+      }
     }
   },
 
   opt'sanitizers' {
-    vers'>=16.9' {
-      flag'/fsanitize=address',
-      flag'/fsanitize-address-use-after-return'
-    }
-  / {
-      lvl'on' {
-        flag'/sdl',
-      }
-    / opt'stack_protector' {
-        -lvl'off' { flag'/sdl-' },
+    match {
+      vers'>=16.9' {
+        flag'/fsanitize=address',
+        flag'/fsanitize-address-use-after-return'
       },
+      match {
+        lvl'on' {
+          flag'/sdl',
+        },
+        opt'stack_protector' {
+          -lvl'off' { flag'/sdl-' },
+        },
+      }
     }
   },
 },
 
 icl {
   opt'warnings' {
-    lvl'off' {
-      flag'/w'
-    }
-  / {
-      flag'/W2',
-      flag'/Qdiag-disable:1418,2259', -- external function definition with no prior declaration
-                                      -- "type" to "type" may lose significant bits
+    match {
+      lvl'off' {
+        flag'/w'
+      },
+      {
+        flag'/W2',
+        flag'/Qdiag-disable:1418,2259', -- external function definition with no prior declaration
+                                        -- "type" to "type" may lose significant bits
+      }
     }
   },
 
   opt'warnings_as_error' {
-    lvl'on' {
-      flag'/WX',
-    }
-  / lvl'basic' {
-      flag'/Qdiag-error:1079,39,109' -- return-type, div-by-zero, array-bounds
+    match {
+      lvl'on' {
+        flag'/WX',
+      },
+      lvl'basic' {
+        flag'/Qdiag-error:1079,39,109' -- return-type, div-by-zero, array-bounds
+      }
     }
   },
 
@@ -1500,54 +1682,70 @@ icl {
   },
 
   opt'debug' {
-    lvl'off' { flag'/debug:NONE' }
-  / {
-      flag'/RTC1',
-      flag'/Od',
-      lvl'on' { flag'/debug:full' }
-    / lvl'line_tables_only' { flag'/debug:minimal' },
-
-      has_opt'optimization':with(lvl'g') {
-        flag'/Zi'
+    match {
+      lvl'off' { flag'/debug:NONE' },
+      {
+        flag'/RTC1',
+        flag'/Od',
+        match {
+          lvl'on' { flag'/debug:full' },
+          lvl'line_tables_only' { flag'/debug:minimal' }
+        },
+        match {
+          has_opt'optimization':with(lvl'g') {
+            flag'/Zi'
+          },
+          -- /ZI cannot be used with /GL
+          opt'whole_program' {
+            lvl'off' { flag'/ZI' } / flag'/Zi'
+          },
+          flag'/ZI',
+        }
       }
-    -- /ZI cannot be used with /GL
-    / opt'whole_program' {
-        lvl'off' { flag'/ZI' } / flag'/Zi'
-      }
-    / flag'/ZI',
     }
   },
 
   opt'optimization' {
-    lvl'0' {
-      flag'/Ob0',
-      flag'/Od',
-      flag'/Oi-',
-      flag'/Oy-',
-    }
-  / lvl'g' { flag'/Ob1' }
-  / {
-      flag'/GF',
-      lvl'1' { flag'/O1', }
-    / lvl'2' { flag'/O2', }
-    / lvl'3' { flag'/O2', }
-    / lvl'z' { flag'/O3', }
-    / lvl'size' { flag'/Os', }
-    / --[[lvl'fast']] { flag'/fast' }
+    match {
+      lvl'0' {
+        flag'/Ob0',
+        flag'/Od',
+        flag'/Oi-',
+        flag'/Oy-',
+      },
+      lvl'g' { flag'/Ob1' },
+      {
+        flag'/GF',
+        match {
+          lvl'1' { flag'/O1', },
+          lvl'2' { flag'/O2', },
+          lvl'3' { flag'/O2', },
+          lvl'z' { flag'/O3', },
+          lvl'size' { flag'/Os', },
+          --[[lvl'fast']] { flag'/fast' }
+        }
+      }
     }
   },
 
   opt'stack_protector' {
-    lvl'off' {
-      flag'/GS-',
+    match {
+      lvl'off' {
+        flag'/GS-',
+      },
+      {
+        flag'/GS',
+        match {
+          lvl'strong' {
+            flag'/RTC1', -- /RTCsu
+          },
+          lvl'all' {
+            flag'/RTC1',
+            flag'/RTCc',
+          },
+        }
+      },
     }
-  / {
-      flag'/GS',
-      lvl'strong' {
-        flag'/RTC1', -- /RTCsu
-      }
-    / lvl'all' { flag'/RTC1', flag'/RTCc', },
-    },
   },
 
   opt'sanitizers' {
@@ -1563,19 +1761,23 @@ icl {
   },
 
   opt'control_flow' {
-    lvl'off' {
-      flag'/guard:cf-',
-      flag'/mconditional-branch=keep',
-    }
-  / {
-      flag'/guard:cf',
-      lvl'branch' {
-        flag'/mconditional-branch:all-fix',
-        flag'/Qcf-protection:branch',
-      }
-    / lvl'on' {
-        flag'/mconditional-branch:all-fix',
-        flag'/Qcf-protection:full',
+    match {
+      lvl'off' {
+        flag'/guard:cf-',
+        flag'/mconditional-branch=keep',
+      },
+      {
+        flag'/guard:cf',
+        match {
+          lvl'branch' {
+            flag'/mconditional-branch:all-fix',
+            flag'/Qcf-protection:branch',
+          },
+          lvl'on' {
+            flag'/mconditional-branch:all-fix',
+            flag'/Qcf-protection:full',
+          }
+        }
       }
     }
   },
@@ -1590,141 +1792,165 @@ icl {
 
 icc {
   opt'warnings' {
-    lvl'off' {
-      flag'-w'
-    }
-  / {
-      flag'-Wall',
-      flag'-Warray-bounds',
-      flag'-Wcast-qual',
-      flag'-Wchar-subscripts',
-      flag'-Wdisabled-optimization',
-      flag'-Wenum-compare',
-      flag'-Wextra',
-      flag'-Wfloat-equal',
-      flag'-Wformat-security',
-      flag'-Wformat=2',
-      flag'-Winit-self',
-    -- flag'-Winline',
-      flag'-Winvalid-pch',
-      flag'-Wmaybe-uninitialized',
-      flag'-Wmissing-include-dirs',
-      flag'-Wnarrowing',
-      flag'-Wnonnull',
-      flag'-Wparentheses',
-      flag'-Wpointer-sign',
-      flag'-Wreorder',
-      flag'-Wsequence-point',
-      flag'-Wtrigraphs',
-      flag'-Wundef',
-      flag'-Wunused-function',
-      flag'-Wunused-but-set-variable',
-      flag'-Wunused-variable',
-      flag'-Wpointer-arith',
-      cxx'-Wdeprecated',
-      cxx'-Wnon-virtual-dtor',
-      cxx'-Woverloaded-virtual',
-      c'-Wold-style-definition',
-      c'-Wstrict-prototypes',
-      c'-Wwrite-strings',
-
-      opt'switch_warnings' {
-        Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' }
-      / lvl'mandatory_default' { flag'-Wswitch-default' }
-      / lvl'exhaustive_enum_and_mandatory_default' {
-          flag'-Wswitch',
-        }
-      / {
-          flag'-Wno-switch'
-        },
+    match {
+      lvl'off' {
+        flag'-w'
       },
+      {
+        flag'-Wall',
+        flag'-Warray-bounds',
+        flag'-Wcast-qual',
+        flag'-Wchar-subscripts',
+        flag'-Wdisabled-optimization',
+        flag'-Wenum-compare',
+        flag'-Wextra',
+        flag'-Wfloat-equal',
+        flag'-Wformat-security',
+        flag'-Wformat=2',
+        flag'-Winit-self',
+      -- flag'-Winline',
+        flag'-Winvalid-pch',
+        flag'-Wmaybe-uninitialized',
+        flag'-Wmissing-include-dirs',
+        flag'-Wnarrowing',
+        flag'-Wnonnull',
+        flag'-Wparentheses',
+        flag'-Wpointer-sign',
+        flag'-Wreorder',
+        flag'-Wsequence-point',
+        flag'-Wtrigraphs',
+        flag'-Wundef',
+        flag'-Wunused-function',
+        flag'-Wunused-but-set-variable',
+        flag'-Wunused-variable',
+        flag'-Wpointer-arith',
+        cxx'-Wdeprecated',
+        cxx'-Wnon-virtual-dtor',
+        cxx'-Woverloaded-virtual',
+        c'-Wold-style-definition',
+        c'-Wstrict-prototypes',
+        c'-Wwrite-strings',
+
+        opt'switch_warnings' {
+          match {
+            Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' },
+            lvl'mandatory_default' { flag'-Wswitch-default' },
+            lvl'exhaustive_enum_and_mandatory_default' {
+              flag'-Wswitch',
+            },
+            {
+              flag'-Wno-switch'
+            },
+          }
+        },
+      }
     }
   },
 
   opt'warnings_as_error' {
-    lvl'on' {
-      flag'-Werror',
+    match {
+      lvl'on' {
+        flag'-Werror',
+      },
+      lvl'basic' {
+        flag'-diag-error=1079,39,109' -- return-type, div-by-zero, array-bounds
+      }
+      -- flag'-Wno-error', does not work
     }
-  / lvl'basic' {
-      flag'-diag-error=1079,39,109' -- return-type, div-by-zero, array-bounds
-    }
-    -- flag'-Wno-error', does not work
   },
 
   -- opt'pedantic' -- -pedantic does not work ???
   opt'pedantic' {
-    lvl'off' {
-      flag'-fgnu-keywords',
-    }
-  / {
-      flag'-fno-gnu-keywords',
+    match {
+      lvl'off' {
+        flag'-fgnu-keywords',
+      },
+      {
+        flag'-fno-gnu-keywords',
+      }
     }
   },
 
   opt'shadow_warnings' {
-    lvl'off' {
-      flag'-Wno-shadow',
-    }
-  / Or(lvl'on', lvl'all') {
-      flag'-Wshadow'
+    match {
+      lvl'off' {
+        flag'-Wno-shadow',
+      },
+      Or(lvl'on', lvl'all') {
+        flag'-Wshadow'
+      }
     }
   },
 
   opt'stl_debug' {
     -lvl'off' {
-      Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
-        cxx'-D_GLIBCXX_DEBUG',
+      match {
+        Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
+          cxx'-D_GLIBCXX_DEBUG',
+        },
+        cxx'-D_GLIBCXX_ASSERTIONS',
       }
-    / cxx'-D_GLIBCXX_ASSERTIONS',
     },
   },
 
   opt'debug' {
-    lvl'off' { flag '-g0' }
-  / flag'-g',
+    match {
+      lvl'off' { flag '-g0' },
+      flag'-g',
+    }
   },
 
   opt'optimization' {
-    lvl'0' { flag'-O0', }
-  / lvl'g' { flag'-O1', }
-  / lvl'1' { flag'-O1', }
-  / lvl'2' { flag'-O2', }
-  / lvl'3' { flag'-O3', }
-  / lvl'z' { flag'-fast', }
-  / lvl'size' { flag'-Os', }
-  / --[[lvl'fast']] { flag'-Ofast' }
+    match {
+      lvl'0' { flag'-O0', },
+      lvl'g' { flag'-O1', },
+      lvl'1' { flag'-O1', },
+      lvl'2' { flag'-O2', },
+      lvl'3' { flag'-O3', },
+      lvl'z' { flag'-fast', },
+      lvl'size' { flag'-Os', },
+      --[[lvl'fast']] { flag'-Ofast' }
+    }
   },
 
   opt'stack_protector' {
-    lvl'off' {
-      fl'-fno-protector-strong',
-      flag'-U_FORTIFY_SOURCE'
+    match {
+      lvl'off' {
+        fl'-fno-protector-strong',
+        flag'-U_FORTIFY_SOURCE'
+      },
+      {
+        flag'-D_FORTIFY_SOURCE=2',
+        match {
+          lvl'strong' { fl'-fstack-protector-strong', },
+          lvl'all' { fl'-fstack-protector-all', },
+          fl'-fstack-protector',
+        }
+      },
     }
-  / {
-      flag'-D_FORTIFY_SOURCE=2',
-      lvl'strong' { fl'-fstack-protector-strong', }
-    / lvl'all' { fl'-fstack-protector-all', }
-    / fl'-fstack-protector',
-    },
   },
 
   opt'relro' {
-    lvl'off' { link'-Xlinker-znorelro', }
-  / lvl'on'  { link'-Xlinker-zrelro', }
-  / { --[[lvl'full']]
-      link'-Xlinker-zrelro',
-      link'-Xlinker-znow',
-      link'-Xlinker-znoexecstack',
-    },
+    match {
+      lvl'off' { link'-Xlinker-znorelro', },
+      lvl'on'  { link'-Xlinker-zrelro', },
+      { --[[lvl'full']]
+        link'-Xlinker-zrelro',
+        link'-Xlinker-znow',
+        link'-Xlinker-znoexecstack',
+      },
+    }
   },
 
   opt'pie' {
-    lvl'off'{ link'-no-pic', }
-  / lvl'on' { link'-pie', }
-  / lvl'fpie'{ flag'-fpie', }
-  / lvl'fpic'{ flag'-fpic', }
-  / lvl'fPIE'{ flag'-fPIE', }
-  / lvl'fPIC'{ flag'-fPIC', },
+    match {
+      lvl'off'{ link'-no-pic', },
+      lvl'on' { link'-pie', },
+      lvl'fpie'{ flag'-fpie', },
+      lvl'fpic'{ flag'-fpic', },
+      lvl'fPIE'{ flag'-fPIE', },
+      lvl'fPIC'{ flag'-fPIC', },
+    }
   },
 
   opt'sanitizers' {
@@ -1732,8 +1958,10 @@ icc {
   },
 
   opt'integer_sanitizers' {
-    lvl'on' { flag'-funsigned-bitfields' }
-  / flag'-fno-unsigned-bitfields'
+    match {
+      lvl'on' { flag'-funsigned-bitfields' },
+      flag'-fno-unsigned-bitfields'
+    }
   },
 
   opt'float_sanitizers' {
@@ -1745,35 +1973,41 @@ icc {
   },
 
   opt'linker' {
-    lvl'bfd' { link'-fuse-ld=bfd' }
-  / lvl'gold' { link'-fuse-ld=gold' }
-  / link'-fuse-ld=lld'
+    match {
+      lvl'bfd' { link'-fuse-ld=bfd' },
+      lvl'gold' { link'-fuse-ld=gold' },
+      link'-fuse-ld=lld'
+    }
   },
 
   opt'lto' {
-    lvl'off' { fl'-no-ipo', }
-  / {
-      fl'-ipo',
-      lvl'fat' {
-        linux {
-          fl'-ffat-lto-objects',
+    match {
+      lvl'off' { fl'-no-ipo', },
+      {
+        fl'-ipo',
+        lvl'fat' {
+          linux {
+            fl'-ffat-lto-objects',
+          }
         }
       }
     }
   },
 
   opt'control_flow' {
-    lvl'off' {
-      flag'-mconditional-branch=keep',
-      flag'-fcf-protection=none',
-    }
-  / lvl'branch' {
-      flag'-mconditional-branch=all-fix',
-      flag'-fcf-protection=branch',
-    }
-  / lvl'on' {
-      flag'-mconditional-branch=all-fix',
-      flag'-fcf-protection=full',
+    match {
+      lvl'off' {
+        flag'-mconditional-branch=keep',
+        flag'-fcf-protection=none',
+      },
+      lvl'branch' {
+        flag'-mconditional-branch=all-fix',
+        flag'-fcf-protection=branch',
+      },
+      lvl'on' {
+        flag'-mconditional-branch=all-fix',
+        flag'-fcf-protection=full',
+      }
     }
   },
 
