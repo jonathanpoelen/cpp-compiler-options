@@ -14,7 +14,7 @@ option('jln_fix_compiler_error', type : 'combo', choices : ['default', 'off', 'o
 option('jln_float_sanitizers', type : 'combo', choices : ['default', 'off', 'on'], value : 'default', description : '')
 option('jln_integer_sanitizers', type : 'combo', choices : ['default', 'off', 'on'], value : 'default', description : '')
 option('jln_linker', type : 'combo', choices : ['default', 'bfd', 'gold', 'lld', 'native'], value : 'default', description : 'configure linker')
-option('jln_lto', type : 'combo', choices : ['default', 'off', 'on', 'fat', 'thin'], value : 'default', description : 'enable Link Time Optimization')
+option('jln_lto', type : 'combo', choices : ['default', 'off', 'on', 'normal', 'fat', 'thin'], value : 'default', description : 'enable Link Time Optimization')
 option('jln_msvc_conformance', type : 'combo', choices : ['default', 'all', 'all_without_throwing_new'], value : 'all', description : 'standard conformance options')
 option('jln_msvc_crt_secure_no_warnings', type : 'combo', choices : ['default', 'off', 'on'], value : 'on', description : 'disable CRT warnings')
 option('jln_msvc_isystem', type : 'combo', choices : ['default', 'anglebrackets', 'include_and_caexcludepath'], value : 'default', description : 'warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)')
