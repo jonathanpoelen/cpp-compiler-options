@@ -552,6 +552,23 @@ opt'warnings' { -- if warnings is enabled (not `warnings=default`)
 }
 ```
 
+- `has_opt'name' { ... }`
+
+```lua
+opt'warnings' {
+  has_opt'debug' { -- if debug is enabled (not `debug=default`)
+    lvl'off' { cxx'-w' } -- for `warnings=off`, not debug=off
+  }
+}
+
+has_opt'debug':with('gdb', 'on') { -- if debug is 'on' or 'gdb'
+  ...
+}
+has_opt'debug':without('gdb', 'on') { -- if debug is not 'default', 'on' or 'gdb'
+  ...
+}
+```
+
 - `reset_opt'name'` for disabled an option
 
 ```lua
@@ -583,3 +600,8 @@ lvl'on' { xxx } / { yyy } -- equivalent to `{ lvl'on' { xxx }, -lvl'on' { yyy } 
 ```
 
 Note: `-opt'name'` isn't allowed
+
+## Others
+
+- `if_else(cond, f)` = `cond { f(true) } / f()`
+- `match(a,b,c,...)` = `a / b / c / ...`
