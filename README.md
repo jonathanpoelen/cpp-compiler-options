@@ -62,7 +62,7 @@ var_init = default pattern
 
 cpu = default generic native
 linker = default bfd gold lld native
-lto = default off on fat thin
+lto = default off on normal fat thin
 optimization = default 0 g 1 2 3 fast size z
 whole_program = default off on strip_all
 

@@ -62,7 +62,7 @@
 #  
 #  cpu = default generic native
 #  linker = default bfd gold lld native
-#  lto = default off on fat thin
+#  lto = default off on normal fat thin
 #  optimization = default 0 g 1 2 3 fast size z
 #  whole_program = default off on strip_all
 #  
@@ -158,7 +158,7 @@ feature <jln-integer-sanitizers> : _ default off on : incidental ;
 # configure linker
 feature <jln-linker> : _ default bfd gold lld native : propagated ;
 # enable Link Time Optimization
-feature <jln-lto> : _ default off on fat thin : incidental ;
+feature <jln-lto> : _ default off on normal fat thin : incidental ;
 # standard conformance options
 feature <jln-msvc-conformance> : _ all default all-without-throwing-new : incidental ;
 # disable CRT warnings
@@ -216,7 +216,7 @@ feature <jln-debug-incidental> : _ default off on line-tables-only gdb lldb sce 
 feature <jln-exceptions-incidental> : _ default off on : incidental ;
 feature <jln-float-sanitizers-incidental> : _ default off on : incidental ;
 feature <jln-integer-sanitizers-incidental> : _ default off on : incidental ;
-feature <jln-lto-incidental> : _ default off on fat thin : incidental ;
+feature <jln-lto-incidental> : _ default off on normal fat thin : incidental ;
 feature <jln-msvc-conformance-incidental> : _ all default all-without-throwing-new : incidental ;
 feature <jln-ndebug-incidental> : _ with-optimization-1-or-above default off on : incidental ;
 feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size z : incidental ;
@@ -248,7 +248,7 @@ feature <jln-fix-compiler-error-default> : on default off : incidental ;
 feature <jln-float-sanitizers-default> : default off on : incidental ;
 feature <jln-integer-sanitizers-default> : default off on : incidental ;
 feature <jln-linker-default> : default bfd gold lld native : incidental ;
-feature <jln-lto-default> : default off on fat thin : incidental ;
+feature <jln-lto-default> : default off on normal fat thin : incidental ;
 feature <jln-msvc-conformance-default> : all default all-without-throwing-new : incidental ;
 feature <jln-msvc-crt-secure-no-warnings-default> : on default off : incidental ;
 feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath : incidental ;
@@ -308,7 +308,7 @@ constant jln_c_env_fix_compiler_error : [ jln_c-get-env jln_fix_compiler_error :
 constant jln_c_env_float_sanitizers : [ jln_c-get-env jln_float_sanitizers : default off on ] ;
 constant jln_c_env_integer_sanitizers : [ jln_c-get-env jln_integer_sanitizers : default off on ] ;
 constant jln_c_env_linker : [ jln_c-get-env jln_linker : default bfd gold lld native ] ;
-constant jln_c_env_lto : [ jln_c-get-env jln_lto : default off on fat thin ] ;
+constant jln_c_env_lto : [ jln_c-get-env jln_lto : default off on normal fat thin ] ;
 constant jln_c_env_msvc_conformance : [ jln_c-get-env jln_msvc_conformance : all default all-without-throwing-new ] ;
 constant jln_c_env_msvc_crt_secure_no_warnings : [ jln_c-get-env jln_msvc_crt_secure_no_warnings : on default off ] ;
 constant jln_c_env_msvc_isystem : [ jln_c-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath ] ;
@@ -1006,16 +1006,7 @@ rule jln_c_flags ( properties * )
             <linkflags>"-sASSERTIONS=1"
             <linkflags>"-sDEMANGLE_SUPPORT=1"
           ;
-          if $(x_sanitizers) != "default"
-          {
-            if $(x_sanitizers) != "on"
-            {
-              flags +=
-                <linkflags>"-sSAFE_HEAP=1"
-              ;
-            }
-          }
-          else
+          if ! ( ( $(x_sanitizers) = "on" ) )
           {
             flags +=
               <linkflags>"-sSAFE_HEAP=1"
@@ -1084,7 +1075,7 @@ rule jln_c_flags ( properties * )
     }
     if $(x_color) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_C_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400009 ] ) || $(JLN_NORMALIZED_C_COMP) != "gcc" )
+      if ( ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400009 ] || $(JLN_NORMALIZED_C_COMP) != "gcc" )
       {
         if $(x_color) = "auto"
         {
@@ -1233,7 +1224,7 @@ rule jln_c_flags ( properties * )
               <linkflags>"-fuse-ld=lld"
             ;
           }
-          if ( $(x_lto) = "thin" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 600000 ] )
+          if ( ( $(x_lto) = "thin" || $(x_lto) = "on" ) && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 600000 ] )
           {
             flags +=
               <cflags>"-flto=thin"
@@ -2148,7 +2139,7 @@ rule jln_c_flags ( properties * )
       }
       else
       {
-        if $(x_lto) = "thin"
+        if ( $(x_lto) = "thin" || $(x_lto) = "on" )
         {
           flags +=
             <cflags>"-flto=thin"
@@ -2407,6 +2398,18 @@ rule jln_c_flags ( properties * )
           }
         }
       }
+      if $(x_linker) != "default"
+      {
+        if $(JLN_NORMALIZED_C_COMP) = "clang-cl"
+        {
+          if ( $(x_linker) = "lld" || $(x_linker) = "native" )
+          {
+            flags +=
+              <linkflags>"-fuse-ld=lld"
+            ;
+          }
+        }
+      }
       if $(x_control_flow) != "default"
       {
         if $(x_control_flow) = "off"
@@ -2546,16 +2549,32 @@ rule jln_c_flags ( properties * )
         }
       }
     }
+    if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1500016 ]
+    {
+      x_msvc_isystem = "default" ;
+    }
     if $(x_msvc_isystem) != "default"
     {
       if $(x_msvc_isystem) = "external-as-include-system-flag"
       {
-        # unimplementable
+        if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600010 ]
+        {
+          # unimplementable
+        }
+        else
+        {
+          # unimplementable
+        }
       }
       else
       {
+        if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600010 ]
+        {
+          flags +=
+            <cflags>"/experimental:external"
+          ;
+        }
         flags +=
-          <cflags>"/experimental:external"
           <cflags>"/external:W0"
         ;
         if $(x_msvc_isystem) = "anglebrackets"
@@ -2962,38 +2981,11 @@ rule jln_c_flags ( properties * )
             ;
           }
         }
-        if $(x_optimization) != "default"
+        if ( $(x_optimization) = "g" )
         {
-          if $(x_optimization) = "g"
-          {
-            flags +=
-              <cflags>"/Zi"
-            ;
-          }
-          else
-          {
-            if $(x_whole_program) != "default"
-            {
-              if $(x_whole_program) = "off"
-              {
-                flags +=
-                  <cflags>"/ZI"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <cflags>"/Zi"
-                ;
-              }
-            }
-            else
-            {
-              flags +=
-                <cflags>"/ZI"
-              ;
-            }
-          }
+          flags +=
+            <cflags>"/Zi"
+          ;
         }
         else
         {
