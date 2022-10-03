@@ -909,6 +909,11 @@ clang_emcc {
 /
 
 Or(gcc, clang) {
+  gcc'>=12' {
+    -- contrary to what the doc says, this flag is not set with -O0
+    cxx'-ffold-simple-inlines',
+  },
+
   opt'coverage' {
     lvl'on' {
       flag'--coverage', -- -fprofile-arcs -ftest-coverage
