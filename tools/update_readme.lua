@@ -49,22 +49,24 @@ for opt,v in options:gmatch('([-_%w]+) = ([-_%w]+)') do
     t[#t+1] = opt
   end
 end
-local strnotdefaults = {}
+
+local strnotdefaults1 = {}
+local strnotdefaults2 = {}
 for k,l in pairs(notdefaults) do
-  local stropt
   if #l == 1 then
-    stropt = l[1]
+    strnotdefaults1[#strnotdefaults1+1] = '- `' .. l[1] .. '` is `' .. k .. '`'
   else
     table.sort(l)
-    local last = table.remove(l)
-    stropt = table.concat(l, '`, `') .. '` and `' .. last
+    strnotdefaults2[#strnotdefaults2+1] = '- The following values are `' .. k
+                                     .. '`:\n  - `' .. table.concat(l, '`\n  - `') .. '`'
   end
-
-  strnotdefaults[#strnotdefaults + 1] = stropt .. (#l == 1 and '` is `' or '` are `') .. k
 end
-table.sort(strnotdefaults)
+table.sort(strnotdefaults1)
+table.sort(strnotdefaults2)
 contents = contents
 :gsub('(<!%-%- summary %-%->)\n.+(\n<!%-%- /summary %-%->)', '%1' .. summary:gsub('%%%%', '%%') .. '%2')
-:gsub('(<!%-%- %./compiler%-options%.lua generators/list_options%.lua %-%-color %-%->\n```ini\n)[^`]*(```\n<!%-%- %./compiler%-options%.lua %-%->)\n\n.-\n\n.-\n', '%1' .. options .. '%2\n\nThe value `default` does nothing.\n\nIf not specified, `' .. table.concat(strnotdefaults, '` ; `') .. '`.\n')
+:gsub('(<!%-%- %./compiler%-options%.lua generators/list_options%.lua %-%-color %-%->\n```ini\n)[^`]*(```\n<!%-%- %./compiler%-options%.lua %-%->).-[^<]*',
+  '%1' .. options .. '%2\n\nThe value `default` does nothing.\n\nIf not specified:\n\n'
+  .. table.concat(strnotdefaults1, '\n') .. '\n'.. table.concat(strnotdefaults2, '\n') .. '\n\n')
 
 io.open(README, 'w'):write(contents)
