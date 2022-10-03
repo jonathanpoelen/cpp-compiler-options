@@ -1,5 +1,5 @@
 
-Compilation options for different versions of Clang, GCC, ICC, ICX and MSVC. Provided a generator and different file formats (build system and compiler).
+Compilation options for different versions of Clang, GCC, MSVC, Emscripten, ICC and ICX. Provided a generator and different file formats (build system and compiler).
 
 The `output` directory contains files for `cmake`, `xmake`, `premake5`, `meson`, `bjam`/`b2`, `scons` and command-line options for `gcc`/`g++`, `clang`/`clang++` and `msvc`. If a version of the compiler is not present, then there is no difference compared to an older version.
 
