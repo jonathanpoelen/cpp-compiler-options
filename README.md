@@ -94,7 +94,7 @@ ndebug = with_optimization_1_or_above default off on
 other_sanitizers = default off thread pointer memory
 sanitizers = default off on
 stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
-var_init = default pattern
+var_init = default uninitialized pattern zero
 
 # Optimization:
 

@@ -486,11 +486,22 @@ Or(gcc, clang_like) {
   },
 
   opt'var_init' {
-    lvl'pattern' {
-      Or(gcc'>=12', clang'>=8') {
-        flag'-ftrivial-auto-var-init=pattern'
+    Or(gcc'>=12', clang'>=8') {
+      clang {
+        flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
       },
-    }
+      match {
+        lvl'pattern' {
+          flag'-ftrivial-auto-var-init=pattern'
+        },
+        lvl'zero' {
+          flag'-ftrivial-auto-var-init=zero'
+        },
+        --[[lvl'uninitialized']] {
+          flag'-ftrivial-auto-var-init=uninitialized',
+        },
+      },
+    },
   },
 
   opt'windows_abi_compatibility_warnings' {
@@ -2354,7 +2365,11 @@ Vbase = {
     },
 
     var_init={
-      values={'pattern'},
+      values={
+        {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)'},
+        {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)'},
+        {'zero', 'zero Initialize automatic variables with zeroes'},
+      },
       description='initialize all stack variables implicitly, including padding',
     },
 
