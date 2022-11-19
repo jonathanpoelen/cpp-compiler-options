@@ -195,17 +195,21 @@ include(output/cpp/cmake)
 
 # init default values
 # jln_init_flags(
-#     [jln-option> <default_value>]...
+#     [<jln-option> <default_value>]...
 #     [AUTO_PROFILE on]
 #     [VERBOSE on]
-#     [BUILD_TYPE type [jln-option> <default_value>]...]...
+#     [BUILD_TYPE type [<jln-option> <default_value>]...]...
 # )
-# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
-# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
+# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE
+                (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
+# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE}
+              has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 jln_init_flags(
-  SUGGESTIONS on                  # set SUGGESTIONS default value to "on"
-  BUILD_TYPE debug SANITIZERS on  # set SANITIZERS default value to "on" only in Debug build
-  BUILD_TYPE release LTO on       # set LTO default value to "on" only in Release build
+  SUGGESTIONS on      # set SUGGESTIONS default value to "on"
+  BUILD_TYPE debug
+    SANITIZERS on     # set SANITIZERS default value to "on" only in Debug build
+  BUILD_TYPE release
+    LTO on            # set LTO default value to "on" only in Release build
 )
 
 
@@ -213,7 +217,7 @@ jln_init_flags(
 #     <libname> {INTERFACE|PUBLIC|PRIVATE}
 #     [<jln-option> <value>]...
 #     [DISABLE_OTHERS {on|off}]
-#     [BUILD_TYPE type [jln-option> <value>]...]...
+#     [BUILD_TYPE type [<jln-option> <value>]...]...
 # )
 jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to "very_strict"
 
@@ -223,7 +227,7 @@ jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to
 #     LINK_VAR <out-variable>
 #     [<jln-option> <value>]...
 #     [DISABLE_OTHERS {on|off}]
-#     [BUILD_TYPE type [jln-option> <value>]...]...
+#     [BUILD_TYPE type [<jln-option> <value>]...]...
 # )
 jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS WARNINGS very_strict)
 
