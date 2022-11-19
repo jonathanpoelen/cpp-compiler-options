@@ -82,7 +82,7 @@
 #  other_sanitizers = default off thread pointer memory
 #  sanitizers = default off on
 #  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
-#  var_init = default pattern
+#  var_init = default uninitialized pattern zero
 #  
 #  # Optimization:
 #  
@@ -119,7 +119,25 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` is `all` ; `ndebug` is `with_optimization_1_or_above` ; `shadow_warnings` and `windows_abi_compatibility_warnings` is `off`.
+#  If not specified:
+#  
+#  - `msvc_conformance` is `all`
+#  - `ndebug` is `with_optimization_1_or_above`
+#  - The following values are `off`:
+#    - `shadow_warnings`
+#    - `windows_abi_compatibility_warnings`
+#  - The following values are `on`:
+#    - `conversion_warnings`
+#    - `covered_switch_default_warnings`
+#    - `fix_compiler_error`
+#    - `msvc_crt_secure_no_warnings`
+#    - `pedantic`
+#    - `stl_fix`
+#    - `switch_warnings`
+#    - `warnings`
+#    - `windows_bigobj`
+#  
+#  <!-- enddefault -->
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -353,9 +371,18 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('var_init', 'default') != 'default' )
-      if (  ___jln_c_flags.get('var_init', 'default') == 'pattern' )
-        if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
+      if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
+        if (  ___jln_c_compiler_id == 'clang' )
+          jln_c_c_flags += ['-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', ]
+        endif
+        if (  ___jln_c_flags.get('var_init', 'default') == 'pattern' )
           jln_c_c_flags += ['-ftrivial-auto-var-init=pattern', ]
+        else
+          if (  ___jln_c_flags.get('var_init', 'default') == 'zero' )
+            jln_c_c_flags += ['-ftrivial-auto-var-init=zero', ]
+          else
+            jln_c_c_flags += ['-ftrivial-auto-var-init=uninitialized', ]
+          endif
         endif
       endif
     endif
@@ -926,7 +953,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         else
           if (  ___jln_c_flags.get('other_sanitizers', 'default') == 'memory' )
             if (  ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=5.0') ) )
-              jln_c_c_flags += ['-fsanitize=memory', ]
+              jln_c_c_flags += ['-fsanitize=memory', '-fno-omit-frame-pointer', ]
             endif
           else
             if (  ___jln_c_flags.get('other_sanitizers', 'default') == 'pointer' )

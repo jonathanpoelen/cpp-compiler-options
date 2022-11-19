@@ -82,7 +82,7 @@ ndebug = with_optimization_1_or_above default off on
 other_sanitizers = default off thread pointer memory
 sanitizers = default off on
 stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
-var_init = default pattern
+var_init = default uninitialized pattern zero
 
 # Optimization:
 
@@ -119,7 +119,25 @@ windows_bigobj = on default
 
 The value `default` does nothing.
 
-If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` is `all` ; `ndebug` is `with_optimization_1_or_above` ; `shadow_warnings` and `windows_abi_compatibility_warnings` is `off`.
+If not specified:
+
+- `msvc_conformance` is `all`
+- `ndebug` is `with_optimization_1_or_above`
+- The following values are `off`:
+  - `shadow_warnings`
+  - `windows_abi_compatibility_warnings`
+- The following values are `on`:
+  - `conversion_warnings`
+  - `covered_switch_default_warnings`
+  - `fix_compiler_error`
+  - `msvc_crt_secure_no_warnings`
+  - `pedantic`
+  - `stl_fix`
+  - `switch_warnings`
+  - `warnings`
+  - `windows_bigobj`
+
+<!-- enddefault -->
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
