@@ -266,9 +266,18 @@ foreach ___jln_flags : ___jln_custom_flags
       endif
     endif
     if (  ___jln_flags.get('var_init', 'default') != 'default' )
-      if (  ___jln_flags.get('var_init', 'default') == 'pattern' )
-        if (  ( ( ___jln_compiler_id == 'gcc' and ___jln_compiler_version.version_compare('>=12.0') ) or ( ___jln_compiler_id == 'clang' and ___jln_compiler_version.version_compare('>=8.0') ) ) )
+      if (  ( ( ___jln_compiler_id == 'gcc' and ___jln_compiler_version.version_compare('>=12.0') ) or ( ___jln_compiler_id == 'clang' and ___jln_compiler_version.version_compare('>=8.0') ) ) )
+        if (  ___jln_compiler_id == 'clang' )
+          jln_cpp_flags += ['-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', ]
+        endif
+        if (  ___jln_flags.get('var_init', 'default') == 'pattern' )
           jln_cpp_flags += ['-ftrivial-auto-var-init=pattern', ]
+        else
+          if (  ___jln_flags.get('var_init', 'default') == 'zero' )
+            jln_cpp_flags += ['-ftrivial-auto-var-init=zero', ]
+          else
+            jln_cpp_flags += ['-ftrivial-auto-var-init=uninitialized', ]
+          endif
         endif
       endif
     endif
@@ -648,6 +657,9 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
   else
     if (  ( ___jln_compiler_id == 'gcc' or ___jln_compiler_id == 'clang' ) )
+      if (  ( ___jln_compiler_id == 'gcc' and ___jln_compiler_version.version_compare('>=12.0') ) )
+        jln_cpp_flags += ['-ffold-simple-inlines', ]
+      endif
       if (  ___jln_flags.get('coverage', 'default') != 'default' )
         if (  ___jln_flags.get('coverage', 'default') == 'on' )
           jln_cpp_flags += ['--coverage', ]
@@ -896,7 +908,7 @@ foreach ___jln_flags : ___jln_custom_flags
         else
           if (  ___jln_flags.get('other_sanitizers', 'default') == 'memory' )
             if (  ( ___jln_compiler_id == 'clang' and ___jln_compiler_version.version_compare('>=5.0') ) )
-              jln_cpp_flags += ['-fsanitize=memory', ]
+              jln_cpp_flags += ['-fsanitize=memory', '-fno-omit-frame-pointer', ]
             endif
           else
             if (  ___jln_flags.get('other_sanitizers', 'default') == 'pointer' )

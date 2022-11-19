@@ -84,7 +84,10 @@ feature <jln-suggestions> : _ default off on : propagated ;
 # warnings concerning the switch keyword
 feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
 # initialize all stack variables implicitly, including padding
-feature <jln-var-init> : _ default pattern : incidental ;
+#  - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang)
+#  - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)
+#  - zero: zero Initialize automatic variables with zeroes
+feature <jln-var-init> : _ default uninitialized pattern zero : incidental ;
 # warning level
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
 # make all or some warnings into errors
@@ -112,7 +115,7 @@ feature <jln-relro-incidental> : _ default off on full : incidental ;
 feature <jln-sanitizers-incidental> : _ default off on : incidental ;
 feature <jln-stack-protector-incidental> : _ default off on strong all : incidental ;
 feature <jln-stl-fix-incidental> : _ on default off : incidental ;
-feature <jln-var-init-incidental> : _ default pattern : incidental ;
+feature <jln-var-init-incidental> : _ default uninitialized pattern zero : incidental ;
 feature <jln-warnings-as-error-incidental> : _ default off on basic : incidental ;
 feature <jln-whole-program-incidental> : _ default off on strip-all : incidental ;
 feature <jln-windows-bigobj-incidental> : _ on default : incidental ;
@@ -150,7 +153,7 @@ feature <jln-stack-protector-default> : default off on strong all : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
-feature <jln-var-init-default> : default pattern : incidental ;
+feature <jln-var-init-default> : default uninitialized pattern zero : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
@@ -210,7 +213,7 @@ constant jln_c_env_stack_protector : [ jln_c-get-env jln_stack_protector : defau
 constant jln_c_env_stl_fix : [ jln_c-get-env jln_stl_fix : on default off ] ;
 constant jln_c_env_suggestions : [ jln_c-get-env jln_suggestions : default off on ] ;
 constant jln_c_env_switch_warnings : [ jln_c-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
-constant jln_c_env_var_init : [ jln_c-get-env jln_var_init : default pattern ] ;
+constant jln_c_env_var_init : [ jln_c-get-env jln_var_init : default uninitialized pattern zero ] ;
 constant jln_c_env_warnings : [ jln_c-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_c_env_warnings_as_error : [ jln_c-get-env jln_warnings_as_error : default off on basic ] ;
 constant jln_c_env_whole_program : [ jln_c-get-env jln_whole_program : default off on strip-all ] ;
@@ -717,13 +720,34 @@ rule jln_c_flags ( properties * )
     }
     if $(x_var_init) != "default"
     {
-      if $(x_var_init) = "pattern"
+      if ( ( $(JLN_NORMALIZED_C_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_C_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ] ) )
       {
-        if ( ( $(JLN_NORMALIZED_C_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_C_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ] ) )
+        if $(JLN_NORMALIZED_C_COMP) = "clang"
+        {
+          flags +=
+            <cflags>"-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang"
+          ;
+        }
+        if $(x_var_init) = "pattern"
         {
           flags +=
             <cflags>"-ftrivial-auto-var-init=pattern"
           ;
+        }
+        else
+        {
+          if $(x_var_init) = "zero"
+          {
+            flags +=
+              <cflags>"-ftrivial-auto-var-init=zero"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"-ftrivial-auto-var-init=uninitialized"
+            ;
+          }
         }
       }
     }
@@ -1920,6 +1944,7 @@ rule jln_c_flags ( properties * )
             {
               flags +=
                 <cflags>"-fsanitize=memory"
+                <cflags>"-fno-omit-frame-pointer"
               ;
             }
           }

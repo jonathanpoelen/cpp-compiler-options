@@ -212,9 +212,18 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('var_init', 'default') != 'default' )
-      if (  ___jln_c_flags.get('var_init', 'default') == 'pattern' )
-        if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
+      if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
+        if (  ___jln_c_compiler_id == 'clang' )
+          jln_c_c_flags += ['-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', ]
+        endif
+        if (  ___jln_c_flags.get('var_init', 'default') == 'pattern' )
           jln_c_c_flags += ['-ftrivial-auto-var-init=pattern', ]
+        else
+          if (  ___jln_c_flags.get('var_init', 'default') == 'zero' )
+            jln_c_c_flags += ['-ftrivial-auto-var-init=zero', ]
+          else
+            jln_c_c_flags += ['-ftrivial-auto-var-init=uninitialized', ]
+          endif
         endif
       endif
     endif
@@ -785,7 +794,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         else
           if (  ___jln_c_flags.get('other_sanitizers', 'default') == 'memory' )
             if (  ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=5.0') ) )
-              jln_c_c_flags += ['-fsanitize=memory', ]
+              jln_c_c_flags += ['-fsanitize=memory', '-fno-omit-frame-pointer', ]
             endif
           else
             if (  ___jln_c_flags.get('other_sanitizers', 'default') == 'pointer' )

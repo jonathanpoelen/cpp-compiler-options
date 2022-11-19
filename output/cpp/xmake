@@ -88,8 +88,8 @@ local _flag_names = {
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
-  ["jln-var-init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
-  ["var_init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
+  ["jln-var-init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
+  ["var_init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
@@ -628,9 +628,18 @@ function get_flags(options, extra_options)
       end
     end
     if options.var_init ~= "" then
-      if options.var_init == "pattern" then
-        if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
+      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
+        if compiler == 'clang' then
+          insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+        end
+        if options.var_init == "pattern" then
           insert(jln_cxflags, "-ftrivial-auto-var-init=pattern")
+        else
+          if options.var_init == "zero" then
+            insert(jln_cxflags, "-ftrivial-auto-var-init=zero")
+          else
+            insert(jln_cxflags, "-ftrivial-auto-var-init=uninitialized")
+          end
         end
       end
     end
@@ -1045,6 +1054,9 @@ function get_flags(options, extra_options)
     end
   else
     if ( compiler == 'gcc' or compiler == 'clang' ) then
+      if ( compiler == 'gcc' and compversion >= 1200000 ) then
+        insert(jln_cxflags, "-ffold-simple-inlines")
+      end
       if options.coverage ~= "" then
         if options.coverage == "on" then
           insert(jln_cxflags, "--coverage")
@@ -1302,6 +1314,7 @@ function get_flags(options, extra_options)
           if options.other_sanitizers == "memory" then
             if ( compiler == 'clang' and compversion >= 500000 ) then
               insert(jln_cxflags, "-fsanitize=memory")
+              insert(jln_cxflags, "-fno-omit-frame-pointer")
             end
           else
             if options.other_sanitizers == "pointer" then

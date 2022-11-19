@@ -232,8 +232,8 @@ def add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_switch_warnings', 'warnings concerning the switch keyword', default_values.get('switch_warnings', _default_flags['switch_warnings']),
                  allowed_values=('default', 'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default')),
-    EnumVariable('jln_var_init', 'initialize all stack variables implicitly, including padding', default_values.get('var_init', _default_flags['var_init']),
-                 allowed_values=('default', 'pattern')),
+    EnumVariable('jln_var_init', 'initialize all stack variables implicitly, including padding\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)\\n - zero: zero Initialize automatic variables with zeroes', default_values.get('var_init', _default_flags['var_init']),
+                 allowed_values=('default', 'uninitialized', 'pattern', 'zero')),
     EnumVariable('jln_warnings', 'warning level', default_values.get('warnings', _default_flags['warnings']),
                  allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
     EnumVariable('jln_warnings_as_error', 'make all or some warnings into errors', default_values.get('warnings_as_error', _default_flags['warnings_as_error']),
@@ -467,9 +467,16 @@ def get_flags(options, env=None):
       else:
         flags += ('-fno-rtti', )
     if x_var_init != 'default' :
-      if x_var_init == 'pattern' :
-        if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) :
+      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) :
+        if compiler == 'clang' :
+          flags += ('-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', )
+        if x_var_init == 'pattern' :
           flags += ('-ftrivial-auto-var-init=pattern', )
+        else:
+          if x_var_init == 'zero' :
+            flags += ('-ftrivial-auto-var-init=zero', )
+          else:
+            flags += ('-ftrivial-auto-var-init=uninitialized', )
     if x_windows_abi_compatibility_warnings != 'default' :
       if ( ( compiler == 'gcc' and compversion >= 1000000 ) or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) :
         if x_windows_abi_compatibility_warnings == 'on' :
@@ -733,6 +740,8 @@ def get_flags(options, env=None):
         flags += ('-g', )
   else:
     if ( compiler == 'gcc' or compiler == 'clang' ) :
+      if ( compiler == 'gcc' and compversion >= 1200000 ) :
+        flags += ('-ffold-simple-inlines', )
       if x_coverage != 'default' :
         if x_coverage == 'on' :
           flags += ('--coverage', )
@@ -917,7 +926,7 @@ def get_flags(options, env=None):
         else:
           if x_other_sanitizers == 'memory' :
             if ( compiler == 'clang' and compversion >= 500000 ) :
-              flags += ('-fsanitize=memory', )
+              flags += ('-fsanitize=memory', '-fno-omit-frame-pointer', )
           else:
             if x_other_sanitizers == 'pointer' :
               if ( compiler == 'gcc' and compversion >= 800000 ) :

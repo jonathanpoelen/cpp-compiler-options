@@ -1,0 +1,3 @@
+-ffold-simple-inlines
+-fsanitize=pointer-compare
+-fsanitize=pointer-subtract

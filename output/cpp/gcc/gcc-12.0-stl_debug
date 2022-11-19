@@ -1,0 +1,2 @@
+-D_GLIBCXX_ASSERTIONS
+-ffold-simple-inlines
