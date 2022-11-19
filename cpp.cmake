@@ -4,17 +4,21 @@
 #  
 #  # init default values
 #  # jln_init_flags(
-#  #     [jln-option> <default_value>]...
+#  #     [<jln-option> <default_value>]...
 #  #     [AUTO_PROFILE on]
 #  #     [VERBOSE on]
-#  #     [BUILD_TYPE type [jln-option> <default_value>]...]...
+#  #     [BUILD_TYPE type [<jln-option> <default_value>]...]...
 #  # )
-#  # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
-#  # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
+#  # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE
+#                  (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
+#  # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE}
+#                has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 #  jln_init_flags(
-#    SUGGESTIONS on                  # set SUGGESTIONS default value to "on"
-#    BUILD_TYPE debug SANITIZERS on  # set SANITIZERS default value to "on" only in Debug build
-#    BUILD_TYPE release LTO on       # set LTO default value to "on" only in Release build
+#    SUGGESTIONS on      # set SUGGESTIONS default value to "on"
+#    BUILD_TYPE debug
+#      SANITIZERS on     # set SANITIZERS default value to "on" only in Debug build
+#    BUILD_TYPE release
+#      LTO on            # set LTO default value to "on" only in Release build
 #  )
 #  
 #  
@@ -22,7 +26,7 @@
 #  #     <libname> {INTERFACE|PUBLIC|PRIVATE}
 #  #     [<jln-option> <value>]...
 #  #     [DISABLE_OTHERS {on|off}]
-#  #     [BUILD_TYPE type [jln-option> <value>]...]...
+#  #     [BUILD_TYPE type [<jln-option> <value>]...]...
 #  # )
 #  jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to "very_strict"
 #  
@@ -32,7 +36,7 @@
 #  #     LINK_VAR <out-variable>
 #  #     [<jln-option> <value>]...
 #  #     [DISABLE_OTHERS {on|off}]
-#  #     [BUILD_TYPE type [jln-option> <value>]...]...
+#  #     [BUILD_TYPE type [<jln-option> <value>]...]...
 #  # )
 #  jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS WARNINGS very_strict)
 #  
@@ -82,7 +86,7 @@
 #  other_sanitizers = default off thread pointer memory
 #  sanitizers = default off on
 #  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
-#  var_init = default pattern
+#  var_init = default uninitialized pattern zero
 #  
 #  # Optimization:
 #  
@@ -119,7 +123,25 @@
 #  
 #  The value `default` does nothing.
 #  
-#  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` is `all` ; `ndebug` is `with_optimization_1_or_above` ; `shadow_warnings` and `windows_abi_compatibility_warnings` is `off`.
+#  If not specified:
+#  
+#  - `msvc_conformance` is `all`
+#  - `ndebug` is `with_optimization_1_or_above`
+#  - The following values are `off`:
+#    - `shadow_warnings`
+#    - `windows_abi_compatibility_warnings`
+#  - The following values are `on`:
+#    - `conversion_warnings`
+#    - `covered_switch_default_warnings`
+#    - `fix_compiler_error`
+#    - `msvc_crt_secure_no_warnings`
+#    - `pedantic`
+#    - `stl_fix`
+#    - `switch_warnings`
+#    - `warnings`
+#    - `windows_bigobj`
+#  
+#  <!-- enddefault -->
 #  
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -180,7 +202,7 @@ set(_JLN_STL_DEBUG_VALUES default off on allow_broken_abi allow_broken_abi_and_b
 set(_JLN_STL_FIX_VALUES default off on)
 set(_JLN_SUGGESTIONS_VALUES default off on)
 set(_JLN_SWITCH_WARNINGS_VALUES default on off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default)
-set(_JLN_VAR_INIT_VALUES default pattern)
+set(_JLN_VAR_INIT_VALUES default uninitialized pattern zero)
 set(_JLN_WARNINGS_VALUES default off on strict very_strict)
 set(_JLN_WARNINGS_AS_ERROR_VALUES default off on basic)
 set(_JLN_WHOLE_PROGRAM_VALUES default off on strip_all)
@@ -503,12 +525,12 @@ if(NOT("${JLN_SWITCH_WARNINGS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_SWITCH_WARNINGS}\" for JLN_SWITCH_WARNINGS, expected: default, on, off, exhaustive_enum, mandatory_default, exhaustive_enum_and_mandatory_default")
   endif()
 endif()
-set(JLN_VAR_INIT "${JLN_VAR_INIT}" CACHE STRING "initialize all stack variables implicitly, including padding")
-set_property(CACHE JLN_VAR_INIT PROPERTY STRINGS "default" "pattern")
+set(JLN_VAR_INIT "${JLN_VAR_INIT}" CACHE STRING "initialize all stack variables implicitly, including padding\n - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang)\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)\n - zero: zero Initialize automatic variables with zeroes")
+set_property(CACHE JLN_VAR_INIT PROPERTY STRINGS "default" "uninitialized" "pattern" "zero")
 if(NOT("${JLN_VAR_INIT}" STREQUAL ""))
   string(TOLOWER "${JLN_VAR_INIT}" JLN_VAR_INIT)
-  if(NOT(("default" STREQUAL JLN_VAR_INIT) OR ("pattern" STREQUAL JLN_VAR_INIT)))
-    message(FATAL_ERROR "Unknow value \"${JLN_VAR_INIT}\" for JLN_VAR_INIT, expected: default, pattern")
+  if(NOT(("default" STREQUAL JLN_VAR_INIT) OR ("uninitialized" STREQUAL JLN_VAR_INIT) OR ("pattern" STREQUAL JLN_VAR_INIT) OR ("zero" STREQUAL JLN_VAR_INIT)))
+    message(FATAL_ERROR "Unknow value \"${JLN_VAR_INIT}\" for JLN_VAR_INIT, expected: default, uninitialized, pattern, zero")
   endif()
 endif()
 set(JLN_WARNINGS "${JLN_WARNINGS}" CACHE STRING "warning level")
@@ -1098,7 +1120,7 @@ function(jln_init_flags)
     message(STATUS "JLN_STL_FIX = ${JLN_STL_FIX_D}	[default, off, on]")
     message(STATUS "JLN_SUGGESTIONS = ${JLN_SUGGESTIONS_D}	[default, off, on]")
     message(STATUS "JLN_SWITCH_WARNINGS = ${JLN_SWITCH_WARNINGS_D}	[default, on, off, exhaustive_enum, mandatory_default, exhaustive_enum_and_mandatory_default]")
-    message(STATUS "JLN_VAR_INIT = ${JLN_VAR_INIT_D}	[default, pattern]")
+    message(STATUS "JLN_VAR_INIT = ${JLN_VAR_INIT_D}	[default, uninitialized, pattern, zero]")
     message(STATUS "JLN_WARNINGS = ${JLN_WARNINGS_D}	[default, off, on, strict, very_strict]")
     message(STATUS "JLN_WARNINGS_AS_ERROR = ${JLN_WARNINGS_AS_ERROR_D}	[default, off, on, basic]")
     message(STATUS "JLN_WHOLE_PROGRAM = ${JLN_WHOLE_PROGRAM_D}	[default, off, on, strip_all]")
@@ -1706,9 +1728,18 @@ function(jln_flags)
       endif()
     endif()
     if (   NOT ( JLN_FLAGS_VAR_INIT STREQUAL "default" ) )
-      if (  JLN_FLAGS_VAR_INIT STREQUAL "pattern" )
-        if (  ( ( JLN_GCC_CXX_COMPILER AND JLN_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "12.0" ) OR ( JLN_CLANG_CXX_COMPILER AND JLN_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "8.0" ) ) )
+      if (  ( ( JLN_GCC_CXX_COMPILER AND JLN_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "12.0" ) OR ( JLN_CLANG_CXX_COMPILER AND JLN_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "8.0" ) ) )
+        if (  JLN_CLANG_CXX_COMPILER )
+          list(APPEND CXX_FLAGS  "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+        endif()
+        if (  JLN_FLAGS_VAR_INIT STREQUAL "pattern" )
           list(APPEND CXX_FLAGS  "-ftrivial-auto-var-init=pattern")
+        else()
+          if (  JLN_FLAGS_VAR_INIT STREQUAL "zero" )
+            list(APPEND CXX_FLAGS  "-ftrivial-auto-var-init=zero")
+          else()
+            list(APPEND CXX_FLAGS  "-ftrivial-auto-var-init=uninitialized")
+          endif()
         endif()
       endif()
     endif()
@@ -2088,6 +2119,9 @@ function(jln_flags)
     endif()
   else()
     if (  ( JLN_GCC_CXX_COMPILER OR JLN_CLANG_CXX_COMPILER ) )
+      if (  ( JLN_GCC_CXX_COMPILER AND JLN_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "12.0" ) )
+        list(APPEND CXX_FLAGS  "-ffold-simple-inlines")
+      endif()
       if (   NOT ( JLN_FLAGS_COVERAGE STREQUAL "default" ) )
         if (  JLN_FLAGS_COVERAGE STREQUAL "on" )
           list(APPEND CXX_FLAGS  "--coverage")
@@ -2336,7 +2370,7 @@ function(jln_flags)
         else()
           if (  JLN_FLAGS_OTHER_SANITIZERS STREQUAL "memory" )
             if (  ( JLN_CLANG_CXX_COMPILER AND JLN_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "5.0" ) )
-              list(APPEND CXX_FLAGS  "-fsanitize=memory")
+              list(APPEND CXX_FLAGS  "-fsanitize=memory" "-fno-omit-frame-pointer")
             endif()
           else()
             if (  JLN_FLAGS_OTHER_SANITIZERS STREQUAL "pointer" )

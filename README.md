@@ -4,17 +4,21 @@ include(cpp.cmake)
 
 # init default values
 # jln_init_flags(
-#     [jln-option> <default_value>]...
+#     [<jln-option> <default_value>]...
 #     [AUTO_PROFILE on]
 #     [VERBOSE on]
-#     [BUILD_TYPE type [jln-option> <default_value>]...]...
+#     [BUILD_TYPE type [<jln-option> <default_value>]...]...
 # )
-# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
-# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE} has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
+# AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE
+                (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
+# BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE}
+              has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 jln_init_flags(
-  SUGGESTIONS on                  # set SUGGESTIONS default value to "on"
-  BUILD_TYPE debug SANITIZERS on  # set SANITIZERS default value to "on" only in Debug build
-  BUILD_TYPE release LTO on       # set LTO default value to "on" only in Release build
+  SUGGESTIONS on      # set SUGGESTIONS default value to "on"
+  BUILD_TYPE debug
+    SANITIZERS on     # set SANITIZERS default value to "on" only in Debug build
+  BUILD_TYPE release
+    LTO on            # set LTO default value to "on" only in Release build
 )
 
 
@@ -22,7 +26,7 @@ jln_init_flags(
 #     <libname> {INTERFACE|PUBLIC|PRIVATE}
 #     [<jln-option> <value>]...
 #     [DISABLE_OTHERS {on|off}]
-#     [BUILD_TYPE type [jln-option> <value>]...]...
+#     [BUILD_TYPE type [<jln-option> <value>]...]...
 # )
 jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to "very_strict"
 
@@ -32,7 +36,7 @@ jln_target_interface(mytarget1 INTERFACE WARNINGS very_strict) # set WARNINGS to
 #     LINK_VAR <out-variable>
 #     [<jln-option> <value>]...
 #     [DISABLE_OTHERS {on|off}]
-#     [BUILD_TYPE type [jln-option> <value>]...]...
+#     [BUILD_TYPE type [<jln-option> <value>]...]...
 # )
 jln_flags(CXX_VAR CXX_FLAGS LINK_VAR LINK_FLAGS WARNINGS very_strict)
 
@@ -82,7 +86,7 @@ ndebug = with_optimization_1_or_above default off on
 other_sanitizers = default off thread pointer memory
 sanitizers = default off on
 stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
-var_init = default pattern
+var_init = default uninitialized pattern zero
 
 # Optimization:
 
@@ -119,7 +123,25 @@ windows_bigobj = on default
 
 The value `default` does nothing.
 
-If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` is `all` ; `ndebug` is `with_optimization_1_or_above` ; `shadow_warnings` and `windows_abi_compatibility_warnings` is `off`.
+If not specified:
+
+- `msvc_conformance` is `all`
+- `ndebug` is `with_optimization_1_or_above`
+- The following values are `off`:
+  - `shadow_warnings`
+  - `windows_abi_compatibility_warnings`
+- The following values are `on`:
+  - `conversion_warnings`
+  - `covered_switch_default_warnings`
+  - `fix_compiler_error`
+  - `msvc_crt_secure_no_warnings`
+  - `pedantic`
+  - `stl_fix`
+  - `switch_warnings`
+  - `warnings`
+  - `windows_bigobj`
+
+<!-- enddefault -->
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
