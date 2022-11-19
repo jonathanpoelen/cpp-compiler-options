@@ -86,9 +86,8 @@ local _module_name = 'flags'
 -- `extra_options` = {
 --   category :string|boolean = false -- add a category for option()
 --   module_name: string = 'flags' -- default value for ]] .. funcprefix .. [[rule()
--- }
-]])
-    self:print('\nfunction ' .. funcprefix .. 'init_options(default_options, extra_options)')
+-- }]])
+    self:print('function ' .. funcprefix .. 'init_options(default_options, extra_options)')
     self:print(common_code)
     self:print([[
   if default_options then
@@ -535,6 +534,7 @@ function get_flags(options, extra_options)
     return filebase and {
       {filebase .. '_options.lua', self._options_str},
       {filebase, self:get_output()}
-    } or self:get_output()
+    } or '-- options.lua\n' .. self._options_str ..
+         '-- xmake module\n' .. self:get_output()
   end,
 }
