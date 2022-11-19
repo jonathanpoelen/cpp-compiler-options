@@ -1126,6 +1126,7 @@ Or(gcc, clang) {
       lvl'memory' {
         clang'>=5' {
           flag'-fsanitize=memory',
+          flag'-fno-omit-frame-pointer',
         }
       },
       lvl'pointer' {
