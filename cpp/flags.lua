@@ -90,7 +90,7 @@
 --  other_sanitizers = default off thread pointer memory
 --  sanitizers = default off on
 --  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
---  var_init = default pattern
+--  var_init = default uninitialized pattern zero
 --  
 --  # Optimization:
 --  
@@ -127,7 +127,25 @@
 --  
 --  The value `default` does nothing.
 --  
---  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` is `all` ; `ndebug` is `with_optimization_1_or_above` ; `shadow_warnings` and `windows_abi_compatibility_warnings` is `off`.
+--  If not specified:
+--  
+--  - `msvc_conformance` is `all`
+--  - `ndebug` is `with_optimization_1_or_above`
+--  - The following values are `off`:
+--    - `shadow_warnings`
+--    - `windows_abi_compatibility_warnings`
+--  - The following values are `on`:
+--    - `conversion_warnings`
+--    - `covered_switch_default_warnings`
+--    - `fix_compiler_error`
+--    - `msvc_crt_secure_no_warnings`
+--    - `pedantic`
+--    - `stl_fix`
+--    - `switch_warnings`
+--    - `warnings`
+--    - `windows_bigobj`
+--  
+--  <!-- enddefault -->
 --  
 --  - `control_flow=allow_bugs`
 --    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -237,8 +255,8 @@ local _flag_names = {
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
-  ["jln-var-init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
-  ["var_init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
+  ["jln-var-init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
+  ["var_init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
@@ -777,9 +795,18 @@ function get_flags(options, extra_options)
       end
     end
     if options.var_init ~= "" then
-      if options.var_init == "pattern" then
-        if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
+      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
+        if compiler == 'clang' then
+          insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+        end
+        if options.var_init == "pattern" then
           insert(jln_cxflags, "-ftrivial-auto-var-init=pattern")
+        else
+          if options.var_init == "zero" then
+            insert(jln_cxflags, "-ftrivial-auto-var-init=zero")
+          else
+            insert(jln_cxflags, "-ftrivial-auto-var-init=uninitialized")
+          end
         end
       end
     end
@@ -1194,6 +1221,9 @@ function get_flags(options, extra_options)
     end
   else
     if ( compiler == 'gcc' or compiler == 'clang' ) then
+      if ( compiler == 'gcc' and compversion >= 1200000 ) then
+        insert(jln_cxflags, "-ffold-simple-inlines")
+      end
       if options.coverage ~= "" then
         if options.coverage == "on" then
           insert(jln_cxflags, "--coverage")
@@ -1451,6 +1481,7 @@ function get_flags(options, extra_options)
           if options.other_sanitizers == "memory" then
             if ( compiler == 'clang' and compversion >= 500000 ) then
               insert(jln_cxflags, "-fsanitize=memory")
+              insert(jln_cxflags, "-fno-omit-frame-pointer")
             end
           else
             if options.other_sanitizers == "pointer" then

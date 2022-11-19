@@ -8,8 +8,6 @@ local _module_name = 'flags'
 --   category :string|boolean = false -- add a category for option()
 --   module_name: string = 'flags' -- default value for jln_c_rule()
 -- }
-
-
 function jln_c_init_options(default_options, extra_options)
 local _extraopt_flag_names = {
   ["jln-cc"] = true,
@@ -87,8 +85,8 @@ local _flag_names = {
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
-  ["jln-var-init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
-  ["var_init"] = {["default"]="", ["pattern"]="pattern", [""]=""},
+  ["jln-var-init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
+  ["var_init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
@@ -401,8 +399,8 @@ local _flag_names = {
   option("jln-var-init", {
            showmenu=true,
            category=category,
-           description="initialize all stack variables implicitly, including padding",
-           values={"default", "pattern"},
+           description="initialize all stack variables implicitly, including padding\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)\\n - zero: zero Initialize automatic variables with zeroes",
+           values={"default", "uninitialized", "pattern", "zero"},
            default=default_options["var_init"] or default_options["jln-var-init"] or "default",
            after_check=function(option) check_option("jln-var-init", "var_init") end,
          })
