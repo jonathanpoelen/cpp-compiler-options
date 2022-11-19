@@ -91,7 +91,7 @@
 --  other_sanitizers = default off thread pointer memory
 --  sanitizers = default off on
 --  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
---  var_init = default pattern
+--  var_init = default uninitialized pattern zero
 --  
 --  # Optimization:
 --  
@@ -128,7 +128,25 @@
 --  
 --  The value `default` does nothing.
 --  
---  If not specified, `conversion_warnings`, `covered_switch_default_warnings`, `fix_compiler_error`, `msvc_crt_secure_no_warnings`, `pedantic`, `stl_fix`, `switch_warnings`, `warnings` and `windows_bigobj` are `on` ; `msvc_conformance` is `all` ; `ndebug` is `with_optimization_1_or_above` ; `shadow_warnings` and `windows_abi_compatibility_warnings` is `off`.
+--  If not specified:
+--  
+--  - `msvc_conformance` is `all`
+--  - `ndebug` is `with_optimization_1_or_above`
+--  - The following values are `off`:
+--    - `shadow_warnings`
+--    - `windows_abi_compatibility_warnings`
+--  - The following values are `on`:
+--    - `conversion_warnings`
+--    - `covered_switch_default_warnings`
+--    - `fix_compiler_error`
+--    - `msvc_crt_secure_no_warnings`
+--    - `pedantic`
+--    - `stl_fix`
+--    - `switch_warnings`
+--    - `warnings`
+--    - `windows_bigobj`
+--  
+--  <!-- enddefault -->
 --  
 --  - `control_flow=allow_bugs`
 --    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -385,7 +403,7 @@ function jln_newoptions(defaults)
   newoption{trigger="jln-switch-warnings", allowed={{'default'}, {'on'}, {'off'}, {'exhaustive_enum'}, {'mandatory_default'}, {'exhaustive_enum_and_mandatory_default'}}, description="warnings concerning the switch keyword"}
   if not _OPTIONS["jln-switch-warnings"] then _OPTIONS["jln-switch-warnings"] = (defaults["switch_warnings"] or defaults["jln-switch-warnings"] or "on") end
 
-  newoption{trigger="jln-var-init", allowed={{'default'}, {'pattern'}}, description="initialize all stack variables implicitly, including padding"}
+  newoption{trigger="jln-var-init", allowed={{'default'}, {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)'}, {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)'}, {'zero', 'zero Initialize automatic variables with zeroes'}}, description="initialize all stack variables implicitly, including padding"}
   if not _OPTIONS["jln-var-init"] then _OPTIONS["jln-var-init"] = (defaults["var_init"] or defaults["jln-var-init"] or "default") end
 
   newoption{trigger="jln-warnings", allowed={{'default'}, {'off'}, {'on'}, {'strict'}, {'very_strict'}}, description="warning level"}
@@ -856,9 +874,18 @@ function jln_getoptions(values, disable_others, print_compiler)
       end
     end
     if values['var_init'] ~= 'default' then
-      if values['var_init'] == 'pattern' then
-        if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
+      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
+        if compiler == 'clang' then
+          table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+        end
+        if values['var_init'] == 'pattern' then
           table_insert(jln_buildoptions, "-ftrivial-auto-var-init=pattern")
+        else
+          if values['var_init'] == 'zero' then
+            table_insert(jln_buildoptions, "-ftrivial-auto-var-init=zero")
+          else
+            table_insert(jln_buildoptions, "-ftrivial-auto-var-init=uninitialized")
+          end
         end
       end
     end
@@ -1273,6 +1300,9 @@ function jln_getoptions(values, disable_others, print_compiler)
     end
   else
     if ( compiler == 'gcc' or compiler == 'clang' ) then
+      if ( compiler == 'gcc' and compversion >= 1200000 ) then
+        table_insert(jln_buildoptions, "-ffold-simple-inlines")
+      end
       if values['coverage'] ~= 'default' then
         if values['coverage'] == 'on' then
           table_insert(jln_buildoptions, "--coverage")
@@ -1530,6 +1560,7 @@ function jln_getoptions(values, disable_others, print_compiler)
           if values['other_sanitizers'] == 'memory' then
             if ( compiler == 'clang' and compversion >= 500000 ) then
               table_insert(jln_buildoptions, "-fsanitize=memory")
+              table_insert(jln_buildoptions, "-fno-omit-frame-pointer")
             end
           else
             if values['other_sanitizers'] == 'pointer' then
