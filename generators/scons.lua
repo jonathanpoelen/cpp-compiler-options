@@ -24,7 +24,7 @@ return {
 
     self:print_header('#')
 
-    local optprefix = optprefix and optprefix:gsub('-', '_') or ''
+    optprefix = optprefix and optprefix:gsub('-', '_') or ''
     local prefixenv = self.is_C and 'CC' or 'CXX'
 
     local enums, flags, var2opts, opt2vars, xvalues = {}, {}, {}, {}, {}

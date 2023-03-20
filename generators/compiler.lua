@@ -35,7 +35,7 @@ return {
               local has_value
 
               currcomp = {{}, false}
-              for k,y in ipairs(sub) do
+              for _,y in ipairs(sub) do
                 for comp in pairs(self:_startcond(y, currcomp) or {}) do
                   compilers[comp] = true
                   has_value = true
@@ -47,14 +47,14 @@ return {
           end
         end,
 
-        stopcond=function(self)
+        stopcond=function()
           stackcomp[#stackcomp] = nil
           stackifcomp[#stackifcomp] = nil
         end,
 
         resetopt=noop,
 
-        startoptcond=function(self)
+        startoptcond=function()
           table_insert(stackcomp, stackcomp[#stackcomp])
           table_insert(stackifcomp, false)
         end,
@@ -65,7 +65,7 @@ return {
           table_insert(stackcomp, r or stackcomp[#stackcomp])
         end,
 
-        elsecond=function(self)
+        elsecond=function()
           -- exclude `if` compilers from the parent's active compilers
           if stackifcomp[#stackifcomp] then
             local old = stackifcomp[#stackifcomp]
@@ -79,7 +79,7 @@ return {
           end
         end,
 
-        stop=function(self)
+        stop=function()
           local comps = {}
           for comp, t in pairs(versions_by_compiler) do
             local versions = {}
@@ -105,7 +105,7 @@ return {
           table.sort(comps, function(a,b) return a[1] < b[1] end)
 
           local names = {}
-          for k,comp_vers in ipairs(comps) do
+          for _,comp_vers in ipairs(comps) do
             if #comp_vers[2] ~= 0 then
               -- sort by version
               table.sort(comp_vers[2], function(a,b)
@@ -125,7 +125,7 @@ return {
                                  .. (minimal_comp[2] - 1))
               end
 
-              for k,d in ipairs(comp_vers[2]) do
+              for _,d in ipairs(comp_vers[2]) do
                 table_insert(names, d[3])
               end
             else
@@ -154,7 +154,7 @@ return {
     end
     local has_help = is_help(compiler)
     if not has_help then
-      for k,v in pairs({...}) do
+      for _,v in pairs({...}) do
         has_help = is_help(v)
         if has_help then
           break
@@ -218,9 +218,9 @@ return {
 
     local cli_opts = {...}
     if #cli_opts ~= 0 then
-      t = {}
+      local t = {}
       local concat_opts = false
-      for k,v in ipairs(cli_opts) do
+      for _,v in ipairs(cli_opts) do
         v:gsub('([%-+]?)([%w%-_]+)=?(.*)', function(f, name, lvl)
               if name == 'warn' or name == 'warning' then name = 'warnings'
           elseif name == 'san' or name == 'sanitizer' then name = 'sanitizers'
@@ -266,7 +266,7 @@ return {
     local flags = {}
     return {
       _cond=function(self, v, r)
-        for k,x in ipairs(v) do
+        for _,x in ipairs(v) do
           if self:cond(x) == r then
             return r
           end
@@ -328,9 +328,9 @@ return {
         return opts[optname] and true or false
       end,
 
-      stop=function(self)
+      stop=function()
         local l = {}
-        for k,v in pairs(flags) do
+        for k,_ in pairs(flags) do
           table_insert(l, k)
         end
 

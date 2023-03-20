@@ -1,8 +1,3 @@
-local function normnum(x)
-  x = '00' .. tostring(x)
-  return x:sub(-2)
-end
-
 local function jamlvl(lvl)
   return lvl:gsub('_', '-')
 end
@@ -145,7 +140,7 @@ JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
         relevants = relevants .. '\n      <relevant>' .. opt
         incidentals = incidentals .. 'feature <' .. iopt .. '> : _ '
                       .. defaultjoined .. ' : incidental ;\n'
-        for i,opt in pairs({opt, iopt}) do
+        for _,opt in pairs({opt, iopt}) do
           toolsetflags = toolsetflags .. '  toolset.flags ' .. opt .. ' '
                          .. opt:gsub('-', '_'):upper() .. ' : <' .. opt .. '> ;\n'
         end

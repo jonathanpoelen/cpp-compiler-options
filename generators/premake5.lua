@@ -32,8 +32,8 @@ return {
     local prefixfunc = self.is_C and 'jln_c' or 'jln'
     local comp_gcc = self.is_C and "'gcc'" or "'g++'"
     local comp_clang = self.is_C and "'clang'" or "'clang++'"
-    local comp_icc = self.is_C and "'icc'" or "'icp'"
-    local comp_icx = self.is_C and "'icx'" or "'icpx'"
+    -- local comp_icc = self.is_C and "'icc'" or "'icp'"
+    -- local comp_icx = self.is_C and "'icx'" or "'icpx'"
 
     local extraopts = {
       {compprefix, 'Path or name of the compiler for jln functions'},
@@ -42,7 +42,7 @@ return {
     }
 
     self:print('local _' .. prefixfunc .. '_extraopt_flag_names = {')
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
       self:print('  ["' .. opt .. '"] = true,')
@@ -92,7 +92,7 @@ end]])
       self:print('\n  newoption{trigger="' .. opt .. '", allowed={' ..  table.concat(values, ', ') .. '}, description="' .. quotable(option.description) .. '"}')
       self:print('  if not _OPTIONS["' .. opt .. '"] then _OPTIONS["' .. opt .. '"] = (defaults["' .. optname .. '"] ' .. (opt ~= optname and 'or defaults["' .. opt .. '"]' or '') .. ' or "' .. option.default .. '") end')
     end
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local desc = extra[2]
       local opt = self:tostroption(optname)
@@ -146,7 +146,7 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
               .. 'or (disable_others and "default" or _OPTIONS["' .. opt .. '"]),')
     end
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
       self:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
@@ -161,7 +161,7 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
       local opt = self:tostroption(optname)
       self:print('      ["' .. optname .. '"] = _OPTIONS["' .. opt .. '"],')
     end
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
       self:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')

@@ -41,10 +41,10 @@ return {
     local push_opt_for_print, opt_for_print_end
     if categorized then
       local categorized_opts = {}
-      for k,infos in ipairs(self._opts_by_category) do
+      for _,infos in ipairs(self._opts_by_category) do
         local i = #categorized_opts + 1
         categorized_opts[i] = {infos[1], {}}
-        for k,optname in ipairs(infos[2]) do
+        for _,optname in ipairs(infos[2]) do
           categorized_opts[optname] = i
         end
       end
@@ -62,7 +62,7 @@ return {
       opt_for_print_end = function()
         local strings = {}
         local first = true
-        for k,infos in ipairs(categorized_opts) do
+        for _,infos in ipairs(categorized_opts) do
           if #infos[2] ~= 0 then
             if not first then
               table_insert(strings, '')
@@ -70,7 +70,7 @@ return {
             table_insert(strings, color and ('\027[1m# ' .. infos[1] .. '\027[0m:\n')
                                          or ('# ' .. infos[1] .. ':\n'))
             first = false
-            for k,str in ipairs(infos[2]) do
+            for _,str in ipairs(infos[2]) do
               table_insert(strings, str)
             end
           end
@@ -132,7 +132,7 @@ return {
       table.sort(self._opts_build_type)
       for name, opts in self:getbuildtype() do
         print('\n' .. name)
-        for i,xs in ipairs(opts) do
+        for _,xs in ipairs(opts) do
           print(' - ' .. xs[1] .. ' = ' .. xs[2])
         end
       end
@@ -176,14 +176,14 @@ return {
     else
       local sub = x._and or x._or
       if sub then
-        for k,y in ipairs(sub) do
+        for _,y in ipairs(sub) do
           self:startcond(y, optname)
         end
       end
     end
   end,
 
-  stop=function(self)
+  stop=function()
     for k,opts in pairs(knwon_opts) do
       if not opts[2] then
         table_insert(errors, '_koptions[' .. k .. ']: not used in the tree')

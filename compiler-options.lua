@@ -4,10 +4,7 @@ local table_insert = table.insert
 local unpack = table.unpack or unpack
 
 function has_value(t)
-  for k in pairs(t) do
-    return true
-  end
-  return false
+  return pairs(t)(t)
 end
 
 function has_data(x)
@@ -74,7 +71,7 @@ end
 
 function Logical(op, ...)
   local conds = {}
-  for k,x in ipairs({...}) do
+  for _,x in ipairs({...}) do
     if x._impl then
       x = x._impl()
     elseif type(x) == 'function' then
@@ -2764,13 +2761,13 @@ Vbase = {
       local ignore = self.ignore
       local lang = self.lang
 
-      for i,k in ipairs(create_ordered_keys(self._koptions)) do
+      for _,k in ipairs(create_ordered_keys(self._koptions)) do
         local filter = ignore[k]
         local option = self._koptions[k]
         if filter ~= true and lang ~= option.unavailable then
           if filter then
             local newvalues = {}
-            for j,value in ipairs(option.values) do
+            for _,value in ipairs(option.values) do
               if not filter[value] then
                 table_insert(newvalues, value)
               end
@@ -2791,7 +2788,7 @@ Vbase = {
           local ordered_values = option.values
           if default_value ~= ordered_values[1] then
             ordered_values = {default_value}
-            for i,value in pairs(option.values) do
+            for _,value in pairs(option.values) do
               if value ~= default_value then
                 table_insert(ordered_values, value)
               end
@@ -2814,10 +2811,10 @@ Vbase = {
     if not computed_build_types then
       computed_build_types = {}
       self._computed_build_types = computed_build_types
-      for i,k in pairs(create_ordered_keys(self._opts_build_type)) do
+      for _,k in pairs(create_ordered_keys(self._opts_build_type)) do
         local values = {}
         local profile = self._opts_build_type[k]
-        for i,kv in pairs(create_ordered_keys(profile)) do
+        for _,kv in pairs(create_ordered_keys(profile)) do
           table_insert(values, {kv, profile[kv]})
         end
         table_insert(computed_build_types, {k, values})
@@ -2944,7 +2941,7 @@ function evalflags(t, v, curropt)
     v:resetopt(t.reset_opt)
 
   else
-    for k,x in pairs(t) do
+    for _,x in pairs(t) do
       evalflags(x, v, curropt)
     end
   end
@@ -3268,7 +3265,7 @@ cli={
 }
 
 function getoption(s, pos)
-  local flag = s:sub(2,2)
+  local flag = s:sub(pos, pos)
   local opt = cli[flag]
   if not opt then
     io.stderr:write('Unknown option: -' .. flag .. ' in ' .. s .. '\n')
@@ -3324,7 +3321,7 @@ while opti <= #arg do
       break
     end
     ipos = ipos + 1
-    opt = getoption(s:sub(ipos, ipos))
+    opt = getoption(s, ipos)
   end
 
   if opt.arg then

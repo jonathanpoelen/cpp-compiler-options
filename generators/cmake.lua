@@ -61,7 +61,7 @@ set(_JLN_DISABLE_OTHERS_VALUES on off)
 
     local extraopts = {'verbose', 'auto_profile'}
 
-    for _k, optname in ipairs(extraopts) do
+    for _, optname in ipairs(extraopts) do
       local opt = self:tocmakeoption(optname)
       self:print('set(' .. opt .. ' ${' .. opt .. '} CACHE STRING "")')
     end
@@ -154,7 +154,7 @@ endfunction()
     self:write(';AUTO_PROFILE')
     self:print('" ${ARGN})\n')
 
-    for _k, optname in ipairs(extraopts) do
+    for _, optname in ipairs(extraopts) do
       local opt = self:tocmakeoption(optname)
       local localname = optname:upper()
       local cmake_opt = 'JLN_DEFAULT_FLAG_' .. localname;
@@ -177,7 +177,7 @@ endfunction()
     for buildtypename, opts in self:getbuildtype() do
       buildtypename = buildtypes[buildtypename] or error('Unknown build type: ' .. buildtypename)
       self:print('\n    if("' .. buildtypename .. '" STREQUAL "${_JLN_BUILD_TYPE}")')
-      for i,xs in pairs(opts) do
+      for _,xs in pairs(opts) do
         local cmake_opt = 'JLN_DEFAULT_FLAG_' .. xs[1]:upper()
         self:print('      if(NOT DEFINED ' .. cmake_opt .. ')')
         self:print('        set(' .. cmake_opt .. ' "' .. xs[2] .. '")')

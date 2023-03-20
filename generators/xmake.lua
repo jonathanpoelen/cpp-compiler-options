@@ -51,7 +51,7 @@ return {
     }
 
     self:print('local _extraopt_flag_names = {')
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
       self:print('  ["' .. opt .. '"] = true,')
@@ -296,7 +296,7 @@ function create_options(options, extra_options)
               .. 'or (disable_other_options and "" or _flag_names.' .. optname
               .. '[get_config("' .. opt .. '")]),')
     end
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
       self:print('      ' .. optname .. ' = options.' .. optname .. ' '
@@ -312,7 +312,7 @@ function create_options(options, extra_options)
       self:print('      ["' .. optname .. '"] = _flag_names["' .. optname
               .. '"][get_config("' .. opt .. '")],')
     end
-    for i,extra in ipairs(extraopts) do
+    for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
       self:print('      ["' .. optname .. '"] = _get_extra("' .. opt .. '"),')
