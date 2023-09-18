@@ -71,6 +71,7 @@
 --  shadow_warnings = off default on local compatible_local all
 --  suggestions = default off on
 --  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
+--  unsafe_buffer_usage_warnings = off default on
 --  warnings = on default off strict very_strict
 --  warnings_as_error = default off on basic
 --  windows_abi_compatibility_warnings = off default on
@@ -133,6 +134,7 @@
 --  - `ndebug` is `with_optimization_1_or_above`
 --  - The following values are `off`:
 --    - `shadow_warnings`
+--    - `unsafe_buffer_usage_warnings`
 --    - `windows_abi_compatibility_warnings`
 --  - The following values are `on`:
 --    - `conversion_warnings`
@@ -243,6 +245,8 @@ local _flag_names = {
   ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
+  ["jln-unsafe-buffer-usage-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
+  ["unsafe_buffer_usage_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["jln-var-init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
   ["var_init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
   ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
@@ -324,6 +328,7 @@ function create_options(options, extra_options)
       stl_fix = options.stl_fix or options["jln-stl-fix"] or (disable_other_options and "" or _flag_names.stl_fix[get_config("jln-stl-fix")]),
       suggestions = options.suggestions or options["jln-suggestions"] or (disable_other_options and "" or _flag_names.suggestions[get_config("jln-suggestions")]),
       switch_warnings = options.switch_warnings or options["jln-switch-warnings"] or (disable_other_options and "" or _flag_names.switch_warnings[get_config("jln-switch-warnings")]),
+      unsafe_buffer_usage_warnings = options.unsafe_buffer_usage_warnings or options["jln-unsafe-buffer-usage-warnings"] or (disable_other_options and "" or _flag_names.unsafe_buffer_usage_warnings[get_config("jln-unsafe-buffer-usage-warnings")]),
       var_init = options.var_init or options["jln-var-init"] or (disable_other_options and "" or _flag_names.var_init[get_config("jln-var-init")]),
       warnings = options.warnings or options["jln-warnings"] or (disable_other_options and "" or _flag_names.warnings[get_config("jln-warnings")]),
       warnings_as_error = options.warnings_as_error or options["jln-warnings-as-error"] or (disable_other_options and "" or _flag_names.warnings_as_error[get_config("jln-warnings-as-error")]),
@@ -368,6 +373,7 @@ function create_options(options, extra_options)
       ["stl_fix"] = _flag_names["stl_fix"][get_config("jln-stl-fix")],
       ["suggestions"] = _flag_names["suggestions"][get_config("jln-suggestions")],
       ["switch_warnings"] = _flag_names["switch_warnings"][get_config("jln-switch-warnings")],
+      ["unsafe_buffer_usage_warnings"] = _flag_names["unsafe_buffer_usage_warnings"][get_config("jln-unsafe-buffer-usage-warnings")],
       ["var_init"] = _flag_names["var_init"][get_config("jln-var-init")],
       ["warnings"] = _flag_names["warnings"][get_config("jln-warnings")],
       ["warnings_as_error"] = _flag_names["warnings_as_error"][get_config("jln-warnings-as-error")],
@@ -619,26 +625,6 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "-Wold-style-definition")
           insert(jln_cxflags, "-Wstrict-prototypes")
           insert(jln_cxflags, "-Wwrite-strings")
-          if options.switch_warnings ~= "" then
-            if options.switch_warnings == "on" then
-              insert(jln_cxflags, "-Wswitch")
-            else
-              if options.switch_warnings == "exhaustive_enum" then
-                insert(jln_cxflags, "-Wswitch-enum")
-              else
-                if options.switch_warnings == "mandatory_default" then
-                  insert(jln_cxflags, "-Wswitch-default")
-                else
-                  if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
-                    insert(jln_cxflags, "-Wswitch-default")
-                    insert(jln_cxflags, "-Wswitch-enum")
-                  else
-                    insert(jln_cxflags, "-Wno-switch")
-                  end
-                end
-              end
-            end
-          end
           if compversion >= 400007 then
             insert(jln_cxflags, "-Wsuggest-attribute=noreturn")
             insert(jln_cxflags, "-Wlogical-op")
@@ -660,6 +646,11 @@ function get_flags(options, extra_options)
                         insert(jln_cxflags, "-Walloca")
                         insert(jln_cxflags, "-Wformat-overflow=2")
                         insert(jln_cxflags, "-Wduplicated-branches")
+                        if compversion >= 800000 then
+                          if ( options.warnings == "strict" or options.warnings == "very_strict" ) then
+                            insert(jln_cxflags, "-Wcast-align=strict")
+                          end
+                        end
                       end
                     end
                   end
@@ -674,34 +665,78 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "-Wno-newline-eof")
           insert(jln_cxflags, "-Wno-padded")
           insert(jln_cxflags, "-Wno-global-constructors")
-          if options.switch_warnings ~= "" then
-            if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
-              insert(jln_cxflags, "-Wno-switch-enum")
+          if  not ( ( options.switch_warnings == "off" or options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) ) then
+            insert(jln_cxflags, "-Wno-switch-enum")
+          end
+          if options.covered_switch_default_warnings == "" then
+            insert(jln_cxflags, "-Wno-covered-switch-default")
+          end
+          if compversion >= 300009 then
+            if compversion >= 500000 then
+              if compversion >= 900000 then
+                if compversion >= 1000000 then
+                  if compversion >= 1100000 then
+                    if compversion >= 1600000 then
+                      if options.unsafe_buffer_usage_warnings == "" then
+                        insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    if compiler == 'gcc' then
+      if options.switch_warnings ~= "" then
+        if options.switch_warnings == "on" then
+          insert(jln_cxflags, "-Wswitch")
+        else
+          if options.switch_warnings == "exhaustive_enum" then
+            insert(jln_cxflags, "-Wswitch-enum")
+          else
+            if options.switch_warnings == "mandatory_default" then
+              insert(jln_cxflags, "-Wswitch-default")
             else
-              if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
+              if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
+                insert(jln_cxflags, "-Wswitch-default")
                 insert(jln_cxflags, "-Wswitch-enum")
               else
                 insert(jln_cxflags, "-Wno-switch")
                 insert(jln_cxflags, "-Wno-switch-enum")
+                insert(jln_cxflags, "-Wno-switch-default")
               end
             end
+          end
+        end
+      end
+    else
+      if options.switch_warnings ~= "" then
+        if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
+          insert(jln_cxflags, "-Wswitch")
+        else
+          if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
+            insert(jln_cxflags, "-Wswitch")
+            insert(jln_cxflags, "-Wswitch-enum")
           else
             insert(jln_cxflags, "-Wno-switch")
             insert(jln_cxflags, "-Wno-switch-enum")
           end
-          if options.covered_switch_default_warnings ~= "" then
-            if options.covered_switch_default_warnings == "off" then
-              insert(jln_cxflags, "-Wno-covered-switch-default")
-            else
-              insert(jln_cxflags, "-Wcovered-switch-default")
-            end
-          end
         end
-        if ( options.warnings == "strict" or options.warnings == "very_strict" ) then
-          if ( compiler == 'gcc' and compversion >= 800000 ) then
-            insert(jln_cxflags, "-Wcast-align=strict")
-          end
+      end
+      if options.covered_switch_default_warnings ~= "" then
+        if options.covered_switch_default_warnings == "off" then
+          insert(jln_cxflags, "-Wno-covered-switch-default")
+        else
+          insert(jln_cxflags, "-Wcovered-switch-default")
         end
+      end
+    end
+    if options.unsafe_buffer_usage_warnings ~= "" then
+      if options.unsafe_buffer_usage_warnings == "off" then
+        insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
       end
     end
     if options.exceptions ~= "" then
@@ -822,7 +857,7 @@ function get_flags(options, extra_options)
         else
           insert(jln_ldflags, "-sASSERTIONS=1")
           insert(jln_ldflags, "-sDEMANGLE_SUPPORT=1")
-          if not ( ( options.sanitizers == "on" ) ) then
+          if  not ( ( options.sanitizers == "on" ) ) then
             insert(jln_ldflags, "-sSAFE_HEAP=1")
           end
         end
@@ -1973,19 +2008,19 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "-Wold-style-definition")
           insert(jln_cxflags, "-Wstrict-prototypes")
           insert(jln_cxflags, "-Wwrite-strings")
-          if options.switch_warnings ~= "" then
-            if ( options.switch_warnings == "on" or options.switch_warnings == "exhaustive_enum" ) then
-              insert(jln_cxflags, "-Wswitch-enum")
+        end
+      end
+      if options.switch_warnings ~= "" then
+        if ( options.switch_warnings == "on" or options.switch_warnings == "exhaustive_enum" ) then
+          insert(jln_cxflags, "-Wswitch-enum")
+        else
+          if options.switch_warnings == "mandatory_default" then
+            insert(jln_cxflags, "-Wswitch-default")
+          else
+            if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
+              insert(jln_cxflags, "-Wswitch")
             else
-              if options.switch_warnings == "mandatory_default" then
-                insert(jln_cxflags, "-Wswitch-default")
-              else
-                if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
-                  insert(jln_cxflags, "-Wswitch")
-                else
-                  insert(jln_cxflags, "-Wno-switch")
-                end
-              end
+              insert(jln_cxflags, "-Wno-switch")
             end
           end
         end
