@@ -37,6 +37,7 @@
 #  shadow_warnings = off default on local compatible_local all
 #  suggestions = default off on
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
+#  unsafe_buffer_usage_warnings = off default on
 #  warnings = on default off strict very_strict
 #  warnings_as_error = default off on basic
 #  windows_abi_compatibility_warnings = off default on
@@ -99,6 +100,7 @@
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
 #    - `shadow_warnings`
+#    - `unsafe_buffer_usage_warnings`
 #    - `windows_abi_compatibility_warnings`
 #  - The following values are `on`:
 #    - `conversion_warnings`
@@ -144,90 +146,92 @@ import string ;
 
 JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
-# enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)
+# Enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)
 feature <jln-analyzer> : _ default off on taint : propagated ;
 # By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.
 feature <jln-analyzer-too-complex-warning> : _ default off on : propagated ;
-# controls the complexity of the control flow paths that are emitted for analyzer diagnostics
+# Controls the complexity of the control flow paths that are emitted for analyzer diagnostics
 #  - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.
 #  - 1: As per the previous level, but also show events for the entry to each function.
 #  - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.
 #  - 3: As per the previous level, but show all control flow events, not just significant ones.
 feature <jln-analyzer-verbosity> : _ default 0 1 2 3 : propagated ;
 feature <jln-color> : _ default auto never always : propagated ;
-# insert extra runtime security checks to detect attempts to compromise your code
+# Insert extra runtime security checks to detect attempts to compromise your code
 feature <jln-control-flow> : _ default off on branch return allow-bugs : incidental ;
-# warn for implicit conversions that may alter a value
+# Warn for implicit conversions that may alter a value
 feature <jln-conversion-warnings> : _ on default off sign conversion : propagated ;
 feature <jln-coverage> : _ default off on : incidental ;
-# warning for default label in switch which covers all enumeration values
+# Warning for default label in switch which covers all enumeration values
 feature <jln-covered-switch-default-warnings> : _ on default off : propagated ;
 feature <jln-cpu> : _ default generic native : incidental ;
-# produce debugging information in the operating system's
+# Produce debugging information in the operating system's
 feature <jln-debug> : _ default off on line-tables-only gdb lldb sce : incidental ;
-# emit fix-it hints in a machine-parseable format
+# Emit fix-it hints in a machine-parseable format
 feature <jln-diagnostics-format> : _ default fixits patch print-source-range-info : propagated ;
-# enable C++ exception
+# Enable C++ exception
 feature <jln-exceptions> : _ default off on : incidental ;
-# transforms some warnings into errors to comply with the standard
+# Transforms some warnings into errors to comply with the standard
 feature <jln-fix-compiler-error> : _ on default off : propagated ;
 feature <jln-float-sanitizers> : _ default off on : incidental ;
 feature <jln-integer-sanitizers> : _ default off on : incidental ;
-# configure linker
+# Configure linker
 feature <jln-linker> : _ default bfd gold lld native : propagated ;
-# enable Link Time Optimization
+# Enable Link Time Optimization
 feature <jln-lto> : _ default off on normal fat thin : incidental ;
-# standard conformance options
+# Standard conformance options
 feature <jln-msvc-conformance> : _ all default all-without-throwing-new : incidental ;
-# disable CRT warnings
+# Disable CRT warnings
 feature <jln-msvc-crt-secure-no-warnings> : _ on default off : propagated ;
-# warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)
+# Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)
 feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath : propagated ;
-# enable NDEBUG macro (disable assert macro)
+# Enable NDEBUG macro (disable assert macro)
 feature <jln-ndebug> : _ with-optimization-1-or-above default off on : incidental ;
-# optimization level
-#  - 0: not optimize
-#  - g: enable debugging experience
-#  - 1: optimize
-#  - 2: optimize even more
-#  - 3: optimize yet more
-#  - fast: enables all optimization=3 and disregard strict standards compliance
-#  - size: optimize for size
-#  - z: optimize for size aggressively (/!\ possible slow compilation)
+# Optimization level
+#  - 0: Not optimize
+#  - g: Enable debugging experience
+#  - 1: Optimize
+#  - 2: Optimize even more
+#  - 3: Optimize yet more
+#  - fast: Enables all optimization=3 and disregard strict standards compliance
+#  - size: Optimize for size
+#  - z: Optimize for size aggressively (/!\ possible slow compilation)
 feature <jln-optimization> : _ default 0 g 1 2 3 fast size z : incidental ;
-# enable other sanitizers
+# Enable other sanitizers
 feature <jln-other-sanitizers> : _ default off thread pointer memory : incidental ;
-# issue all the warnings demanded by strict ISO C and ISO C++
+# Issue all the warnings demanded by strict ISO C and ISO C++
 feature <jln-pedantic> : _ on default off as-error : incidental ;
-# controls position-independent code generation
+# Controls position-independent code generation
 feature <jln-pie> : _ default off on static fpic fPIC fpie fPIE : incidental ;
-# specifies a memory segment that should be made read-only after relocation, if supported.
+# Specifies a memory segment that should be made read-only after relocation, if supported.
 feature <jln-relro> : _ default off on full : incidental ;
-# warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations
+# Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations
 feature <jln-reproducible-build-warnings> : _ default off on : propagated ;
-# enable sanitizers (asan, ubsan, etc)
+# Enable sanitizers (asan, ubsan, etc)
 feature <jln-sanitizers> : _ default off on : incidental ;
 feature <jln-shadow-warnings> : _ off default on local compatible-local all : propagated ;
-# emit extra code to check for buffer overflows, such as stack smashing attacks
+# Emit extra code to check for buffer overflows, such as stack smashing attacks
 feature <jln-stack-protector> : _ default off on strong all : incidental ;
-# enable /DNOMINMAX with msvc
+# Enable /DNOMINMAX with msvc
 feature <jln-stl-fix> : _ on default off : incidental ;
-# warn for cases where adding an attribute may be beneficial
+# Warn for cases where adding an attribute may be beneficial
 feature <jln-suggestions> : _ default off on : propagated ;
-# warnings concerning the switch keyword
+# Warnings concerning the switch keyword
 feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
-# initialize all stack variables implicitly, including padding
+# Enable -Wunsafe-buffer-usage with clang
+feature <jln-unsafe-buffer-usage-warnings> : _ off default on : propagated ;
+# Initialize all stack variables implicitly, including padding
 #  - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang)
 #  - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)
 #  - zero: zero Initialize automatic variables with zeroes
 feature <jln-var-init> : _ default uninitialized pattern zero : incidental ;
-# warning level
+# Warning level
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
-# make all or some warnings into errors
+# Make all or some warnings into errors
 feature <jln-warnings-as-error> : _ default off on basic : incidental ;
 # Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
-# increases that addressable sections capacity
+# Increases that addressable sections capacity
 feature <jln-windows-bigobj> : _ on default : incidental ;
 
 feature <jln-control-flow-incidental> : _ default off on branch return allow-bugs : incidental ;
@@ -286,6 +290,7 @@ feature <jln-stack-protector-default> : default off on strong all : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
+feature <jln-unsafe-buffer-usage-warnings-default> : off default on : incidental ;
 feature <jln-var-init-default> : default uninitialized pattern zero : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
@@ -346,6 +351,7 @@ constant jln_c_env_stack_protector : [ jln_c-get-env jln_stack_protector : defau
 constant jln_c_env_stl_fix : [ jln_c-get-env jln_stl_fix : on default off ] ;
 constant jln_c_env_suggestions : [ jln_c-get-env jln_suggestions : default off on ] ;
 constant jln_c_env_switch_warnings : [ jln_c-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
+constant jln_c_env_unsafe_buffer_usage_warnings : [ jln_c-get-env jln_unsafe_buffer_usage_warnings : off default on ] ;
 constant jln_c_env_var_init : [ jln_c-get-env jln_var_init : default uninitialized pattern zero ] ;
 constant jln_c_env_warnings : [ jln_c-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_c_env_warnings_as_error : [ jln_c-get-env jln_warnings_as_error : default off on basic ] ;
@@ -565,6 +571,7 @@ rule jln_c_flags ( properties * )
   local x_stl_fix = [ jln_c-get-value2 $(ps) : jln-stl-fix : jln-stl-fix-incidental : $(jln_c_env_stl_fix) ] ;
   local x_suggestions = [ jln_c-get-value $(ps) : jln-suggestions : $(jln_c_env_suggestions) ] ;
   local x_switch_warnings = [ jln_c-get-value $(ps) : jln-switch-warnings : $(jln_c_env_switch_warnings) ] ;
+  local x_unsafe_buffer_usage_warnings = [ jln_c-get-value $(ps) : jln-unsafe-buffer-usage-warnings : $(jln_c_env_unsafe_buffer_usage_warnings) ] ;
   local x_var_init = [ jln_c-get-value2 $(ps) : jln-var-init : jln-var-init-incidental : $(jln_c_env_var_init) ] ;
   local x_warnings = [ jln_c-get-value $(ps) : jln-warnings : $(jln_c_env_warnings) ] ;
   local x_warnings_as_error = [ jln_c-get-value2 $(ps) : jln-warnings-as-error : jln-warnings-as-error-incidental : $(jln_c_env_warnings_as_error) ] ;
@@ -672,49 +679,6 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wstrict-prototypes"
             <cflags>"-Wwrite-strings"
           ;
-          if $(x_switch_warnings) != "default"
-          {
-            if $(x_switch_warnings) = "on"
-            {
-              flags +=
-                <cflags>"-Wswitch"
-              ;
-            }
-            else
-            {
-              if $(x_switch_warnings) = "exhaustive-enum"
-              {
-                flags +=
-                  <cflags>"-Wswitch-enum"
-                ;
-              }
-              else
-              {
-                if $(x_switch_warnings) = "mandatory-default"
-                {
-                  flags +=
-                    <cflags>"-Wswitch-default"
-                  ;
-                }
-                else
-                {
-                  if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
-                  {
-                    flags +=
-                      <cflags>"-Wswitch-default"
-                      <cflags>"-Wswitch-enum"
-                    ;
-                  }
-                  else
-                  {
-                    flags +=
-                      <cflags>"-Wno-switch"
-                    ;
-                  }
-                }
-              }
-            }
-          }
           if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400007 ]
           {
             flags +=
@@ -753,6 +717,15 @@ rule jln_c_flags ( properties * )
                           <cflags>"-Wformat-overflow=2"
                           <cflags>"-Wduplicated-branches"
                         ;
+                        if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ]
+                        {
+                          if ( $(x_warnings) = "strict" || $(x_warnings) = "very-strict" )
+                          {
+                            flags +=
+                              <cflags>"-Wcast-align=strict"
+                            ;
+                          }
+                        }
                       }
                     }
                   }
@@ -771,19 +744,77 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wno-padded"
             <cflags>"-Wno-global-constructors"
           ;
-          if $(x_switch_warnings) != "default"
+          if  ! ( ( $(x_switch_warnings) = "off" || $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" ) )
           {
-            if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "mandatory-default" )
+            flags +=
+              <cflags>"-Wno-switch-enum"
+            ;
+          }
+          if $(x_covered_switch_default_warnings) = "default"
+          {
+            flags +=
+              <cflags>"-Wno-covered-switch-default"
+            ;
+          }
+          if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 300009 ]
+          {
+            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 500000 ]
+            {
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 900000 ]
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1000000 ]
+                {
+                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1100000 ]
+                  {
+                    if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600000 ]
+                    {
+                      if $(x_unsafe_buffer_usage_warnings) = "default"
+                      {
+                        flags +=
+                          <cflags>"-Wno-unsafe-buffer-usage"
+                        ;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if $(JLN_NORMALIZED_C_COMP) = "gcc"
+    {
+      if $(x_switch_warnings) != "default"
+      {
+        if $(x_switch_warnings) = "on"
+        {
+          flags +=
+            <cflags>"-Wswitch"
+          ;
+        }
+        else
+        {
+          if $(x_switch_warnings) = "exhaustive-enum"
+          {
+            flags +=
+              <cflags>"-Wswitch-enum"
+            ;
+          }
+          else
+          {
+            if $(x_switch_warnings) = "mandatory-default"
             {
               flags +=
-                <cflags>"-Wno-switch-enum"
+                <cflags>"-Wswitch-default"
               ;
             }
             else
             {
-              if ( $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
+              if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
               {
                 flags +=
+                  <cflags>"-Wswitch-default"
                   <cflags>"-Wswitch-enum"
                 ;
               }
@@ -792,9 +823,32 @@ rule jln_c_flags ( properties * )
                 flags +=
                   <cflags>"-Wno-switch"
                   <cflags>"-Wno-switch-enum"
+                  <cflags>"-Wno-switch-default"
                 ;
               }
             }
+          }
+        }
+      }
+    }
+    else
+    {
+      if $(x_switch_warnings) != "default"
+      {
+        if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "mandatory-default" )
+        {
+          flags +=
+            <cflags>"-Wswitch"
+          ;
+        }
+        else
+        {
+          if ( $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
+          {
+            flags +=
+              <cflags>"-Wswitch"
+              <cflags>"-Wswitch-enum"
+            ;
           }
           else
           {
@@ -803,31 +857,31 @@ rule jln_c_flags ( properties * )
               <cflags>"-Wno-switch-enum"
             ;
           }
-          if $(x_covered_switch_default_warnings) != "default"
-          {
-            if $(x_covered_switch_default_warnings) = "off"
-            {
-              flags +=
-                <cflags>"-Wno-covered-switch-default"
-              ;
-            }
-            else
-            {
-              flags +=
-                <cflags>"-Wcovered-switch-default"
-              ;
-            }
-          }
         }
-        if ( $(x_warnings) = "strict" || $(x_warnings) = "very-strict" )
+      }
+      if $(x_covered_switch_default_warnings) != "default"
+      {
+        if $(x_covered_switch_default_warnings) = "off"
         {
-          if ( $(JLN_NORMALIZED_C_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ] )
-          {
-            flags +=
-              <cflags>"-Wcast-align=strict"
-            ;
-          }
+          flags +=
+            <cflags>"-Wno-covered-switch-default"
+          ;
         }
+        else
+        {
+          flags +=
+            <cflags>"-Wcovered-switch-default"
+          ;
+        }
+      }
+    }
+    if $(x_unsafe_buffer_usage_warnings) != "default"
+    {
+      if $(x_unsafe_buffer_usage_warnings) = "off"
+      {
+        flags +=
+          <cflags>"-Wno-unsafe-buffer-usage"
+        ;
       }
     }
     if $(x_exceptions) != "default"
@@ -1048,7 +1102,7 @@ rule jln_c_flags ( properties * )
             <linkflags>"-sASSERTIONS=1"
             <linkflags>"-sDEMANGLE_SUPPORT=1"
           ;
-          if ! ( ( $(x_sanitizers) = "on" ) )
+          if  ! ( ( $(x_sanitizers) = "on" ) )
           {
             flags +=
               <linkflags>"-sSAFE_HEAP=1"
@@ -3277,37 +3331,37 @@ rule jln_c_flags ( properties * )
             <cflags>"-Wstrict-prototypes"
             <cflags>"-Wwrite-strings"
           ;
-          if $(x_switch_warnings) != "default"
+        }
+      }
+      if $(x_switch_warnings) != "default"
+      {
+        if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "exhaustive-enum" )
+        {
+          flags +=
+            <cflags>"-Wswitch-enum"
+          ;
+        }
+        else
+        {
+          if $(x_switch_warnings) = "mandatory-default"
           {
-            if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "exhaustive-enum" )
+            flags +=
+              <cflags>"-Wswitch-default"
+            ;
+          }
+          else
+          {
+            if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
             {
               flags +=
-                <cflags>"-Wswitch-enum"
+                <cflags>"-Wswitch"
               ;
             }
             else
             {
-              if $(x_switch_warnings) = "mandatory-default"
-              {
-                flags +=
-                  <cflags>"-Wswitch-default"
-                ;
-              }
-              else
-              {
-                if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
-                {
-                  flags +=
-                    <cflags>"-Wswitch"
-                  ;
-                }
-                else
-                {
-                  flags +=
-                    <cflags>"-Wno-switch"
-                  ;
-                }
-              }
+              flags +=
+                <cflags>"-Wno-switch"
+              ;
             }
           }
         }
