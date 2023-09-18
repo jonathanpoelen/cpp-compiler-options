@@ -72,6 +72,7 @@ reproducible_build_warnings = default off on
 shadow_warnings = off default on local compatible_local all
 suggestions = default off on
 switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
+unsafe_buffer_usage_warnings = off default on
 warnings = on default off strict very_strict
 warnings_as_error = default off on basic
 windows_abi_compatibility_warnings = off default on
@@ -134,6 +135,7 @@ If not specified:
 - `ndebug` is `with_optimization_1_or_above`
 - The following values are `off`:
   - `shadow_warnings`
+  - `unsafe_buffer_usage_warnings`
   - `windows_abi_compatibility_warnings`
 - The following values are `on`:
   - `conversion_warnings`

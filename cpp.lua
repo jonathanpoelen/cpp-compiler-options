@@ -72,6 +72,7 @@
 --  shadow_warnings = off default on local compatible_local all
 --  suggestions = default off on
 --  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
+--  unsafe_buffer_usage_warnings = off default on
 --  warnings = on default off strict very_strict
 --  warnings_as_error = default off on basic
 --  windows_abi_compatibility_warnings = off default on
@@ -134,6 +135,7 @@
 --  - `ndebug` is `with_optimization_1_or_above`
 --  - The following values are `off`:
 --    - `shadow_warnings`
+--    - `unsafe_buffer_usage_warnings`
 --    - `windows_abi_compatibility_warnings`
 --  - The following values are `on`:
 --    - `conversion_warnings`
@@ -256,6 +258,8 @@ local _jln_flag_names = {
   ["suggestions"] = true,
   ["jln-switch-warnings"] = true,
   ["switch_warnings"] = true,
+  ["jln-unsafe-buffer-usage-warnings"] = true,
+  ["unsafe_buffer_usage_warnings"] = true,
   ["jln-var-init"] = true,
   ["var_init"] = true,
   ["jln-warnings"] = true,
@@ -286,49 +290,49 @@ function jln_newoptions(defaults)
     defaults = {}
   end
 
-  newoption{trigger="jln-analyzer", allowed={{'default'}, {'off'}, {'on'}, {'taint'}}, description="enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)"}
+  newoption{trigger="jln-analyzer", allowed={{'default'}, {'off'}, {'on'}, {'taint'}}, description="Enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)"}
   if not _OPTIONS["jln-analyzer"] then _OPTIONS["jln-analyzer"] = (defaults["analyzer"] or defaults["jln-analyzer"] or "default") end
 
   newoption{trigger="jln-analyzer-too-complex-warning", allowed={{'default'}, {'off'}, {'on'}}, description="By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs."}
   if not _OPTIONS["jln-analyzer-too-complex-warning"] then _OPTIONS["jln-analyzer-too-complex-warning"] = (defaults["analyzer_too_complex_warning"] or defaults["jln-analyzer-too-complex-warning"] or "default") end
 
-  newoption{trigger="jln-analyzer-verbosity", allowed={{'default'}, {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'}, {'1', 'As per the previous level, but also show events for the entry to each function.'}, {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'}, {'3', 'As per the previous level, but show all control flow events, not just significant ones.'}}, description="controls the complexity of the control flow paths that are emitted for analyzer diagnostics"}
+  newoption{trigger="jln-analyzer-verbosity", allowed={{'default'}, {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'}, {'1', 'As per the previous level, but also show events for the entry to each function.'}, {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'}, {'3', 'As per the previous level, but show all control flow events, not just significant ones.'}}, description="Controls the complexity of the control flow paths that are emitted for analyzer diagnostics"}
   if not _OPTIONS["jln-analyzer-verbosity"] then _OPTIONS["jln-analyzer-verbosity"] = (defaults["analyzer_verbosity"] or defaults["jln-analyzer-verbosity"] or "default") end
 
   newoption{trigger="jln-color", allowed={{'default'}, {'auto'}, {'never'}, {'always'}}, description=""}
   if not _OPTIONS["jln-color"] then _OPTIONS["jln-color"] = (defaults["color"] or defaults["jln-color"] or "default") end
 
-  newoption{trigger="jln-control-flow", allowed={{'default'}, {'off'}, {'on'}, {'branch'}, {'return'}, {'allow_bugs'}}, description="insert extra runtime security checks to detect attempts to compromise your code"}
+  newoption{trigger="jln-control-flow", allowed={{'default'}, {'off'}, {'on'}, {'branch'}, {'return'}, {'allow_bugs'}}, description="Insert extra runtime security checks to detect attempts to compromise your code"}
   if not _OPTIONS["jln-control-flow"] then _OPTIONS["jln-control-flow"] = (defaults["control_flow"] or defaults["jln-control-flow"] or "default") end
 
-  newoption{trigger="jln-conversion-warnings", allowed={{'default'}, {'off'}, {'on'}, {'sign'}, {'conversion'}}, description="warn for implicit conversions that may alter a value"}
+  newoption{trigger="jln-conversion-warnings", allowed={{'default'}, {'off'}, {'on'}, {'sign'}, {'conversion'}}, description="Warn for implicit conversions that may alter a value"}
   if not _OPTIONS["jln-conversion-warnings"] then _OPTIONS["jln-conversion-warnings"] = (defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on") end
 
   newoption{trigger="jln-coverage", allowed={{'default'}, {'off'}, {'on'}}, description=""}
   if not _OPTIONS["jln-coverage"] then _OPTIONS["jln-coverage"] = (defaults["coverage"] or defaults["jln-coverage"] or "default") end
 
-  newoption{trigger="jln-covered-switch-default-warnings", allowed={{'default'}, {'on'}, {'off'}}, description="warning for default label in switch which covers all enumeration values"}
+  newoption{trigger="jln-covered-switch-default-warnings", allowed={{'default'}, {'on'}, {'off'}}, description="Warning for default label in switch which covers all enumeration values"}
   if not _OPTIONS["jln-covered-switch-default-warnings"] then _OPTIONS["jln-covered-switch-default-warnings"] = (defaults["covered_switch_default_warnings"] or defaults["jln-covered-switch-default-warnings"] or "on") end
 
   newoption{trigger="jln-cpu", allowed={{'default'}, {'generic'}, {'native'}}, description=""}
   if not _OPTIONS["jln-cpu"] then _OPTIONS["jln-cpu"] = (defaults["cpu"] or defaults["jln-cpu"] or "default") end
 
-  newoption{trigger="jln-debug", allowed={{'default'}, {'off'}, {'on'}, {'line_tables_only'}, {'gdb'}, {'lldb'}, {'sce'}}, description="produce debugging information in the operating system\'s"}
+  newoption{trigger="jln-debug", allowed={{'default'}, {'off'}, {'on'}, {'line_tables_only'}, {'gdb'}, {'lldb'}, {'sce'}}, description="Produce debugging information in the operating system\'s"}
   if not _OPTIONS["jln-debug"] then _OPTIONS["jln-debug"] = (defaults["debug"] or defaults["jln-debug"] or "default") end
 
-  newoption{trigger="jln-diagnostics-format", allowed={{'default'}, {'fixits'}, {'patch'}, {'print_source_range_info'}}, description="emit fix-it hints in a machine-parseable format"}
+  newoption{trigger="jln-diagnostics-format", allowed={{'default'}, {'fixits'}, {'patch'}, {'print_source_range_info'}}, description="Emit fix-it hints in a machine-parseable format"}
   if not _OPTIONS["jln-diagnostics-format"] then _OPTIONS["jln-diagnostics-format"] = (defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "default") end
 
-  newoption{trigger="jln-diagnostics-show-template-tree", allowed={{'default'}, {'off'}, {'on'}}, description="enables printing a tree-like structure showing the common and differing parts of the types"}
+  newoption{trigger="jln-diagnostics-show-template-tree", allowed={{'default'}, {'off'}, {'on'}}, description="Enables printing a tree-like structure showing the common and differing parts of the types"}
   if not _OPTIONS["jln-diagnostics-show-template-tree"] then _OPTIONS["jln-diagnostics-show-template-tree"] = (defaults["diagnostics_show_template_tree"] or defaults["jln-diagnostics-show-template-tree"] or "default") end
 
-  newoption{trigger="jln-elide-type", allowed={{'default'}, {'off'}, {'on'}}, description="prints diagnostics showing common parts of template types as \"[...]\""}
+  newoption{trigger="jln-elide-type", allowed={{'default'}, {'off'}, {'on'}}, description="Prints diagnostics showing common parts of template types as \"[...]\""}
   if not _OPTIONS["jln-elide-type"] then _OPTIONS["jln-elide-type"] = (defaults["elide_type"] or defaults["jln-elide-type"] or "default") end
 
-  newoption{trigger="jln-exceptions", allowed={{'default'}, {'off'}, {'on'}}, description="enable C++ exception"}
+  newoption{trigger="jln-exceptions", allowed={{'default'}, {'off'}, {'on'}}, description="Enable C++ exception"}
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
 
-  newoption{trigger="jln-fix-compiler-error", allowed={{'default'}, {'off'}, {'on'}}, description="transforms some warnings into errors to comply with the standard"}
+  newoption{trigger="jln-fix-compiler-error", allowed={{'default'}, {'off'}, {'on'}}, description="Transforms some warnings into errors to comply with the standard"}
   if not _OPTIONS["jln-fix-compiler-error"] then _OPTIONS["jln-fix-compiler-error"] = (defaults["fix_compiler_error"] or defaults["jln-fix-compiler-error"] or "on") end
 
   newoption{trigger="jln-float-sanitizers", allowed={{'default'}, {'off'}, {'on'}}, description=""}
@@ -337,79 +341,82 @@ function jln_newoptions(defaults)
   newoption{trigger="jln-integer-sanitizers", allowed={{'default'}, {'off'}, {'on'}}, description=""}
   if not _OPTIONS["jln-integer-sanitizers"] then _OPTIONS["jln-integer-sanitizers"] = (defaults["integer_sanitizers"] or defaults["jln-integer-sanitizers"] or "default") end
 
-  newoption{trigger="jln-linker", allowed={{'default'}, {'bfd'}, {'gold'}, {'lld'}, {'native'}}, description="configure linker"}
+  newoption{trigger="jln-linker", allowed={{'default'}, {'bfd'}, {'gold'}, {'lld'}, {'native'}}, description="Configure linker"}
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
 
-  newoption{trigger="jln-lto", allowed={{'default'}, {'off'}, {'on'}, {'normal'}, {'fat'}, {'thin'}}, description="enable Link Time Optimization"}
+  newoption{trigger="jln-lto", allowed={{'default'}, {'off'}, {'on'}, {'normal'}, {'fat'}, {'thin'}}, description="Enable Link Time Optimization"}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
 
-  newoption{trigger="jln-msvc-conformance", allowed={{'default'}, {'all'}, {'all_without_throwing_new'}}, description="standard conformance options"}
+  newoption{trigger="jln-msvc-conformance", allowed={{'default'}, {'all'}, {'all_without_throwing_new'}}, description="Standard conformance options"}
   if not _OPTIONS["jln-msvc-conformance"] then _OPTIONS["jln-msvc-conformance"] = (defaults["msvc_conformance"] or defaults["jln-msvc-conformance"] or "all") end
 
-  newoption{trigger="jln-msvc-crt-secure-no-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="disable CRT warnings"}
+  newoption{trigger="jln-msvc-crt-secure-no-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="Disable CRT warnings"}
   if not _OPTIONS["jln-msvc-crt-secure-no-warnings"] then _OPTIONS["jln-msvc-crt-secure-no-warnings"] = (defaults["msvc_crt_secure_no_warnings"] or defaults["jln-msvc-crt-secure-no-warnings"] or "on") end
 
-  newoption{trigger="jln-msvc-isystem", allowed={{'default'}, {'anglebrackets'}, {'include_and_caexcludepath'}}, description="warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)"}
+  newoption{trigger="jln-msvc-isystem", allowed={{'default'}, {'anglebrackets'}, {'include_and_caexcludepath'}}, description="Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)"}
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
 
-  newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{'default'}, {'off'}, {'on'}}, description="warnings concerning template in an external header (requires msvc_isystem)"}
+  newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{'default'}, {'off'}, {'on'}}, description="Warnings concerning template in an external header (requires msvc_isystem)"}
   if not _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] then _OPTIONS["jln-msvc-isystem-with-template-from-non-external"] = (defaults["msvc_isystem_with_template_from_non_external"] or defaults["jln-msvc-isystem-with-template-from-non-external"] or "default") end
 
-  newoption{trigger="jln-ndebug", allowed={{'default'}, {'off'}, {'on'}, {'with_optimization_1_or_above'}}, description="enable NDEBUG macro (disable assert macro)"}
+  newoption{trigger="jln-ndebug", allowed={{'default'}, {'off'}, {'on'}, {'with_optimization_1_or_above'}}, description="Enable NDEBUG macro (disable assert macro)"}
   if not _OPTIONS["jln-ndebug"] then _OPTIONS["jln-ndebug"] = (defaults["ndebug"] or defaults["jln-ndebug"] or "with_optimization_1_or_above") end
 
   newoption{trigger="jln-noexcept-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception."}
   if not _OPTIONS["jln-noexcept-warnings"] then _OPTIONS["jln-noexcept-warnings"] = (defaults["noexcept_warnings"] or defaults["jln-noexcept-warnings"] or "default") end
 
-  newoption{trigger="jln-optimization", allowed={{'default'}, {'0', 'not optimize'}, {'g', 'enable debugging experience'}, {'1', 'optimize'}, {'2', 'optimize even more'}, {'3', 'optimize yet more'}, {'fast', 'enables all optimization=3 and disregard strict standards compliance'}, {'size', 'optimize for size'}, {'z', 'optimize for size aggressively (/!\\ possible slow compilation)'}}, description="optimization level"}
+  newoption{trigger="jln-optimization", allowed={{'default'}, {'0', 'Not optimize'}, {'g', 'Enable debugging experience'}, {'1', 'Optimize'}, {'2', 'Optimize even more'}, {'3', 'Optimize yet more'}, {'fast', 'Enables all optimization=3 and disregard strict standards compliance'}, {'size', 'Optimize for size'}, {'z', 'Optimize for size aggressively (/!\\ possible slow compilation)'}}, description="Optimization level"}
   if not _OPTIONS["jln-optimization"] then _OPTIONS["jln-optimization"] = (defaults["optimization"] or defaults["jln-optimization"] or "default") end
 
-  newoption{trigger="jln-other-sanitizers", allowed={{'default'}, {'off'}, {'thread'}, {'pointer'}, {'memory'}}, description="enable other sanitizers"}
+  newoption{trigger="jln-other-sanitizers", allowed={{'default'}, {'off'}, {'thread'}, {'pointer'}, {'memory'}}, description="Enable other sanitizers"}
   if not _OPTIONS["jln-other-sanitizers"] then _OPTIONS["jln-other-sanitizers"] = (defaults["other_sanitizers"] or defaults["jln-other-sanitizers"] or "default") end
 
-  newoption{trigger="jln-pedantic", allowed={{'default'}, {'off'}, {'on'}, {'as_error'}}, description="issue all the warnings demanded by strict ISO C and ISO C++"}
+  newoption{trigger="jln-pedantic", allowed={{'default'}, {'off'}, {'on'}, {'as_error'}}, description="Issue all the warnings demanded by strict ISO C and ISO C++"}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "on") end
 
-  newoption{trigger="jln-pie", allowed={{'default'}, {'off'}, {'on'}, {'static'}, {'fpic'}, {'fPIC'}, {'fpie'}, {'fPIE'}}, description="controls position-independent code generation"}
+  newoption{trigger="jln-pie", allowed={{'default'}, {'off'}, {'on'}, {'static'}, {'fpic'}, {'fPIC'}, {'fpie'}, {'fPIE'}}, description="Controls position-independent code generation"}
   if not _OPTIONS["jln-pie"] then _OPTIONS["jln-pie"] = (defaults["pie"] or defaults["jln-pie"] or "default") end
 
-  newoption{trigger="jln-relro", allowed={{'default'}, {'off'}, {'on'}, {'full'}}, description="specifies a memory segment that should be made read-only after relocation, if supported."}
+  newoption{trigger="jln-relro", allowed={{'default'}, {'off'}, {'on'}, {'full'}}, description="Specifies a memory segment that should be made read-only after relocation, if supported."}
   if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or defaults["jln-relro"] or "default") end
 
-  newoption{trigger="jln-reproducible-build-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations"}
+  newoption{trigger="jln-reproducible-build-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="Warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations"}
   if not _OPTIONS["jln-reproducible-build-warnings"] then _OPTIONS["jln-reproducible-build-warnings"] = (defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "default") end
 
-  newoption{trigger="jln-rtti", allowed={{'default'}, {'off'}, {'on'}}, description="disable generation of information about every class with virtual functions for use by the C++ run-time type identification features (\"dynamic_cast\" and \"typeid\")"}
+  newoption{trigger="jln-rtti", allowed={{'default'}, {'off'}, {'on'}}, description="Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features (\"dynamic_cast\" and \"typeid\")"}
   if not _OPTIONS["jln-rtti"] then _OPTIONS["jln-rtti"] = (defaults["rtti"] or defaults["jln-rtti"] or "default") end
 
-  newoption{trigger="jln-sanitizers", allowed={{'default'}, {'off'}, {'on'}}, description="enable sanitizers (asan, ubsan, etc)"}
+  newoption{trigger="jln-sanitizers", allowed={{'default'}, {'off'}, {'on'}}, description="Enable sanitizers (asan, ubsan, etc)"}
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
 
   newoption{trigger="jln-shadow-warnings", allowed={{'default'}, {'off'}, {'on'}, {'local'}, {'compatible_local'}, {'all'}}, description=""}
   if not _OPTIONS["jln-shadow-warnings"] then _OPTIONS["jln-shadow-warnings"] = (defaults["shadow_warnings"] or defaults["jln-shadow-warnings"] or "off") end
 
-  newoption{trigger="jln-stack-protector", allowed={{'default'}, {'off'}, {'on'}, {'strong'}, {'all'}}, description="emit extra code to check for buffer overflows, such as stack smashing attacks"}
+  newoption{trigger="jln-stack-protector", allowed={{'default'}, {'off'}, {'on'}, {'strong'}, {'all'}}, description="Emit extra code to check for buffer overflows, such as stack smashing attacks"}
   if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
 
-  newoption{trigger="jln-stl-debug", allowed={{'default'}, {'off'}, {'on'}, {'allow_broken_abi'}, {'allow_broken_abi_and_bugs'}, {'assert_as_exception'}}, description="controls the debug level of the STL"}
+  newoption{trigger="jln-stl-debug", allowed={{'default'}, {'off'}, {'on'}, {'allow_broken_abi'}, {'allow_broken_abi_and_bugs'}, {'assert_as_exception'}}, description="Controls the debug level of the STL"}
   if not _OPTIONS["jln-stl-debug"] then _OPTIONS["jln-stl-debug"] = (defaults["stl_debug"] or defaults["jln-stl-debug"] or "default") end
 
-  newoption{trigger="jln-stl-fix", allowed={{'default'}, {'off'}, {'on'}}, description="enable /DNOMINMAX with msvc"}
+  newoption{trigger="jln-stl-fix", allowed={{'default'}, {'off'}, {'on'}}, description="Enable /DNOMINMAX with msvc"}
   if not _OPTIONS["jln-stl-fix"] then _OPTIONS["jln-stl-fix"] = (defaults["stl_fix"] or defaults["jln-stl-fix"] or "on") end
 
-  newoption{trigger="jln-suggestions", allowed={{'default'}, {'off'}, {'on'}}, description="warn for cases where adding an attribute may be beneficial"}
+  newoption{trigger="jln-suggestions", allowed={{'default'}, {'off'}, {'on'}}, description="Warn for cases where adding an attribute may be beneficial"}
   if not _OPTIONS["jln-suggestions"] then _OPTIONS["jln-suggestions"] = (defaults["suggestions"] or defaults["jln-suggestions"] or "default") end
 
-  newoption{trigger="jln-switch-warnings", allowed={{'default'}, {'on'}, {'off'}, {'exhaustive_enum'}, {'mandatory_default'}, {'exhaustive_enum_and_mandatory_default'}}, description="warnings concerning the switch keyword"}
+  newoption{trigger="jln-switch-warnings", allowed={{'default'}, {'on'}, {'off'}, {'exhaustive_enum'}, {'mandatory_default'}, {'exhaustive_enum_and_mandatory_default'}}, description="Warnings concerning the switch keyword"}
   if not _OPTIONS["jln-switch-warnings"] then _OPTIONS["jln-switch-warnings"] = (defaults["switch_warnings"] or defaults["jln-switch-warnings"] or "on") end
 
-  newoption{trigger="jln-var-init", allowed={{'default'}, {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)'}, {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)'}, {'zero', 'zero Initialize automatic variables with zeroes'}}, description="initialize all stack variables implicitly, including padding"}
+  newoption{trigger="jln-unsafe-buffer-usage-warnings", allowed={{'default'}, {'on'}, {'off'}}, description="Enable -Wunsafe-buffer-usage with clang"}
+  if not _OPTIONS["jln-unsafe-buffer-usage-warnings"] then _OPTIONS["jln-unsafe-buffer-usage-warnings"] = (defaults["unsafe_buffer_usage_warnings"] or defaults["jln-unsafe-buffer-usage-warnings"] or "off") end
+
+  newoption{trigger="jln-var-init", allowed={{'default'}, {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)'}, {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)'}, {'zero', 'zero Initialize automatic variables with zeroes'}}, description="Initialize all stack variables implicitly, including padding"}
   if not _OPTIONS["jln-var-init"] then _OPTIONS["jln-var-init"] = (defaults["var_init"] or defaults["jln-var-init"] or "default") end
 
-  newoption{trigger="jln-warnings", allowed={{'default'}, {'off'}, {'on'}, {'strict'}, {'very_strict'}}, description="warning level"}
+  newoption{trigger="jln-warnings", allowed={{'default'}, {'off'}, {'on'}, {'strict'}, {'very_strict'}}, description="Warning level"}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "on") end
 
-  newoption{trigger="jln-warnings-as-error", allowed={{'default'}, {'off'}, {'on'}, {'basic'}}, description="make all or some warnings into errors"}
+  newoption{trigger="jln-warnings-as-error", allowed={{'default'}, {'off'}, {'on'}, {'basic'}}, description="Make all or some warnings into errors"}
   if not _OPTIONS["jln-warnings-as-error"] then _OPTIONS["jln-warnings-as-error"] = (defaults["warnings_as_error"] or defaults["jln-warnings-as-error"] or "default") end
 
   newoption{trigger="jln-whole-program", allowed={{'default'}, {'off'}, {'on'}, {'strip_all'}}, description="Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto."}
@@ -418,7 +425,7 @@ function jln_newoptions(defaults)
   newoption{trigger="jln-windows-abi-compatibility-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys"}
   if not _OPTIONS["jln-windows-abi-compatibility-warnings"] then _OPTIONS["jln-windows-abi-compatibility-warnings"] = (defaults["windows_abi_compatibility_warnings"] or defaults["jln-windows-abi-compatibility-warnings"] or "off") end
 
-  newoption{trigger="jln-windows-bigobj", allowed={{'default'}, {'on'}}, description="increases that addressable sections capacity"}
+  newoption{trigger="jln-windows-bigobj", allowed={{'default'}, {'on'}}, description="Increases that addressable sections capacity"}
   if not _OPTIONS["jln-windows-bigobj"] then _OPTIONS["jln-windows-bigobj"] = (defaults["windows_bigobj"] or defaults["jln-windows-bigobj"] or "on") end
   newoption{trigger="jln-cxx", description="Path or name of the compiler for jln functions"}
   newoption{trigger="jln-cxx-version", description="Force the compiler version for jln functions"}
@@ -500,6 +507,7 @@ function jln_tovalues(values, disable_others)
       ["stl_fix"] = values["stl_fix"] or values["jln-stl-fix"] or (disable_others and "default" or _OPTIONS["jln-stl-fix"]),
       ["suggestions"] = values["suggestions"] or values["jln-suggestions"] or (disable_others and "default" or _OPTIONS["jln-suggestions"]),
       ["switch_warnings"] = values["switch_warnings"] or values["jln-switch-warnings"] or (disable_others and "default" or _OPTIONS["jln-switch-warnings"]),
+      ["unsafe_buffer_usage_warnings"] = values["unsafe_buffer_usage_warnings"] or values["jln-unsafe-buffer-usage-warnings"] or (disable_others and "default" or _OPTIONS["jln-unsafe-buffer-usage-warnings"]),
       ["var_init"] = values["var_init"] or values["jln-var-init"] or (disable_others and "default" or _OPTIONS["jln-var-init"]),
       ["warnings"] = values["warnings"] or values["jln-warnings"] or (disable_others and "default" or _OPTIONS["jln-warnings"]),
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "default" or _OPTIONS["jln-warnings-as-error"]),
@@ -551,6 +559,7 @@ function jln_tovalues(values, disable_others)
       ["stl_fix"] = _OPTIONS["jln-stl-fix"],
       ["suggestions"] = _OPTIONS["jln-suggestions"],
       ["switch_warnings"] = _OPTIONS["jln-switch-warnings"],
+      ["unsafe_buffer_usage_warnings"] = _OPTIONS["jln-unsafe-buffer-usage-warnings"],
       ["var_init"] = _OPTIONS["jln-var-init"],
       ["warnings"] = _OPTIONS["jln-warnings"],
       ["warnings_as_error"] = _OPTIONS["jln-warnings-as-error"],
@@ -723,26 +732,6 @@ function jln_getoptions(values, disable_others, print_compiler)
           table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
           table_insert(jln_buildoptions, "-Wold-style-cast")
           table_insert(jln_buildoptions, "-Woverloaded-virtual")
-          if values['switch_warnings'] ~= 'default' then
-            if values['switch_warnings'] == 'on' then
-              table_insert(jln_buildoptions, "-Wswitch")
-            else
-              if values['switch_warnings'] == 'exhaustive_enum' then
-                table_insert(jln_buildoptions, "-Wswitch-enum")
-              else
-                if values['switch_warnings'] == 'mandatory_default' then
-                  table_insert(jln_buildoptions, "-Wswitch-default")
-                else
-                  if values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' then
-                    table_insert(jln_buildoptions, "-Wswitch-default")
-                    table_insert(jln_buildoptions, "-Wswitch-enum")
-                  else
-                    table_insert(jln_buildoptions, "-Wno-switch")
-                  end
-                end
-              end
-            end
-          end
           if compversion >= 400007 then
             table_insert(jln_buildoptions, "-Wsuggest-attribute=noreturn")
             table_insert(jln_buildoptions, "-Wzero-as-null-pointer-constant")
@@ -772,6 +761,9 @@ function jln_getoptions(values, disable_others, print_compiler)
                         table_insert(jln_buildoptions, "-Wduplicated-branches")
                         if compversion >= 800000 then
                           table_insert(jln_buildoptions, "-Wclass-memaccess")
+                          if ( values['warnings'] == 'strict' or values['warnings'] == 'very_strict' ) then
+                            table_insert(jln_buildoptions, "-Wcast-align=strict")
+                          end
                         end
                       end
                     end
@@ -791,27 +783,11 @@ function jln_getoptions(values, disable_others, print_compiler)
           table_insert(jln_buildoptions, "-Wno-global-constructors")
           table_insert(jln_buildoptions, "-Wno-weak-vtables")
           table_insert(jln_buildoptions, "-Wno-exit-time-destructors")
-          if values['switch_warnings'] ~= 'default' then
-            if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'mandatory_default' ) then
-              table_insert(jln_buildoptions, "-Wno-switch-enum")
-            else
-              if ( values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) then
-                table_insert(jln_buildoptions, "-Wswitch-enum")
-              else
-                table_insert(jln_buildoptions, "-Wno-switch")
-                table_insert(jln_buildoptions, "-Wno-switch-enum")
-              end
-            end
-          else
-            table_insert(jln_buildoptions, "-Wno-switch")
+          if  not ( ( values['switch_warnings'] == 'off' or values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) ) then
             table_insert(jln_buildoptions, "-Wno-switch-enum")
           end
-          if values['covered_switch_default_warnings'] ~= 'default' then
-            if values['covered_switch_default_warnings'] == 'off' then
-              table_insert(jln_buildoptions, "-Wno-covered-switch-default")
-            else
-              table_insert(jln_buildoptions, "-Wcovered-switch-default")
-            end
+          if values['covered_switch_default_warnings'] == 'default' then
+            table_insert(jln_buildoptions, "-Wno-covered-switch-default")
           end
           if compversion >= 300009 then
             table_insert(jln_buildoptions, "-Wno-undefined-var-template")
@@ -823,17 +799,69 @@ function jln_getoptions(values, disable_others, print_compiler)
                   table_insert(jln_buildoptions, "-Wno-c++20-compat")
                   if compversion >= 1100000 then
                     table_insert(jln_buildoptions, "-Wno-suggest-destructor-override")
+                    if compversion >= 1600000 then
+                      if values['unsafe_buffer_usage_warnings'] == 'default' then
+                        table_insert(jln_buildoptions, "-Wno-unsafe-buffer-usage")
+                      end
+                    end
                   end
                 end
               end
             end
           end
         end
-        if ( values['warnings'] == 'strict' or values['warnings'] == 'very_strict' ) then
-          if ( compiler == 'gcc' and compversion >= 800000 ) then
-            table_insert(jln_buildoptions, "-Wcast-align=strict")
+      end
+    end
+    if compiler == 'gcc' then
+      if values['switch_warnings'] ~= 'default' then
+        if values['switch_warnings'] == 'on' then
+          table_insert(jln_buildoptions, "-Wswitch")
+        else
+          if values['switch_warnings'] == 'exhaustive_enum' then
+            table_insert(jln_buildoptions, "-Wswitch-enum")
+          else
+            if values['switch_warnings'] == 'mandatory_default' then
+              table_insert(jln_buildoptions, "-Wswitch-default")
+            else
+              if values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' then
+                table_insert(jln_buildoptions, "-Wswitch-default")
+                table_insert(jln_buildoptions, "-Wswitch-enum")
+              else
+                table_insert(jln_buildoptions, "-Wno-switch")
+                table_insert(jln_buildoptions, "-Wno-switch-enum")
+                table_insert(jln_buildoptions, "-Wno-switch-default")
+              end
+            end
           end
         end
+      end
+    else
+      if values['switch_warnings'] ~= 'default' then
+        if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'mandatory_default' ) then
+          table_insert(jln_buildoptions, "-Wswitch")
+        else
+          if ( values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) then
+            table_insert(jln_buildoptions, "-Wswitch")
+            table_insert(jln_buildoptions, "-Wswitch-enum")
+          else
+            table_insert(jln_buildoptions, "-Wno-switch")
+            table_insert(jln_buildoptions, "-Wno-switch-enum")
+          end
+        end
+      end
+      if values['covered_switch_default_warnings'] ~= 'default' then
+        if values['covered_switch_default_warnings'] == 'off' then
+          table_insert(jln_buildoptions, "-Wno-covered-switch-default")
+        else
+          table_insert(jln_buildoptions, "-Wcovered-switch-default")
+        end
+      end
+    end
+    if values['unsafe_buffer_usage_warnings'] ~= 'default' then
+      if values['unsafe_buffer_usage_warnings'] == 'off' then
+        table_insert(jln_buildoptions, "-Wno-unsafe-buffer-usage")
+      else
+        table_insert(jln_buildoptions, "-Wunsafe-buffer-usage")
       end
     end
     if values['diagnostics_show_template_tree'] ~= 'default' then
@@ -1009,7 +1037,7 @@ function jln_getoptions(values, disable_others, print_compiler)
         else
           table_insert(jln_linkoptions, "-sASSERTIONS=1")
           table_insert(jln_linkoptions, "-sDEMANGLE_SUPPORT=1")
-          if not ( ( values['sanitizers'] == 'on' ) ) then
+          if  not ( ( values['sanitizers'] == 'on' ) ) then
             table_insert(jln_linkoptions, "-sSAFE_HEAP=1")
           end
         end
@@ -2209,19 +2237,19 @@ function jln_getoptions(values, disable_others, print_compiler)
           table_insert(jln_buildoptions, "-Wdeprecated")
           table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
           table_insert(jln_buildoptions, "-Woverloaded-virtual")
-          if values['switch_warnings'] ~= 'default' then
-            if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'exhaustive_enum' ) then
-              table_insert(jln_buildoptions, "-Wswitch-enum")
+        end
+      end
+      if values['switch_warnings'] ~= 'default' then
+        if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'exhaustive_enum' ) then
+          table_insert(jln_buildoptions, "-Wswitch-enum")
+        else
+          if values['switch_warnings'] == 'mandatory_default' then
+            table_insert(jln_buildoptions, "-Wswitch-default")
+          else
+            if values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' then
+              table_insert(jln_buildoptions, "-Wswitch")
             else
-              if values['switch_warnings'] == 'mandatory_default' then
-                table_insert(jln_buildoptions, "-Wswitch-default")
-              else
-                if values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' then
-                  table_insert(jln_buildoptions, "-Wswitch")
-                else
-                  table_insert(jln_buildoptions, "-Wno-switch")
-                end
-              end
+              table_insert(jln_buildoptions, "-Wno-switch")
             end
           end
         end
