@@ -144,14 +144,14 @@ function opt(x) return If({opt=x}) end
 
 local has_opt_mt = {
   __call = function(self, ...)
-    assert(#self.levels > 0)
-    return If({check_opt={optname=self.optname, levels=levels, exclude=self.exclude}})(...)
+    -- assert(#self.levels > 0)
+    return If({check_opt={optname=self.optname, levels=self.levels, exclude=self.exclude}})(...)
   end,
   with = function(self, ...)
     assert(not self._used)
     self._used = true
 
-    levels = self.levels
+    local levels = self.levels
     local set = {}
     local lvl
     for _, cond in pairs({...}) do
