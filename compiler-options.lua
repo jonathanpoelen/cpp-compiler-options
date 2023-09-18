@@ -432,6 +432,12 @@ Or(gcc, clang_like) {
 
                     vers'>=11' {
                       cxx'-Wno-suggest-destructor-override',
+
+                      vers'>=16' {
+                        -has_opt'unsafe_buffer_usage_warnings' {
+                          flag'-Wno-unsafe-buffer-usage'
+                        }
+                      },
                     }
                   }
                 }
@@ -445,6 +451,13 @@ Or(gcc, clang_like) {
         }
       }
     },
+  },
+
+  opt'unsafe_buffer_usage_warnings' {
+    match {
+      lvl'off' { flag'-Wno-unsafe-buffer-usage' },
+      cxx'-Wunsafe-buffer-usage',
+    }
   },
 
   opt'diagnostics_show_template_tree' {
@@ -2361,6 +2374,13 @@ Vbase = {
       incidental=true,
     },
 
+    unsafe_buffer_usage_warnings={
+      values={'on', 'off'},
+      default='off',
+      description='Enable -Wunsafe-buffer-usage with clang',
+      incidental=true,
+    },
+
     var_init={
       values={
         {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)'},
@@ -2418,6 +2438,7 @@ Vbase = {
       'shadow_warnings',
       'suggestions',
       'switch_warnings',
+      'unsafe_buffer_usage_warnings',
       'warnings',
       'warnings_as_error',
     }},
@@ -2561,6 +2582,9 @@ Vbase = {
         elseif notv.compiler then self:write(' ' .. self:_vcond_compiler(notv.compiler, true))
         elseif notv.platform then self:write(' ' .. self:_vcond_platform(notv.platform, true))
         elseif notv.linker   then self:write(' ' .. self:_vcond_linker(notv.linker, true))
+        elseif notv.check_opt then
+          local o = notv.check_opt
+          self:write(' ' .. self:_vcond_check_opt(o.optname, o.levels, o.exclude, true))
         else                      self:write(' ' .. self._vcondkeyword._not
                                           .. ' ' .. self._vcondkeyword.open)
                                   self:_vcond(notv, optname)
@@ -2585,9 +2609,9 @@ Vbase = {
       return self._vcondkeyword.eq
     end
 
-    self._vcond_check_opt = self._vcond_check_opt or function(self, optname, levels, exclude)
+    self._vcond_check_opt = self._vcond_check_opt or function(self, optname, levels, exclude, not_)
       if #levels == 0 then
-        return self:_vcond_lvl('default', optname, true)
+        return self:_vcond_lvl('default', optname, not not_)
       end
 
       local strings = {}
@@ -2600,13 +2624,13 @@ Vbase = {
                 .. ' ' .. self._vcondkeyword.close
 
       if exclude then
-        return self:_vcond_lvl('default', optname, true)
+        return self:_vcond_lvl('default', optname, not not_)
             .. ' ' .. self._vcondkeyword._and
             .. ' ' .. self._vcondkeyword._not
             .. ' ' .. cond
       end
 
-      return cond
+      return self:propagate_not(cond, not_)
     end
 
     self._vcond_to_opt = self._vcond_to_opt or function(self, optname)
