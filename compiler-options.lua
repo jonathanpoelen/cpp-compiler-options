@@ -280,93 +280,82 @@ Or(gcc, clang_like) {
   opt'warnings' {
     match {
       lvl'off' { flag'-w' },
-      {
-        match {
-          gcc {
-            flag'-Wall',
-        -- flag'-Weffc++',
-            flag'-Wextra',
-            flag'-Wcast-align',
-            flag'-Wcast-qual',
-            flag'-Wdisabled-optimization',
-            flag'-Wfloat-equal',
-            flag'-Wformat-security',
-            flag'-Wformat=2',
-        -- flag'-Winline',
-            flag'-Winvalid-pch',
-            flag'-Wmissing-include-dirs',
-            flag'-Wpacked',
-            flag'-Wredundant-decls',
-            flag'-Wundef',
-            flag'-Wunused-macros',
-            flag'-Wpointer-arith',
-            cxx'-Wmissing-declarations',
-            cxx'-Wnon-virtual-dtor',
-            cxx'-Wold-style-cast',
-            cxx'-Woverloaded-virtual',
-            c'-Wbad-function-cast',
-            c'-Winit-self', -- enabled by -Wall in C++
-            c'-Wjump-misses-init',
-            c'-Wnested-externs',
-            c'-Wold-style-definition',
-            c'-Wstrict-prototypes',
-            c'-Wwrite-strings',
+      match {
+        gcc {
+          flag'-Wall',
+          -- flag'-Weffc++',
+          flag'-Wextra',
+          flag'-Wcast-align',
+          flag'-Wcast-qual',
+          flag'-Wdisabled-optimization',
+          flag'-Wfloat-equal',
+          flag'-Wformat-security',
+          flag'-Wformat=2',
+          -- flag'-Winline',
+          flag'-Winvalid-pch',
+          flag'-Wmissing-include-dirs',
+          flag'-Wpacked',
+          flag'-Wredundant-decls',
+          flag'-Wundef',
+          flag'-Wunused-macros',
+          flag'-Wpointer-arith',
+          cxx'-Wmissing-declarations',
+          cxx'-Wnon-virtual-dtor',
+          cxx'-Wold-style-cast',
+          cxx'-Woverloaded-virtual',
+          c'-Wbad-function-cast',
+          c'-Winit-self', -- enabled by -Wall in C++
+          c'-Wjump-misses-init',
+          c'-Wnested-externs',
+          c'-Wold-style-definition',
+          c'-Wstrict-prototypes',
+          c'-Wwrite-strings',
 
-            opt'switch_warnings' {
-              match {
-                lvl'on' { flag'-Wswitch' }, -- enabled by -Wall
-                lvl'exhaustive_enum' { flag'-Wswitch-enum' },
-                lvl'mandatory_default' { flag'-Wswitch-default' },
-                lvl'exhaustive_enum_and_mandatory_default' {
-                  flag'-Wswitch-default',
-                  flag'-Wswitch-enum',
-                },
-                flag'-Wno-switch',
-              }
-            },
+          vers'>=4.7' {
+            flag'-Wsuggest-attribute=noreturn',
+            cxx'-Wzero-as-null-pointer-constant',
+            flag'-Wlogical-op',
+            -- flag'-Wno-aggressive-loop-optimizations',
+            -- flag'-Wnormalized=nfc',
+            flag'-Wvector-operation-performance',
+            flag'-Wdouble-promotion',
+            flag'-Wtrampolines', -- C only with a nested function ?
 
-            vers'>=4.7' {
-              flag'-Wsuggest-attribute=noreturn',
-              cxx'-Wzero-as-null-pointer-constant',
-              flag'-Wlogical-op',
-          -- flag'-Wno-aggressive-loop-optimizations',
-          -- flag'-Wnormalized=nfc',
-              flag'-Wvector-operation-performance',
-              flag'-Wdouble-promotion',
-              flag'-Wtrampolines', -- C only with a nested function ?
+            vers'>=4.8' {
+              cxx'-Wuseless-cast',
 
-              vers'>=4.8' {
-                cxx'-Wuseless-cast',
+              vers'>=4.9' {
+                cxx'-Wconditionally-supported',
+                flag'-Wfloat-conversion',
 
-                vers'>=4.9' {
-                  cxx'-Wconditionally-supported',
-                  flag'-Wfloat-conversion',
+                vers'>=5.1' {
+                  flag'-Wformat-signedness',
+                  flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
+                  -- flag'-Wctor-dtor-privacy',
+                  cxx'-Wstrict-null-sentinel',
+                  cxx'-Wsuggest-override',
 
-                  vers'>=5.1' {
-                    flag'-Wformat-signedness',
-                    flag'-Warray-bounds=2', -- This option is only active when -ftree-vrp is active (default for -O2 and above). level=1 enabled by -Wall.
-                -- flag'-Wctor-dtor-privacy',
-                    cxx'-Wstrict-null-sentinel',
-                    cxx'-Wsuggest-override',
+                  vers'>=6.1' {
+                    flag'-Wduplicated-cond',
+                    flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
 
-                    vers'>=6.1' {
-                      flag'-Wduplicated-cond',
-                      flag'-Wnull-dereference', -- This option is only active when -fdelete-null-pointer-checks is active, which is enabled by optimizations in most targets.
+                    vers'>=7' {
+                      cxx'-Waligned-new',
 
-                      vers'>=7' {
-                        cxx'-Waligned-new',
+                      vers'>=7.1' {
+                        flag'-Walloc-zero',
+                        flag'-Walloca',
+                        flag'-Wformat-overflow=2',
+                        -- flag'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
+                        -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
+                        flag'-Wduplicated-branches',
 
-                        vers'>=7.1' {
-                          flag'-Walloc-zero',
-                          flag'-Walloca',
-                          flag'-Wformat-overflow=2',
-                      -- flag'-Wformat-truncation=1', -- enabled by -Wformat. Works best with -O2 and higher. =2 = calls to bounded functions whose return value is used
-                      -- flag'-Wformat-y2k', -- strftime formats that may yield only a two-digit year.
-                          flag'-Wduplicated-branches',
+                        vers'>=8' {
+                          cxx'-Wclass-memaccess',
 
-                          vers'>=8' {
-                            cxx'-Wclass-memaccess',
-                          }
+                          Or(lvl'strict', lvl'very_strict') {
+                            flag'-Wcast-align=strict'
+                          },
                         }
                       }
                     }
@@ -375,82 +364,108 @@ Or(gcc, clang_like) {
               }
             }
           },
-          { --[[clang_like]]
-            flag'-Weverything',
-            flag'-Wno-documentation',
-            flag'-Wno-documentation-unknown-command',
-            flag'-Wno-newline-eof',
-        -- flag'-Wno-range-loop-analysis',
-        -- flag'-Wno-disabled-macro-expansion',
-            cxx'-Wno-c++98-compat',
-            cxx'-Wno-c++98-compat-pedantic',
-            flag'-Wno-padded',
-            flag'-Wno-global-constructors',
-            cxx'-Wno-weak-vtables',
-            cxx'-Wno-exit-time-destructors',
-        -- cxx'-Qunused-arguments',
+        },
+        { --[[clang_like]]
+          flag'-Weverything',
+          flag'-Wno-documentation',
+          flag'-Wno-documentation-unknown-command',
+          flag'-Wno-newline-eof',
+          -- flag'-Wno-range-loop-analysis',
+          -- flag'-Wno-disabled-macro-expansion',
+          cxx'-Wno-c++98-compat',
+          cxx'-Wno-c++98-compat-pedantic',
+          flag'-Wno-padded',
+          flag'-Wno-global-constructors',
+          cxx'-Wno-weak-vtables',
+          cxx'-Wno-exit-time-destructors',
+          -- cxx'-Qunused-arguments',
 
-            match {
-              opt'switch_warnings' {
-                match {
-                  Or(lvl'on', lvl'mandatory_default') {
-                    flag'-Wno-switch-enum',
-                  },
-                  Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
-                    flag'-Wswitch-enum',
-                  },
-                  { --[[lvl'off']]
-                    flag'-Wno-switch',
-                    flag'-Wno-switch-enum',
-                  }
-                }
-              },
-              {
-                flag'-Wno-switch',
-                flag'-Wno-switch-enum',
-              },
-            },
+          -has_opt'switch_warnings':with(
+            lvl'off',
+            lvl'exhaustive_enum',
+            lvl'exhaustive_enum_and_mandatory_default'
+          ) {
+            flag'-Wno-switch-enum',
+          },
 
-            opt'covered_switch_default_warnings' {
-              match {
-                lvl'off' { flag'-Wno-covered-switch-default' },
-                flag'-Wcovered-switch-default',
-              }
-            },
+          -has_opt'covered_switch_default_warnings' {
+            flag'-Wno-covered-switch-default'
+          },
 
-            vers'>=3.9' {
-              cxx'-Wno-undefined-var-template',
+          vers'>=3.9' {
+            cxx'-Wno-undefined-var-template',
 
-              vers'>=5' {
-                cxx'-Wno-inconsistent-missing-destructor-override',
+            vers'>=5' {
+              cxx'-Wno-inconsistent-missing-destructor-override',
 
-                vers'>=9' {
-                  cxx'-Wno-ctad-maybe-unsupported',
+              vers'>=9' {
+                cxx'-Wno-ctad-maybe-unsupported',
 
-                  vers'>=10' {
-                    cxx'-Wno-c++20-compat',
+                vers'>=10' {
+                  cxx'-Wno-c++20-compat',
 
-                    vers'>=11' {
-                      cxx'-Wno-suggest-destructor-override',
+                  vers'>=11' {
+                    cxx'-Wno-suggest-destructor-override',
 
-                      vers'>=16' {
-                        -has_opt'unsafe_buffer_usage_warnings' {
-                          flag'-Wno-unsafe-buffer-usage'
-                        }
-                      },
-                    }
+                    vers'>=16' {
+                      -has_opt'unsafe_buffer_usage_warnings' {
+                        flag'-Wno-unsafe-buffer-usage'
+                      }
+                    },
                   }
                 }
               }
             }
-          },
+          }
         },
+      }
+    },
+  },
 
-        Or(lvl'strict', lvl'very_strict') {
-          gcc'>=8' { flag'-Wcast-align=strict' }
+  match {
+    gcc {
+      opt'switch_warnings' {
+        match {
+          lvl'on' { flag'-Wswitch' }, -- enabled by -Wall
+          lvl'exhaustive_enum' { flag'-Wswitch-enum' },
+          lvl'mandatory_default' { flag'-Wswitch-default' },
+          lvl'exhaustive_enum_and_mandatory_default' {
+            flag'-Wswitch-default',
+            flag'-Wswitch-enum',
+          },
+          { --[[lvl'off']]
+            flag'-Wno-switch',
+            flag'-Wno-switch-enum',
+            flag'-Wno-switch-default',
+          }
         }
       }
     },
+    { --[[clang_like]]
+      opt'switch_warnings' {
+        -- -Wswitch-default is a noop
+        match {
+          Or(lvl'on', lvl'mandatory_default') {
+            flag'-Wswitch', -- enabled by default
+          },
+          Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
+            flag'-Wswitch', -- do like gcc where -Wswitch-enum covers cases of -Wswitch
+            flag'-Wswitch-enum',
+          },
+          { --[[lvl'off']]
+            flag'-Wno-switch',
+            flag'-Wno-switch-enum',
+          }
+        }
+      },
+
+      opt'covered_switch_default_warnings' {
+        match {
+          lvl'off' { flag'-Wno-covered-switch-default' },
+          flag'-Wcovered-switch-default',
+        }
+      },
+    }
   },
 
   opt'unsafe_buffer_usage_warnings' {
@@ -1835,7 +1850,7 @@ icc {
         flag'-Wformat-security',
         flag'-Wformat=2',
         flag'-Winit-self',
-      -- flag'-Winline',
+        -- flag'-Winline',
         flag'-Winvalid-pch',
         flag'-Wmaybe-uninitialized',
         flag'-Wmissing-include-dirs',
@@ -1857,20 +1872,20 @@ icc {
         c'-Wold-style-definition',
         c'-Wstrict-prototypes',
         c'-Wwrite-strings',
-
-        opt'switch_warnings' {
-          match {
-            Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' },
-            lvl'mandatory_default' { flag'-Wswitch-default' },
-            lvl'exhaustive_enum_and_mandatory_default' {
-              flag'-Wswitch',
-            },
-            {
-              flag'-Wno-switch'
-            },
-          }
-        },
       }
+    }
+  },
+
+  opt'switch_warnings' {
+    match {
+      Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' },
+      lvl'mandatory_default' { flag'-Wswitch-default' },
+      lvl'exhaustive_enum_and_mandatory_default' {
+        flag'-Wswitch',
+      },
+      {
+        flag'-Wno-switch'
+      },
     }
   },
 
@@ -1995,7 +2010,7 @@ icc {
     lvl'on' {
       flag'-fp-stack-check',
       flag'-fp-trap=common',
-    -- flag'-fp-trap=all',
+      -- flag'-fp-trap=all',
     }
   },
 
@@ -2138,7 +2153,7 @@ Vbase = {
   _koptions={
     analyzer={
       values={'off', 'on', 'taint'},
-      description='enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)',
+      description='Enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)',
       incidental=true,
     },
 
@@ -2155,7 +2170,7 @@ Vbase = {
         {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'},
         {'3', 'As per the previous level, but show all control flow events, not just significant ones.'},
       },
-      description='controls the complexity of the control flow paths that are emitted for analyzer diagnostics',
+      description='Controls the complexity of the control flow paths that are emitted for analyzer diagnostics',
       incidental=true,
     },
 
@@ -2166,13 +2181,13 @@ Vbase = {
 
     control_flow={
       values={'off', 'on', 'branch', 'return', 'allow_bugs'},
-      description='insert extra runtime security checks to detect attempts to compromise your code',
+      description='Insert extra runtime security checks to detect attempts to compromise your code',
     },
 
     conversion_warnings={
       values={'off', 'on', 'sign', 'conversion'},
       default='on',
-      description='warn for implicit conversions that may alter a value',
+      description='Warn for implicit conversions that may alter a value',
       incidental=true,
     },
 
@@ -2183,7 +2198,7 @@ Vbase = {
     covered_switch_default_warnings={
       values={'on', 'off'},
       default='on',
-      description='warning for default label in switch which covers all enumeration values',
+      description='Warning for default label in switch which covers all enumeration values',
       incidental=true,
     },
 
@@ -2193,38 +2208,38 @@ Vbase = {
 
     debug={
       values={'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},
-      description='produce debugging information in the operating system\'s',
+      description='Produce debugging information in the operating system\'s',
     },
 
     diagnostics_format={
       values={'fixits', 'patch', 'print_source_range_info'},
-      description='emit fix-it hints in a machine-parseable format',
+      description='Emit fix-it hints in a machine-parseable format',
       incidental=true,
     },
 
     diagnostics_show_template_tree={
       values={'off', 'on'},
-      description='enables printing a tree-like structure showing the common and differing parts of the types',
+      description='Enables printing a tree-like structure showing the common and differing parts of the types',
       incidental=true,
       unavailable='c',
     },
 
     elide_type={
       values={'off', 'on'},
-      description='prints diagnostics showing common parts of template types as "[...]"',
+      description='Prints diagnostics showing common parts of template types as "[...]"',
       incidental=true,
       unavailable='c',
     },
 
     exceptions={
       values={'off', 'on'},
-      description='enable C++ exception',
+      description='Enable C++ exception',
     },
 
     fix_compiler_error={
       values={'off', 'on'},
       default='on',
-      description='transforms some warnings into errors to comply with the standard',
+      description='Transforms some warnings into errors to comply with the standard',
       incidental=true,
     },
 
@@ -2238,24 +2253,24 @@ Vbase = {
 
     linker={
       values={'bfd', 'gold', 'lld', 'native'},
-      description='configure linker',
+      description='Configure linker',
       incidental=true,
     },
 
     lto={
       values={'off', 'on', 'normal', 'fat', 'thin'},
-      description='enable Link Time Optimization',
+      description='Enable Link Time Optimization',
     },
 
     msvc_isystem={
       values={'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},
-      description='warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)',
+      description='Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)',
       incidental=true,
     },
 
     msvc_isystem_with_template_from_non_external={
       values={'off', 'on'},
-      description='warnings concerning template in an external header (requires msvc_isystem)',
+      description='Warnings concerning template in an external header (requires msvc_isystem)',
       incidental=true,
       unavailable='c',
     },
@@ -2263,20 +2278,20 @@ Vbase = {
     msvc_conformance={
       values={'all', 'all_without_throwing_new'},
       default='all',
-      description='standard conformance options',
+      description='Standard conformance options',
     },
 
     msvc_crt_secure_no_warnings={
       values={'off', 'on'},
       default='on',
-      description='disable CRT warnings',
+      description='Disable CRT warnings',
       incidental=true,
     },
 
     ndebug={
       values={'off', 'on', 'with_optimization_1_or_above'},
       default='with_optimization_1_or_above',
-      description='enable NDEBUG macro (disable assert macro)',
+      description='Enable NDEBUG macro (disable assert macro)',
     },
 
     noexcept_warnings={
@@ -2288,66 +2303,66 @@ Vbase = {
 
     optimization={
       values={
-        {'0', 'not optimize'},
-        {'g', 'enable debugging experience'},
-        {'1', 'optimize'},
-        {'2', 'optimize even more'},
-        {'3', 'optimize yet more'},
-        {'fast', 'enables all optimization=3 and disregard strict standards compliance'},
-        {'size', 'optimize for size'},
-        {'z', 'optimize for size aggressively (/!\\ possible slow compilation)'}
+        {'0', 'Not optimize'},
+        {'g', 'Enable debugging experience'},
+        {'1', 'Optimize'},
+        {'2', 'Optimize even more'},
+        {'3', 'Optimize yet more'},
+        {'fast', 'Enables all optimization=3 and disregard strict standards compliance'},
+        {'size', 'Optimize for size'},
+        {'z', 'Optimize for size aggressively (/!\\ possible slow compilation)'}
       },
-      description='optimization level',
+      description='Optimization level',
     },
 
     other_sanitizers={
       values={'off', 'thread', 'pointer', 'memory'},
-      description='enable other sanitizers',
+      description='Enable other sanitizers',
     },
 
     pedantic={
       values={'off', 'on', 'as_error'},
       default='on',
-      description='issue all the warnings demanded by strict ISO C and ISO C++',
+      description='Issue all the warnings demanded by strict ISO C and ISO C++',
     },
 
     pie={
       values={'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE'},
-      description='controls position-independent code generation',
+      description='Controls position-independent code generation',
     },
 
     relro={
       values={'off', 'on', 'full'},
-      description='specifies a memory segment that should be made read-only after relocation, if supported.',
+      description='Specifies a memory segment that should be made read-only after relocation, if supported.',
     },
 
     reproducible_build_warnings={
       values={'off', 'on'},
-      description='warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations',
+      description='Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations',
       incidental=true,
     },
 
     rtti={
       values={'off', 'on'},
-      description='disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid")',
+      description='Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid")',
       unavailable='c',
     },
 
     sanitizers={
       values={'off', 'on'},
-      description='enable sanitizers (asan, ubsan, etc)',
+      description='Enable sanitizers (asan, ubsan, etc)',
     },
 
     stl_debug={
       values={'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception'},
-      description='controls the debug level of the STL',
+      description='Controls the debug level of the STL',
       unavailable='c',
     },
 
     stl_fix={
       values={'off', 'on'},
       default='on',
-      description='enable /DNOMINMAX with msvc',
+      description='Enable /DNOMINMAX with msvc',
     },
 
     shadow_warnings={
@@ -2358,19 +2373,19 @@ Vbase = {
 
     stack_protector={
       values={'off', 'on', 'strong', 'all'},
-      description='emit extra code to check for buffer overflows, such as stack smashing attacks',
+      description='Emit extra code to check for buffer overflows, such as stack smashing attacks',
     },
 
     suggestions={
       values={'off', 'on'},
-      description='warn for cases where adding an attribute may be beneficial',
+      description='Warn for cases where adding an attribute may be beneficial',
       incidental=true,
     },
 
     switch_warnings={
       values={'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default'},
       default='on',
-      description='warnings concerning the switch keyword',
+      description='Warnings concerning the switch keyword',
       incidental=true,
     },
 
@@ -2387,19 +2402,19 @@ Vbase = {
         {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)'},
         {'zero', 'zero Initialize automatic variables with zeroes'},
       },
-      description='initialize all stack variables implicitly, including padding',
+      description='Initialize all stack variables implicitly, including padding',
     },
 
     warnings={
       values={'off', 'on', 'strict', 'very_strict'},
       default='on',
-      description='warning level',
+      description='Warning level',
       incidental=true,
     },
 
     warnings_as_error={
       values={'off', 'on', 'basic'},
-      description='make all or some warnings into errors',
+      description='Make all or some warnings into errors',
       -- incidental=true,
     },
 
@@ -2419,7 +2434,7 @@ Vbase = {
     windows_bigobj={
       values={'on'},
       default='on',
-      description='increases that addressable sections capacity',
+      description='Increases that addressable sections capacity',
     },
   },
 
