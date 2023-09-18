@@ -1,4 +1,5 @@
 -Weverything
+-Wno-covered-switch-default
 -Wno-documentation
 -Wno-documentation-unknown-command
 -Wno-global-constructors
@@ -6,6 +7,5 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
--Wno-switch
 -Wno-switch-enum
 /permissive-

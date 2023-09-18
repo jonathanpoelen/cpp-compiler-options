@@ -1,0 +1,4 @@
+-DNDEBUG
+-flto=thin
+-fuse-ld=lld
+/O2

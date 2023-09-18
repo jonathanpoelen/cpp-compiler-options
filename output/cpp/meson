@@ -75,6 +75,7 @@ ___jln_flags = {
   'stl_fix': ___jln_default_flags.get('stl_fix', get_option('jln_stl_fix')),
   'suggestions': ___jln_default_flags.get('suggestions', get_option('jln_suggestions')),
   'switch_warnings': ___jln_default_flags.get('switch_warnings', get_option('jln_switch_warnings')),
+  'unsafe_buffer_usage_warnings': ___jln_default_flags.get('unsafe_buffer_usage_warnings', get_option('jln_unsafe_buffer_usage_warnings')),
   'var_init': ___jln_default_flags.get('var_init', get_option('jln_var_init')),
   'warnings': ___jln_warnings,
   'warnings_as_error': ___jln_default_flags.get('warnings_as_error', get_option('jln_warnings_as_error')),
@@ -140,25 +141,6 @@ foreach ___jln_flags : ___jln_custom_flags
       else
         if (  ___jln_compiler_id == 'gcc' )
           jln_cpp_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winvalid-pch', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Wpointer-arith', '-Wmissing-declarations', '-Wnon-virtual-dtor', '-Wold-style-cast', '-Woverloaded-virtual', ]
-          if (  ___jln_flags.get('switch_warnings', 'default') != 'default' )
-            if (  ___jln_flags.get('switch_warnings', 'default') == 'on' )
-              jln_cpp_flags += ['-Wswitch', ]
-            else
-              if (  ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum' )
-                jln_cpp_flags += ['-Wswitch-enum', ]
-              else
-                if (  ___jln_flags.get('switch_warnings', 'default') == 'mandatory_default' )
-                  jln_cpp_flags += ['-Wswitch-default', ]
-                else
-                  if (  ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' )
-                    jln_cpp_flags += ['-Wswitch-default', '-Wswitch-enum', ]
-                  else
-                    jln_cpp_flags += ['-Wno-switch', ]
-                  endif
-                endif
-              endif
-            endif
-          endif
           if (  ___jln_compiler_version.version_compare('>=4.7') )
             jln_cpp_flags += ['-Wsuggest-attribute=noreturn', '-Wzero-as-null-pointer-constant', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', ]
             if (  ___jln_compiler_version.version_compare('>=4.8') )
@@ -175,6 +157,9 @@ foreach ___jln_flags : ___jln_custom_flags
                         jln_cpp_flags += ['-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', ]
                         if (  ___jln_compiler_version.version_compare('>=8.0') )
                           jln_cpp_flags += ['-Wclass-memaccess', ]
+                          if (  ( ___jln_flags.get('warnings', 'default') == 'strict' or ___jln_flags.get('warnings', 'default') == 'very_strict' ) )
+                            jln_cpp_flags += ['-Wcast-align=strict', ]
+                          endif
                         endif
                       endif
                     endif
@@ -185,25 +170,11 @@ foreach ___jln_flags : ___jln_custom_flags
           endif
         else
           jln_cpp_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', ]
-          if (  ___jln_flags.get('switch_warnings', 'default') != 'default' )
-            if (  ( ___jln_flags.get('switch_warnings', 'default') == 'on' or ___jln_flags.get('switch_warnings', 'default') == 'mandatory_default' ) )
-              jln_cpp_flags += ['-Wno-switch-enum', ]
-            else
-              if (  ( ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) )
-                jln_cpp_flags += ['-Wswitch-enum', ]
-              else
-                jln_cpp_flags += ['-Wno-switch', '-Wno-switch-enum', ]
-              endif
-            endif
-          else
-            jln_cpp_flags += ['-Wno-switch', '-Wno-switch-enum', ]
+          if (   not ( ( ___jln_flags.get('switch_warnings', 'default') == 'off' or ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) ) )
+            jln_cpp_flags += ['-Wno-switch-enum', ]
           endif
-          if (  ___jln_flags.get('covered_switch_default_warnings', 'default') != 'default' )
-            if (  ___jln_flags.get('covered_switch_default_warnings', 'default') == 'off' )
-              jln_cpp_flags += ['-Wno-covered-switch-default', ]
-            else
-              jln_cpp_flags += ['-Wcovered-switch-default', ]
-            endif
+          if (  ___jln_flags.get('covered_switch_default_warnings', 'default') == 'default' )
+            jln_cpp_flags += ['-Wno-covered-switch-default', ]
           endif
           if (  ___jln_compiler_version.version_compare('>=3.9') )
             jln_cpp_flags += ['-Wno-undefined-var-template', ]
@@ -215,17 +186,64 @@ foreach ___jln_flags : ___jln_custom_flags
                   jln_cpp_flags += ['-Wno-c++20-compat', ]
                   if (  ___jln_compiler_version.version_compare('>=11.0') )
                     jln_cpp_flags += ['-Wno-suggest-destructor-override', ]
+                    if (  ___jln_compiler_version.version_compare('>=16.0') )
+                      if (  ___jln_flags.get('unsafe_buffer_usage_warnings', 'default') == 'default' )
+                        jln_cpp_flags += ['-Wno-unsafe-buffer-usage', ]
+                      endif
+                    endif
                   endif
                 endif
               endif
             endif
           endif
         endif
-        if (  ( ___jln_flags.get('warnings', 'default') == 'strict' or ___jln_flags.get('warnings', 'default') == 'very_strict' ) )
-          if (  ( ___jln_compiler_id == 'gcc' and ___jln_compiler_version.version_compare('>=8.0') ) )
-            jln_cpp_flags += ['-Wcast-align=strict', ]
+      endif
+    endif
+    if (  ___jln_compiler_id == 'gcc' )
+      if (  ___jln_flags.get('switch_warnings', 'default') != 'default' )
+        if (  ___jln_flags.get('switch_warnings', 'default') == 'on' )
+          jln_cpp_flags += ['-Wswitch', ]
+        else
+          if (  ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum' )
+            jln_cpp_flags += ['-Wswitch-enum', ]
+          else
+            if (  ___jln_flags.get('switch_warnings', 'default') == 'mandatory_default' )
+              jln_cpp_flags += ['-Wswitch-default', ]
+            else
+              if (  ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' )
+                jln_cpp_flags += ['-Wswitch-default', '-Wswitch-enum', ]
+              else
+                jln_cpp_flags += ['-Wno-switch', '-Wno-switch-enum', '-Wno-switch-default', ]
+              endif
+            endif
           endif
         endif
+      endif
+    else
+      if (  ___jln_flags.get('switch_warnings', 'default') != 'default' )
+        if (  ( ___jln_flags.get('switch_warnings', 'default') == 'on' or ___jln_flags.get('switch_warnings', 'default') == 'mandatory_default' ) )
+          jln_cpp_flags += ['-Wswitch', ]
+        else
+          if (  ( ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) )
+            jln_cpp_flags += ['-Wswitch', '-Wswitch-enum', ]
+          else
+            jln_cpp_flags += ['-Wno-switch', '-Wno-switch-enum', ]
+          endif
+        endif
+      endif
+      if (  ___jln_flags.get('covered_switch_default_warnings', 'default') != 'default' )
+        if (  ___jln_flags.get('covered_switch_default_warnings', 'default') == 'off' )
+          jln_cpp_flags += ['-Wno-covered-switch-default', ]
+        else
+          jln_cpp_flags += ['-Wcovered-switch-default', ]
+        endif
+      endif
+    endif
+    if (  ___jln_flags.get('unsafe_buffer_usage_warnings', 'default') != 'default' )
+      if (  ___jln_flags.get('unsafe_buffer_usage_warnings', 'default') == 'off' )
+        jln_cpp_flags += ['-Wno-unsafe-buffer-usage', ]
+      else
+        jln_cpp_flags += ['-Wunsafe-buffer-usage', ]
       endif
     endif
     if (  ___jln_flags.get('diagnostics_show_template_tree', 'default') != 'default' )
@@ -382,7 +400,7 @@ foreach ___jln_flags : ___jln_custom_flags
           jln_link_flags += ['-sASSERTIONS=0', '-sSAFE_HEAP=0', ]
         else
           jln_link_flags += ['-sASSERTIONS=1', '-sDEMANGLE_SUPPORT=1', ]
-          if (  not ( ( ___jln_flags.get('sanitizers', 'default') == 'on' ) ) )
+          if (   not ( ( ___jln_flags.get('sanitizers', 'default') == 'on' ) ) )
             jln_link_flags += ['-sSAFE_HEAP=1', ]
           endif
         endif
@@ -1448,19 +1466,19 @@ foreach ___jln_flags : ___jln_custom_flags
           jln_cpp_flags += ['-w', ]
         else
           jln_cpp_flags += ['-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wparentheses', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wdeprecated', '-Wnon-virtual-dtor', '-Woverloaded-virtual', ]
-          if (  ___jln_flags.get('switch_warnings', 'default') != 'default' )
-            if (  ( ___jln_flags.get('switch_warnings', 'default') == 'on' or ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum' ) )
-              jln_cpp_flags += ['-Wswitch-enum', ]
+        endif
+      endif
+      if (  ___jln_flags.get('switch_warnings', 'default') != 'default' )
+        if (  ( ___jln_flags.get('switch_warnings', 'default') == 'on' or ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum' ) )
+          jln_cpp_flags += ['-Wswitch-enum', ]
+        else
+          if (  ___jln_flags.get('switch_warnings', 'default') == 'mandatory_default' )
+            jln_cpp_flags += ['-Wswitch-default', ]
+          else
+            if (  ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' )
+              jln_cpp_flags += ['-Wswitch', ]
             else
-              if (  ___jln_flags.get('switch_warnings', 'default') == 'mandatory_default' )
-                jln_cpp_flags += ['-Wswitch-default', ]
-              else
-                if (  ___jln_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' )
-                  jln_cpp_flags += ['-Wswitch', ]
-                else
-                  jln_cpp_flags += ['-Wno-switch', ]
-                endif
-              endif
+              jln_cpp_flags += ['-Wno-switch', ]
             endif
           endif
         endif
