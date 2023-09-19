@@ -120,6 +120,7 @@
 --  diagnostics_format = default fixits patch print_source_range_info
 --  diagnostics_show_template_tree = default off on
 --  elide_type = default off on
+--  msvc_diagnostics_format = caret default classic column
 --  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 --  msvc_isystem_with_template_from_non_external = default off on
 --  pie = default off on static fpic fPIC fpie fPIE
@@ -132,6 +133,7 @@
 --  If not specified:
 --  
 --  - `msvc_conformance` is `all`
+--  - `msvc_diagnostics_format` is `caret`
 --  - `ndebug` is `with_optimization_1_or_above`
 --  - The following values are `off`:
 --    - `shadow_warnings`
@@ -222,6 +224,8 @@ local _jln_flag_names = {
   ["msvc_conformance"] = true,
   ["jln-msvc-crt-secure-no-warnings"] = true,
   ["msvc_crt_secure_no_warnings"] = true,
+  ["jln-msvc-diagnostics-format"] = true,
+  ["msvc_diagnostics_format"] = true,
   ["jln-msvc-isystem"] = true,
   ["msvc_isystem"] = true,
   ["jln-msvc-isystem-with-template-from-non-external"] = true,
@@ -352,6 +356,9 @@ function jln_newoptions(defaults)
 
   newoption{trigger="jln-msvc-crt-secure-no-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="Disable CRT warnings"}
   if not _OPTIONS["jln-msvc-crt-secure-no-warnings"] then _OPTIONS["jln-msvc-crt-secure-no-warnings"] = (defaults["msvc_crt_secure_no_warnings"] or defaults["jln-msvc-crt-secure-no-warnings"] or "on") end
+
+  newoption{trigger="jln-msvc-diagnostics-format", allowed={{'default'}, {'classic', 'Which reports only the line number where the issue was found.'}, {'column', 'Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue'}, {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected'}}, description="Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)"}
+  if not _OPTIONS["jln-msvc-diagnostics-format"] then _OPTIONS["jln-msvc-diagnostics-format"] = (defaults["msvc_diagnostics_format"] or defaults["jln-msvc-diagnostics-format"] or "caret") end
 
   newoption{trigger="jln-msvc-isystem", allowed={{'default'}, {'anglebrackets'}, {'include_and_caexcludepath'}}, description="Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)"}
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
@@ -489,6 +496,7 @@ function jln_tovalues(values, disable_others)
       ["lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"]),
       ["msvc_conformance"] = values["msvc_conformance"] or values["jln-msvc-conformance"] or (disable_others and "default" or _OPTIONS["jln-msvc-conformance"]),
       ["msvc_crt_secure_no_warnings"] = values["msvc_crt_secure_no_warnings"] or values["jln-msvc-crt-secure-no-warnings"] or (disable_others and "default" or _OPTIONS["jln-msvc-crt-secure-no-warnings"]),
+      ["msvc_diagnostics_format"] = values["msvc_diagnostics_format"] or values["jln-msvc-diagnostics-format"] or (disable_others and "default" or _OPTIONS["jln-msvc-diagnostics-format"]),
       ["msvc_isystem"] = values["msvc_isystem"] or values["jln-msvc-isystem"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem"]),
       ["msvc_isystem_with_template_from_non_external"] = values["msvc_isystem_with_template_from_non_external"] or values["jln-msvc-isystem-with-template-from-non-external"] or (disable_others and "default" or _OPTIONS["jln-msvc-isystem-with-template-from-non-external"]),
       ["ndebug"] = values["ndebug"] or values["jln-ndebug"] or (disable_others and "default" or _OPTIONS["jln-ndebug"]),
@@ -541,6 +549,7 @@ function jln_tovalues(values, disable_others)
       ["lto"] = _OPTIONS["jln-lto"],
       ["msvc_conformance"] = _OPTIONS["jln-msvc-conformance"],
       ["msvc_crt_secure_no_warnings"] = _OPTIONS["jln-msvc-crt-secure-no-warnings"],
+      ["msvc_diagnostics_format"] = _OPTIONS["jln-msvc-diagnostics-format"],
       ["msvc_isystem"] = _OPTIONS["jln-msvc-isystem"],
       ["msvc_isystem_with_template_from_non_external"] = _OPTIONS["jln-msvc-isystem-with-template-from-non-external"],
       ["ndebug"] = _OPTIONS["jln-ndebug"],
@@ -1849,6 +1858,12 @@ function jln_getoptions(values, disable_others, print_compiler)
             table_insert(jln_buildoptions, "/Zc:preprocessor")
             if compversion >= 1600008 then
               table_insert(jln_buildoptions, "/Zc:lambda")
+              if compversion >= 1700004 then
+                table_insert(jln_buildoptions, "/Zc:enumTypes")
+                if compversion >= 1700005 then
+                  table_insert(jln_buildoptions, "/Zc:templateScope")
+                end
+              end
             end
           end
         end
@@ -1860,6 +1875,19 @@ function jln_getoptions(values, disable_others, print_compiler)
       else
         if values['msvc_crt_secure_no_warnings'] == 'off' then
           table_insert(jln_buildoptions, "/U_CRT_SECURE_NO_WARNINGS")
+        end
+      end
+    end
+    if values['msvc_diagnostics_format'] ~= 'default' then
+      if compversion >= 1700000 then
+        if values['msvc_diagnostics_format'] == 'classic' then
+          table_insert(jln_buildoptions, "/diagnostics:classic")
+        else
+          if values['msvc_diagnostics_format'] == 'column' then
+            table_insert(jln_buildoptions, "/diagnostics:column")
+          else
+            table_insert(jln_buildoptions, "/diagnostics:caret")
+          end
         end
       end
     end

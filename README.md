@@ -120,6 +120,7 @@ coverage = default off on
 diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
+msvc_diagnostics_format = caret default classic column
 msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 msvc_isystem_with_template_from_non_external = default off on
 pie = default off on static fpic fPIC fpie fPIE
@@ -132,6 +133,7 @@ The value `default` does nothing.
 If not specified:
 
 - `msvc_conformance` is `all`
+- `msvc_diagnostics_format` is `caret`
 - `ndebug` is `with_optimization_1_or_above`
 - The following values are `off`:
   - `shadow_warnings`
