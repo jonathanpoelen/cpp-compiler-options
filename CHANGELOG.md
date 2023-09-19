@@ -1,5 +1,14 @@
 # ChangeLog
 
+## 2023-09-19
+
+- add `msvc_diagnostics_format` (`caret`, `classic`, `column`), default is `caret`
+- `switch_warnings` and `covered_switch_default_warnings` are now separated from `warnings`
+
+## 2022-11-19
+
+- add `var_init=uninitialized` and `var_init=zero`
+
 ## 2022-06-20
 
 - add emscripten compiler
@@ -10,7 +19,7 @@
 
 ## 2022-06-07
 
-- meson: add jln_buildtype_flags (options for specific buildtype)
+- meson: add `jln_buildtype_flags` (options for specific buildtype)
 
 ## 2022-06-06
 
