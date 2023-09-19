@@ -3,15 +3,15 @@
 local table_insert = table.insert
 local unpack = table.unpack or unpack
 
-function has_value(t)
+local function has_value(t)
   return pairs(t)(t)
 end
 
-function has_data(x)
+local function has_data(x)
   return has_value(x._t) or (x._else and has_value(x._else))
 end
 
-function ramify(x)
+local function ramify(x)
   if x._if then
     if not has_data(x) then
       x = {}
@@ -61,15 +61,15 @@ local if_mt_func = {
   end,
 }
 
-function If(condition)
+local function If(condition)
   return setmetatable({ _if=condition }, if_mt)
 end
 
-function IfFunc(f)
+local function IfFunc(f)
   return setmetatable({ _impl=f }, if_mt_func)
 end
 
-function Logical(op, ...)
+local function Logical(op, ...)
   local conds = {}
   for _,x in ipairs({...}) do
     if x._impl then
@@ -90,14 +90,20 @@ function Logical(op, ...)
   return If({[op]=conds})
 end
 
-function _conditional_name(cond)
+local function _conditional_name(cond)
   return IfFunc(function(x)
     local r = If(cond)
     return x and r(x) or r
   end)
 end
 
-function _conditional_name_with_version(cond)
+local function vers(op_and_version)
+  local op, major, minor = op_and_version:match('^([<>!=]=?)(%d+)%.?(%d*)$')
+  assert(op)
+  return If({op=op, major=tonumber(major), minor=tonumber(minor) or 0})
+end
+
+local function _conditional_name_with_version(cond)
   return IfFunc(function(x_or_op_and_version)
     if type(x_or_op_and_version) == 'string' then
       local ret = vers(x_or_op_and_version)
@@ -110,19 +116,19 @@ function _conditional_name_with_version(cond)
   end)
 end
 
-function Compiler(name)
+local function Compiler(name)
   return _conditional_name_with_version({compiler=name})
 end
 
-function Platform(name)
+local function Platform(name)
   return _conditional_name({platform=name})
 end
 
-function Linker(name)
+local function Linker(name)
   return _conditional_name({linker=name})
 end
 
-function CompilerGroup(...)
+local function CompilerGroup(...)
   local conds = {}
   for _,tool in ipairs({...}) do
     table_insert(conds, tool()._if)
@@ -130,17 +136,11 @@ function CompilerGroup(...)
   return _conditional_name_with_version({_or=conds})
 end
 
-function Or(...) return Logical('_or', ...) end
-function And(...) return Logical('_and', ...) end
+local function Or(...) return Logical('_or', ...) end
+local function And(...) return Logical('_and', ...) end
 
-function vers(op_and_version)
-  local op, major, minor = op_and_version:match('^([<>!=]=?)(%d+)%.?(%d*)$')
-  assert(op)
-  return If({op=op, major=tonumber(major), minor=tonumber(minor) or 0})
-end
-
-function lvl(x) return If({lvl=x}) end
-function opt(x) return If({opt=x}) end
+local function lvl(x) return If({lvl=x}) end
+local function opt(x) return If({opt=x}) end
 
 local has_opt_mt = {
   __call = function(self, ...)
@@ -171,13 +171,13 @@ local has_opt_mt = {
 }
 has_opt_mt.__index = has_opt_mt
 
-function has_opt(optname)
+local function has_opt(optname)
   return setmetatable({optname=optname, levels={}}, has_opt_mt)
 end
 
-local windows = Platform('windows')
+-- local windows = Platform('windows')
+-- local macos = Platform('macos')
 local linux = Platform('linux')
-local macos = Platform('macos')
 local mingw = Platform('mingw')
 
 local gcc = Compiler('gcc')
@@ -197,18 +197,18 @@ local clang_like = CompilerGroup(clang, clang_cl, clang_emcc)
 local lld_link = Linker('lld-link')
 local ld64 = Linker('ld64') -- Apple ld64
 
-function link(x) return { link=x } end
-function flag(x) return { cxx=x } end
-function fl(x) return { cxx=x, link=x } end
-function act(id, datas) return { act={id, datas} } end
-function reset_opt(name) return { reset_opt=name } end
+local function link(x) return { link=x } end
+local function flag(x) return { cxx=x } end
+local function fl(x) return { cxx=x, link=x } end
+local function act(id, datas) return { act={id, datas} } end
+local function reset_opt(name) return { reset_opt=name } end
 function noop() end
 
-function if_else(condition, f)
+local function if_else(condition, f)
   return condition { f(true) } / f()
 end
 
-function match(t)
+local function match(t)
   local x = t[1]
   for i=2,#t do
     x = x / t[i]
@@ -216,7 +216,7 @@ function match(t)
   return x
 end
 
-function MakeAST(is_C)
+local function MakeAST(is_C)
 
 local c, cxx
 if is_C then
@@ -2076,7 +2076,7 @@ mingw {
 }
 end -- MakeAST
 
-function create_ordered_keys(t)
+local function create_ordered_keys(t)
   local ordered_keys = {}
 
   for k in pairs(t) do
@@ -2087,7 +2087,7 @@ function create_ordered_keys(t)
   return ordered_keys
 end
 
-function unpack_table_iterator(t)
+local function unpack_table_iterator(t)
   local i = 0
   return function()
     i = i + 1
@@ -2095,7 +2095,7 @@ function unpack_table_iterator(t)
   end
 end
 
-function table_iterator(t)
+local function table_iterator(t)
   local i = 0
   return function()
     i = i + 1
@@ -2108,7 +2108,7 @@ local escaped_table = {
   ["'"]="\\'",
   ['\\']='\\\\',
 }
-function escape(c) return escaped_table[c] end
+local function escape(c) return escaped_table[c] end
 function quotable(str, q)
   if str then
     if q == '' then
@@ -2136,7 +2136,7 @@ function quotable_desc(option, newline, q)
   return quotable(option.description, q)
 end
 
-Vbase = {
+local Vbase = {
   --[[
     {
       optname={
@@ -2821,7 +2821,7 @@ Vbase = {
           end
 
           option.name = k
-          default_value = option.default or 'default'
+          local default_value = option.default or 'default'
           option.default = default_value
 
           local ordered_values = option.values
@@ -2986,7 +2986,7 @@ function evalflags(t, v, curropt)
   end
 end
 
-function clone_table(t)
+local function clone_table(t)
   local newt = {}
   for k,v in pairs(t) do
     if type(v) == 'table' then
@@ -2998,8 +2998,16 @@ function clone_table(t)
   return newt
 end
 
-_g_generators = {}
-function get_generator(name)
+local function insert_missing_function(V)
+  for k,mem in pairs(Vbase) do
+    if not V[k] then
+      V[k] = mem
+    end
+  end
+end
+
+local _g_generators = {}
+local function get_generator(name)
   name = name:gsub('.lua$', '')
   local generator = _g_generators[name]
 
@@ -3034,15 +3042,7 @@ function get_generator(name)
   return clone_table(generator)
 end
 
-function insert_missing_function(V)
-  for k,mem in pairs(Vbase) do
-    if not V[k] then
-      V[k] = mem
-    end
-  end
-end
-
-function run(ast, is_C, filebase, ignore_options, generator_name, ...)
+local function run(ast, is_C, filebase, ignore_options, generator_name, ...)
   local V = get_generator(generator_name)
 
   -- add ignore from cli
@@ -3108,7 +3108,7 @@ function run(ast, is_C, filebase, ignore_options, generator_name, ...)
   end
 end
 
-function help(out)
+local function help(out)
   local prefix = string.rep(' ', #arg[0]+1)
   out:write(arg[0] .. ' [-p] [-c|-C] [-o outfilebase]\n'
          .. prefix .. '[-f [-]{option_name[=value_name][,...]}]\n'
@@ -3129,14 +3129,14 @@ function help(out)
 ]==])
 end
 
-function check_optname(cond, optname)
+local function check_optname(cond, optname)
   if not cond then
     io.stderr:write(arg[0] .. ": Unknown option: " .. optname .. '\n')
     os.exit(2)
   end
 end
 
-function check_optvalue(cond, optname, optvalue)
+local function check_optvalue(cond, optname, optvalue)
   if not cond then
     io.stderr:write(arg[0] .. ": Unknown value: " .. optvalue .. ' in ' .. optname .. '\n')
     os.exit(2)
@@ -3144,7 +3144,7 @@ function check_optvalue(cond, optname, optvalue)
 end
 
 -- {[0]=enabled, remove:bool, [platform_or_compiler_or_linker]=true, ...}
-tools_filter = {
+local tools_filter = {
   enabled=false,
   remove=false,
   ktools_filter={},
@@ -3176,7 +3176,7 @@ local is_C = false
 local print_ast = false
 local run_params = {}
 
-function push_run_params()
+local function push_run_params()
   local params = {is_C, filebase, ignore_options}
   table_insert(run_params, params)
   filebase = nil
@@ -3185,7 +3185,7 @@ function push_run_params()
   return params
 end
 
-cli={
+local cli={
   c={function() is_C=true end},
   C={function() is_C=false end},
   h={function() help(io.stdout) os.exit(0) end},
@@ -3285,13 +3285,13 @@ cli={
     if value:sub(1,1) ~= '-' then
       local select_options = ignore_options
       ignore_options = {}
-      for optname in pairs(Vbase._koptions) do
+      for optname, optdata in pairs(Vbase._koptions) do
         local v = select_options[optname]
         if not v then
           ignore_options[optname] = true
         elseif v ~= true then
           local t = {}
-          for k in pairs(optkv[optname]) do
+          for k in pairs(optdata.values) do
             if not v[k] then
               t[k] = true
             end
@@ -3303,7 +3303,7 @@ cli={
   end},
 }
 
-function getoption(s, pos)
+local function getoption(s, pos)
   local flag = s:sub(pos, pos)
   local opt = cli[flag]
   if not opt then
@@ -3313,7 +3313,7 @@ function getoption(s, pos)
   return opt
 end
 
-opti=1
+local opti=1
 while opti <= #arg do
   local s = arg[opti]
 
@@ -3387,8 +3387,9 @@ if opti > #arg and not print_ast then
   os.exit(1)
 end
 
-ast_c = nil
-ast_cpp = nil
+local ast_c = nil
+local ast_cpp = nil
+local ast
 
 for _, params in ipairs(run_params) do
   if params[1] then
@@ -3503,7 +3504,7 @@ for _, params in ipairs(run_params) do
       _subelse=true
     }
 
-    function printAST(ast, prefix)
+    local function printAST(ast, prefix)
       if type(ast) == 'table' then
         io.stdout:write('{\n')
         local newprefix = prefix..'  '
