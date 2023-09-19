@@ -111,6 +111,7 @@
 #  diagnostics_format = default fixits patch print_source_range_info
 #  diagnostics_show_template_tree = default off on
 #  elide_type = default off on
+#  msvc_diagnostics_format = caret default classic column
 #  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 #  msvc_isystem_with_template_from_non_external = default off on
 #  pie = default off on static fpic fPIC fpie fPIE
@@ -123,6 +124,7 @@
 #  If not specified:
 #  
 #  - `msvc_conformance` is `all`
+#  - `msvc_diagnostics_format` is `caret`
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
 #    - `shadow_warnings`
@@ -216,6 +218,7 @@ ___jln_c_flags = {
   'lto': ___jln_c_default_flags.get('lto', get_option('jln_lto')),
   'msvc_conformance': ___jln_c_default_flags.get('msvc_conformance', get_option('jln_msvc_conformance')),
   'msvc_crt_secure_no_warnings': ___jln_c_default_flags.get('msvc_crt_secure_no_warnings', get_option('jln_msvc_crt_secure_no_warnings')),
+  'msvc_diagnostics_format': ___jln_c_default_flags.get('msvc_diagnostics_format', get_option('jln_msvc_diagnostics_format')),
   'msvc_isystem': ___jln_c_default_flags.get('msvc_isystem', get_option('jln_msvc_isystem')),
   'ndebug': ___jln_c_default_flags.get('ndebug', get_option('jln_ndebug')),
   'optimization': ___jln_c_default_flags.get('optimization', get_option('jln_optimization')),
@@ -1226,6 +1229,19 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       else
         if (  ___jln_c_flags.get('msvc_crt_secure_no_warnings', 'default') == 'off' )
           jln_c_c_flags += ['/U_CRT_SECURE_NO_WARNINGS', ]
+        endif
+      endif
+    endif
+    if (  ___jln_c_flags.get('msvc_diagnostics_format', 'default') != 'default' )
+      if (  ___jln_c_compiler_version.version_compare('>=17.0') )
+        if (  ___jln_c_flags.get('msvc_diagnostics_format', 'default') == 'classic' )
+          jln_c_c_flags += ['/diagnostics:classic', ]
+        else
+          if (  ___jln_c_flags.get('msvc_diagnostics_format', 'default') == 'column' )
+            jln_c_c_flags += ['/diagnostics:column', ]
+          else
+            jln_c_c_flags += ['/diagnostics:caret', ]
+          endif
         endif
       endif
     endif
