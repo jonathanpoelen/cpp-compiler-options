@@ -334,9 +334,9 @@ function create_options(options, extra_options)
       warnings_as_error = options.warnings_as_error or options["jln-warnings-as-error"] or (disable_other_options and "" or _flag_names.warnings_as_error[get_config("jln-warnings-as-error")]),
       whole_program = options.whole_program or options["jln-whole-program"] or (disable_other_options and "" or _flag_names.whole_program[get_config("jln-whole-program")]),
       windows_bigobj = options.windows_bigobj or options["jln-windows-bigobj"] or (disable_other_options and "" or _flag_names.windows_bigobj[get_config("jln-windows-bigobj")]),
-      cc = options.cc or (not disable_other_options and _get_extra("jln-cc")) or nil,
-      cc_version = options.cc_version or (not disable_other_options and _get_extra("jln-cc-version")) or nil,
-      ld = options.ld or (not disable_other_options and _get_extra("jln-ld")) or nil,
+      cc = options.cc or options["jln-cc"] or (not disable_other_options and _get_extra("jln-cc")) or nil,
+      cc_version = options.cc_version or options["jln-cc-version"] or (not disable_other_options and _get_extra("jln-cc-version")) or nil,
+      ld = options.ld or options["jln-ld"] or (not disable_other_options and _get_extra("jln-ld")) or nil,
     }
   else
     return {
