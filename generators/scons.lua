@@ -152,7 +152,7 @@ def get_flags(options, env=None):
   cxx=function(self, x) return "'" .. x .. "', " end,
   link=function(self, x) return "'" .. x .. "', " end,
 
-  act=function(self, name, datas, optname)
+  act=function(self, datas, optname)
     self:print(self.indent .. '# unimplementable')
     self:print(self.indent .. 'pass')
     return true

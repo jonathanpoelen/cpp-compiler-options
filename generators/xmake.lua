@@ -525,7 +525,7 @@ function get_flags(options, extra_options)
   cxx=function(self, x) return self.indent .. 'insert(jln_cxflags, "' .. x .. '")\n' end,
   link=function(self, x) return self.indent .. 'insert(jln_ldflags, "' .. x .. '")\n' end,
 
-  act=function(self, name, datas, optname)
+  act=function(self, datas, optname)
     self:print(self.indent .. '-- unimplementable')
     return true
   end,

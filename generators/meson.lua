@@ -134,7 +134,7 @@ foreach ___]] .. prefixfunc .. [[_flags : ___]] .. prefixfunc .. [[_custom_flags
   cxx=function(self, x) return "'" .. x .. "', " end,
   link=function(self, x) return "'" .. x .. "', " end,
 
-  act=function(self, name, datas, optname)
+  act=function(self, datas, optname)
     self:print(self.indent .. '# unimplementable')
     return true
   end,

@@ -345,7 +345,7 @@ return {
       cxx=function(self, x) flags[x] = true end,
       link=function(self, x) flags[x] = true end,
 
-      act=function(self, name, datas)
+      act=function(self, datas, optname)
         for _,k in ipairs({'cxx','link'}) do
           for _,x in ipairs(datas[k] or {}) do
             flags[x] = true

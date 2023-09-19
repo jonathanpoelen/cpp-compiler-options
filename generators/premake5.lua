@@ -282,7 +282,7 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
   cxx=function(self, x) return self.indent .. 'table_insert(jln_buildoptions, "' .. x .. '")\n' end,
   link=function(self, x) return self.indent .. 'table_insert(jln_linkoptions, "' .. x .. '")\n' end,
 
-  act=function(self, name, datas, optname)
+  act=function(self, datas, optname)
     self:print(self.indent .. '-- unimplementable')
     return true
   end,

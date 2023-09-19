@@ -347,31 +347,30 @@ endif()
   cxx=function(self, x) return ' "' .. x .. '"' end,
   link=function(self, x) return ' "' .. x .. '"' end,
 
-  act=function(self, name, datas, optname)
-    if name == 'msvc_external' then
-      local cxx_flags,isystem_flag
+  act=function(self, datas, optname)
+    local cxx_flags, isystem_flag
 
-      local cat = self.is_C and 'C' or 'CXX'
-      for k,d in pairs(datas) do
-        if k == 'cxx' then
-          cxx_flags = self.indent .. 'set(CMAKE_' .. cat .. '_FLAGS "${CMAKE_' .. cat .. '_FLAGS} '
-                      .. table.concat(d, ' ') .. ' " CACHE INTERNAL "")'
-        elseif k == 'SYSTEM_FLAG' then
-          isystem_flag = self.indent .. 'set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "' .. d .. ' " CACHE INTERNAL "")'
-        else
-          return 'Unknow ' .. k
-        end
-      end
-
-      if cxx_flags and isystem_flag then
-        self:print(cxx_flags)
-        self:print(isystem_flag)
+    local cat = self.is_C and 'C' or 'CXX'
+    for k,d in pairs(datas) do
+      if k == 'cxx' then
+        cxx_flags = self.indent .. 'set(CMAKE_' .. cat .. '_FLAGS "${CMAKE_' .. cat .. '_FLAGS} '
+                 .. d .. ' " CACHE INTERNAL "")'
+      elseif k == 'system_flag' then
+        isystem_flag = self.indent .. 'set(CMAKE_INCLUDE_SYSTEM_FLAG_' .. cat
+                    .. ' "' .. d .. ' " CACHE INTERNAL "")'
       else
-        return 'Missing key: ' .. (cxx_flags and 'flags' or 'cxx')
+        return 'Unknow ' .. k
       end
-
-      return true
     end
+
+    if not cxx_flags and not isystem_flag then
+      return 'Missing key: system_flag or cxx'
+    end
+
+    if cxx_flags then self:print(cxx_flags) end
+    if isystem_flag then self:print(isystem_flag) end
+
+    return true
   end,
 
   _vcond_toflags=function(self, cxx, links)

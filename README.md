@@ -616,7 +616,7 @@ And(gcc, lvl'off') { ... }
 Compilers, linkers, platforms and condition returns a `if_mt`.
 
 - `-xxx {...}` for `not xxx`
-- `xxx {...} / yyy {...}` for `xxx else yyy`
+- `xxx {...} / yyy {...}` for `xxx or else yyy`
 
 ```lua
 opt'warnings' { -lvl'on' { ... } } -- neither warnings=on nor warnings=default
@@ -629,3 +629,7 @@ Note: `-opt'name'` isn't allowed
 
 - `if_else(cond, f)` = `cond { f(true) } / f()`
 - `match(a,b,c,...)` = `a / b / c / ...`
+- `act(data)` for a specific action hardcoded into a generator
+  - cmake: `data` must be a table which can contain the keys:
+    - `cxx`: add the value in `CMAKE_CXX_FLAGS` / `CMAKE_C_FLAGS`
+    - `system_flag`: add the value in `CMAKE_INCLUDE_SYSTEM_FLAG_CXX` / `CMAKE_INCLUDE_SYSTEM_FLAG_C`.

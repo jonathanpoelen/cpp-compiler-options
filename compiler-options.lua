@@ -200,7 +200,7 @@ local ld64 = Linker('ld64') -- Apple ld64
 local function link(x) return { link=x } end
 local function flag(x) return { cxx=x } end
 local function fl(x) return { cxx=x, link=x } end
-local function act(id, datas) return { act={id, datas} } end
+local function act(datas) return { act={datas} } end
 local function reset_opt(name) return { reset_opt=name } end
 function noop() end
 
@@ -1449,13 +1449,9 @@ msvc {
       match {
         lvl'external_as_include_system_flag' {
           if_else(vers'<16.10', function(b)
-            return act('msvc_external', {
-              cxx={
-                '/external:env:INCLUDE',
-                '/external:W0',
-                b and '/experimental:external',
-              },
-              SYSTEM_FLAG='/external:I',
+            return act({
+              cxx='/external:env:INCLUDE /external:W0' .. (b and ' /experimental:external' or ''),
+              system_flag='/external:I',
             })
           end)
         },
@@ -2969,7 +2965,7 @@ function evalflags(t, v, curropt)
     if t.link then v:link(t.link, curropt) end
 
   elseif t.act then
-    local r = v:act(t.act[1], t.act[2], curropt)
+    local r = v:act(t.act[1], curropt)
     if r == false or r == nil then
       error('Unknown action: ' .. t.act[1])
     elseif r ~= true then
