@@ -10,9 +10,9 @@ include(cpp.cmake)
 #     [BUILD_TYPE type [<jln-option> <default_value>]...]...
 # )
 # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE
-                (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
+#               (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
 # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE}
-              has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
+#             has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 jln_init_flags(
   SUGGESTIONS on      # set SUGGESTIONS default value to "on"
   BUILD_TYPE debug
@@ -115,6 +115,7 @@ coverage = default off on
 diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
+msvc_diagnostics_format = caret default classic column
 msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 msvc_isystem_with_template_from_non_external = default off on
 pie = default off on static fpic fPIC fpie fPIE
@@ -127,6 +128,7 @@ The value `default` does nothing.
 If not specified:
 
 - `msvc_conformance` is `all`
+- `msvc_diagnostics_format` is `caret`
 - `ndebug` is `with_optimization_1_or_above`
 - The following values are `off`:
   - `shadow_warnings`

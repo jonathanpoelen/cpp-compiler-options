@@ -10,9 +10,9 @@
 #  #     [BUILD_TYPE type [<jln-option> <default_value>]...]...
 #  # )
 #  # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE
-#                  (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
+#  #               (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
 #  # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE}
-#                has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
+#  #             has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 #  jln_init_flags(
 #    SUGGESTIONS on      # set SUGGESTIONS default value to "on"
 #    BUILD_TYPE debug
@@ -115,6 +115,7 @@
 #  diagnostics_format = default fixits patch print_source_range_info
 #  diagnostics_show_template_tree = default off on
 #  elide_type = default off on
+#  msvc_diagnostics_format = caret default classic column
 #  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 #  msvc_isystem_with_template_from_non_external = default off on
 #  pie = default off on static fpic fPIC fpie fPIE
@@ -127,6 +128,7 @@
 #  If not specified:
 #  
 #  - `msvc_conformance` is `all`
+#  - `msvc_diagnostics_format` is `caret`
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
 #    - `shadow_warnings`
@@ -184,6 +186,7 @@ set(_JLN_LINKER_VALUES default bfd gold lld native)
 set(_JLN_LTO_VALUES default off on normal fat thin)
 set(_JLN_MSVC_CONFORMANCE_VALUES default all all_without_throwing_new)
 set(_JLN_MSVC_CRT_SECURE_NO_WARNINGS_VALUES default off on)
+set(_JLN_MSVC_DIAGNOSTICS_FORMAT_VALUES default classic column caret)
 set(_JLN_MSVC_ISYSTEM_VALUES default anglebrackets include_and_caexcludepath external_as_include_system_flag)
 set(_JLN_NDEBUG_VALUES default off on with_optimization_1_or_above)
 set(_JLN_OPTIMIZATION_VALUES default 0 g 1 2 3 fast size z)
@@ -359,6 +362,14 @@ if(NOT("${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" JLN_MSVC_CRT_SECURE_NO_WARNINGS)
   if(NOT(("default" STREQUAL JLN_MSVC_CRT_SECURE_NO_WARNINGS) OR ("off" STREQUAL JLN_MSVC_CRT_SECURE_NO_WARNINGS) OR ("on" STREQUAL JLN_MSVC_CRT_SECURE_NO_WARNINGS)))
     message(FATAL_ERROR "Unknow value \"${JLN_MSVC_CRT_SECURE_NO_WARNINGS}\" for JLN_MSVC_CRT_SECURE_NO_WARNINGS, expected: default, off, on")
+  endif()
+endif()
+set(JLN_MSVC_DIAGNOSTICS_FORMAT "${JLN_MSVC_DIAGNOSTICS_FORMAT}" CACHE STRING "Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)\n - classic: Which reports only the line number where the issue was found.\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected")
+set_property(CACHE JLN_MSVC_DIAGNOSTICS_FORMAT PROPERTY STRINGS "default" "classic" "column" "caret")
+if(NOT("${JLN_MSVC_DIAGNOSTICS_FORMAT}" STREQUAL ""))
+  string(TOLOWER "${JLN_MSVC_DIAGNOSTICS_FORMAT}" JLN_MSVC_DIAGNOSTICS_FORMAT)
+  if(NOT(("default" STREQUAL JLN_MSVC_DIAGNOSTICS_FORMAT) OR ("classic" STREQUAL JLN_MSVC_DIAGNOSTICS_FORMAT) OR ("column" STREQUAL JLN_MSVC_DIAGNOSTICS_FORMAT) OR ("caret" STREQUAL JLN_MSVC_DIAGNOSTICS_FORMAT)))
+    message(FATAL_ERROR "Unknow value \"${JLN_MSVC_DIAGNOSTICS_FORMAT}\" for JLN_MSVC_DIAGNOSTICS_FORMAT, expected: default, classic, column, caret")
   endif()
 endif()
 set(JLN_MSVC_ISYSTEM "${JLN_MSVC_ISYSTEM}" CACHE STRING "Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)")
@@ -592,7 +603,7 @@ set(JLN_C_IS_INITIALIZED 0 CACHE BOOL "private" FORCE)
 #       BUILD_TYPE release LTO on
 #   )
 function(jln_c_init_flags)
-  jln_c_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;COLOR;CONTROL_FLOW;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DEBUG;DIAGNOSTICS_FORMAT;EXCEPTIONS;FIX_COMPILER_ERROR;FLOAT_SANITIZERS;INTEGER_SANITIZERS;LINKER;LTO;MSVC_CONFORMANCE;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;OTHER_SANITIZERS;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STACK_PROTECTOR;STL_FIX;SUGGESTIONS;SWITCH_WARNINGS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WHOLE_PROGRAM;WINDOWS_BIGOBJ;AUTO_PROFILE" ${ARGN})
+  jln_c_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;COLOR;CONTROL_FLOW;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DEBUG;DIAGNOSTICS_FORMAT;EXCEPTIONS;FIX_COMPILER_ERROR;FLOAT_SANITIZERS;INTEGER_SANITIZERS;LINKER;LTO;MSVC_CONFORMANCE;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_DIAGNOSTICS_FORMAT;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;OTHER_SANITIZERS;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STACK_PROTECTOR;STL_FIX;SUGGESTIONS;SWITCH_WARNINGS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WHOLE_PROGRAM;WINDOWS_BIGOBJ;AUTO_PROFILE" ${ARGN})
 
   if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)
     set(JLN_VERBOSE_D ${JLN_DEFAULT_FLAG_VERBOSE})
@@ -819,6 +830,14 @@ function(jln_c_init_flags)
     set(JLN_MSVC_CRT_SECURE_NO_WARNINGS_D "${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" CACHE STRING "private" FORCE)
   endif()
 
+  if(DEFINED JLN_DEFAULT_FLAG_MSVC_DIAGNOSTICS_FORMAT)
+    set(JLN_MSVC_DIAGNOSTICS_FORMAT_D ${JLN_DEFAULT_FLAG_MSVC_DIAGNOSTICS_FORMAT} CACHE STRING "private" FORCE)
+  elseif("${JLN_MSVC_DIAGNOSTICS_FORMAT}" STREQUAL "")
+    set(JLN_MSVC_DIAGNOSTICS_FORMAT_D "caret" CACHE STRING "private" FORCE)
+  else()
+    set(JLN_MSVC_DIAGNOSTICS_FORMAT_D "${JLN_MSVC_DIAGNOSTICS_FORMAT}" CACHE STRING "private" FORCE)
+  endif()
+
   if(DEFINED JLN_DEFAULT_FLAG_MSVC_ISYSTEM)
     set(JLN_MSVC_ISYSTEM_D ${JLN_DEFAULT_FLAG_MSVC_ISYSTEM} CACHE STRING "private" FORCE)
   elseif("${JLN_MSVC_ISYSTEM}" STREQUAL "")
@@ -1000,6 +1019,7 @@ function(jln_c_init_flags)
     message(STATUS "JLN_LTO = ${JLN_LTO_D}	[default, off, on, normal, fat, thin]")
     message(STATUS "JLN_MSVC_CONFORMANCE = ${JLN_MSVC_CONFORMANCE_D}	[default, all, all_without_throwing_new]")
     message(STATUS "JLN_MSVC_CRT_SECURE_NO_WARNINGS = ${JLN_MSVC_CRT_SECURE_NO_WARNINGS_D}	[default, off, on]")
+    message(STATUS "JLN_MSVC_DIAGNOSTICS_FORMAT = ${JLN_MSVC_DIAGNOSTICS_FORMAT_D}	[default, classic, column, caret]")
     message(STATUS "JLN_MSVC_ISYSTEM = ${JLN_MSVC_ISYSTEM_D}	[default, anglebrackets, include_and_caexcludepath, external_as_include_system_flag]")
     message(STATUS "JLN_NDEBUG = ${JLN_NDEBUG_D}	[default, off, on, with_optimization_1_or_above]")
     message(STATUS "JLN_OPTIMIZATION = ${JLN_OPTIMIZATION_D}	[default, 0, g, 1, 2, 3, fast, size, z]")
@@ -1096,7 +1116,7 @@ function(jln_c_flags)
   endif()
   set(CXX_FLAGS "")
   set(LINK_LINK "")
-  jln_c_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;C_VAR;LINK_VAR;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;COLOR;CONTROL_FLOW;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DEBUG;DIAGNOSTICS_FORMAT;EXCEPTIONS;FIX_COMPILER_ERROR;FLOAT_SANITIZERS;INTEGER_SANITIZERS;LINKER;LTO;MSVC_CONFORMANCE;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;OTHER_SANITIZERS;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STACK_PROTECTOR;STL_FIX;SUGGESTIONS;SWITCH_WARNINGS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WHOLE_PROGRAM;WINDOWS_BIGOBJ" ${ARGN})
+  jln_c_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;C_VAR;LINK_VAR;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;COLOR;CONTROL_FLOW;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DEBUG;DIAGNOSTICS_FORMAT;EXCEPTIONS;FIX_COMPILER_ERROR;FLOAT_SANITIZERS;INTEGER_SANITIZERS;LINKER;LTO;MSVC_CONFORMANCE;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_DIAGNOSTICS_FORMAT;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;OTHER_SANITIZERS;PEDANTIC;PIE;RELRO;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STACK_PROTECTOR;STL_FIX;SUGGESTIONS;SWITCH_WARNINGS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WHOLE_PROGRAM;WINDOWS_BIGOBJ" ${ARGN})
 
   if(NOT DEFINED JLN_FLAGS_ANALYZER)
     if(JLN_FLAGS_DISABLE_OTHERS)
@@ -1247,6 +1267,14 @@ function(jln_c_flags)
       set(JLN_FLAGS_MSVC_CRT_SECURE_NO_WARNINGS "on")
     else()
       set(JLN_FLAGS_MSVC_CRT_SECURE_NO_WARNINGS "${JLN_MSVC_CRT_SECURE_NO_WARNINGS_D}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_MSVC_DIAGNOSTICS_FORMAT)
+    if(JLN_FLAGS_DISABLE_OTHERS)
+      set(JLN_FLAGS_MSVC_DIAGNOSTICS_FORMAT "caret")
+    else()
+      set(JLN_FLAGS_MSVC_DIAGNOSTICS_FORMAT "${JLN_MSVC_DIAGNOSTICS_FORMAT_D}")
     endif()
   endif()
 
@@ -2382,6 +2410,19 @@ function(jln_c_flags)
         endif()
       endif()
     endif()
+    if (   NOT ( JLN_FLAGS_MSVC_DIAGNOSTICS_FORMAT STREQUAL "default" ) )
+      if (  JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "17.0" )
+        if (  JLN_FLAGS_MSVC_DIAGNOSTICS_FORMAT STREQUAL "classic" )
+          list(APPEND CXX_FLAGS  "/diagnostics:classic")
+        else()
+          if (  JLN_FLAGS_MSVC_DIAGNOSTICS_FORMAT STREQUAL "column" )
+            list(APPEND CXX_FLAGS  "/diagnostics:column")
+          else()
+            list(APPEND CXX_FLAGS  "/diagnostics:caret")
+          endif()
+        endif()
+      endif()
+    endif()
     if (  JLN_C_COMPILER_VERSION VERSION_LESS "15.16" )
       set(JLN_FLAGS_MSVC_ISYSTEM "default")
     endif()
@@ -2389,10 +2430,10 @@ function(jln_c_flags)
       if (  JLN_FLAGS_MSVC_ISYSTEM STREQUAL "external_as_include_system_flag" )
         if (  JLN_C_COMPILER_VERSION VERSION_LESS "16.10" )
           set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /external:env:INCLUDE /external:W0 /experimental:external " CACHE INTERNAL "")
-          set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I " CACHE INTERNAL "")
+          set(CMAKE_INCLUDE_SYSTEM_FLAG_C "/external:I " CACHE INTERNAL "")
         else()
           set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /external:env:INCLUDE /external:W0 " CACHE INTERNAL "")
-          set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I " CACHE INTERNAL "")
+          set(CMAKE_INCLUDE_SYSTEM_FLAG_C "/external:I " CACHE INTERNAL "")
         endif()
       else()
         if (  JLN_C_COMPILER_VERSION VERSION_LESS "16.10" )
