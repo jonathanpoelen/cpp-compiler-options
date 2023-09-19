@@ -299,6 +299,7 @@ function create_options(options, extra_options)
     for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
+      local isnotsamename = (opt ~= optname)
       self:print('      ' .. optname .. ' = options.' .. optname .. ' '
               .. (isnotsamename and 'or options["' .. opt .. '"] ' or '')
               .. 'or (not disable_other_options and _get_extra("' .. opt .. '")) or nil,')

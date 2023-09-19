@@ -149,6 +149,7 @@ function ]] .. prefixfunc .. [[_tovalues(values, disable_others)
     for _,extra in ipairs(extraopts) do
       local optname = extra[1]
       local opt = self:tostroption(optname)
+      local isnotsamename = (opt ~= optname)
       self:print('      ["' .. optname .. '"] = values["' .. optname .. '"] '
               .. (isnotsamename and 'or values["' .. opt .. '"] ' or '')
               .. 'or (not disable_others and _get_extra("' .. opt .. '")) or nil,')

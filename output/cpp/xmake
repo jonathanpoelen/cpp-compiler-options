@@ -186,9 +186,9 @@ function create_options(options, extra_options)
       whole_program = options.whole_program or options["jln-whole-program"] or (disable_other_options and "" or _flag_names.whole_program[get_config("jln-whole-program")]),
       windows_abi_compatibility_warnings = options.windows_abi_compatibility_warnings or options["jln-windows-abi-compatibility-warnings"] or (disable_other_options and "" or _flag_names.windows_abi_compatibility_warnings[get_config("jln-windows-abi-compatibility-warnings")]),
       windows_bigobj = options.windows_bigobj or options["jln-windows-bigobj"] or (disable_other_options and "" or _flag_names.windows_bigobj[get_config("jln-windows-bigobj")]),
-      cxx = options.cxx or (not disable_other_options and _get_extra("jln-cxx")) or nil,
-      cxx_version = options.cxx_version or (not disable_other_options and _get_extra("jln-cxx-version")) or nil,
-      ld = options.ld or (not disable_other_options and _get_extra("jln-ld")) or nil,
+      cxx = options.cxx or options["jln-cxx"] or (not disable_other_options and _get_extra("jln-cxx")) or nil,
+      cxx_version = options.cxx_version or options["jln-cxx-version"] or (not disable_other_options and _get_extra("jln-cxx-version")) or nil,
+      ld = options.ld or options["jln-ld"] or (not disable_other_options and _get_extra("jln-ld")) or nil,
     }
   else
     return {

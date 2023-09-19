@@ -344,9 +344,9 @@ function jln_tovalues(values, disable_others)
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "default" or _OPTIONS["jln-whole-program"]),
       ["windows_abi_compatibility_warnings"] = values["windows_abi_compatibility_warnings"] or values["jln-windows-abi-compatibility-warnings"] or (disable_others and "default" or _OPTIONS["jln-windows-abi-compatibility-warnings"]),
       ["windows_bigobj"] = values["windows_bigobj"] or values["jln-windows-bigobj"] or (disable_others and "default" or _OPTIONS["jln-windows-bigobj"]),
-      ["cxx"] = values["cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
-      ["cxx_version"] = values["cxx_version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
-      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
+      ["cxx"] = values["cxx"] or values["jln-cxx"] or (not disable_others and _get_extra("jln-cxx")) or nil,
+      ["cxx_version"] = values["cxx_version"] or values["jln-cxx-version"] or (not disable_others and _get_extra("jln-cxx-version")) or nil,
+      ["ld"] = values["ld"] or values["jln-ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
 }
   else
     return {
