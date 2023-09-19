@@ -1446,6 +1446,16 @@ msvc {
     }
   },
 
+  opt'msvc_diagnostics_format' {
+    vers'>=17' {
+      match {
+        lvl'classic' { flag'/diagnostics:classic' },
+        lvl'column' { flag'/diagnostics:column' },
+        --[[lvl'caret']] { flag'/diagnostics:caret' },
+      }
+    }
+  },
+
   -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
   vers'<15.16' {
     reset_opt'msvc_isystem'
@@ -2264,19 +2274,6 @@ local Vbase = {
       description='Enable Link Time Optimization',
     },
 
-    msvc_isystem={
-      values={'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},
-      description='Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)',
-      incidental=true,
-    },
-
-    msvc_isystem_with_template_from_non_external={
-      values={'off', 'on'},
-      description='Warnings concerning template in an external header (requires msvc_isystem)',
-      incidental=true,
-      unavailable='c',
-    },
-
     msvc_conformance={
       values={'all', 'all_without_throwing_new'},
       default='all',
@@ -2288,6 +2285,30 @@ local Vbase = {
       default='on',
       description='Disable CRT warnings',
       incidental=true,
+    },
+
+    msvc_diagnostics_format={
+      values={
+        {'classic', 'Which reports only the line number where the issue was found.'},
+        {'column', 'Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue'},
+        {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected'},
+      },
+      default='caret',
+      description='Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)',
+      incidental=true,
+    },
+
+    msvc_isystem={
+      values={'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},
+      description='Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)',
+      incidental=true,
+    },
+
+    msvc_isystem_with_template_from_non_external={
+      values={'off', 'on'},
+      description='Warnings concerning template in an external header (requires msvc_isystem)',
+      incidental=true,
+      unavailable='c',
     },
 
     ndebug={
