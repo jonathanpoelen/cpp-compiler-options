@@ -1427,6 +1427,12 @@ msvc {
           flag'/Zc:preprocessor',
           vers'>=16.8' {
             cxx'/Zc:lambda',
+            vers'>=17.4' { -- MSVC 19.34
+              cxx'/Zc:enumTypes',
+              vers'>=17.5' { -- MSVC 19.35
+                cxx'/Zc:templateScope',
+              }
+            }
           }
         },
       }
