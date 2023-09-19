@@ -472,9 +472,9 @@ function jln_c_tovalues(values, disable_others)
       ["warnings_as_error"] = values["warnings_as_error"] or values["jln-warnings-as-error"] or (disable_others and "default" or _OPTIONS["jln-warnings-as-error"]),
       ["whole_program"] = values["whole_program"] or values["jln-whole-program"] or (disable_others and "default" or _OPTIONS["jln-whole-program"]),
       ["windows_bigobj"] = values["windows_bigobj"] or values["jln-windows-bigobj"] or (disable_others and "default" or _OPTIONS["jln-windows-bigobj"]),
-      ["cc"] = values["cc"] or (not disable_others and _get_extra("jln-cc")) or nil,
-      ["cc_version"] = values["cc_version"] or (not disable_others and _get_extra("jln-cc-version")) or nil,
-      ["ld"] = values["ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
+      ["cc"] = values["cc"] or values["jln-cc"] or (not disable_others and _get_extra("jln-cc")) or nil,
+      ["cc_version"] = values["cc_version"] or values["jln-cc-version"] or (not disable_others and _get_extra("jln-cc-version")) or nil,
+      ["ld"] = values["ld"] or values["jln-ld"] or (not disable_others and _get_extra("jln-ld")) or nil,
 }
   else
     return {
