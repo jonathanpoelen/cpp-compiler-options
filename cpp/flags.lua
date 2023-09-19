@@ -119,6 +119,7 @@
 --  diagnostics_format = default fixits patch print_source_range_info
 --  diagnostics_show_template_tree = default off on
 --  elide_type = default off on
+--  msvc_diagnostics_format = caret default classic column
 --  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
 --  msvc_isystem_with_template_from_non_external = default off on
 --  pie = default off on static fpic fPIC fpie fPIE
@@ -131,6 +132,7 @@
 --  If not specified:
 --  
 --  - `msvc_conformance` is `all`
+--  - `msvc_diagnostics_format` is `caret`
 --  - `ndebug` is `with_optimization_1_or_above`
 --  - The following values are `off`:
 --    - `shadow_warnings`
@@ -221,6 +223,8 @@ local _flag_names = {
   ["msvc_conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
   ["jln-msvc-crt-secure-no-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_crt_secure_no_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-msvc-diagnostics-format"] = {["default"]="", ["classic"]="classic", ["column"]="column", ["caret"]="caret", [""]=""},
+  ["msvc_diagnostics_format"] = {["default"]="", ["classic"]="classic", ["column"]="column", ["caret"]="caret", [""]=""},
   ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
   ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
   ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -330,6 +334,7 @@ function create_options(options, extra_options)
       lto = options.lto or options["jln-lto"] or (disable_other_options and "" or _flag_names.lto[get_config("jln-lto")]),
       msvc_conformance = options.msvc_conformance or options["jln-msvc-conformance"] or (disable_other_options and "" or _flag_names.msvc_conformance[get_config("jln-msvc-conformance")]),
       msvc_crt_secure_no_warnings = options.msvc_crt_secure_no_warnings or options["jln-msvc-crt-secure-no-warnings"] or (disable_other_options and "" or _flag_names.msvc_crt_secure_no_warnings[get_config("jln-msvc-crt-secure-no-warnings")]),
+      msvc_diagnostics_format = options.msvc_diagnostics_format or options["jln-msvc-diagnostics-format"] or (disable_other_options and "" or _flag_names.msvc_diagnostics_format[get_config("jln-msvc-diagnostics-format")]),
       msvc_isystem = options.msvc_isystem or options["jln-msvc-isystem"] or (disable_other_options and "" or _flag_names.msvc_isystem[get_config("jln-msvc-isystem")]),
       msvc_isystem_with_template_from_non_external = options.msvc_isystem_with_template_from_non_external or options["jln-msvc-isystem-with-template-from-non-external"] or (disable_other_options and "" or _flag_names.msvc_isystem_with_template_from_non_external[get_config("jln-msvc-isystem-with-template-from-non-external")]),
       ndebug = options.ndebug or options["jln-ndebug"] or (disable_other_options and "" or _flag_names.ndebug[get_config("jln-ndebug")]),
@@ -382,6 +387,7 @@ function create_options(options, extra_options)
       ["lto"] = _flag_names["lto"][get_config("jln-lto")],
       ["msvc_conformance"] = _flag_names["msvc_conformance"][get_config("jln-msvc-conformance")],
       ["msvc_crt_secure_no_warnings"] = _flag_names["msvc_crt_secure_no_warnings"][get_config("jln-msvc-crt-secure-no-warnings")],
+      ["msvc_diagnostics_format"] = _flag_names["msvc_diagnostics_format"][get_config("jln-msvc-diagnostics-format")],
       ["msvc_isystem"] = _flag_names["msvc_isystem"][get_config("jln-msvc-isystem")],
       ["msvc_isystem_with_template_from_non_external"] = _flag_names["msvc_isystem_with_template_from_non_external"][get_config("jln-msvc-isystem-with-template-from-non-external")],
       ["ndebug"] = _flag_names["ndebug"][get_config("jln-ndebug")],
@@ -1767,6 +1773,12 @@ function get_flags(options, extra_options)
             insert(jln_cxflags, "/Zc:preprocessor")
             if compversion >= 1600008 then
               insert(jln_cxflags, "/Zc:lambda")
+              if compversion >= 1700004 then
+                insert(jln_cxflags, "/Zc:enumTypes")
+                if compversion >= 1700005 then
+                  insert(jln_cxflags, "/Zc:templateScope")
+                end
+              end
             end
           end
         end
@@ -1778,6 +1790,19 @@ function get_flags(options, extra_options)
       else
         if options.msvc_crt_secure_no_warnings == "off" then
           insert(jln_cxflags, "/U_CRT_SECURE_NO_WARNINGS")
+        end
+      end
+    end
+    if options.msvc_diagnostics_format ~= "" then
+      if compversion >= 1700000 then
+        if options.msvc_diagnostics_format == "classic" then
+          insert(jln_cxflags, "/diagnostics:classic")
+        else
+          if options.msvc_diagnostics_format == "column" then
+            insert(jln_cxflags, "/diagnostics:column")
+          else
+            insert(jln_cxflags, "/diagnostics:caret")
+          end
         end
       end
     end
