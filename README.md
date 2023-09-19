@@ -203,9 +203,9 @@ include(output/cpp/cmake)
 #     [BUILD_TYPE type [<jln-option> <default_value>]...]...
 # )
 # AUTO_PROFILE: enables options based on CMAKE_BUILD_TYPE
-                (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
+#               (assumes "Debug" if CMAKE_BUILD_TYPE is empty)
 # BUILD_TYPE: enables following options only if ${CMAKE_BUILD_TYPE}
-              has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
+#             has the same value (CMAKE_BUILD_TYPE assumed to Debug if empty)
 jln_init_flags(
   SUGGESTIONS on      # set SUGGESTIONS default value to "on"
   BUILD_TYPE debug
