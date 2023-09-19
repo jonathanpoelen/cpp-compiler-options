@@ -11,7 +11,8 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
--Wno-switch-enum
 -Wno-undefined-var-template
 -Wno-weak-vtables
+-Wswitch
+-Wswitch-enum
 -pedantic

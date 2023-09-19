@@ -13,7 +13,8 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
--Wno-switch-enum
 -Wno-undefined-var-template
 -Wno-weak-vtables
+-Wswitch
+-Wswitch-enum
 -pedantic

@@ -8,7 +8,8 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
--Wno-switch-enum
 -Wsign-compare
 -Wsign-conversion
+-Wswitch
+-Wswitch-enum
 /permissive-

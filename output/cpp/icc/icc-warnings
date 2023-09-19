@@ -23,6 +23,7 @@
 -Wpointer-sign
 -Wreorder
 -Wsequence-point
+-Wswitch-enum
 -Wtrigraphs
 -Wundef
 -Wunused-but-set-variable

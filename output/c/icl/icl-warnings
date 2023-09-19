@@ -1,2 +1,5 @@
 /Qdiag-disable:1418,2259
 /W2
+/Zc:inline
+/Zc:strictStrings
+/Zc:throwingNew

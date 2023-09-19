@@ -7,6 +7,7 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
--Wno-switch-enum
 -Wno-unsafe-buffer-usage
+-Wswitch
+-Wswitch-enum
 -pedantic

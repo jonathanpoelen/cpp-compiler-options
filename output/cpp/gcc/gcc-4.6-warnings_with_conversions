@@ -19,6 +19,7 @@
 -Wredundant-decls
 -Wsign-compare
 -Wsign-conversion
+-Wswitch-enum
 -Wundef
 -Wunused-macros
 -pedantic

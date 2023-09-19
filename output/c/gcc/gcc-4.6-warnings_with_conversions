@@ -21,6 +21,7 @@
 -Wsign-compare
 -Wsign-conversion
 -Wstrict-prototypes
+-Wswitch-enum
 -Wundef
 -Wunused-macros
 -Wwrite-strings

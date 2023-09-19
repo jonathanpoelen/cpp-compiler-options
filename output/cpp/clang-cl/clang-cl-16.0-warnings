@@ -15,9 +15,10 @@
 -Wno-shadow
 -Wno-shadow-field
 -Wno-suggest-destructor-override
--Wno-switch-enum
 -Wno-undefined-var-template
 -Wno-unsafe-buffer-usage
 -Wno-weak-vtables
+-Wswitch
+-Wswitch-enum
 /Zc:__cplusplus
 /permissive-

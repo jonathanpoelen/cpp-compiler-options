@@ -16,6 +16,7 @@
 -Wpacked
 -Wpointer-arith
 -Wredundant-decls
+-Wswitch-enum
 -Wundef
 -Wunused-macros
 -pedantic

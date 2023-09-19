@@ -22,6 +22,7 @@
 -Wreorder
 -Wsequence-point
 -Wstrict-prototypes
+-Wswitch-enum
 -Wtrigraphs
 -Wundef
 -Wunused-but-set-variable

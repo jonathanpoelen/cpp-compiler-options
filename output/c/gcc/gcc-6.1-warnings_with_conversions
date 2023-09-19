@@ -29,6 +29,7 @@
 -Wsign-conversion
 -Wstrict-prototypes
 -Wsuggest-attribute=noreturn
+-Wswitch-enum
 -Wtrampolines
 -Wundef
 -Wunused-macros

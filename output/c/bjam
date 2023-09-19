@@ -48,6 +48,11 @@ feature <jln-lto> : _ default off on normal fat thin : incidental ;
 feature <jln-msvc-conformance> : _ all default all-without-throwing-new : incidental ;
 # Disable CRT warnings
 feature <jln-msvc-crt-secure-no-warnings> : _ on default off : propagated ;
+# Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)
+#  - classic: Which reports only the line number where the issue was found.
+#  - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue
+#  - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected
+feature <jln-msvc-diagnostics-format> : _ caret default classic column : propagated ;
 # Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)
 feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath : propagated ;
 # Enable NDEBUG macro (disable assert macro)
@@ -141,6 +146,7 @@ feature <jln-linker-default> : default bfd gold lld native : incidental ;
 feature <jln-lto-default> : default off on normal fat thin : incidental ;
 feature <jln-msvc-conformance-default> : all default all-without-throwing-new : incidental ;
 feature <jln-msvc-crt-secure-no-warnings-default> : on default off : incidental ;
+feature <jln-msvc-diagnostics-format-default> : caret default classic column : incidental ;
 feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath : incidental ;
 feature <jln-ndebug-default> : with-optimization-1-or-above default off on : incidental ;
 feature <jln-optimization-default> : default 0 g 1 2 3 fast size z : incidental ;
@@ -202,6 +208,7 @@ constant jln_c_env_linker : [ jln_c-get-env jln_linker : default bfd gold lld na
 constant jln_c_env_lto : [ jln_c-get-env jln_lto : default off on normal fat thin ] ;
 constant jln_c_env_msvc_conformance : [ jln_c-get-env jln_msvc_conformance : all default all-without-throwing-new ] ;
 constant jln_c_env_msvc_crt_secure_no_warnings : [ jln_c-get-env jln_msvc_crt_secure_no_warnings : on default off ] ;
+constant jln_c_env_msvc_diagnostics_format : [ jln_c-get-env jln_msvc_diagnostics_format : caret default classic column ] ;
 constant jln_c_env_msvc_isystem : [ jln_c-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath ] ;
 constant jln_c_env_ndebug : [ jln_c-get-env jln_ndebug : with-optimization-1-or-above default off on ] ;
 constant jln_c_env_optimization : [ jln_c-get-env jln_optimization : default 0 g 1 2 3 fast size z ] ;
@@ -422,6 +429,7 @@ rule jln_c_flags ( properties * )
   local x_lto = [ jln_c-get-value2 $(ps) : jln-lto : jln-lto-incidental : $(jln_c_env_lto) ] ;
   local x_msvc_conformance = [ jln_c-get-value2 $(ps) : jln-msvc-conformance : jln-msvc-conformance-incidental : $(jln_c_env_msvc_conformance) ] ;
   local x_msvc_crt_secure_no_warnings = [ jln_c-get-value $(ps) : jln-msvc-crt-secure-no-warnings : $(jln_c_env_msvc_crt_secure_no_warnings) ] ;
+  local x_msvc_diagnostics_format = [ jln_c-get-value $(ps) : jln-msvc-diagnostics-format : $(jln_c_env_msvc_diagnostics_format) ] ;
   local x_msvc_isystem = [ jln_c-get-value $(ps) : jln-msvc-isystem : $(jln_c_env_msvc_isystem) ] ;
   local x_ndebug = [ jln_c-get-value2 $(ps) : jln-ndebug : jln-ndebug-incidental : $(jln_c_env_ndebug) ] ;
   local x_optimization = [ jln_c-get-value2 $(ps) : jln-optimization : jln-optimization-incidental : $(jln_c_env_optimization) ] ;
@@ -2508,6 +2516,33 @@ rule jln_c_flags ( properties * )
           flags +=
             <cflags>"/U_CRT_SECURE_NO_WARNINGS"
           ;
+        }
+      }
+    }
+    if $(x_msvc_diagnostics_format) != "default"
+    {
+      if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1700000 ]
+      {
+        if $(x_msvc_diagnostics_format) = "classic"
+        {
+          flags +=
+            <cflags>"/diagnostics:classic"
+          ;
+        }
+        else
+        {
+          if $(x_msvc_diagnostics_format) = "column"
+          {
+            flags +=
+              <cflags>"/diagnostics:column"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"/diagnostics:caret"
+            ;
+          }
         }
       }
     }

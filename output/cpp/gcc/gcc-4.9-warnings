@@ -21,6 +21,7 @@
 -Wpointer-arith
 -Wredundant-decls
 -Wsuggest-attribute=noreturn
+-Wswitch-enum
 -Wtrampolines
 -Wundef
 -Wunused-macros

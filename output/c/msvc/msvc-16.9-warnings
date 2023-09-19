@@ -1,4 +1,8 @@
 /W4
+/Zc:inline
+/Zc:preprocessor
+/Zc:referenceBinding
+/Zc:throwingNew
 /permissive-
 /wd4456
 /wd4459

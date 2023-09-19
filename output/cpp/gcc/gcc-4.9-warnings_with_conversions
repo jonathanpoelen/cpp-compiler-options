@@ -24,6 +24,7 @@
 -Wsign-compare
 -Wsign-conversion
 -Wsuggest-attribute=noreturn
+-Wswitch-enum
 -Wtrampolines
 -Wundef
 -Wunused-macros

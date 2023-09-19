@@ -25,6 +25,7 @@
 -Wsign-compare
 -Wsign-conversion
 -Wstrict-prototypes
+-Wswitch-enum
 -Wtrigraphs
 -Wundef
 -Wunused-but-set-variable

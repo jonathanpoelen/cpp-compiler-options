@@ -1,5 +1,10 @@
 /W4
 /Zc:__cplusplus
+/Zc:externConstexpr
+/Zc:inline
+/Zc:preprocessor
+/Zc:referenceBinding
+/Zc:throwingNew
 /permissive-
 /wd4456
 /wd4459

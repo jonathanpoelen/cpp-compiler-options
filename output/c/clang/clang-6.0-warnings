@@ -6,5 +6,6 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
--Wno-switch-enum
+-Wswitch
+-Wswitch-enum
 -pedantic

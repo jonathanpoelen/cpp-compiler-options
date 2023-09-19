@@ -27,6 +27,7 @@
 -Wstrict-null-sentinel
 -Wsuggest-attribute=noreturn
 -Wsuggest-override
+-Wswitch-enum
 -Wtrampolines
 -Wundef
 -Wunused-macros

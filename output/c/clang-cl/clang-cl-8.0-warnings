@@ -7,5 +7,6 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
--Wno-switch-enum
+-Wswitch
+-Wswitch-enum
 /permissive-

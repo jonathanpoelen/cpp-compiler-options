@@ -10,6 +10,7 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
--Wno-switch-enum
 -Wno-weak-vtables
+-Wswitch
+-Wswitch-enum
 -pedantic

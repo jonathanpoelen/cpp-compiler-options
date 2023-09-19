@@ -24,6 +24,7 @@
 -Wredundant-decls
 -Wstrict-prototypes
 -Wsuggest-attribute=noreturn
+-Wswitch-enum
 -Wtrampolines
 -Wundef
 -Wunused-macros

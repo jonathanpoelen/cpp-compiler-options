@@ -11,8 +11,9 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
--Wno-switch-enum
 -Wno-weak-vtables
 -Wsign-compare
 -Wsign-conversion
+-Wswitch
+-Wswitch-enum
 -pedantic

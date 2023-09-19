@@ -12,9 +12,10 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
--Wno-switch-enum
 -Wno-undefined-var-template
 -Wno-weak-vtables
 -Wsign-compare
 -Wsign-conversion
+-Wswitch
+-Wswitch-enum
 -pedantic

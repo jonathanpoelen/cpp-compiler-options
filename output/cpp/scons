@@ -27,6 +27,7 @@ _default_flags = {
   'lto': 'default',
   'msvc_conformance': 'all',
   'msvc_crt_secure_no_warnings': 'on',
+  'msvc_diagnostics_format': 'caret',
   'msvc_isystem': 'default',
   'msvc_isystem_with_template_from_non_external': 'default',
   'ndebug': 'with_optimization_1_or_above',
@@ -76,6 +77,7 @@ _var2opts = {
   'jln_lto': 'lto',
   'jln_msvc_conformance': 'msvc_conformance',
   'jln_msvc_crt_secure_no_warnings': 'msvc_crt_secure_no_warnings',
+  'jln_msvc_diagnostics_format': 'msvc_diagnostics_format',
   'jln_msvc_isystem': 'msvc_isystem',
   'jln_msvc_isystem_with_template_from_non_external': 'msvc_isystem_with_template_from_non_external',
   'jln_ndebug': 'ndebug',
@@ -125,6 +127,7 @@ _opt2vars = {
   'lto': 'jln_lto',
   'msvc_conformance': 'jln_msvc_conformance',
   'msvc_crt_secure_no_warnings': 'jln_msvc_crt_secure_no_warnings',
+  'msvc_diagnostics_format': 'jln_msvc_diagnostics_format',
   'msvc_isystem': 'jln_msvc_isystem',
   'msvc_isystem_with_template_from_non_external': 'jln_msvc_isystem_with_template_from_non_external',
   'ndebug': 'jln_ndebug',
@@ -199,6 +202,8 @@ def add_variables(vars, default_values={}):
                  allowed_values=('default', 'all', 'all_without_throwing_new')),
     EnumVariable('jln_msvc_crt_secure_no_warnings', 'Disable CRT warnings', default_values.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings']),
                  allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_msvc_diagnostics_format', 'Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)\\n - classic: Which reports only the line number where the issue was found.\\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue\\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected', default_values.get('msvc_diagnostics_format', _default_flags['msvc_diagnostics_format']),
+                 allowed_values=('default', 'classic', 'column', 'caret')),
     EnumVariable('jln_msvc_isystem', 'Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)', default_values.get('msvc_isystem', _default_flags['msvc_isystem']),
                  allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
     EnumVariable('jln_msvc_isystem_with_template_from_non_external', 'Warnings concerning template in an external header (requires msvc_isystem)', default_values.get('msvc_isystem_with_template_from_non_external', _default_flags['msvc_isystem_with_template_from_non_external']),
@@ -333,6 +338,7 @@ def get_flags(options, env=None):
   x_lto = options.get('lto', _default_flags['lto'])
   x_msvc_conformance = options.get('msvc_conformance', _default_flags['msvc_conformance'])
   x_msvc_crt_secure_no_warnings = options.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings'])
+  x_msvc_diagnostics_format = options.get('msvc_diagnostics_format', _default_flags['msvc_diagnostics_format'])
   x_msvc_isystem = options.get('msvc_isystem', _default_flags['msvc_isystem'])
   x_msvc_isystem_with_template_from_non_external = options.get('msvc_isystem_with_template_from_non_external', _default_flags['msvc_isystem_with_template_from_non_external'])
   x_ndebug = options.get('ndebug', _default_flags['ndebug'])
@@ -1114,12 +1120,25 @@ def get_flags(options, env=None):
             flags += ('/Zc:preprocessor', )
             if compversion >= 1600008 :
               flags += ('/Zc:lambda', )
+              if compversion >= 1700004 :
+                flags += ('/Zc:enumTypes', )
+                if compversion >= 1700005 :
+                  flags += ('/Zc:templateScope', )
     if x_msvc_crt_secure_no_warnings != 'default' :
       if x_msvc_crt_secure_no_warnings == 'on' :
         flags += ('/D_CRT_SECURE_NO_WARNINGS=1', )
       else:
         if x_msvc_crt_secure_no_warnings == 'off' :
           flags += ('/U_CRT_SECURE_NO_WARNINGS', )
+    if x_msvc_diagnostics_format != 'default' :
+      if compversion >= 1700000 :
+        if x_msvc_diagnostics_format == 'classic' :
+          flags += ('/diagnostics:classic', )
+        else:
+          if x_msvc_diagnostics_format == 'column' :
+            flags += ('/diagnostics:column', )
+          else:
+            flags += ('/diagnostics:caret', )
     if compversion < 1500016 :
       x_msvc_isystem = 'default'
     if x_msvc_isystem != 'default' :
