@@ -3,7 +3,7 @@
 -- mkdir w
 -- for d in bjam cmake meson premake5 scons xmake ; do git worktree add w/$d ; done
 
-function readfile(filename)
+local function readfile(filename)
   local f,e = io.open(filename)
   if e then
     error(filename .. ': ' .. e)
@@ -13,7 +13,7 @@ function readfile(filename)
   return r
 end
 
-function writefile(filename, ...)
+local function writefile(filename, ...)
   local f,e = io.open(filename, 'w')
   if e then
     error(filename .. ': ' .. e)
@@ -23,11 +23,11 @@ function writefile(filename, ...)
 end
 
 
-readme = readfile('README.md')
-start_options = readme:find('# Options', 0, true)
-end_options = readme:find('# Use generated files', start_options, true)
+local readme = readfile('README.md')
+local start_options = readme:find('# Options', 0, true)
+local end_options = readme:find('# Use generated files', start_options, true)
 
-options_md = readme:sub(start_options, end_options - 2)
+local options_md = readme:sub(start_options, end_options - 2)
 
 for _,t in ipairs({
   -- name, H2 in md, comm, cfile, cppfile, extra_files

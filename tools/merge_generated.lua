@@ -1,6 +1,6 @@
 #!/usr/bin/env lua
 
-function atorset(t, k)
+local function atorset(t, k)
   local l = t[k]
   if not l then
     l = {}
@@ -33,7 +33,7 @@ end
 
 -- os.exit()
 
-function get_file_contents(path)
+local function get_file_contents(path)
   local f, err = io.open(path)
   if err then
     error(path .. ': ' .. err)
@@ -43,7 +43,7 @@ function get_file_contents(path)
   return s
 end
 
-function load_files(prefix)
+local function load_files(prefix)
   local t = {}
   for cat in pairs(categories) do
     t[cat] = get_file_contents(prefix .. cat)
@@ -51,14 +51,14 @@ function load_files(prefix)
   return t
 end
 
-function append_table(t, ...)
+local function append_table(t, ...)
   for x in ... do
     t[#t+1] = x
   end
   return t
 end
 
-function split_lines(s, t)
+local function split_lines(s, t)
   t = t or {}
   if s then
     return append_table(t, s:gmatch('[^\n]+'))
@@ -66,7 +66,7 @@ function split_lines(s, t)
   return t
 end
 
-function tokeys(t, tk)
+local function tokeys(t, tk)
   tk = tk or {}
   for _,x in pairs(t) do
     tk[x] = x
@@ -74,7 +74,7 @@ function tokeys(t, tk)
   return tk
 end
 
-function write_ktable(t, path)
+local function write_ktable(t, path)
   t[''] = nil
   t = append_table({}, pairs(t))
   table.sort(t)
@@ -85,12 +85,12 @@ function write_ktable(t, path)
   return t
 end
 
-function remove_file(path)
+local function remove_file(path)
   print(path)
   os.remove(path)
 end
 
-function create_debug_file(prefix, files_contents)
+local function create_debug_file(prefix, files_contents)
   local lines = tokeys(
     split_lines(files_contents['debug'],
       split_lines(files_contents['sanitizers'])))
