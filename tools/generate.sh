@@ -88,6 +88,14 @@ gencompopt ()
   done
 }
 
+warn_opts='
+  shadow_warnings=off
+  windows_abi_compatibility_warnings=off
+  switch_warnings=exhaustive_enum
+  msvc_conformance=all
+  pedantic
+  warnings
+'
 # options by compilers
 while read comp ; do
   # ignore emscripten
@@ -96,8 +104,8 @@ while read comp ; do
   compname=${comp%-[0-9]*}
   # C and C++
   gencompopt 2 release                    cpu=native lto optimization=2 linker=native ndebug
-  gencompopt 2 warnings                   shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings
-  gencompopt 2 warnings_with_conversions  shadow_warnings=off windows_abi_compatibility_warnings=off pedantic warnings conversion_warnings
+  gencompopt 2 warnings                   $warn_opts
+  gencompopt 2 warnings_with_conversions  $warn_opts conversion_warnings
   gencompopt 2 suggestions                suggestions
   gencompopt 2 stl_debug                  stl_debug
   gencompopt 2 debug                      debug
