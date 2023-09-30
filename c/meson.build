@@ -389,8 +389,10 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('unsafe_buffer_usage_warnings', 'default') != 'default' )
-      if (  ___jln_c_flags.get('unsafe_buffer_usage_warnings', 'default') == 'off' )
-        jln_c_c_flags += ['-Wno-unsafe-buffer-usage', ]
+      if (  ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=16.0') ) )
+        if (  ___jln_c_flags.get('unsafe_buffer_usage_warnings', 'default') == 'off' )
+          jln_c_c_flags += ['-Wno-unsafe-buffer-usage', ]
+        endif
       endif
     endif
     if (  ___jln_c_flags.get('exceptions', 'default') != 'default' )

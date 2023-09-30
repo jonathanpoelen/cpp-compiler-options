@@ -404,10 +404,12 @@ foreach ___jln_flags : ___jln_custom_flags
       endif
     endif
     if (  ___jln_flags.get('unsafe_buffer_usage_warnings', 'default') != 'default' )
-      if (  ___jln_flags.get('unsafe_buffer_usage_warnings', 'default') == 'off' )
-        jln_cpp_flags += ['-Wno-unsafe-buffer-usage', ]
-      else
-        jln_cpp_flags += ['-Wunsafe-buffer-usage', ]
+      if (  ( ___jln_compiler_id == 'clang' and ___jln_compiler_version.version_compare('>=16.0') ) )
+        if (  ___jln_flags.get('unsafe_buffer_usage_warnings', 'default') == 'off' )
+          jln_cpp_flags += ['-Wno-unsafe-buffer-usage', ]
+        else
+          jln_cpp_flags += ['-Wunsafe-buffer-usage', ]
+        endif
       endif
     endif
     if (  ___jln_flags.get('diagnostics_show_template_tree', 'default') != 'default' )
