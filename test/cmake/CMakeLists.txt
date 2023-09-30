@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.5)
 project(test)
-cmake_minimum_required(VERSION 3.2)
 
 include(../../output/cpp/cmake)
 if ("${TEST_PROFILE}" STREQUAL "on")
