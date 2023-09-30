@@ -38,7 +38,7 @@ option('jln_stl_debug', type : 'combo', choices : ['default', 'off', 'on', 'allo
 option('jln_stl_fix', type : 'combo', choices : ['default', 'off', 'on'], value : 'on', description : 'Enable /DNOMINMAX with msvc')
 option('jln_suggestions', type : 'combo', choices : ['default', 'off', 'on'], value : 'default', description : 'Warn for cases where adding an attribute may be beneficial')
 option('jln_switch_warnings', type : 'combo', choices : ['default', 'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default'], value : 'on', description : 'Warnings concerning the switch keyword')
-option('jln_unsafe_buffer_usage_warnings', type : 'combo', choices : ['default', 'on', 'off'], value : 'off', description : 'Enable -Wunsafe-buffer-usage with clang')
+option('jln_unsafe_buffer_usage_warnings', type : 'combo', choices : ['default', 'on', 'off'], value : 'default', description : 'Enable -Wunsafe-buffer-usage with clang')
 option('jln_var_init', type : 'combo', choices : ['default', 'uninitialized', 'pattern', 'zero'], value : 'default', description : 'Initialize all stack variables implicitly, including padding\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)\\n - zero: zero Initialize automatic variables with zeroes')
 option('jln_warnings', type : 'combo', choices : ['default', 'off', 'on', 'strict', 'very_strict'], value : 'on', description : 'Warning level')
 option('jln_warnings_as_error', type : 'combo', choices : ['default', 'off', 'on', 'basic'], value : 'default', description : 'Make all or some warnings into errors')

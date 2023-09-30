@@ -413,7 +413,7 @@ local _flag_names = {
            category=category,
            description="Enable -Wunsafe-buffer-usage with clang",
            values={"default", "on", "off"},
-           default=default_options["unsafe_buffer_usage_warnings"] or default_options["jln-unsafe-buffer-usage-warnings"] or "off",
+           default=default_options["unsafe_buffer_usage_warnings"] or default_options["jln-unsafe-buffer-usage-warnings"] or "default",
            after_check=function(option) check_option("jln-unsafe-buffer-usage-warnings", "unsafe_buffer_usage_warnings") end,
          })
   option("jln-var-init", {

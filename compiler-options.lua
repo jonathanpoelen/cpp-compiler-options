@@ -469,9 +469,11 @@ Or(gcc, clang_like) {
   },
 
   opt'unsafe_buffer_usage_warnings' {
-    match {
-      lvl'off' { flag'-Wno-unsafe-buffer-usage' },
-      cxx'-Wunsafe-buffer-usage',
+    clang'>=16' {
+      match {
+        lvl'off' { flag'-Wno-unsafe-buffer-usage' },
+        cxx'-Wunsafe-buffer-usage',
+      }
     }
   },
 
@@ -2414,7 +2416,6 @@ local Vbase = {
 
     unsafe_buffer_usage_warnings={
       values={'on', 'off'},
-      default='off',
       description='Enable -Wunsafe-buffer-usage with clang',
       incidental=true,
     },

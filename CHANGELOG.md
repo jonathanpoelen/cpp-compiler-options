@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2023-09-30
+
+- add `unsafe_buffer_usage_warnings` (`on`, `off`).
+
 ## 2023-09-19
 
 - add `msvc_diagnostics_format` (`caret`, `classic`, `column`), default is `caret`
