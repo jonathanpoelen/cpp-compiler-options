@@ -383,7 +383,7 @@ function jln_c_newoptions(defaults)
   if not _OPTIONS["jln-switch-warnings"] then _OPTIONS["jln-switch-warnings"] = (defaults["switch_warnings"] or defaults["jln-switch-warnings"] or "on") end
 
   newoption{trigger="jln-unsafe-buffer-usage-warnings", allowed={{'default'}, {'on'}, {'off'}}, description="Enable -Wunsafe-buffer-usage with clang"}
-  if not _OPTIONS["jln-unsafe-buffer-usage-warnings"] then _OPTIONS["jln-unsafe-buffer-usage-warnings"] = (defaults["unsafe_buffer_usage_warnings"] or defaults["jln-unsafe-buffer-usage-warnings"] or "off") end
+  if not _OPTIONS["jln-unsafe-buffer-usage-warnings"] then _OPTIONS["jln-unsafe-buffer-usage-warnings"] = (defaults["unsafe_buffer_usage_warnings"] or defaults["jln-unsafe-buffer-usage-warnings"] or "default") end
 
   newoption{trigger="jln-var-init", allowed={{'default'}, {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)'}, {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)'}, {'zero', 'zero Initialize automatic variables with zeroes'}}, description="Initialize all stack variables implicitly, including padding"}
   if not _OPTIONS["jln-var-init"] then _OPTIONS["jln-var-init"] = (defaults["var_init"] or defaults["jln-var-init"] or "default") end
@@ -805,8 +805,10 @@ function jln_c_getoptions(values, disable_others, print_compiler)
       end
     end
     if values['unsafe_buffer_usage_warnings'] ~= 'default' then
-      if values['unsafe_buffer_usage_warnings'] == 'off' then
-        table_insert(jln_buildoptions, "-Wno-unsafe-buffer-usage")
+      if ( compiler == 'clang' and compversion >= 1600000 ) then
+        if values['unsafe_buffer_usage_warnings'] == 'off' then
+          table_insert(jln_buildoptions, "-Wno-unsafe-buffer-usage")
+        end
       end
     end
     if values['exceptions'] ~= 'default' then
