@@ -782,10 +782,12 @@ function get_flags(options, extra_options)
       end
     end
     if options.unsafe_buffer_usage_warnings ~= "" then
-      if options.unsafe_buffer_usage_warnings == "off" then
-        insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
-      else
-        insert(jln_cxflags, "-Wunsafe-buffer-usage")
+      if ( compiler == 'clang' and compversion >= 1600000 ) then
+        if options.unsafe_buffer_usage_warnings == "off" then
+          insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
+        else
+          insert(jln_cxflags, "-Wunsafe-buffer-usage")
+        end
       end
     end
     if options.diagnostics_show_template_tree ~= "" then

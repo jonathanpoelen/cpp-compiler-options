@@ -741,8 +741,10 @@ function get_flags(options, extra_options)
       end
     end
     if options.unsafe_buffer_usage_warnings ~= "" then
-      if options.unsafe_buffer_usage_warnings == "off" then
-        insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
+      if ( compiler == 'clang' and compversion >= 1600000 ) then
+        if options.unsafe_buffer_usage_warnings == "off" then
+          insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
+        end
       end
     end
     if options.exceptions ~= "" then
