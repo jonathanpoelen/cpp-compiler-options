@@ -180,7 +180,7 @@ _default_flags = {
   'stl_fix': 'on',
   'suggestions': 'default',
   'switch_warnings': 'on',
-  'unsafe_buffer_usage_warnings': 'off',
+  'unsafe_buffer_usage_warnings': 'default',
   'var_init': 'default',
   'warnings': 'on',
   'warnings_as_error': 'default',
@@ -594,10 +594,11 @@ def get_flags(options, env=None):
         else:
           flags += ('-Wcovered-switch-default', )
     if x_unsafe_buffer_usage_warnings != 'default' :
-      if x_unsafe_buffer_usage_warnings == 'off' :
-        flags += ('-Wno-unsafe-buffer-usage', )
-      else:
-        flags += ('-Wunsafe-buffer-usage', )
+      if ( compiler == 'clang' and compversion >= 1600000 ) :
+        if x_unsafe_buffer_usage_warnings == 'off' :
+          flags += ('-Wno-unsafe-buffer-usage', )
+        else:
+          flags += ('-Wunsafe-buffer-usage', )
     if x_diagnostics_show_template_tree != 'default' :
       if ( ( compiler == 'gcc' and compversion >= 800000 ) or compiler == 'clang' ) :
         if x_diagnostics_show_template_tree == 'on' :
