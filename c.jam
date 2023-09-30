@@ -226,7 +226,7 @@ feature <jln-suggestions> : _ default off on : propagated ;
 # Warnings concerning the switch keyword
 feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
 # Enable -Wunsafe-buffer-usage with clang
-feature <jln-unsafe-buffer-usage-warnings> : _ off default on : propagated ;
+feature <jln-unsafe-buffer-usage-warnings> : _ default on off : propagated ;
 # Initialize all stack variables implicitly, including padding
 #  - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang)
 #  - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)
@@ -298,7 +298,7 @@ feature <jln-stack-protector-default> : default off on strong all : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
-feature <jln-unsafe-buffer-usage-warnings-default> : off default on : incidental ;
+feature <jln-unsafe-buffer-usage-warnings-default> : default on off : incidental ;
 feature <jln-var-init-default> : default uninitialized pattern zero : incidental ;
 feature <jln-warnings-default> : on default off strict very-strict : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
@@ -360,7 +360,7 @@ constant jln_c_env_stack_protector : [ jln_c-get-env jln_stack_protector : defau
 constant jln_c_env_stl_fix : [ jln_c-get-env jln_stl_fix : on default off ] ;
 constant jln_c_env_suggestions : [ jln_c-get-env jln_suggestions : default off on ] ;
 constant jln_c_env_switch_warnings : [ jln_c-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
-constant jln_c_env_unsafe_buffer_usage_warnings : [ jln_c-get-env jln_unsafe_buffer_usage_warnings : off default on ] ;
+constant jln_c_env_unsafe_buffer_usage_warnings : [ jln_c-get-env jln_unsafe_buffer_usage_warnings : default on off ] ;
 constant jln_c_env_var_init : [ jln_c-get-env jln_var_init : default uninitialized pattern zero ] ;
 constant jln_c_env_warnings : [ jln_c-get-env jln_warnings : on default off strict very-strict ] ;
 constant jln_c_env_warnings_as_error : [ jln_c-get-env jln_warnings_as_error : default off on basic ] ;
@@ -887,11 +887,14 @@ rule jln_c_flags ( properties * )
     }
     if $(x_unsafe_buffer_usage_warnings) != "default"
     {
-      if $(x_unsafe_buffer_usage_warnings) = "off"
+      if ( $(JLN_NORMALIZED_C_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600000 ] )
       {
-        flags +=
-          <cflags>"-Wno-unsafe-buffer-usage"
-        ;
+        if $(x_unsafe_buffer_usage_warnings) = "off"
+        {
+          flags +=
+            <cflags>"-Wno-unsafe-buffer-usage"
+          ;
+        }
       }
     }
     if $(x_exceptions) != "default"
