@@ -722,13 +722,16 @@ function get_flags(options, extra_options)
       if options.switch_warnings ~= "" then
         if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
           insert(jln_cxflags, "-Wswitch")
+          insert(jln_cxflags, "-Wswitch-default")
         else
           if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
             insert(jln_cxflags, "-Wswitch")
             insert(jln_cxflags, "-Wswitch-enum")
+            insert(jln_cxflags, "-Wno-switch-default")
           else
             insert(jln_cxflags, "-Wno-switch")
             insert(jln_cxflags, "-Wno-switch-enum")
+            insert(jln_cxflags, "-Wno-switch-default")
           end
         end
       end
