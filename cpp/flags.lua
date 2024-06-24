@@ -761,18 +761,29 @@ function get_flags(options, extra_options)
       end
     else
       if options.switch_warnings ~= "" then
-        if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
+        if options.switch_warnings == "on" then
           insert(jln_cxflags, "-Wswitch")
-          insert(jln_cxflags, "-Wswitch-default")
+          insert(jln_cxflags, "-Wno-switch-default")
         else
-          if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
+          if options.switch_warnings == "mandatory_default" then
             insert(jln_cxflags, "-Wswitch")
-            insert(jln_cxflags, "-Wswitch-enum")
-            insert(jln_cxflags, "-Wno-switch-default")
+            insert(jln_cxflags, "-Wswitch-default")
           else
-            insert(jln_cxflags, "-Wno-switch")
-            insert(jln_cxflags, "-Wno-switch-enum")
-            insert(jln_cxflags, "-Wno-switch-default")
+            if options.switch_warnings == "exhaustive_enum" then
+              insert(jln_cxflags, "-Wswitch")
+              insert(jln_cxflags, "-Wswitch-enum")
+              insert(jln_cxflags, "-Wno-switch-default")
+            else
+              if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
+                insert(jln_cxflags, "-Wswitch")
+                insert(jln_cxflags, "-Wswitch-enum")
+                insert(jln_cxflags, "-Wswitch-default")
+              else
+                insert(jln_cxflags, "-Wno-switch")
+                insert(jln_cxflags, "-Wno-switch-enum")
+                insert(jln_cxflags, "-Wno-switch-default")
+              end
+            end
           end
         end
       end
