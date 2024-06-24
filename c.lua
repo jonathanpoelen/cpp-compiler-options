@@ -786,13 +786,16 @@ function jln_c_getoptions(values, disable_others, print_compiler)
       if values['switch_warnings'] ~= 'default' then
         if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'mandatory_default' ) then
           table_insert(jln_buildoptions, "-Wswitch")
+          table_insert(jln_buildoptions, "-Wswitch-default")
         else
           if ( values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) then
             table_insert(jln_buildoptions, "-Wswitch")
             table_insert(jln_buildoptions, "-Wswitch-enum")
+            table_insert(jln_buildoptions, "-Wno-switch-default")
           else
             table_insert(jln_buildoptions, "-Wno-switch")
             table_insert(jln_buildoptions, "-Wno-switch-enum")
+            table_insert(jln_buildoptions, "-Wno-switch-default")
           end
         end
       end
