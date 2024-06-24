@@ -780,27 +780,51 @@ rule jln_flags ( properties * )
     {
       if $(x_switch_warnings) != "default"
       {
-        if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "mandatory-default" )
+        if $(x_switch_warnings) = "on"
         {
           flags +=
             <cxxflags>"-Wswitch"
+            <cxxflags>"-Wno-switch-default"
           ;
         }
         else
         {
-          if ( $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
+          if $(x_switch_warnings) = "mandatory-default"
           {
             flags +=
               <cxxflags>"-Wswitch"
-              <cxxflags>"-Wswitch-enum"
+              <cxxflags>"-Wswitch-default"
             ;
           }
           else
           {
-            flags +=
-              <cxxflags>"-Wno-switch"
-              <cxxflags>"-Wno-switch-enum"
-            ;
+            if $(x_switch_warnings) = "exhaustive-enum"
+            {
+              flags +=
+                <cxxflags>"-Wswitch"
+                <cxxflags>"-Wswitch-enum"
+                <cxxflags>"-Wno-switch-default"
+              ;
+            }
+            else
+            {
+              if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
+              {
+                flags +=
+                  <cxxflags>"-Wswitch"
+                  <cxxflags>"-Wswitch-enum"
+                  <cxxflags>"-Wswitch-default"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cxxflags>"-Wno-switch"
+                  <cxxflags>"-Wno-switch-enum"
+                  <cxxflags>"-Wno-switch-default"
+                ;
+              }
+            }
           }
         }
       }

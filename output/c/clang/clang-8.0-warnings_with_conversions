@@ -8,6 +8,7 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
+-Wno-switch-default
 -Wsign-compare
 -Wsign-conversion
 -Wswitch

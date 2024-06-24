@@ -447,13 +447,19 @@ def get_flags(options, env=None):
                 flags += ('-Wno-switch', '-Wno-switch-enum', '-Wno-switch-default', )
     else:
       if x_switch_warnings != 'default' :
-        if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
-          flags += ('-Wswitch', )
+        if x_switch_warnings == 'on' :
+          flags += ('-Wswitch', '-Wno-switch-default', )
         else:
-          if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
-            flags += ('-Wswitch', '-Wswitch-enum', )
+          if x_switch_warnings == 'mandatory_default' :
+            flags += ('-Wswitch', '-Wswitch-default', )
           else:
-            flags += ('-Wno-switch', '-Wno-switch-enum', )
+            if x_switch_warnings == 'exhaustive_enum' :
+              flags += ('-Wswitch', '-Wswitch-enum', '-Wno-switch-default', )
+            else:
+              if x_switch_warnings == 'exhaustive_enum_and_mandatory_default' :
+                flags += ('-Wswitch', '-Wswitch-enum', '-Wswitch-default', )
+              else:
+                flags += ('-Wno-switch', '-Wno-switch-enum', '-Wno-switch-default', )
       if x_covered_switch_default_warnings != 'default' :
         if x_covered_switch_default_warnings == 'off' :
           flags += ('-Wno-covered-switch-default', )

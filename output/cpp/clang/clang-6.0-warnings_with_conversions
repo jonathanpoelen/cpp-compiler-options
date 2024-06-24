@@ -12,6 +12,7 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
+-Wno-switch-default
 -Wno-undefined-var-template
 -Wno-weak-vtables
 -Wsign-compare

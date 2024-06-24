@@ -13,6 +13,7 @@
 -Wno-padded
 -Wno-shadow
 -Wno-shadow-field
+-Wno-switch-default
 -Wno-undefined-var-template
 -Wno-weak-vtables
 -Wswitch

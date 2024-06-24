@@ -708,27 +708,51 @@ rule jln_c_flags ( properties * )
     {
       if $(x_switch_warnings) != "default"
       {
-        if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "mandatory-default" )
+        if $(x_switch_warnings) = "on"
         {
           flags +=
             <cflags>"-Wswitch"
+            <cflags>"-Wno-switch-default"
           ;
         }
         else
         {
-          if ( $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
+          if $(x_switch_warnings) = "mandatory-default"
           {
             flags +=
               <cflags>"-Wswitch"
-              <cflags>"-Wswitch-enum"
+              <cflags>"-Wswitch-default"
             ;
           }
           else
           {
-            flags +=
-              <cflags>"-Wno-switch"
-              <cflags>"-Wno-switch-enum"
-            ;
+            if $(x_switch_warnings) = "exhaustive-enum"
+            {
+              flags +=
+                <cflags>"-Wswitch"
+                <cflags>"-Wswitch-enum"
+                <cflags>"-Wno-switch-default"
+              ;
+            }
+            else
+            {
+              if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
+              {
+                flags +=
+                  <cflags>"-Wswitch"
+                  <cflags>"-Wswitch-enum"
+                  <cflags>"-Wswitch-default"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cflags>"-Wno-switch"
+                  <cflags>"-Wno-switch-enum"
+                  <cflags>"-Wno-switch-default"
+                ;
+              }
+            }
           }
         }
       }

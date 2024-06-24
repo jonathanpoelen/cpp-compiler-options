@@ -11,6 +11,7 @@
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
+-Wno-switch-default
 -Wno-weak-vtables
 -Wsign-compare
 -Wsign-conversion
