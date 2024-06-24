@@ -443,18 +443,30 @@ Or(gcc, clang_like) {
     },
     { --[[clang_like]]
       opt'switch_warnings' {
-        -- -Wswitch-default is a noop
+        -- -Wswitch-default is a noop with < 18.0
         match {
-          Or(lvl'on', lvl'mandatory_default') {
+          lvl'on' {
             flag'-Wswitch', -- enabled by default
+            flag'-Wno-switch-default',
           },
-          Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
+          lvl'mandatory_default' {
+            flag'-Wswitch', -- enabled by default
+            flag'-Wswitch-default',
+          },
+          lvl'exhaustive_enum' {
             flag'-Wswitch', -- do like gcc where -Wswitch-enum covers cases of -Wswitch
             flag'-Wswitch-enum',
+            flag'-Wno-switch-default',
+          },
+          lvl'exhaustive_enum_and_mandatory_default' {
+            flag'-Wswitch', -- do like gcc where -Wswitch-enum covers cases of -Wswitch
+            flag'-Wswitch-enum',
+            flag'-Wswitch-default',
           },
           { --[[lvl'off']]
             flag'-Wno-switch',
             flag'-Wno-switch-enum',
+            flag'-Wno-switch-default',
           }
         }
       },
