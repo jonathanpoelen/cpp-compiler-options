@@ -921,6 +921,7 @@ rule jln_flags ( properties * )
         {
           flags +=
             <cxxflags>"-Wswitch"
+            <cxxflags>"-Wswitch-default"
           ;
         }
         else
@@ -930,6 +931,7 @@ rule jln_flags ( properties * )
             flags +=
               <cxxflags>"-Wswitch"
               <cxxflags>"-Wswitch-enum"
+              <cxxflags>"-Wno-switch-default"
             ;
           }
           else
@@ -937,6 +939,7 @@ rule jln_flags ( properties * )
             flags +=
               <cxxflags>"-Wno-switch"
               <cxxflags>"-Wno-switch-enum"
+              <cxxflags>"-Wno-switch-default"
             ;
           }
         }
