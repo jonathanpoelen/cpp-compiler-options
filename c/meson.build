@@ -371,12 +371,12 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     else
       if (  ___jln_c_flags.get('switch_warnings', 'default') != 'default' )
         if (  ( ___jln_c_flags.get('switch_warnings', 'default') == 'on' or ___jln_c_flags.get('switch_warnings', 'default') == 'mandatory_default' ) )
-          jln_c_c_flags += ['-Wswitch', ]
+          jln_c_c_flags += ['-Wswitch', '-Wswitch-default', ]
         else
           if (  ( ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) )
-            jln_c_c_flags += ['-Wswitch', '-Wswitch-enum', ]
+            jln_c_c_flags += ['-Wswitch', '-Wswitch-enum', '-Wno-switch-default', ]
           else
-            jln_c_c_flags += ['-Wno-switch', '-Wno-switch-enum', ]
+            jln_c_c_flags += ['-Wno-switch', '-Wno-switch-enum', '-Wno-switch-default', ]
           endif
         endif
       endif
