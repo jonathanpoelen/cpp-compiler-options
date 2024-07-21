@@ -225,7 +225,7 @@ function ]] .. funcprefix .. [[init_modes(options_by_modes, extra_options)
   options = _jln_table_clone(extra_options, options)
 
   rule(rulename)
-    on_load(function(target)
+    on_config(function(target)
       if callback then
         options[1] = nil
       end
@@ -244,7 +244,7 @@ end
 -- Create a new rule. Options are added to the current configuration (see create_options())
 -- `options`: same as create_options()
 -- `extra_options` = {
---   module_name :string = module name used by on_load() in ]] .. funcprefix .. [[rule()
+--   module_name :string = module name used by on_config() in ]] .. funcprefix .. [[rule()
 --   clone_options :boolean = make an internal copy of options
 --                            which prevents changing it after the call to ]] .. funcprefix .. [[rule().
 --                            (default: false)
@@ -257,7 +257,7 @@ function ]] .. funcprefix .. [[rule(rulename, options, extra_options)
   options = _jln_table_clone(extra_options, options)
 
   rule(rulename)
-    on_load(function(target)
+    on_config(function(target)
       _jln_cxx_rule_fn(target, module_name, rulename, options, extra_options, import)
     end)
   rule_end()
