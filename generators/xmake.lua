@@ -168,6 +168,33 @@ local _module_name = 'flags'
     -- @}
 
     self:print([[
+local cached_flags = {}
+local current_path = os.scriptdir()
+
+local function _jln_cxx_rule_fn(target, module_name, rulename, options, extra_options, import)
+  local cached = cached_flags[rulename]
+  if not cached then
+    import(module_name, {rootdir=current_path})
+    cached = flags.get_flags(options, extra_options)
+    table.insert(cached.cxxflags, {force=true})
+    table.insert(cached.ldflags, {force=true})
+    cached_flags[rulename] = cached
+  end
+  target:add('cxxflags', table.unpack(cached.cxxflags))
+  target:add('ldflags', table.unpack(cached.ldflags))
+end
+
+local function _jln_table_clone(extra_options, options)
+  if extra_options.clone_options then
+    local cloned = {}
+    for k, v in pairs(options) do
+      cloned[k] = v
+    end
+    return cloned
+  end
+  return options
+end
+
 -- Set options for a specific mode (see also ]] .. funcprefix .. [[rule()).
 -- If options_by_modes is nil, a default configuration is used.
 -- `options_by_modes` = {
@@ -183,30 +210,36 @@ local _module_name = 'flags'
 function ]] .. funcprefix .. [[init_modes(options_by_modes, extra_options)
   extra_options = extra_options or {}
   local rulename = extra_options.rulename or '__]] .. funcprefix .. [[flags__'
+  local module_name = extra_options.module_name or _module_name
 
-  for mode,options in pairs(options_by_modes or ]] .. funcprefix .. [[default_options_by_modes) do
+  local options = {}
+
+  for mode,opts in pairs(options_by_modes or ]] .. funcprefix .. [[default_options_by_modes) do
     if is_mode(mode) then
-      local callback = options[1]
+      options = opts
+      break
+    end
+  end
+
+  local callback = options[1]
+  options = _jln_table_clone(extra_options, options)
+
+  rule(rulename)
+    on_load(function(target)
       if callback then
         options[1] = nil
       end
-      ]] .. funcprefix .. [[rule(rulename, options, extra_options)
+
+      _jln_cxx_rule_fn(target, module_name, rulename, options, extra_options, import)
+
       if callback then
         options[1] = callback
         callback()
       end
-      add_rules(rulename)
-      return
-    end
-  end
-
-  ]] .. funcprefix .. [[rule(rulename, {}, extra_options)
+    end)
+  rule_end()
   add_rules(rulename)
 end
-
-
-local cached_flags = {}
-local current_path = os.scriptdir()
 
 -- Create a new rule. Options are added to the current configuration (see create_options())
 -- `options`: same as create_options()
@@ -221,26 +254,11 @@ function ]] .. funcprefix .. [[rule(rulename, options, extra_options)
   extra_options = extra_options or {}
   local module_name = extra_options.module_name or _module_name
 
-  if extra_options.clone_options then
-    local cloned = {}
-    for k, v in pairs(options) do
-      cloned[k] = v
-    end
-    options = cloned
-  end
+  options = _jln_table_clone(extra_options, options)
 
   rule(rulename)
     on_load(function(target)
-      local cached = cached_flags[rulename]
-      if not cached then
-        import(module_name, {rootdir=current_path})
-        cached = flags.get_flags(options, extra_options)
-        table.insert(cached.cxxflags, {force=true})
-        table.insert(cached.ldflags, {force=true})
-        cached_flags[rulename] = cached
-      end
-      target:add('cxxflags', table.unpack(cached.cxxflags))
-      target:add('ldflags', table.unpack(cached.ldflags))
+      _jln_cxx_rule_fn(target, module_name, rulename, options, extra_options, import)
     end)
   rule_end()
 end
@@ -265,10 +283,10 @@ local _check_flags = function(d)
     local ref = _flag_names[k]
     if not ref then
       if not _extraopt_flag_names[k] then
-        os.raise(vformat("${color.error}Unknown key: '%s'", k))
+        os.raise(vformat("${color.error}cpp-compiler-options: Unknown key: '%s'", k))
       end
     elseif not ref[v] then
-      os.raise(vformat("${color.error}Unknown value '%s' for '%s'", v, k))
+      os.raise(vformat("${color.error}cpp-compiler-options: Unknown value '%s' for '%s'", v, k))
     end
   end
 end
