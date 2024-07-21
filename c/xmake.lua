@@ -486,6 +486,33 @@ jln_c_default_options_by_modes = {
   },
 }
 
+local cached_flags = {}
+local current_path = os.scriptdir()
+
+local function _jln_cxx_rule_fn(target, module_name, rulename, options, extra_options, import)
+  local cached = cached_flags[rulename]
+  if not cached then
+    import(module_name, {rootdir=current_path})
+    cached = flags.get_flags(options, extra_options)
+    table.insert(cached.cxxflags, {force=true})
+    table.insert(cached.ldflags, {force=true})
+    cached_flags[rulename] = cached
+  end
+  target:add('cxxflags', table.unpack(cached.cxxflags))
+  target:add('ldflags', table.unpack(cached.ldflags))
+end
+
+local function _jln_table_clone(extra_options, options)
+  if extra_options.clone_options then
+    local cloned = {}
+    for k, v in pairs(options) do
+      cloned[k] = v
+    end
+    return cloned
+  end
+  return options
+end
+
 -- Set options for a specific mode (see also jln_c_rule()).
 -- If options_by_modes is nil, a default configuration is used.
 -- `options_by_modes` = {
@@ -501,35 +528,41 @@ jln_c_default_options_by_modes = {
 function jln_c_init_modes(options_by_modes, extra_options)
   extra_options = extra_options or {}
   local rulename = extra_options.rulename or '__jln_c_flags__'
+  local module_name = extra_options.module_name or _module_name
 
-  for mode,options in pairs(options_by_modes or jln_c_default_options_by_modes) do
+  local options = {}
+
+  for mode,opts in pairs(options_by_modes or jln_c_default_options_by_modes) do
     if is_mode(mode) then
-      local callback = options[1]
+      options = opts
+      break
+    end
+  end
+
+  local callback = options[1]
+  options = _jln_table_clone(extra_options, options)
+
+  rule(rulename)
+    on_config(function(target)
       if callback then
         options[1] = nil
       end
-      jln_c_rule(rulename, options, extra_options)
+
+      _jln_cxx_rule_fn(target, module_name, rulename, options, extra_options, import)
+
       if callback then
         options[1] = callback
         callback()
       end
-      add_rules(rulename)
-      return
-    end
-  end
-
-  jln_c_rule(rulename, {}, extra_options)
+    end)
+  rule_end()
   add_rules(rulename)
 end
-
-
-local cached_flags = {}
-local current_path = os.scriptdir()
 
 -- Create a new rule. Options are added to the current configuration (see create_options())
 -- `options`: same as create_options()
 -- `extra_options` = {
---   module_name :string = module name used by on_load() in jln_c_rule()
+--   module_name :string = module name used by on_config() in jln_c_rule()
 --   clone_options :boolean = make an internal copy of options
 --                            which prevents changing it after the call to jln_c_rule().
 --                            (default: false)
@@ -539,26 +572,11 @@ function jln_c_rule(rulename, options, extra_options)
   extra_options = extra_options or {}
   local module_name = extra_options.module_name or _module_name
 
-  if extra_options.clone_options then
-    local cloned = {}
-    for k, v in pairs(options) do
-      cloned[k] = v
-    end
-    options = cloned
-  end
+  options = _jln_table_clone(extra_options, options)
 
   rule(rulename)
-    on_load(function(target)
-      local cached = cached_flags[rulename]
-      if not cached then
-        import(module_name, {rootdir=current_path})
-        cached = flags.get_flags(options, extra_options)
-        table.insert(cached.cxxflags, {force=true})
-        table.insert(cached.ldflags, {force=true})
-        cached_flags[rulename] = cached
-      end
-      target:add('cxxflags', table.unpack(cached.cxxflags))
-      target:add('ldflags', table.unpack(cached.ldflags))
+    on_config(function(target)
+      _jln_cxx_rule_fn(target, module_name, rulename, options, extra_options, import)
     end)
   rule_end()
 end
