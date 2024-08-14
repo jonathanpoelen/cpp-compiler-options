@@ -481,7 +481,7 @@ Or(gcc, clang_like) {
   },
 
   opt'unsafe_buffer_usage_warnings' {
-    clang'>=16' {
+    clang_like'>=16' {
       match {
         lvl'off' { flag'-Wno-unsafe-buffer-usage' },
         cxx'-Wunsafe-buffer-usage',
@@ -490,7 +490,7 @@ Or(gcc, clang_like) {
   },
 
   opt'diagnostics_show_template_tree' {
-    Or(gcc'>=8', clang) {
+    Or(gcc'>=8', clang_like) {
       match {
         lvl'on' { cxx'-fdiagnostics-show-template-tree' },
         cxx'-fno-diagnostics-show-template-tree',
@@ -501,7 +501,7 @@ Or(gcc, clang_like) {
   opt'elide_type' {
     match {
       lvl'on' { gcc'>=8' { cxx'-felide-type' } },
-      Or(gcc'>=8', clang'>=3.4') { cxx'-fno-elide-type', },
+      Or(gcc'>=8', clang_like'>=3.4') { cxx'-fno-elide-type', },
     }
   },
 
@@ -525,8 +525,8 @@ Or(gcc, clang_like) {
   },
 
   opt'var_init' {
-    Or(gcc'>=12', clang'>=8') {
-      clang {
+    Or(gcc'>=12', clang_like'>=8') {
+      clang_like {
         flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
       },
       match {
@@ -742,7 +742,7 @@ Or(gcc, clang_like) {
         gcc'>=7' { flag'-fdiagnostics-generate-patch' }
       },
       { --[[lvl'print_source_range_info']]
-        clang { flag'-fdiagnostics-print-source-range-info' }
+        clang_like { flag'-fdiagnostics-print-source-range-info' }
       }
     }
   },
@@ -803,7 +803,7 @@ Or(gcc, clang_like) {
     match {
       lvl'off' {
         flag'-Wno-shadow',
-        Or(clang_cl, clang'>=8') {
+        clang'>=8' {
           flag'-Wno-shadow-field'
         }
       },
@@ -828,7 +828,7 @@ Or(gcc, clang_like) {
   },
 
   opt'float_sanitizers' {
-    Or(gcc'>=5', clang'>=5', clang_cl) {
+    Or(gcc'>=5', clang_like'>=5') {
       match {
         lvl'on' {
           flag'-fsanitize=float-divide-by-zero',
@@ -844,7 +844,7 @@ Or(gcc, clang_like) {
 
   opt'integer_sanitizers' {
     match {
-      Or(clang'>=5', clang_cl) {
+      clang_like'>=5' {
         match {
           lvl'on' { flag'-fsanitize=integer', },
           flag'-fno-sanitize=integer',
