@@ -69,9 +69,9 @@ local function IfFunc(f)
   return setmetatable({ _impl=f }, if_mt_func)
 end
 
-local function Logical(op, ...)
+local function Logical(op, conditions)
   local conds = {}
-  for _,x in ipairs({...}) do
+  for _,x in ipairs(conditions) do
     if x._impl then
       x = x._impl()
     elseif type(x) == 'function' then
@@ -128,16 +128,16 @@ local function Linker(name)
   return _conditional_name({linker=name})
 end
 
-local function CompilerGroup(...)
-  local conds = {}
-  for _,tool in ipairs({...}) do
-    table_insert(conds, tool()._if)
+local function CompilerLike(compiler_like, compilers)
+  local tools = {}
+  for _,tool in ipairs(compilers) do
+    table_insert(tools, tool()._if.compiler)
   end
-  return _conditional_name_with_version({_or=conds})
+  return _conditional_name_with_version({compiler_like=compiler_like, compilers=tools})
 end
 
-local function Or(...) return Logical('_or', ...) end
-local function And(...) return Logical('_and', ...) end
+local function Or(...) return Logical('_or', {...}) end
+local function And(...) return Logical('_and', {...}) end
 
 local function lvl(x) return If({lvl=x}) end
 local function opt(x) return If({opt=x}) end
@@ -188,7 +188,7 @@ local icc = Compiler('icc')
 local icl = Compiler('icl')
 -- local emcc = Compiler('emcc')
 local clang_emcc = Compiler('clang-emcc') -- virtual compiler, refer to clang version
-local clang_like = CompilerGroup(clang, clang_cl, clang_emcc)
+local clang_like = CompilerLike('clang-like', {clang, clang_cl, clang_emcc})
 
 -- for clang-emcc to emcc
 -- local switch_to_real_compiler = {switch_to_special=true}
@@ -803,7 +803,7 @@ Or(gcc, clang_like) {
     match {
       lvl'off' {
         flag'-Wno-shadow',
-        clang'>=8' {
+        clang_like'>=8' {
           flag'-Wno-shadow-field'
         }
       },
@@ -2631,6 +2631,8 @@ local Vbase = {
             if notv.lvl      then self:write(' ' .. self:_vcond_lvl(notv.lvl, optname, true))
         elseif notv.major    then self:write(' ' .. self._vcond_version(self, reverse_ops[notv.op], notv.major, notv.minor))
         elseif notv.compiler then self:write(' ' .. self:_vcond_compiler(notv.compiler, true))
+        elseif notv.compiler_like then
+          self:write(' ' .. self:_vcond_compiler_like(notv.compiler_like, true, notv.compilers))
         elseif notv.platform then self:write(' ' .. self:_vcond_platform(notv.platform, true))
         elseif notv.linker   then self:write(' ' .. self:_vcond_linker(notv.linker, true))
         elseif notv.check_opt then
@@ -2644,6 +2646,8 @@ local Vbase = {
       elseif v.lvl      then self:write(' ' .. self:_vcond_lvl(v.lvl, optname))
       elseif v.major    then self:write(' ' .. self._vcond_version(self, v.op, v.major, v.minor))
       elseif v.compiler then self:write(' ' .. self:_vcond_compiler(v.compiler))
+        elseif v.compiler_like then
+          self:write(' ' .. self:_vcond_compiler_like(v.compiler_like, false, v.compilers))
       elseif v.platform then self:write(' ' .. self:_vcond_platform(v.platform))
       elseif v.linker   then self:write(' ' .. self:_vcond_linker(v.linker))
       elseif v.check_opt then
@@ -2700,6 +2704,26 @@ local Vbase = {
       return "'" .. compiler .. "'"
     end
 
+    self._vcond_to_compiler_like = self._vcond_to_compiler_like
+    or self._vcond_to_compiler_like_map and function(self, compiler_like)
+      return self._vcond_to_compiler_like_map[compiler_like]
+        or error('Unknown ' .. compiler_like .. ' tool')
+    end
+    or function(self, compiler_like, compilers)
+      local t = {' '}
+      table.insert(t, self._vcondkeyword.open)
+      table.insert(t, self:_vcond_compiler(compilers[1]))
+      for i=2,#compilers do
+        table.insert(t, ' ')
+        table.insert(t, self._vcondkeyword._or)
+        table.insert(t, ' ')
+        table.insert(t, self:_vcond_compiler(compilers[i]))
+      end
+      table.insert(t, ' ')
+      table.insert(t, self._vcondkeyword.close)
+      return table.concat(t, '')
+    end
+
     self._vcond_to_linker = self._vcond_to_linker or function(self, linker)
       return "'" .. linker .. "'"
     end
@@ -2718,6 +2742,13 @@ local Vbase = {
 
     self._vcond_compiler = self._vcond_compiler or function(self, compiler, not_)
       return self._vcondkeyword.compiler .. self:eq_op(not_) .. self:_vcond_to_compiler(compiler)
+    end
+
+    self._vcond_compiler_like = self._vcond_compiler_like or function(self, compiler_like, not_, compilers)
+      if not_ then
+        return self._vcondkeyword._not .. self:_vcond_to_compiler_like(compiler_like, compilers)
+      end
+      return self:_vcond_to_compiler_like(compiler_like, compilers)
     end
 
     self._vcond_linker = self._vcond_linker or function(self, linker, not_)

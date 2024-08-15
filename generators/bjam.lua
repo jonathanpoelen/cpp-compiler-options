@@ -87,6 +87,10 @@ return {
 
     self.prefixcomp = self.is_C and 'C' or 'CXX'
 
+    self._vcond_to_compiler_like_map = {
+      ['clang-like'] = '$(JLN_NORMALIZED_' .. self.prefixcomp .. '_IS_CLANG_LIKE)',
+    }
+
     self:_vcond_init({
       ifopen='', ifclose='', eq=' = ', no_eq=' != ',
       compiler='$(JLN_NORMALIZED_' .. self.prefixcomp .. '_COMP)',
@@ -187,6 +191,7 @@ rule ]] .. prefixfunc .. [[-get-env ( env : values * )
 JLN_ORIGINAL_]] .. self.prefixcomp .. [[_TOOLSET = "" ;
 JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = "" ;
 JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 100000 ;
+JLN_NORMALIZED_]] .. self.prefixcomp .. [[_IS_CLANG_LIKE = 0 ;
 
 rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
 {
@@ -196,6 +201,7 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
 
     local is_emcc = 0 ;
     local is_intel = 0 ;
+    local is_clang = 0 ;
     switch $(toolset)  {
       case emscripten* : is_emcc = 1 ;
       case emcc* : is_emcc = 1 ;
@@ -203,16 +209,19 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
       case icx* : is_intel = 1 ;
       case icpx* : is_intel = 1 ;
       case dpcpp* : is_intel = 1 ;
+      case clang* : is_clang = 1 ;
     }
 
     if $(is_emcc) = 1 {
       JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang-emcc ;
+      JLN_NORMALIZED_]] .. self.prefixcomp .. [[_IS_CLANG_LIKE = 1 ;
       # get clang version. Assume emcc exists
       version = [ MATCH "clang version ([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "emcc -v 2>&1" ] ] ;
     }
     # icx / icpx
     else if $(is_intel) = 1 {
       JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = clang ;
+      JLN_NORMALIZED_]] .. self.prefixcomp .. [[_IS_CLANG_LIKE = 1 ;
       switch $(version)  {
         case 2021* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1200000 ;
         case 2022* : JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP_VERSION = 1400000 ;
@@ -227,6 +236,7 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
       }
     }
     else {
+      JLN_NORMALIZED_]] .. self.prefixcomp .. [[_IS_CLANG_LIKE = $(is_clang) ;
       # TODO `version` is not the real version.
       # For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
       JLN_NORMALIZED_]] .. self.prefixcomp .. [[_COMP = $(toolset) ;

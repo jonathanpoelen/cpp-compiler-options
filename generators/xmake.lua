@@ -407,6 +407,14 @@ local _compiler_by_toolname = {
   ['em++']='emcc',
 }
 
+local _is_clang_like_by_compiler = {
+  clang=true,
+  ['clang-cl']=true,
+  emcc=true,
+  icx=true,
+  ['icx-cl']=true,
+}
+
 
 local _comp_cache = {}
 local _ld_cache
@@ -514,6 +522,8 @@ function get_flags(options, extra_options)
     add_comp_cache(original_compiler, original_version, {compiler, version, compversion})
   end
 
+  local is_clang_like = _is_clang_like_by_compiler[compiler]
+
   if extra_options and extra_options.print_compiler then
     cprint("get_flags: compiler: ${cyan}%s${reset} (${cyan}%s${reset}), linker: ${cyan}%s", compiler, version, linker)
   end
@@ -539,6 +549,10 @@ function get_flags(options, extra_options)
   _vcond_platform=function(self, platform, not_)
     return (not_ and 'not ' or '') .. 'is_plat("' .. toplatform(platform) .. '")'
   end,
+
+  _vcond_to_compiler_like_map={
+    ['clang-like'] = 'is_clang_like',
+  },
 
   cxx=function(self, x) return self.indent .. 'insert(jln_cxflags, "' .. x .. '")\n' end,
   link=function(self, x) return self.indent .. 'insert(jln_ldflags, "' .. x .. '")\n' end,

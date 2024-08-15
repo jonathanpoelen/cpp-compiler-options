@@ -216,6 +216,7 @@ set(JLN_]].. compiler_type .. [[_COMPILER_VERSION ${CMAKE_]].. compiler_type .. 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(JLN_GCC_]].. compiler_type .. [[_COMPILER 1)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(JLN_CLANG_LIKE_COMPILER 1)
   if (CMAKE_CXX_COMPILER MATCHES ]] .. (self.is_C and '/emcc' or '/em\\\\+\\\\+') .. [[)
     set(JLN_CLANG_EMCC_]].. compiler_type .. [[_COMPILER 1)
   elseif(MSVC)
@@ -225,6 +226,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   endif()
 # icx / icpx, dpcpp
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
+  set(JLN_CLANG_LIKE_COMPILER 1)
   set(JLN_ICX_]].. compiler_type .. [[_COMPILER 1)
   set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
   # extract clang version (dpcpp requires a valid c++ file)
@@ -259,6 +261,7 @@ endif()
       gcc='JLN_GCC_'.. compiler_type .. '_COMPILER',
       msvc='JLN_MSVC_'.. compiler_type .. '_COMPILER',
       clang='JLN_CLANG_'.. compiler_type .. '_COMPILER',
+      ['clang-like']='JLN_CLANG_LIKE_COMPILER',
       ['clang-cl']='JLN_CLANG_CL_'.. compiler_type .. '_COMPILER',
       ['clang-emcc']='JLN_CLANG_EMCC_'.. compiler_type .. '_COMPILER',
       icl='JLN_ICL_'.. compiler_type .. '_COMPILER',
@@ -277,6 +280,7 @@ endif()
       return self:propagate_not(expr, not_)
     end
 
+    self._vcond_compiler_like = vcond_tool
     self._vcond_compiler = vcond_tool
     self._vcond_platform = vcond_tool
     self._vcond_linker = vcond_tool

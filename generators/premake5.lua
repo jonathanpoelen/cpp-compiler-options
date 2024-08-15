@@ -229,6 +229,7 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
                  ((compiler:find('ico?x', 1, true) or
                    compiler:find('dpcpp', 1, true)
                   ) and 'icx') or
+                 (compiler:find('emcc', 1, true) and 'clang-emcc') or
                  nil
     end
 
@@ -273,11 +274,17 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
     printf("]] .. prefixfunc .. [[_getoptions: compiler: %s, version: %s", compiler, version)
   end
 
+  local is_clang_like = compiler:find('^clang')
+
   local jln_buildoptions, jln_linkoptions = {}, {}
 ]])
   end,
 
   _vcond_to_version=function(self, major, minor) return tostring(major * 100000 + minor) end,
+
+  _vcond_to_compiler_like_map={
+    ['clang-like'] = 'is_clang_like',
+  },
 
   cxx=function(self, x) return self.indent .. 'table_insert(jln_buildoptions, "' .. x .. '")\n' end,
   link=function(self, x) return self.indent .. 'table_insert(jln_linkoptions, "' .. x .. '")\n' end,

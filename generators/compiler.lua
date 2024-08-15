@@ -1,5 +1,15 @@
 local table_insert = table.insert
 
+function negate_compilers(compilers, parentcomps)
+  local new = {}
+  for comp in pairs(parentcomps) do
+    if not compilers[comp] then
+      new[comp] = true
+    end
+  end
+  return new
+end
+
 return {
   -- ignore={ },
 
@@ -13,36 +23,44 @@ return {
       local versions_by_compiler = {}
 
       return {
-        -- currcomp = {kcompilers, has_comp:bool}
-        _startcond=function(self, x, currcomp)
+        -- currcomps = {kcompiler=true}
+        _startcond=function(self, x, currcomps, parentcomps)
           if x.compiler then
             versions_by_compiler[x.compiler] = versions_by_compiler[x.compiler] or {}
-            currcomp[1][x.compiler] = true
-            currcomp[2] = true
             return {[x.compiler]=true}
+          elseif x.compiler_like then
+            local compilers = {}
+            for _,comp in ipairs(x.compilers) do
+              compilers[comp] = true
+              versions_by_compiler[comp] = versions_by_compiler[comp] or {}
+            end
+            return compilers
           elseif x.major then
             local vers = '-' .. x.major .. '.' .. x.minor
-            for comp in pairs(currcomp[2] and currcomp[1] or stackcomp[#stackcomp]) do
-              local intversion = x.major * 1000000 + x.minor
+            local intversion = x.major * 1000000 + x.minor
+            for comp in pairs(currcomps) do
               versions_by_compiler[comp][intversion] = {x.major, x.minor, comp..vers, comp}
             end
           elseif x._not then
-            return self:_startcond(x._not, currcomp)
+            local compilers = self:_startcond(x._not, currcomps, parentcomps)
+            return compilers and negate_compilers(compilers, parentcomps)
           else
             local sub = x._and or x._or
             if sub then
-              local compilers = {}
-              local has_value
+              local compilers
 
-              currcomp = {{}, false}
               for _,y in ipairs(sub) do
-                for comp in pairs(self:_startcond(y, currcomp) or {}) do
-                  compilers[comp] = true
-                  has_value = true
+                local subcompilers = self:_startcond(y, compilers or currcomps, parentcomps)
+                if not compilers then
+                  compilers = subcompilers
+                elseif subcompilers then
+                  for comp in pairs(subcompilers) do
+                    compilers[comp] = true
+                  end
                 end
               end
 
-              return has_value and compilers
+              return compilers
             end
           end
         end,
@@ -60,22 +78,16 @@ return {
         end,
 
         startcond=function(self, x)
-          local r = self:_startcond(x, {{}, false})
+          local r = self:_startcond(x, stackcomp[#stackcomp], stackcomp[#stackcomp-1] or {})
           table_insert(stackifcomp, r or false)
           table_insert(stackcomp, r or stackcomp[#stackcomp])
         end,
 
         elsecond=function()
           -- exclude `if` compilers from the parent's active compilers
-          if stackifcomp[#stackifcomp] then
-            local old = stackifcomp[#stackifcomp]
-            local new = {}
-            for comp in pairs(stackcomp[#stackcomp-1]) do
-              if not old[comp] then
-                new[comp] = true
-              end
-            end
-            stackcomp[#stackcomp] = new
+          local compilers = stackifcomp[#stackifcomp]
+          if compilers then
+            stackcomp[#stackcomp] = negate_compilers(compilers, stackcomp[#stackcomp-1])
           end
         end,
 
@@ -209,6 +221,10 @@ return {
             break
           end
         end
+      elseif compiler:find('^emcc') then
+        compiler = 'clang-' .. compiler
+      elseif compiler:find('^emscripten') then
+        compiler = 'clang-emcc' .. compiler:sub(11)
       end
       compiler = compiler:gsub('-$','')
       version:gsub('[%w_]+', function(x) table_insert(t, x) end)
@@ -290,6 +306,13 @@ return {
         elseif v.major    then return major > v.major or (major == v.major and minor >= v.minor)
         elseif v.compiler then return compiler == v.compiler
         elseif v.platform then return platform == v.platform
+        elseif v.compiler_like then
+          for _,comp in ipairs(v.compilers) do
+            if compiler == comp then
+              return true
+            end
+          end
+          return false
         elseif v.linker or v.linker_version then return false
         elseif v.check_opt then
           local o = v.check_opt

@@ -130,8 +130,13 @@ def get_flags(options, env=None):
         )
         version = (int(m.group(1)), int(m.group(2)))
         _compiler_version_cache[compiler] = version
+    is_clang_like = true
     compiler = 'clang'
+  elif _compiler == 'emcc':
+    is_clang_like = true
+    compiler = 'clang-emcc'
   else:
+    is_clang_like = compiler.startswith('clang')
     compiler = _compiler
 
   version = version or (0,0)
@@ -148,6 +153,10 @@ def get_flags(options, env=None):
 
   _vcond_to_version=function(self, major, minor) return tostring(major * 100000 + minor) end,
   _vcond_to_opt=function(self, optname) return  "x_" .. optname end,
+
+  _vcond_to_compiler_like_map={
+    ['clang-like'] = 'is_clang_like',
+  },
 
   cxx=function(self, x) return "'" .. x .. "', " end,
   link=function(self, x) return "'" .. x .. "', " end,

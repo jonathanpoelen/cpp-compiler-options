@@ -25,6 +25,10 @@ return {
     self.optprefix = optprefix and optprefix:gsub('-', '_') or ''
     self.prefixfunc = prefixfunc
 
+    self._vcond_to_compiler_like_map = {
+      ['clang-like'] = '___' .. prefixfunc .. 'is_clang_like',
+    }
+
     self:_vcond_init({
       _not='not',
       _and='and',
@@ -34,7 +38,7 @@ return {
       _else='else',
       endif='endif',
       compiler='___' .. prefixfunc .. '_compiler_id',
-      linker='___' .. prefixfunc .. '_linker_id'
+      linker='___' .. prefixfunc .. '_linker_id',
     })
 
     self:print_header('#')
@@ -108,8 +112,10 @@ ___]] .. prefixfunc .. [[_compiler = meson.get_compiler(']] .. lang .. [[')
 ___]] .. prefixfunc .. [[_compiler_id = ___]] .. prefixfunc .. [[_compiler.get_id()
 if ___]] .. prefixfunc .. [[_compiler_id == 'emscripten'
   ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.get_define('__clang_major__.__clang_minor__').replace(' ', '')
+  ___]] .. prefixfunc .. [[is_clang_like = true
 else
   ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.version()
+  ___]] .. prefixfunc .. [[is_clang_like = ['clang', 'clang-cl', 'emscripten', 'icx', 'icx-cl'].contains(___]] .. prefixfunc .. [[_compiler_id)
 endif
 ___]] .. prefixfunc .. [[_linker_id = ___]] .. prefixfunc .. [[_compiler.get_linker_id()
 
