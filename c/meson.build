@@ -63,7 +63,7 @@
 #  shadow_warnings = off default on local compatible_local all
 #  suggestions = default off on
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
-#  unsafe_buffer_usage_warnings = off default on
+#  unsafe_buffer_usage_warnings = default on off
 #  warnings = on default off strict very_strict
 #  warnings_as_error = default off on basic
 #  windows_abi_compatibility_warnings = off default on
@@ -128,7 +128,6 @@
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
 #    - `shadow_warnings`
-#    - `unsafe_buffer_usage_warnings`
 #    - `windows_abi_compatibility_warnings`
 #  - The following values are `on`:
 #    - `conversion_warnings`
@@ -248,8 +247,10 @@ ___jln_c_compiler = meson.get_compiler('c')
 ___jln_c_compiler_id = ___jln_c_compiler.get_id()
 if ___jln_c_compiler_id == 'emscripten'
   ___jln_c_compiler_version = ___jln_c_compiler.get_define('__clang_major__.__clang_minor__').replace(' ', '')
+  ___jln_cis_clang_like = true
 else
   ___jln_c_compiler_version = ___jln_c_compiler.version()
+  ___jln_cis_clang_like = ['clang', 'clang-cl', 'emscripten', 'icx', 'icx-cl'].contains(___jln_c_compiler_id)
 endif
 ___jln_c_linker_id = ___jln_c_compiler.get_linker_id()
 
@@ -291,7 +292,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
   endif
-  if (  ( ___jln_c_compiler_id == 'gcc' or ___jln_c_compiler_id == 'clang' or ___jln_c_compiler_id == 'clang-cl' or ___jln_c_compiler_id == 'emscripten' ) )
+  if (  ( ___jln_c_compiler_id == 'gcc' or ___jln_cis_clang_like ) )
     if (  ___jln_c_flags.get('warnings', 'default') != 'default' )
       if (  ___jln_c_flags.get('warnings', 'default') == 'off' )
         jln_c_c_flags += ['-w', ]
@@ -397,7 +398,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('unsafe_buffer_usage_warnings', 'default') != 'default' )
-      if (  ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=16.0') ) )
+      if (  ( ___jln_cis_clang_like and ___jln_c_compiler_version.version_compare('>=16.0') ) )
         if (  ___jln_c_flags.get('unsafe_buffer_usage_warnings', 'default') == 'off' )
           jln_c_c_flags += ['-Wno-unsafe-buffer-usage', ]
         endif
@@ -414,8 +415,8 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('var_init', 'default') != 'default' )
-      if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
-        if (  ___jln_c_compiler_id == 'clang' )
+      if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_cis_clang_like and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
+        if (  ___jln_cis_clang_like )
           jln_c_c_flags += ['-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', ]
         endif
         if (  ___jln_c_flags.get('var_init', 'default') == 'pattern' )
@@ -567,7 +568,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
             jln_c_c_flags += ['-fdiagnostics-generate-patch', ]
           endif
         else
-          if (  ___jln_c_compiler_id == 'clang' )
+          if (  ___jln_cis_clang_like )
             jln_c_c_flags += ['-fdiagnostics-print-source-range-info', ]
           endif
         endif
@@ -622,7 +623,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     if (  ___jln_c_flags.get('shadow_warnings', 'default') != 'default' )
       if (  ___jln_c_flags.get('shadow_warnings', 'default') == 'off' )
         jln_c_c_flags += ['-Wno-shadow', ]
-        if (  ( ___jln_c_compiler_id == 'clang-cl' or ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
+        if (  ( ___jln_cis_clang_like and ___jln_c_compiler_version.version_compare('>=8.0') ) )
           jln_c_c_flags += ['-Wno-shadow-field', ]
         endif
       else
@@ -648,7 +649,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('float_sanitizers', 'default') != 'default' )
-      if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=5.0') ) or ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=5.0') ) or ___jln_c_compiler_id == 'clang-cl' ) )
+      if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=5.0') ) or ( ___jln_cis_clang_like and ___jln_c_compiler_version.version_compare('>=5.0') ) ) )
         if (  ___jln_c_flags.get('float_sanitizers', 'default') == 'on' )
           jln_c_c_flags += ['-fsanitize=float-divide-by-zero', '-fsanitize=float-cast-overflow', ]
         else
@@ -657,7 +658,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       endif
     endif
     if (  ___jln_c_flags.get('integer_sanitizers', 'default') != 'default' )
-      if (  ( ( ___jln_c_compiler_id == 'clang' and ___jln_c_compiler_version.version_compare('>=5.0') ) or ___jln_c_compiler_id == 'clang-cl' ) )
+      if (  ( ___jln_cis_clang_like and ___jln_c_compiler_version.version_compare('>=5.0') ) )
         if (  ___jln_c_flags.get('integer_sanitizers', 'default') == 'on' )
           jln_c_c_flags += ['-fsanitize=integer', ]
         else
@@ -673,7 +674,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     endif
   endif
   if (  ___jln_c_flags.get('conversion_warnings', 'default') != 'default' )
-    if (  ( ___jln_c_compiler_id == 'gcc' or ___jln_c_compiler_id == 'clang' or ___jln_c_compiler_id == 'clang-cl' or ___jln_c_compiler_id == 'emscripten' or ___jln_c_compiler_id == 'intel' ) )
+    if (  ( ___jln_c_compiler_id == 'gcc' or ___jln_cis_clang_like or ___jln_c_compiler_id == 'intel' ) )
       if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'on' )
         jln_c_c_flags += ['-Wconversion', '-Wsign-compare', '-Wsign-conversion', ]
       else
