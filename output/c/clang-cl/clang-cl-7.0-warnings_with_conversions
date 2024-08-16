@@ -1,0 +1,15 @@
+-Wconversion
+-Weverything
+-Wno-covered-switch-default
+-Wno-documentation
+-Wno-documentation-unknown-command
+-Wno-global-constructors
+-Wno-newline-eof
+-Wno-padded
+-Wno-shadow
+-Wno-switch-default
+-Wsign-compare
+-Wsign-conversion
+-Wswitch
+-Wswitch-enum
+/permissive-

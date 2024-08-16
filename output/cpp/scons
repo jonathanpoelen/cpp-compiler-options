@@ -306,8 +306,13 @@ def get_flags(options, env=None):
         )
         version = (int(m.group(1)), int(m.group(2)))
         _compiler_version_cache[compiler] = version
+    is_clang_like = true
     compiler = 'clang'
+  elif _compiler == 'emcc':
+    is_clang_like = true
+    compiler = 'clang-emcc'
   else:
+    is_clang_like = compiler.startswith('clang')
     compiler = _compiler
 
   version = version or (0,0)
@@ -386,7 +391,7 @@ def get_flags(options, env=None):
           if x_optimization != 'default' :
             if not ( ( x_optimization == '0' or x_optimization == 'g' ) ) :
               flags += ('-DNDEBUG', )
-  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) :
+  if ( compiler == 'gcc' or is_clang_like ) :
     if x_warnings != 'default' :
       if x_warnings == 'off' :
         flags += ('-w', )
@@ -466,13 +471,13 @@ def get_flags(options, env=None):
         else:
           flags += ('-Wcovered-switch-default', )
     if x_unsafe_buffer_usage_warnings != 'default' :
-      if ( compiler == 'clang' and compversion >= 1600000 ) :
+      if ( is_clang_like and compversion >= 1600000 ) :
         if x_unsafe_buffer_usage_warnings == 'off' :
           flags += ('-Wno-unsafe-buffer-usage', )
         else:
           flags += ('-Wunsafe-buffer-usage', )
     if x_diagnostics_show_template_tree != 'default' :
-      if ( ( compiler == 'gcc' and compversion >= 800000 ) or compiler == 'clang' ) :
+      if ( ( compiler == 'gcc' and compversion >= 800000 ) or is_clang_like ) :
         if x_diagnostics_show_template_tree == 'on' :
           flags += ('-fdiagnostics-show-template-tree', )
         else:
@@ -482,7 +487,7 @@ def get_flags(options, env=None):
         if ( compiler == 'gcc' and compversion >= 800000 ) :
           flags += ('-felide-type', )
       else:
-        if ( ( compiler == 'gcc' and compversion >= 800000 ) or ( compiler == 'clang' and compversion >= 300004 ) ) :
+        if ( ( compiler == 'gcc' and compversion >= 800000 ) or ( is_clang_like and compversion >= 300004 ) ) :
           flags += ('-fno-elide-type', )
     if x_exceptions != 'default' :
       if x_exceptions == 'on' :
@@ -497,8 +502,8 @@ def get_flags(options, env=None):
       else:
         flags += ('-fno-rtti', )
     if x_var_init != 'default' :
-      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) :
-        if compiler == 'clang' :
+      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( is_clang_like and compversion >= 800000 ) ) :
+        if is_clang_like :
           flags += ('-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', )
         if x_var_init == 'pattern' :
           flags += ('-ftrivial-auto-var-init=pattern', )
@@ -508,7 +513,7 @@ def get_flags(options, env=None):
           else:
             flags += ('-ftrivial-auto-var-init=uninitialized', )
     if x_windows_abi_compatibility_warnings != 'default' :
-      if ( ( compiler == 'gcc' and compversion >= 1000000 ) or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) :
+      if ( ( compiler == 'gcc' and compversion >= 1000000 ) or is_clang_like ) :
         if x_windows_abi_compatibility_warnings == 'on' :
           flags += ('-Wmismatched-tags', )
         else:
@@ -623,7 +628,7 @@ def get_flags(options, env=None):
           if ( compiler == 'gcc' and compversion >= 700000 ) :
             flags += ('-fdiagnostics-generate-patch', )
         else:
-          if compiler == 'clang' :
+          if is_clang_like :
             flags += ('-fdiagnostics-print-source-range-info', )
     if x_fix_compiler_error != 'default' :
       if x_fix_compiler_error == 'on' :
@@ -666,7 +671,7 @@ def get_flags(options, env=None):
     if x_shadow_warnings != 'default' :
       if x_shadow_warnings == 'off' :
         flags += ('-Wno-shadow', )
-        if ( compiler == 'clang-cl' or ( compiler == 'clang' and compversion >= 800000 ) ) :
+        if ( is_clang_like and compversion >= 800000 ) :
           flags += ('-Wno-shadow-field', )
       else:
         if x_shadow_warnings == 'on' :
@@ -684,13 +689,13 @@ def get_flags(options, env=None):
               else:
                 flags += ('-Wshadow=compatible-local', )
     if x_float_sanitizers != 'default' :
-      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) :
+      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( is_clang_like and compversion >= 500000 ) ) :
         if x_float_sanitizers == 'on' :
           flags += ('-fsanitize=float-divide-by-zero', '-fsanitize=float-cast-overflow', )
         else:
           flags += ('-fno-sanitize=float-divide-by-zero', '-fno-sanitize=float-cast-overflow', )
     if x_integer_sanitizers != 'default' :
-      if ( ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) :
+      if ( is_clang_like and compversion >= 500000 ) :
         if x_integer_sanitizers == 'on' :
           flags += ('-fsanitize=integer', )
         else:
@@ -700,7 +705,7 @@ def get_flags(options, env=None):
           if x_integer_sanitizers == 'on' :
             flags += ('-ftrapv', '-fsanitize=undefined', )
   if x_conversion_warnings != 'default' :
-    if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' or compiler == 'icc' ) :
+    if ( compiler == 'gcc' or is_clang_like or compiler == 'icc' ) :
       if x_conversion_warnings == 'on' :
         flags += ('-Wconversion', '-Wsign-compare', '-Wsign-conversion', )
       else:

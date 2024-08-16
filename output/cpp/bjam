@@ -317,6 +317,7 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
 JLN_ORIGINAL_CXX_TOOLSET = "" ;
 JLN_NORMALIZED_CXX_COMP = "" ;
 JLN_NORMALIZED_CXX_COMP_VERSION = 100000 ;
+JLN_NORMALIZED_CXX_IS_CLANG_LIKE = 0 ;
 
 rule jln-update-normalized-compiler ( toolset : version )
 {
@@ -326,6 +327,7 @@ rule jln-update-normalized-compiler ( toolset : version )
 
     local is_emcc = 0 ;
     local is_intel = 0 ;
+    local is_clang = 0 ;
     switch $(toolset)  {
       case emscripten* : is_emcc = 1 ;
       case emcc* : is_emcc = 1 ;
@@ -333,16 +335,19 @@ rule jln-update-normalized-compiler ( toolset : version )
       case icx* : is_intel = 1 ;
       case icpx* : is_intel = 1 ;
       case dpcpp* : is_intel = 1 ;
+      case clang* : is_clang = 1 ;
     }
 
     if $(is_emcc) = 1 {
       JLN_NORMALIZED_CXX_COMP = clang-emcc ;
+      JLN_NORMALIZED_CXX_IS_CLANG_LIKE = 1 ;
       # get clang version. Assume emcc exists
       version = [ MATCH "clang version ([0-9]+\\.[0-9]+\\.[0-9]+)" : [ SHELL "emcc -v 2>&1" ] ] ;
     }
     # icx / icpx
     else if $(is_intel) = 1 {
       JLN_NORMALIZED_CXX_COMP = clang ;
+      JLN_NORMALIZED_CXX_IS_CLANG_LIKE = 1 ;
       switch $(version)  {
         case 2021* : JLN_NORMALIZED_CXX_COMP_VERSION = 1200000 ;
         case 2022* : JLN_NORMALIZED_CXX_COMP_VERSION = 1400000 ;
@@ -357,6 +362,7 @@ rule jln-update-normalized-compiler ( toolset : version )
       }
     }
     else {
+      JLN_NORMALIZED_CXX_IS_CLANG_LIKE = $(is_clang) ;
       # TODO `version` is not the real version.
       # For toolset=gcc-5, version is 5 ; for clang-scan, version is ''
       JLN_NORMALIZED_CXX_COMP = $(toolset) ;
@@ -557,7 +563,7 @@ rule jln_flags ( properties * )
       }
     }
   }
-  if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_COMP) = "clang" || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" || $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc" )
+  if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
   {
     if $(x_warnings) != "default"
     {
@@ -846,7 +852,7 @@ rule jln_flags ( properties * )
     }
     if $(x_unsafe_buffer_usage_warnings) != "default"
     {
-      if ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600000 ] )
+      if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600000 ] )
       {
         if $(x_unsafe_buffer_usage_warnings) = "off"
         {
@@ -864,7 +870,7 @@ rule jln_flags ( properties * )
     }
     if $(x_diagnostics_show_template_tree) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || $(JLN_NORMALIZED_CXX_COMP) = "clang" )
+      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
       {
         if $(x_diagnostics_show_template_tree) = "on"
         {
@@ -893,7 +899,7 @@ rule jln_flags ( properties * )
       }
       else
       {
-        if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300004 ] ) )
+        if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300004 ] ) )
         {
           flags +=
             <cxxflags>"-fno-elide-type"
@@ -939,9 +945,9 @@ rule jln_flags ( properties * )
     }
     if $(x_var_init) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) )
+      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) )
       {
-        if $(JLN_NORMALIZED_CXX_COMP) = "clang"
+        if $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE)
         {
           flags +=
             <cxxflags>"-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang"
@@ -972,7 +978,7 @@ rule jln_flags ( properties * )
     }
     if $(x_windows_abi_compatibility_warnings) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1000000 ] ) || $(JLN_NORMALIZED_CXX_COMP) = "clang" || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" || $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc" )
+      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1000000 ] ) || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
       {
         if $(x_windows_abi_compatibility_warnings) = "on"
         {
@@ -1325,7 +1331,7 @@ rule jln_flags ( properties * )
         }
         else
         {
-          if $(JLN_NORMALIZED_CXX_COMP) = "clang"
+          if $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE)
           {
             flags +=
               <cxxflags>"-fdiagnostics-print-source-range-info"
@@ -1446,7 +1452,7 @@ rule jln_flags ( properties * )
         flags +=
           <cxxflags>"-Wno-shadow"
         ;
-        if ( $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" || ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) )
+        if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] )
         {
           flags +=
             <cxxflags>"-Wno-shadow-field"
@@ -1501,7 +1507,7 @@ rule jln_flags ( properties * )
     }
     if $(x_float_sanitizers) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" )
+      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) )
       {
         if $(x_float_sanitizers) = "on"
         {
@@ -1521,7 +1527,7 @@ rule jln_flags ( properties * )
     }
     if $(x_integer_sanitizers) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" )
+      if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] )
       {
         if $(x_integer_sanitizers) = "on"
         {
@@ -1553,7 +1559,7 @@ rule jln_flags ( properties * )
   }
   if $(x_conversion_warnings) != "default"
   {
-    if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_COMP) = "clang" || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" || $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc" || $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'linux" )
+    if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) || $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'linux" )
     {
       if $(x_conversion_warnings) = "on"
       {
