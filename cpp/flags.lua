@@ -71,7 +71,7 @@
 --  shadow_warnings = off default on local compatible_local all
 --  suggestions = default off on
 --  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
---  unsafe_buffer_usage_warnings = off default on
+--  unsafe_buffer_usage_warnings = default on off
 --  warnings = on default off strict very_strict
 --  warnings_as_error = default off on basic
 --  windows_abi_compatibility_warnings = off default on
@@ -136,7 +136,6 @@
 --  - `ndebug` is `with_optimization_1_or_above`
 --  - The following values are `off`:
 --    - `shadow_warnings`
---    - `unsafe_buffer_usage_warnings`
 --    - `windows_abi_compatibility_warnings`
 --  - The following values are `on`:
 --    - `conversion_warnings`
@@ -448,17 +447,6 @@ local function string_version_to_number(version)
 end
 
 
-local function add_comp_cache(original_compiler, original_version, compcache)
-  -- remove compiler when empty string
-  if compcache[1] == '' then
-    compcache[1] = nil
-  end
-  local tmp = _comp_cache[original_compiler] or {}
-  tmp[original_version] = compcache
-  _comp_cache[original_compiler] = tmp
-end
-
-
 local function extract_progname_and_version_from_path(compiler)
   compiler = compiler:match('/([^/]+)$') or compiler
   local version = compiler:match('%d+%.?%d*%.?%d*$') or ''
@@ -487,6 +475,14 @@ local _compiler_by_toolname = {
   ['em++']='emcc',
 }
 
+local _is_clang_like_by_compiler = {
+  clang=true,
+  ['clang-cl']=true,
+  emcc=true,
+  icx=true,
+  ['icx-cl']=true,
+}
+
 
 local _comp_cache = {}
 local _ld_cache
@@ -501,6 +497,7 @@ end
 -- Returns an array of compile and link flags
 -- `options`: same as create_options()
 -- `extra_options` = {
+--   envs: table = nil -- for os.iorunv
 --   disable_other_options: bool = false
 --   print_compiler: bool = false -- for debug only
 -- }
@@ -516,9 +513,15 @@ function get_flags(options, extra_options)
     linker = _ld_cache
     if not linker then
       local program, toolname = platform.tool('ld')
+      if extra_options and extra_options.print_compiler then
+        cprint("jln.get_flags (1): linker: ${cyan}%s${reset} / ${cyan}%s${reset}", program, toolname)
+      end
       linker = toolname or detect.find_toolname(program) or ''
       _ld_cache = linker
     end
+  end
+  if extra_options and extra_options.print_compiler then
+    cprint("jln.get_flags: linker: ${cyan}%s${reset}", linker)
   end
 
   local original_compiler = compiler or ''
@@ -540,6 +543,10 @@ function get_flags(options, extra_options)
     if compiler then
       local restored_version = version
       compiler, version = extract_progname_and_version_from_path(compiler)
+      if extra_options and extra_options.print_compiler then
+        cprint("jln.get_flags (1): compiler: ${cyan}%s${reset} (${cyan}%s${reset})", compiler, version)
+      end
+
       version = restored_version or version
       if version == '' then
         local compinfos = detect.find_tool(compiler, {version=true, program=compiler})
@@ -551,6 +558,10 @@ function get_flags(options, extra_options)
     else
       local toolname
       compiler, toolname = platform.tool('cxx')
+      if extra_options and extra_options.print_compiler then
+        cprint("jln.get_flags (2): compiler: ${cyan}%s${reset} / ${cyan}%s${reset}", compiler, toolname)
+      end
+
       if not compiler then
         -- wprint("Unknown compiler")
         add_comp_cache(original_compiler, original_version, {})
@@ -588,13 +599,19 @@ function get_flags(options, extra_options)
       }
     end
 
+    if extra_options and extra_options.print_compiler then
+      cprint("jln.get_flags (3): compiler: ${cyan}%s${reset} (${cyan}%s${reset})", compiler, version)
+    end
+
     compversion = string_version_to_number(version)
 
     add_comp_cache(original_compiler, original_version, {compiler, version, compversion})
   end
 
+  local is_clang_like = _is_clang_like_by_compiler[compiler]
+
   if extra_options and extra_options.print_compiler then
-    cprint("get_flags: compiler: ${cyan}%s${reset} (${cyan}%s${reset}), linker: ${cyan}%s", compiler, version, linker)
+    cprint("jln.get_flags: compiler: ${cyan}%s${reset} (${cyan}%s${reset}), linker: ${cyan}%s", compiler, version, linker)
   end
 
   local insert = table.insert
@@ -631,7 +648,7 @@ function get_flags(options, extra_options)
       end
     end
   end
-  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) then
+  if ( compiler == 'gcc' or is_clang_like ) then
     if options.warnings ~= "" then
       if options.warnings == "off" then
         insert(jln_cxflags, "-w")
@@ -796,7 +813,7 @@ function get_flags(options, extra_options)
       end
     end
     if options.unsafe_buffer_usage_warnings ~= "" then
-      if ( compiler == 'clang' and compversion >= 1600000 ) then
+      if ( is_clang_like and compversion >= 1600000 ) then
         if options.unsafe_buffer_usage_warnings == "off" then
           insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
         else
@@ -805,7 +822,7 @@ function get_flags(options, extra_options)
       end
     end
     if options.diagnostics_show_template_tree ~= "" then
-      if ( ( compiler == 'gcc' and compversion >= 800000 ) or compiler == 'clang' ) then
+      if ( ( compiler == 'gcc' and compversion >= 800000 ) or is_clang_like ) then
         if options.diagnostics_show_template_tree == "on" then
           insert(jln_cxflags, "-fdiagnostics-show-template-tree")
         else
@@ -819,7 +836,7 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "-felide-type")
         end
       else
-        if ( ( compiler == 'gcc' and compversion >= 800000 ) or ( compiler == 'clang' and compversion >= 300004 ) ) then
+        if ( ( compiler == 'gcc' and compversion >= 800000 ) or ( is_clang_like and compversion >= 300004 ) ) then
           insert(jln_cxflags, "-fno-elide-type")
         end
       end
@@ -842,8 +859,8 @@ function get_flags(options, extra_options)
       end
     end
     if options.var_init ~= "" then
-      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
-        if compiler == 'clang' then
+      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( is_clang_like and compversion >= 800000 ) ) then
+        if is_clang_like then
           insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
         end
         if options.var_init == "pattern" then
@@ -858,7 +875,7 @@ function get_flags(options, extra_options)
       end
     end
     if options.windows_abi_compatibility_warnings ~= "" then
-      if ( ( compiler == 'gcc' and compversion >= 1000000 ) or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) then
+      if ( ( compiler == 'gcc' and compversion >= 1000000 ) or is_clang_like ) then
         if options.windows_abi_compatibility_warnings == "on" then
           insert(jln_cxflags, "-Wmismatched-tags")
         else
@@ -1046,7 +1063,7 @@ function get_flags(options, extra_options)
             insert(jln_cxflags, "-fdiagnostics-generate-patch")
           end
         else
-          if compiler == 'clang' then
+          if is_clang_like then
             insert(jln_cxflags, "-fdiagnostics-print-source-range-info")
           end
         end
@@ -1110,7 +1127,7 @@ function get_flags(options, extra_options)
     if options.shadow_warnings ~= "" then
       if options.shadow_warnings == "off" then
         insert(jln_cxflags, "-Wno-shadow")
-        if ( compiler == 'clang-cl' or ( compiler == 'clang' and compversion >= 800000 ) ) then
+        if ( is_clang_like and compversion >= 800000 ) then
           insert(jln_cxflags, "-Wno-shadow-field")
         end
       else
@@ -1136,7 +1153,7 @@ function get_flags(options, extra_options)
       end
     end
     if options.float_sanitizers ~= "" then
-      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) then
+      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( is_clang_like and compversion >= 500000 ) ) then
         if options.float_sanitizers == "on" then
           insert(jln_cxflags, "-fsanitize=float-divide-by-zero")
           insert(jln_cxflags, "-fsanitize=float-cast-overflow")
@@ -1147,7 +1164,7 @@ function get_flags(options, extra_options)
       end
     end
     if options.integer_sanitizers ~= "" then
-      if ( ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) then
+      if ( is_clang_like and compversion >= 500000 ) then
         if options.integer_sanitizers == "on" then
           insert(jln_cxflags, "-fsanitize=integer")
         else
@@ -1164,7 +1181,7 @@ function get_flags(options, extra_options)
     end
   end
   if options.conversion_warnings ~= "" then
-    if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' or compiler == 'icc' ) then
+    if ( compiler == 'gcc' or is_clang_like or compiler == 'icc' ) then
       if options.conversion_warnings == "on" then
         insert(jln_cxflags, "-Wconversion")
         insert(jln_cxflags, "-Wsign-compare")
