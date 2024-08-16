@@ -368,17 +368,6 @@ local function string_version_to_number(version)
 end
 
 
-local function add_comp_cache(original_compiler, original_version, compcache)
-  -- remove compiler when empty string
-  if compcache[1] == '' then
-    compcache[1] = nil
-  end
-  local tmp = _comp_cache[original_compiler] or {}
-  tmp[original_version] = compcache
-  _comp_cache[original_compiler] = tmp
-end
-
-
 local function extract_progname_and_version_from_path(compiler)
   compiler = compiler:match('/([^/]+)$') or compiler
   local version = compiler:match('%d+%.?%d*%.?%d*$') or ''
@@ -429,6 +418,7 @@ end
 -- Returns an array of compile and link flags
 -- `options`: same as create_options()
 -- `extra_options` = {
+--   envs: table = nil -- for os.iorunv
 --   disable_other_options: bool = false
 --   print_compiler: bool = false -- for debug only
 -- }
@@ -445,9 +435,15 @@ function get_flags(options, extra_options)
     linker = _ld_cache
     if not linker then
       local program, toolname = platform.tool('ld')
+      if extra_options and extra_options.print_compiler then
+        cprint("jln.get_flags (1): linker: ${cyan}%s${reset} / ${cyan}%s${reset}", program, toolname)
+      end
       linker = toolname or detect.find_toolname(program) or ''
       _ld_cache = linker
     end
+  end
+  if extra_options and extra_options.print_compiler then
+    cprint("jln.get_flags: linker: ${cyan}%s${reset}", linker)
   end
 
   local original_compiler = compiler or ''
@@ -469,6 +465,10 @@ function get_flags(options, extra_options)
     if compiler then
       local restored_version = version
       compiler, version = extract_progname_and_version_from_path(compiler)
+      if extra_options and extra_options.print_compiler then
+        cprint("jln.get_flags (1): compiler: ${cyan}%s${reset} (${cyan}%s${reset})", compiler, version)
+      end
+
       version = restored_version or version
       if version == '' then
         local compinfos = detect.find_tool(compiler, {version=true, program=compiler})
@@ -480,6 +480,10 @@ function get_flags(options, extra_options)
     else
       local toolname
       compiler, toolname = platform.tool(']] .. (self.is_C and "cc" or "cxx") .. [[')
+      if extra_options and extra_options.print_compiler then
+        cprint("jln.get_flags (2): compiler: ${cyan}%s${reset} / ${cyan}%s${reset}", compiler, toolname)
+      end
+
       if not compiler then
         -- wprint("Unknown compiler")
         add_comp_cache(original_compiler, original_version, {})
@@ -517,6 +521,10 @@ function get_flags(options, extra_options)
       }
     end
 
+    if extra_options and extra_options.print_compiler then
+      cprint("jln.get_flags (3): compiler: ${cyan}%s${reset} (${cyan}%s${reset})", compiler, version)
+    end
+
     compversion = string_version_to_number(version)
 
     add_comp_cache(original_compiler, original_version, {compiler, version, compversion})
@@ -525,7 +533,7 @@ function get_flags(options, extra_options)
   local is_clang_like = _is_clang_like_by_compiler[compiler]
 
   if extra_options and extra_options.print_compiler then
-    cprint("get_flags: compiler: ${cyan}%s${reset} (${cyan}%s${reset}), linker: ${cyan}%s", compiler, version, linker)
+    cprint("jln.get_flags: compiler: ${cyan}%s${reset} (${cyan}%s${reset}), linker: ${cyan}%s", compiler, version, linker)
   end
 
   local insert = table.insert
