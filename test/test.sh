@@ -114,10 +114,14 @@ if [ -z "$1" ] || [ "$1" = meson ]; then
   cp "$d"/../output/cpp/meson_options.txt "$TMPDIR"/compgenmeson
   sed 1i"project('test', 'cpp')" "$d"/../output/cpp/meson > "$TMPDIR"/compgenmeson/meson.build
   cd "$TMPDIR"/compgenmeson
-  rm -rf b; test_success 'meson b >/dev/null ; meson configure b | grep -Em1 "^  jln_warnings +on"'
-  rm -rf b; test_success 'meson b -Djln_warnings=off >/dev/null ; meson configure b | grep -Em1 "^  jln_warnings +off"'
-  rm -rf b; test_success 'meson b >/dev/null ; meson configure b | grep -Em1 "^  jln_sanitizers +default"'
-  rm -rf b; test_success 'meson b -Djln_sanitizers=on >/dev/null ; meson configure b | grep -Em1 "^  jln_sanitizers +on"'
+  mesontest() {
+    rm -rf b
+    test_success 'meson b '"$1"' >/dev/null ; __result=$(meson configure b); grep -Em1 "^  '"$2"'" <<<"$__result"'
+  }
+  mesontest ''                    'jln_warnings +on'
+  mesontest '-Djln_warnings=off'  'jln_warnings +off'
+  mesontest ''                    'jln_sanitizers +default'
+  mesontest '-Djln_sanitizers=on' 'jln_sanitizers +on'
 fi
 
 if [ -z "$1" ] || [ "$1" = scons ]; then
