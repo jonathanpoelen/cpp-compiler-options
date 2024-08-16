@@ -24,6 +24,7 @@ return {
       platform='os.target()',
       options='values',
       not_eq=' ~= ',
+      version='version',
     })
 
     self:print_header('--')
@@ -177,8 +178,6 @@ end
 -- `print_compiler`: boolean
 -- return {buildoptions={}, linkoptions={}}
 function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compiler)
-  local compversion
-
   values = ]] .. prefixfunc .. [[_tovalues(values, disable_others)
   local compiler = values.]] .. compprefix .. [[
   local version = values.]] .. compprefix .. [[_version
@@ -193,7 +192,6 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
   if compcache then
     compiler = compcache[1]
     version = compcache[2]
-    compversion = compcache[3]
     if not compiler then
       -- printf("WARNING: unknown compiler")
       return {buildoptions={}, linkoptions={}}
@@ -257,17 +255,19 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
       end
     end
 
-    compversion = {}
+    local versparts = {}
     for i in version:gmatch("%d+") do
-      table_insert(compversion, tonumber(i))
+      table_insert(versparts, tonumber(i))
     end
-    if not compversion[1] then
-      printf("WARNING: wrong version format")
-      return {buildoptions={}, linkoptions={}}
-    end
-    compversion = compversion[1] * 100000 + (compversion[2] or 0)
 
-    cache[original_compiler] = {compiler, version, compversion}
+    if versparts[1] then
+      version = versparts[1] * 100000 + (versparts[2] or 0)
+    else
+      wprint("Wrong version format: %s", version)
+      version = 0
+    end
+
+    cache[original_compiler] = {compiler, version}
   end
 
   if print_compiler then

@@ -37,6 +37,7 @@ return {
       ifclose='then',
       endif='end',
       not_eq=' ~= ',
+      version='version',
     })
 
     local funcprefix = (self.is_C and 'jln_c_' or 'jln_cxx_')
@@ -353,21 +354,6 @@ function set_flags(target, options, extra_options)
 end
 
 
-local function string_version_to_number(version)
-  local parts = {}
-  for i in version:gmatch("%d+") do
-    table.insert(parts, tonumber(i))
-  end
-
-  if parts[1] then
-    return parts[1] * 100000 + (parts[2] or 0)
-  end
-
-  wprint("Wrong version format: %s", version)
-  return 0
-end
-
-
 local function extract_progname_and_version_from_path(compiler)
   compiler = compiler:match('/([^/]+)$') or compiler
   local version = compiler:match('%d+%.?%d*%.?%d*$') or ''
@@ -427,7 +413,6 @@ function get_flags(options, extra_options)
   options = create_options(options, extra_options)
 
   local compiler = options.]] .. compprefix .. [[
-
   local version = options.]] .. compprefix .. [[_version
   local linker = options.ld
 
@@ -449,12 +434,10 @@ function get_flags(options, extra_options)
   local original_compiler = compiler or ''
   local original_version = version or ''
   local compcache = (_comp_cache[original_compiler] or {})[original_version]
-  local compversion
 
   if compcache then
     compiler = compcache[1]
     version = compcache[2]
-    compversion = compcache[3]
     if not compiler then
       -- wrintf("Unknown compiler")
       return {]] .. cxflags .. [[={}, ldflags={}}
@@ -463,18 +446,18 @@ function get_flags(options, extra_options)
     local compiler_path = compiler
 
     if compiler then
-      local restored_version = version
-      compiler, version = extract_progname_and_version_from_path(compiler)
-      if extra_options and extra_options.print_compiler then
-        cprint("jln.get_flags (1): compiler: ${cyan}%s${reset} (${cyan}%s${reset})", compiler, version)
-      end
+      if not version then
+        compiler, version = extract_progname_and_version_from_path(compiler)
+        if extra_options and extra_options.print_compiler then
+          cprint("jln.get_flags (1): compiler: ${cyan}%s${reset} (${cyan}%s${reset})", compiler, version)
+        end
 
-      version = restored_version or version
-      if version == '' then
-        local compinfos = detect.find_tool(compiler, {version=true, program=compiler})
-        if compinfos then
-          compiler = compinfos.name
-          version = compinfos.version
+        if version == '' then
+          local compinfos = detect.find_tool(compiler, {version=true, program=compiler})
+          if compinfos then
+            compiler = compinfos.name
+            version = compinfos.version
+          end
         end
       end
     else
@@ -525,9 +508,19 @@ function get_flags(options, extra_options)
       cprint("jln.get_flags (3): compiler: ${cyan}%s${reset} (${cyan}%s${reset})", compiler, version)
     end
 
-    compversion = string_version_to_number(version)
+    local versparts = {}
+    for i in version:gmatch("%d+") do
+      table.insert(versparts, tonumber(i))
+    end
 
-    add_comp_cache(original_compiler, original_version, {compiler, version, compversion})
+    if versparts[1] then
+      version = versparts[1] * 100000 + (versparts[2] or 0)
+    else
+      wprint("Wrong version format: %s", version)
+      version = 0
+    end
+
+    add_comp_cache(original_compiler, original_version, {compiler, version})
   end
 
   local is_clang_like = _is_clang_like_by_compiler[compiler]
