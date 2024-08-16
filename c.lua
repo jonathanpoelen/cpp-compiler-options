@@ -72,7 +72,7 @@
 --  shadow_warnings = off default on local compatible_local all
 --  suggestions = default off on
 --  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
---  unsafe_buffer_usage_warnings = off default on
+--  unsafe_buffer_usage_warnings = default on off
 --  warnings = on default off strict very_strict
 --  warnings_as_error = default off on basic
 --  windows_abi_compatibility_warnings = off default on
@@ -137,7 +137,6 @@
 --  - `ndebug` is `with_optimization_1_or_above`
 --  - The following values are `off`:
 --    - `shadow_warnings`
---    - `unsafe_buffer_usage_warnings`
 --    - `windows_abi_compatibility_warnings`
 --  - The following values are `on`:
 --    - `conversion_warnings`
@@ -590,6 +589,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
                  ((compiler:find('ico?x', 1, true) or
                    compiler:find('dpcpp', 1, true)
                   ) and 'icx') or
+                 (compiler:find('emcc', 1, true) and 'clang-emcc') or
                  nil
     end
 
@@ -634,6 +634,8 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     printf("jln_c_getoptions: compiler: %s, version: %s", compiler, version)
   end
 
+  local is_clang_like = compiler:find('^clang')
+
   local jln_buildoptions, jln_linkoptions = {}, {}
 
   if values['ndebug'] ~= 'default' then
@@ -667,7 +669,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
       end
     end
   end
-  if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' ) then
+  if ( compiler == 'gcc' or is_clang_like ) then
     if values['warnings'] ~= 'default' then
       if values['warnings'] == 'off' then
         table_insert(jln_buildoptions, "-w")
@@ -819,7 +821,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
       end
     end
     if values['unsafe_buffer_usage_warnings'] ~= 'default' then
-      if ( compiler == 'clang' and compversion >= 1600000 ) then
+      if ( is_clang_like and compversion >= 1600000 ) then
         if values['unsafe_buffer_usage_warnings'] == 'off' then
           table_insert(jln_buildoptions, "-Wno-unsafe-buffer-usage")
         end
@@ -836,8 +838,8 @@ function jln_c_getoptions(values, disable_others, print_compiler)
       end
     end
     if values['var_init'] ~= 'default' then
-      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 800000 ) ) then
-        if compiler == 'clang' then
+      if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( is_clang_like and compversion >= 800000 ) ) then
+        if is_clang_like then
           table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
         end
         if values['var_init'] == 'pattern' then
@@ -1012,7 +1014,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
             table_insert(jln_buildoptions, "-fdiagnostics-generate-patch")
           end
         else
-          if compiler == 'clang' then
+          if is_clang_like then
             table_insert(jln_buildoptions, "-fdiagnostics-print-source-range-info")
           end
         end
@@ -1068,7 +1070,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     if values['shadow_warnings'] ~= 'default' then
       if values['shadow_warnings'] == 'off' then
         table_insert(jln_buildoptions, "-Wno-shadow")
-        if ( compiler == 'clang-cl' or ( compiler == 'clang' and compversion >= 800000 ) ) then
+        if ( is_clang_like and compversion >= 800000 ) then
           table_insert(jln_buildoptions, "-Wno-shadow-field")
         end
       else
@@ -1094,7 +1096,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
       end
     end
     if values['float_sanitizers'] ~= 'default' then
-      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) then
+      if ( ( compiler == 'gcc' and compversion >= 500000 ) or ( is_clang_like and compversion >= 500000 ) ) then
         if values['float_sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "-fsanitize=float-divide-by-zero")
           table_insert(jln_buildoptions, "-fsanitize=float-cast-overflow")
@@ -1105,7 +1107,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
       end
     end
     if values['integer_sanitizers'] ~= 'default' then
-      if ( ( compiler == 'clang' and compversion >= 500000 ) or compiler == 'clang-cl' ) then
+      if ( is_clang_like and compversion >= 500000 ) then
         if values['integer_sanitizers'] == 'on' then
           table_insert(jln_buildoptions, "-fsanitize=integer")
         else
@@ -1122,7 +1124,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     end
   end
   if values['conversion_warnings'] ~= 'default' then
-    if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-cl' or compiler == 'clang-emcc' or compiler == 'icc' ) then
+    if ( compiler == 'gcc' or is_clang_like or compiler == 'icc' ) then
       if values['conversion_warnings'] == 'on' then
         table_insert(jln_buildoptions, "-Wconversion")
         table_insert(jln_buildoptions, "-Wsign-compare")
