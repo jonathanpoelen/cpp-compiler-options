@@ -566,7 +566,7 @@ def get_flags(options, env=None):
         flags += ('-fno-exceptions', )
     if x_var_init != 'default' :
       if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( is_clang_like and compversion >= 800000 ) ) :
-        if is_clang_like :
+        if ( is_clang_like and compversion <= 1500000 ) :
           flags += ('-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', )
         if x_var_init == 'pattern' :
           flags += ('-ftrivial-auto-var-init=pattern', )
