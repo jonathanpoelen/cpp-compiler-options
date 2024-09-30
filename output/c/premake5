@@ -667,7 +667,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     end
     if values['var_init'] ~= 'default' then
       if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) ) then
-        if is_clang_like then
+        if ( is_clang_like and version <= 1500000 ) then
           table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
         end
         if values['var_init'] == 'pattern' then

@@ -815,7 +815,7 @@ rule jln_c_flags ( properties * )
     {
       if ( ( $(JLN_NORMALIZED_C_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_C_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ] ) )
       {
-        if $(JLN_NORMALIZED_C_IS_CLANG_LIKE)
+        if ( $(JLN_NORMALIZED_C_IS_CLANG_LIKE) && ! [ numbers.less 1500000 $(JLN_NORMALIZED_C_COMP_VERSION) ] )
         {
           flags +=
             <cflags>"-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang"

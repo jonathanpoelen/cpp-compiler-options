@@ -254,7 +254,7 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     endif
     if (  ___jln_c_flags.get('var_init', 'default') != 'default' )
       if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_cis_clang_like and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
-        if (  ___jln_cis_clang_like )
+        if (  ( ___jln_cis_clang_like and ___jln_c_compiler_version.version_compare('<=15.0') ) )
           jln_c_c_flags += ['-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', ]
         endif
         if (  ___jln_c_flags.get('var_init', 'default') == 'pattern' )
