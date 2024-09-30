@@ -526,7 +526,7 @@ Or(gcc, clang_like) {
 
   opt'var_init' {
     Or(gcc'>=12', clang_like'>=8') {
-      clang_like {
+      clang_like'<=15' {
         flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
       },
       match {
