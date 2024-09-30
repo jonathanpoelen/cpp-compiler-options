@@ -852,7 +852,7 @@ function get_flags(options, extra_options)
     end
     if options.var_init ~= "" then
       if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) ) then
-        if is_clang_like then
+        if ( is_clang_like and version <= 1500000 ) then
           insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
         end
         if options.var_init == "pattern" then
