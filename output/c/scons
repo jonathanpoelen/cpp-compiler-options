@@ -921,7 +921,7 @@ def get_flags(options, env=None):
     if compiler != 'icl' :
       if x_debug != 'default' :
         if x_debug == 'off' :
-          flags += ('/DEBUG:NONE', )
+          linkflags += ('/DEBUG:NONE', )
         else:
           flags += ('/RTC1', '/Od', )
           if x_debug == 'on' :
@@ -1152,7 +1152,7 @@ def get_flags(options, env=None):
           flags += ('/Zc:throwingNew', )
     if x_debug != 'default' :
       if x_debug == 'off' :
-        flags += ('/debug:NONE', )
+        linkflags += ('/DEBUG:NONE', )
       else:
         flags += ('/RTC1', '/Od', )
         if x_debug == 'on' :

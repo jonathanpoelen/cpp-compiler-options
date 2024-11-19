@@ -1051,7 +1051,7 @@ foreach ___jln_flags : ___jln_custom_flags
     if (  ___jln_compiler_id != 'intel-cl' )
       if (  ___jln_flags.get('debug', 'default') != 'default' )
         if (  ___jln_flags.get('debug', 'default') == 'off' )
-          jln_cpp_flags += ['/DEBUG:NONE', ]
+          jln_link_flags += ['/DEBUG:NONE', ]
         else
           jln_cpp_flags += ['/RTC1', '/Od', ]
           if (  ___jln_flags.get('debug', 'default') == 'on' )
@@ -1387,7 +1387,7 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
     if (  ___jln_flags.get('debug', 'default') != 'default' )
       if (  ___jln_flags.get('debug', 'default') == 'off' )
-        jln_cpp_flags += ['/debug:NONE', ]
+        jln_link_flags += ['/DEBUG:NONE', ]
       else
         jln_cpp_flags += ['/RTC1', '/Od', ]
         if (  ___jln_flags.get('debug', 'default') == 'on' )

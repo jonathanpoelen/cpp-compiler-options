@@ -1308,7 +1308,7 @@ Or(msvc, clang_cl, icl) {
   -icl {
     opt'debug' {
       match {
-        lvl'off' { flag'/DEBUG:NONE' },
+        lvl'off' { link'/DEBUG:NONE' },
         {
           flag'/RTC1',
           flag'/Od',
@@ -1751,7 +1751,7 @@ icl {
 
   opt'debug' {
     match {
-      lvl'off' { flag'/debug:NONE' },
+      lvl'off' { link'/DEBUG:NONE' },
       {
         flag'/RTC1',
         flag'/Od',

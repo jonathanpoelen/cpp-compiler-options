@@ -1343,7 +1343,7 @@ function get_flags(options, extra_options)
     if compiler ~= 'icl' then
       if options.debug ~= "" then
         if options.debug == "off" then
-          insert(jln_cxflags, "/DEBUG:NONE")
+          insert(jln_ldflags, "/DEBUG:NONE")
         else
           insert(jln_cxflags, "/RTC1")
           insert(jln_cxflags, "/Od")
@@ -1734,7 +1734,7 @@ function get_flags(options, extra_options)
     end
     if options.debug ~= "" then
       if options.debug == "off" then
-        insert(jln_cxflags, "/debug:NONE")
+        insert(jln_ldflags, "/DEBUG:NONE")
       else
         insert(jln_cxflags, "/RTC1")
         insert(jln_cxflags, "/Od")
