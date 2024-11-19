@@ -26,7 +26,7 @@ return {
     self.prefixfunc = prefixfunc
 
     self._vcond_to_compiler_like_map = {
-      ['clang-like'] = '___' .. prefixfunc .. 'is_clang_like',
+      ['clang-like'] = '___' .. prefixfunc .. '_is_clang_like',
     }
 
     self:_vcond_init({
