@@ -1569,7 +1569,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     if compiler ~= 'icl' then
       if values['debug'] ~= 'default' then
         if values['debug'] == 'off' then
-          table_insert(jln_buildoptions, "/DEBUG:NONE")
+          table_insert(jln_linkoptions, "/DEBUG:NONE")
         else
           table_insert(jln_buildoptions, "/RTC1")
           table_insert(jln_buildoptions, "/Od")
@@ -1960,7 +1960,7 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     end
     if values['debug'] ~= 'default' then
       if values['debug'] == 'off' then
-        table_insert(jln_buildoptions, "/debug:NONE")
+        table_insert(jln_linkoptions, "/DEBUG:NONE")
       else
         table_insert(jln_buildoptions, "/RTC1")
         table_insert(jln_buildoptions, "/Od")
