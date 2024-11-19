@@ -50,7 +50,8 @@ for _,t in ipairs({
   build_md = readme:sub(start_build, end_build + 4):gsub('output/cpp/'..t[1], t[5])
 
   md = build_md .. '\n' .. options_md
-  header = t[3] .. '  ' .. md:gsub('\n', '\n'..t[3]..'  ')
+  header = t[3] .. '  ' .. md:gsub('\n', '\n' .. t[3] .. '  ')
+  header = header:gsub('%s*\n', '\n')
 
   filebase = 'w/'..t[1]..'/'
   writefile(filebase..'README.md', md)
