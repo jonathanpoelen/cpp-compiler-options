@@ -2650,7 +2650,7 @@ rule jln_flags ( properties * )
         if $(x_debug) = "off"
         {
           flags +=
-            <cxxflags>"/DEBUG:NONE"
+            <linkflags>"/DEBUG:NONE"
           ;
         }
         else
@@ -3415,7 +3415,7 @@ rule jln_flags ( properties * )
       if $(x_debug) = "off"
       {
         flags +=
-          <cxxflags>"/debug:NONE"
+          <linkflags>"/DEBUG:NONE"
         ;
       }
       else
