@@ -7,41 +7,32 @@ local function has_value(t)
   return pairs(t)(t)
 end
 
-local function has_data(x)
-  return has_value(x._t) or (x._else and has_value(x._else))
-end
-
-local function ramify(x)
-  if x._if then
-    if not has_data(x) then
-      x = {}
-    end
-  else
-    for k,y in pairs(x) do
-      if y._if and not has_data(y) then
-        x[k] = nil
+local function remove_empty_block(node)
+  if #node ~= 0 then
+    for k,inner_node in pairs(node) do
+      if inner_node._if and not has_value(inner_node._t) or not has_value(inner_node) then
+        assert(not inner_node._else)
+        node[k] = nil
       end
     end
   end
-  return x
 end
 
 local if_mt -- referenced by __unm
 if_mt = {
-  __call = function(self, x)
+  __call = function(self, node)
     assert(not self._t, '`_t` is not nil')
 
-    self._t = ramify(x)
-    return self
-  end,
-  __div = function(self, x)
-    local subelse = self._subelse or self
-    assert(subelse._if and not subelse._else, 'replace `x / y / z` with `x / { y / z }`')
+    if node._if then
+      assert(not node._else)
+      if not has_value(inner_node._t) then
+        node = {}
+      end
+    else
+      remove_empty_block(node)
+    end
 
-    x = x and ramify(x)
-
-    self._subelse = x
-    subelse._else = x
+    self._t = node
     return self
   end,
   __unm = function(self)
@@ -52,9 +43,6 @@ if_mt = {
 local if_mt_func = {
   __call = function(self, ...)
     return self._impl(...)
-  end,
-  __div = function(self, x)
-    return self._impl() / x
   end,
   __unm = function(self)
     return -self._impl()
@@ -204,16 +192,61 @@ local function act(datas) return { act={datas} } end
 local function reset_opt(name) return { reset_opt=name } end
 function noop() end
 
-local function if_else(condition, f)
-  return condition { f(true) } / f()
+local function _not_cond(elem)
+  elem = elem._if
+  return elem._not or {_not = elem}
 end
 
 local function match(t)
-  local x = t[1]
-  for i=2,#t do
-    x = x / t[i]
+  assert(t[1]._if, 'not a condition')
+
+  local first, curr_elem, merged_cond, next_elem
+  for i,next_elem in ipairs(t) do
+    assert(next_elem._if or i == #t, 'condition after a non condition')
+    assert(not next_elem._else, 'contains a else')
+
+    if next_elem._if then
+      -- remove empty block and merge with next condition
+      if not has_value(next_elem._t) then
+        if merged_cond then
+          merged_cond = {_and = {merged_cond, _not_cond(next_elem)}}
+        else
+          merged_cond = _not_cond(next_elem)
+        end
+        goto continue
+      elseif merged_cond then
+        next_elem._if = {_and = {merged_cond, next_elem._if}}
+        merged_cond = nil
+      end
+    else
+      remove_empty_block(next_elem)
+
+      -- skip empty block
+      if not has_value(next_elem) then
+        assert(i == #t)
+        break
+      end
+
+      if merged_cond then
+        next_elem = {_if = merged_cond, _t = next_elem}
+        merged_cond = nil
+      end
+    end
+
+    if first then
+      curr_elem._else = next_elem
+      curr_elem = curr_elem._else
+    else
+      first = next_elem
+      curr_elem = first
+    end
+    ::continue::
   end
-  return x
+  return {first}
+end
+
+local function if_else(condition, f)
+  return match { condition { f(true) }, f() }
 end
 
 local function MakeAST(is_C)
@@ -256,14 +289,12 @@ end
 -- List of all -s options: https://github.com/emscripten-core/emscripten/blob/main/src/settings.js
 
 local ndebug_decl = function(def, undef)
-  return {
-    lvl'off' { undef }
-  / lvl'on' { def }
-  / { --[[lvl'with_optimization_1_or_above']]
-      opt'optimization' {
-        -Or(lvl'0', lvl'g') {
-          def
-        }
+  return match {
+    lvl'off' { undef },
+    lvl'on' { def },
+    { --[[lvl'with_optimization_1_or_above']]
+      has_opt'optimization':without(lvl'0', lvl'g') {
+        def
       }
     }
   }
@@ -272,8 +303,13 @@ end
 return --[[printAST]] {
 
 opt'ndebug' {
-  Or(msvc, icl) { ndebug_decl(flag'/DNDEBUG', flag'/UNDEBUG') }
-                / ndebug_decl(flag'-DNDEBUG', flag'-UNDEBUG')
+  match {
+    Or(msvc, icl) {
+      ndebug_decl(flag'/DNDEBUG', flag'/UNDEBUG')
+    }, {
+      ndebug_decl(flag'-DNDEBUG', flag'-UNDEBUG')
+    }
+  }
 },
 
 Or(gcc, clang_like) {
@@ -925,372 +961,380 @@ Or(gcc, clang, clang_emcc) {
       },
     },
   },
-},
 
-clang_emcc {
-  opt'optimization' {
-    match {
-      lvl'0' { fl'-O0' },
-      lvl'g' { fl'-Og' },
-      lvl'1' { fl'-O1' },
-      lvl'2' { fl'-O2' },
-      lvl'3' { fl'-O3' },
-      lvl'fast' {
-        fl'-O3',
-        -- The LLVM wasm backend avoids traps by adding more code around each possible trap
-        -- (basically clamping the value if it would trap).
-        -- That code may not run in older VMs, though.
-        fl'-mnontrapping-fptoint',
-      },
-      lvl'size' { fl'-Os' },
-      { --[[lvl'z']]
-        fl'-Oz'
-        -- -- This greatly reduces the size of the support JavaScript code
-        -- -- Note that this increases compile time significantly.
-        -- fl'--closure 1',
-      },
-    }
-  },
-
-  opt'debug_level' {
-    match {
-      lvl'0' { flag'-g0' },
-      lvl'1' { flag'-g1' },
-      lvl'2' { flag'-g2' },
-      lvl'3' { flag'-g3' },
-    }
-  },
-
-  opt'debug' {
-    match {
-      lvl'off' { flag'-g0' },
-      -has_opt'debug_level' {
-        flag'-g',
-      }
-    }
-  },
-}
-
-/
-
-Or(gcc, clang) {
-  gcc'>=12' {
-    -- contrary to what the doc says, this flag is not set with -O0
-    cxx'-ffold-simple-inlines',
-  },
-
-  opt'coverage' {
-    lvl'on' {
-      flag'--coverage', -- -fprofile-arcs -ftest-coverage
-      link'--coverage', -- -lgcov
-      clang {
-        link'-lprofile_rt',
-        -- fl'-fprofile-instr-generate',
-        -- fl'-fcoverage-mapping',
-      },
-    },
-  },
-
-  opt'debug_level' {
-    match {
-      lvl'0' { flag'-g0' },
-      lvl'1' { has_opt'debug':with(lvl'gdb') { flag'-ggdb1' } / flag'-g1' },
-      lvl'2' { has_opt'debug':with(lvl'gdb') { flag'-ggdb2' } / flag'-g2' },
-      lvl'3' { has_opt'debug':with(lvl'gdb') { flag'-ggdb3' } / flag'-g3' },
-      lvl'line_tables_only' {
-        clang { flag'-gline-tables-only' }
-        / { flag'-g' }
-      },
-      lvl'line_directives_only' {
-        clang { flag'-gline-directives-only' }
-        / { flag'-g' }
-      },
-    }
-  },
-
-  opt'debug' {
-    match {
-      lvl'off' { flag'-g0' },
-      lvl'on' {
-        -has_opt'debug_level' {
-          flag'-g',
-        }
-      },
-      lvl'gdb' {
-        -has_opt'debug_level' {
-          flag'-ggdb'
-        },
-      },
-      clang {
+  match {
+    clang_emcc {
+      opt'optimization' {
         match {
-          lvl'lldb' { flag'-glldb' },
-          lvl'sce' { flag'-gsce' },
-          lvl'dbx' { flag'-gdbx' },
-          flag'-g',
-        }
-      }
-      / --[[gcc]] {
-        lvl'vms' { flag'-gvms' },
-      },
-      -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
-    }
-  },
-
-  opt'optimization' {
-    match {
-      lvl'0' { flag'-O0' },
-      lvl'g' { flag'-Og' },
-      {
-        link'-Wl,-O1',
-        match {
-          lvl'1' { flag'-O1' },
-          lvl'2' { flag'-O2' },
-          lvl'3' { flag'-O3' },
-          lvl'size' { flag'-Os' },
-          lvl'z' {
-            Or(clang, gcc'>=12') { flag'-Oz' }
-            / flag'-Os'
+          lvl'0' { fl'-O0' },
+          lvl'g' { fl'-Og' },
+          lvl'1' { fl'-O1' },
+          lvl'2' { fl'-O2' },
+          lvl'3' { fl'-O3' },
+          lvl'fast' {
+            fl'-O3',
+            -- The LLVM wasm backend avoids traps by adding more code around each possible trap
+            -- (basically clamping the value if it would trap).
+            -- That code may not run in older VMs, though.
+            fl'-mnontrapping-fptoint',
           },
-          --[[lvl'fast']] {
-            -- -Ofast is deprecated with clang-19
-            clang { flag'-O3', flag'-ffast-math' }
-            / flag'-Ofast'
+          lvl'size' { fl'-Os' },
+          { --[[lvl'z']]
+            fl'-Oz'
+            -- -- This greatly reduces the size of the support JavaScript code
+            -- -- Note that this increases compile time significantly.
+            -- fl'--closure 1',
+          },
+        }
+      },
+
+      opt'debug_level' {
+        match {
+          lvl'0' { flag'-g0' },
+          lvl'1' { flag'-g1' },
+          lvl'2' { flag'-g2' },
+          lvl'3' { flag'-g3' },
+        }
+      },
+
+      opt'debug' {
+        match {
+          lvl'off' { flag'-g0' },
+          -has_opt'debug_level' {
+            flag'-g',
           }
         }
-      }
-    }
-  },
-
-  opt'cpu' {
-    match {
-      lvl'generic' { fl'-mtune=generic' },
-      { fl'-march=native', fl'-mtune=native', }
-    }
-  },
-
-  opt'linker' {
-    match {
-      lvl'mold' {
-        link'-fuse-ld=mold'  -- >= gcc-12
       },
-      lvl'native' {
+    },
+
+    --[[Or(gcc, clang)]] {
+      gcc'>=12' {
+        -- contrary to what the doc says, this flag is not set with -O0
+        cxx'-ffold-simple-inlines',
+      },
+
+      opt'coverage' {
+        lvl'on' {
+          flag'--coverage', -- -fprofile-arcs -ftest-coverage
+          link'--coverage', -- -lgcov
+          clang {
+            link'-lprofile_rt',
+            -- fl'-fprofile-instr-generate',
+            -- fl'-fcoverage-mapping',
+          },
+        },
+      },
+
+      opt'debug_level' {
         match {
-          gcc { link'-fuse-ld=gold' },
-          link'-fuse-ld=lld'
+          lvl'0' { flag'-g0' },
+          lvl'1' { match {has_opt'debug':with(lvl'gdb') { flag'-ggdb1' }, flag'-g1' } },
+          lvl'2' { match {has_opt'debug':with(lvl'gdb') { flag'-ggdb2' }, flag'-g2' } },
+          lvl'3' { match {has_opt'debug':with(lvl'gdb') { flag'-ggdb3' }, flag'-g3' } },
+          lvl'line_tables_only' {
+            match {
+              clang { flag'-gline-tables-only' },
+              { flag'-g' }
+            }
+          },
+          lvl'line_directives_only' {
+            match {
+              clang { flag'-gline-directives-only' },
+              { flag'-g' }
+            }
+          },
         }
       },
-      lvl'bfd' {
-        link'-fuse-ld=bfd'
-      },
-      Or(lvl'gold', gcc'<9') {
-        link'-fuse-ld=gold'
-      },
-      opt'lto' {
+
+      opt'debug' {
         match {
-          -- -flto is incompatible with -fuse-ld=lld
-          And(-lvl'off', gcc) {
+          lvl'off' { flag'-g0' },
+          lvl'on' {
+            -has_opt'debug_level' {
+              flag'-g',
+            }
+          },
+          lvl'gdb' {
+            -has_opt'debug_level' {
+              flag'-ggdb'
+            },
+          },
+          clang {
+            match {
+              lvl'lldb' { flag'-glldb' },
+              lvl'sce' { flag'-gsce' },
+              lvl'dbx' { flag'-gdbx' },
+              flag'-g',
+            }
+          },
+          --[[gcc]] {
+            lvl'vms' { flag'-gvms' },
+          },
+          -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
+        }
+      },
+
+      opt'optimization' {
+        match {
+          lvl'0' { flag'-O0' },
+          lvl'g' { flag'-Og' },
+          {
+            link'-Wl,-O1',
+            match {
+              lvl'1' { flag'-O1' },
+              lvl'2' { flag'-O2' },
+              lvl'3' { flag'-O3' },
+              lvl'size' { flag'-Os' },
+              lvl'z' {
+                match {
+                  Or(clang, gcc'>=12') { flag'-Oz' },
+                  flag'-Os',
+                }
+              },
+              --[[lvl'fast']] {
+                -- -Ofast is deprecated with clang-19
+                match {
+                  clang { flag'-O3', flag'-ffast-math' },
+                  flag'-Ofast',
+                }
+              }
+            }
+          }
+        }
+      },
+
+      opt'cpu' {
+        match {
+          lvl'generic' { fl'-mtune=generic' },
+          { fl'-march=native', fl'-mtune=native', }
+        }
+      },
+
+      opt'linker' {
+        match {
+          lvl'mold' {
+            link'-fuse-ld=mold'  -- >= gcc-12
+          },
+          lvl'native' {
+            match {
+              gcc { link'-fuse-ld=gold' },
+              link'-fuse-ld=lld'
+            }
+          },
+          lvl'bfd' {
+            link'-fuse-ld=bfd'
+          },
+          Or(lvl'gold', gcc'<9') {
             link'-fuse-ld=gold'
+          },
+          opt'lto' {
+            match {
+              -- -flto is incompatible with -fuse-ld=lld
+              And(-lvl'off', gcc) {
+                link'-fuse-ld=gold'
+              },
+              link'-fuse-ld=lld',
+            }
           },
           link'-fuse-ld=lld',
         }
       },
-      link'-fuse-ld=lld',
-    }
-  },
 
-  opt'whole_program' {
-    match {
-      lvl'off' {
-        flag'-fno-whole-program',
-        clang'>=3.9' { fl'-fno-whole-program-vtables' }
-      },
-      {
+      opt'whole_program' {
         match {
-          ld64 {
-            link'-Wl,-dead_strip',
-            link'-Wl,-S', -- Remove debug information
+          lvl'off' {
+            flag'-fno-whole-program',
+            clang'>=3.9' { fl'-fno-whole-program-vtables' }
           },
           {
-            link'-s',
-            lvl'strip_all'{
-              link'-Wl,--gc-sections', -- Remove unused sections
-              link'-Wl,--strip-all',
-            }
-          }
-        },
-
-        match {
-          gcc {
-            fl'-fwhole-program'
-          },
-          clang {
-            vers'>=3.9' {
-              opt'lto' {
-                -lvl'off' {
-                  fl'-fwhole-program-vtables'
-                }
+            match {
+              ld64 {
+                link'-Wl,-dead_strip',
+                link'-Wl,-S', -- Remove debug information
               },
-              vers'>=7' {
-                fl'-fforce-emit-vtables',
+              {
+                link'-s',
+                lvl'strip_all'{
+                  link'-Wl,--gc-sections', -- Remove unused sections
+                  link'-Wl,--strip-all',
+                }
+              }
+            },
+
+            match {
+              gcc {
+                fl'-fwhole-program'
+              },
+              clang {
+                vers'>=3.9' {
+                  opt'lto' {
+                    -lvl'off' {
+                      fl'-fwhole-program-vtables'
+                    }
+                  },
+                  vers'>=7' {
+                    fl'-fforce-emit-vtables',
+                  }
+                }
               }
             }
           }
         }
-      }
-    }
-  },
-
-  opt'stack_protector' {
-    match {
-      lvl'off' {
-        fl'-Wno-stack-protector',
-        flag'-U_FORTIFY_SOURCE'
       },
-      {
-        flag'-D_FORTIFY_SOURCE=2',
-        flag'-Wstack-protector',
+
+      opt'stack_protector' {
         match {
-          lvl'strong' {
+          lvl'off' {
+            fl'-Wno-stack-protector',
+            flag'-U_FORTIFY_SOURCE'
+          },
+          {
+            flag'-D_FORTIFY_SOURCE=2',
+            flag'-Wstack-protector',
             match {
-              gcc {
-                vers'>=4.9' {
-                  fl'-fstack-protector-strong',
-                  vers'>=8' {
-                    fl'-fstack-clash-protection'
+              lvl'strong' {
+                match {
+                  gcc {
+                    vers'>=4.9' {
+                      fl'-fstack-protector-strong',
+                      vers'>=8' {
+                        fl'-fstack-clash-protection'
+                      }
+                    }
+                  },
+                  clang {
+                    fl'-fstack-protector-strong',
+                    fl'-fsanitize=safe-stack',
+                    vers'>=11' {
+                      fl'-fstack-clash-protection'
+                    }
                   }
                 }
               },
-              clang {
-                fl'-fstack-protector-strong',
-                fl'-fsanitize=safe-stack',
-                vers'>=11' {
-                  fl'-fstack-clash-protection'
+              lvl'all' {
+                fl'-fstack-protector-all',
+                match {
+                  gcc'>=8' {
+                    fl'-fstack-clash-protection'
+                  },
+                  clang {
+                    fl'-fsanitize=safe-stack',
+                    vers'>=11' {
+                      fl'-fstack-clash-protection'
+                    }
+                  }
                 }
-              }
-            }
-          },
-          lvl'all' {
-            fl'-fstack-protector-all',
-            match {
-              gcc'>=8' {
-                fl'-fstack-clash-protection'
               },
-              clang {
-                fl'-fsanitize=safe-stack',
-                vers'>=11' {
-                  fl'-fstack-clash-protection'
-                }
-              }
+              fl'-fstack-protector',
+            },
+
+            -- ShadowCallStack is an instrumentation pass, currently only implemented for aarch64
+            -- ShadowCallStack is intended to be a stronger alternative to -fstack-protector
+            -- On aarch64, you also need to pass -ffixed-x18 unless your target already reserves x18.
+            clang {
+              fl'-fsanitize=shadow-call-stack',
             }
           },
-          fl'-fstack-protector',
-        },
-
-        -- ShadowCallStack is an instrumentation pass, currently only implemented for aarch64
-        -- ShadowCallStack is intended to be a stronger alternative to -fstack-protector
-        -- On aarch64, you also need to pass -ffixed-x18 unless your target already reserves x18.
-        clang {
-          fl'-fsanitize=shadow-call-stack',
         }
       },
-    }
-  },
 
-  -- https://airbus-seclab.github.io/c-compiler-security/
-  opt'relro' {
-    match {
-      lvl'off' { link'-Wl,-z,norelro', },
-      lvl'on'  { link'-Wl,-z,relro', },
-      { --[[lvl'full']]
-        link'-Wl,-z,relro,-z,now,-z,noexecstack',
-        opt'linker' {
-          -- -Wl,-z,separate-code is invalid with gold linker
-          -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
-            link'-Wl,-z,separate-code'
+      -- https://airbus-seclab.github.io/c-compiler-security/
+      opt'relro' {
+        match {
+          lvl'off' { link'-Wl,-z,norelro', },
+          lvl'on'  { link'-Wl,-z,relro', },
+          { --[[lvl'full']]
+            link'-Wl,-z,relro,-z,now,-z,noexecstack',
+            opt'linker' {
+              -- -Wl,-z,separate-code is invalid with gold linker
+              -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
+                link'-Wl,-z,separate-code'
+              }
+            }
           }
         }
-      }
-    }
-  },
+      },
 
-  opt'pie' {
-    match {
-      lvl'off' { link'-no-pic' },
-      lvl'on'  { link'-pie' },
-      lvl'fpie'{ flag'-fpie' },
-      lvl'fpic'{ flag'-fpic' },
-      lvl'fPIE'{ flag'-fPIE' },
-      lvl'fPIC'{ flag'-fPIC' },
-      --[[lvl'static']] { link'-static-pie' }
-    }
-  },
-
-  opt'other_sanitizers' {
-    match {
-      lvl'thread' { flag'-fsanitize=thread', },
-      lvl'memory' {
-        clang'>=5' {
-          flag'-fsanitize=memory',
-          flag'-fno-omit-frame-pointer',
+      opt'pie' {
+        match {
+          lvl'off' { link'-no-pic' },
+          lvl'on'  { link'-pie' },
+          lvl'fpie'{ flag'-fpie' },
+          lvl'fpic'{ flag'-fpic' },
+          lvl'fPIE'{ flag'-fPIE' },
+          lvl'fPIC'{ flag'-fPIC' },
+          --[[lvl'static']] { link'-static-pie' }
         }
       },
-      lvl'pointer' {
-        gcc'>=8' {
-          -- By default the check is disabled at run time.
-          -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
-          -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
-          -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
-          -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
-          -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
-          flag'-fsanitize=pointer-compare',
-          flag'-fsanitize=pointer-subtract',
+
+      opt'other_sanitizers' {
+        match {
+          lvl'thread' { flag'-fsanitize=thread', },
+          lvl'memory' {
+            clang'>=5' {
+              flag'-fsanitize=memory',
+              flag'-fno-omit-frame-pointer',
+            }
+          },
+          lvl'pointer' {
+            gcc'>=8' {
+              -- By default the check is disabled at run time.
+              -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
+              -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
+              -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
+              -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
+              -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
+              flag'-fsanitize=pointer-compare',
+              flag'-fsanitize=pointer-subtract',
+            }
+          }
         }
-      }
-    }
-  },
+      },
 
-  opt'noexcept_warnings' {
-    gcc'>=4.9' {
-      match {
-        lvl'on' { cxx'-Wnoexcept' },
-        { cxx'-Wno-noexcept' }
-      }
-    }
-  },
+      opt'noexcept_warnings' {
+        gcc'>=4.9' {
+          match {
+            lvl'on' { cxx'-Wnoexcept' },
+            { cxx'-Wno-noexcept' }
+          }
+        }
+      },
 
-  opt'analyzer' {
-    gcc'>=10' {
-      match {
-        lvl'off' {
-          flag'-fno-analyzer'
-        },
-        {
-          flag'-fanalyzer',
-          lvl'taint' {
-            flag'-fanalyzer-checker=taint'
-          },
-
-          opt'analyzer_too_complex_warning' {
-            match {
-              lvl'on' {
-                flag'-Wanalyzer-too-complex'
+      opt'analyzer' {
+        gcc'>=10' {
+          match {
+            lvl'off' {
+              flag'-fno-analyzer'
+            },
+            {
+              flag'-fanalyzer',
+              lvl'taint' {
+                flag'-fanalyzer-checker=taint'
               },
-              { --[[lvl'off']]
-                flag'-Wno-analyzer-too-complex'
-              }
-            }
-          },
 
-          opt'analyzer_verbosity' {
-            match {
-              lvl'0' { flag'-fanalyzer-verbosity=0' },
-              lvl'1' { flag'-fanalyzer-verbosity=1' },
-              lvl'2' { flag'-fanalyzer-verbosity=2' },
-              --[[lvl'3']] { flag'-fanalyzer-verbosity=3' }
-            }
-          },
-        },
-      }
+              opt'analyzer_too_complex_warning' {
+                match {
+                  lvl'on' {
+                    flag'-Wanalyzer-too-complex'
+                  },
+                  { --[[lvl'off']]
+                    flag'-Wno-analyzer-too-complex'
+                  }
+                }
+              },
+
+              opt'analyzer_verbosity' {
+                match {
+                  lvl'0' { flag'-fanalyzer-verbosity=0' },
+                  lvl'1' { flag'-fanalyzer-verbosity=1' },
+                  lvl'2' { flag'-fanalyzer-verbosity=2' },
+                  --[[lvl'3']] { flag'-fanalyzer-verbosity=3' }
+                }
+              },
+            },
+          }
+        }
+      },
     }
   },
 },
@@ -1390,14 +1434,14 @@ Or(msvc, clang_cl, icl) {
                 lvl'g' { flag'/Zi' },
                 -- /ZI cannot be used with /GL
                 opt'whole_program' {
-                  lvl'off' { flag'/ZI' } / flag'/Zi'
+                  match { lvl'off' { flag'/ZI' }, flag'/Zi' }
                 },
                 flag'/ZI'
               }
             },
             -- /ZI cannot be used with /GL
             opt'whole_program' {
-              lvl'off' { flag'/ZI' } / flag'/Zi'
+              match { lvl'off' { flag'/ZI' }, flag'/Zi' }
             },
             flag'/ZI',
           }
@@ -1438,7 +1482,7 @@ Or(msvc, clang_cl, icl) {
     },
 
     opt'control_flow' {
-      lvl'off' { flag'/guard:cf-', } / flag'/guard:cf',
+      match { lvl'off' { flag'/guard:cf-' }, flag'/guard:cf' },
     },
 
     opt'whole_program' {
@@ -1493,690 +1537,689 @@ Or(msvc, clang_cl, icl) {
   }
 },
 
--- warnings:
--- https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-c4000-c5999?view=vs-2019
--- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=vs-2019
-msvc {
-  opt'windows_bigobj' {
-    flag'/bigobj',
-  },
+match {
+  -- warnings:
+  -- https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-c4000-c5999?view=vs-2019
+  -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=vs-2019
+  msvc {
+    opt'windows_bigobj' {
+      flag'/bigobj',
+    },
 
-  opt'msvc_conformance' {
-    Or(lvl'all', lvl'all_without_throwing_new') {
-      flag'/Zc:inline',
-      flag'/Zc:referenceBinding',
-      lvl'all' {
-        flag'/Zc:throwingNew',
-      },
-      vers'>=15.6' {
-        cxx'/Zc:externConstexpr',
-        vers'>=16.5' {
-          flag'/Zc:preprocessor',
-          vers'>=16.8' {
-            cxx'/Zc:lambda',
-            vers'>=17.4' { -- MSVC 19.34
-              cxx'/Zc:enumTypes',
-              vers'>=17.5' { -- MSVC 19.35
-                cxx'/Zc:templateScope',
+    opt'msvc_conformance' {
+      Or(lvl'all', lvl'all_without_throwing_new') {
+        flag'/Zc:inline',
+        flag'/Zc:referenceBinding',
+        lvl'all' {
+          flag'/Zc:throwingNew',
+        },
+        vers'>=15.6' {
+          cxx'/Zc:externConstexpr',
+          vers'>=16.5' {
+            flag'/Zc:preprocessor',
+            vers'>=16.8' {
+              cxx'/Zc:lambda',
+              vers'>=17.4' { -- MSVC 19.34
+                cxx'/Zc:enumTypes',
+                vers'>=17.5' { -- MSVC 19.35
+                  cxx'/Zc:templateScope',
+                }
+              }
+            }
+          },
+        }
+      }
+    },
+
+    opt'msvc_crt_secure_no_warnings' {
+      match {
+        lvl'on' { flag'/D_CRT_SECURE_NO_WARNINGS=1' },
+        lvl'off' { flag'/U_CRT_SECURE_NO_WARNINGS' }
+      }
+    },
+
+    opt'msvc_diagnostics_format' {
+      vers'>=17' {
+        match {
+          lvl'classic' { flag'/diagnostics:classic' },
+          lvl'column' { flag'/diagnostics:column' },
+          --[[lvl'caret']] { flag'/diagnostics:caret' },
+        }
+      }
+    },
+
+    -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
+    vers'<15.16' {
+      reset_opt'msvc_isystem'
+    },
+    match {
+      opt'msvc_isystem' {
+        match {
+          lvl'external_as_include_system_flag' {
+            if_else(vers'<16.10', function(b)
+              return act({
+                cxx='/external:env:INCLUDE /external:W0' .. (b and ' /experimental:external' or ''),
+                system_flag='/external:I',
+              })
+            end)
+          },
+          {
+            vers'<16.10' {
+              flag'/experimental:external'
+            },
+            flag'/external:W0',
+
+            match {
+              lvl'anglebrackets' {
+                flag'/external:anglebrackets',
+              },
+              -- include_and_caexcludepath
+              {
+                flag'/external:env:INCLUDE',
+                flag'/external:env:CAExcludePath',
+              },
+            }
+          }
+        },
+
+        opt'msvc_isystem_with_template_from_non_external' {
+          match {
+            lvl'off' {
+              flag'/external:template',
+            }, {
+              flag'/external:template-',
+            }
+          }
+        },
+
+        opt'warnings' {
+          match {
+            lvl'off' {
+              flag'/W0'
+            },
+            {
+              -- /external:... ignores warnings start with C47XX
+              flag'/wd4710', -- Function not inlined
+              flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+
+              vers'<19.21' {
+                flag'/wd4774', -- format not a string literal
+              },
+
+              match {
+                lvl'on' {
+                  flag'/W4',
+                  flag'/wd4514', -- Unreferenced inline function has been removed
+                },
+                -- strict / very_strict
+                {
+                  flag'/Wall',
+
+                  flag'/wd4514', -- Unreferenced inline function has been removed
+
+                  flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
+                  flag'/wd4355', -- 'this' used in base member initializing list
+                  flag'/wd4548', -- Expression before comma has no effect
+                  flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
+                  flag'/wd4820', -- Added padding to members
+                  flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
+
+                  flag'/wd4464', -- relative include path contains '..'
+                  flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
+                  flag'/wd5045', -- Spectre mitigation
+
+                  lvl'strict' {
+                    flag'/wd4583', -- Destructor not implicitly called
+                    flag'/wd4619', -- Unknown warning number
+                  },
+                }
               }
             }
           }
         },
-      }
-    }
-  },
 
-  opt'msvc_crt_secure_no_warnings' {
-    match {
-      lvl'on' { flag'/D_CRT_SECURE_NO_WARNINGS=1' },
-      lvl'off' { flag'/U_CRT_SECURE_NO_WARNINGS' }
-    }
-  },
-
-  opt'msvc_diagnostics_format' {
-    vers'>=17' {
-      match {
-        lvl'classic' { flag'/diagnostics:classic' },
-        lvl'column' { flag'/diagnostics:column' },
-        --[[lvl'caret']] { flag'/diagnostics:caret' },
-      }
-    }
-  },
-
-  -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
-  vers'<15.16' {
-    reset_opt'msvc_isystem'
-  },
-  match {
-    opt'msvc_isystem' {
-      match {
-        lvl'external_as_include_system_flag' {
-          if_else(vers'<16.10', function(b)
-            return act({
-              cxx='/external:env:INCLUDE /external:W0' .. (b and ' /experimental:external' or ''),
-              system_flag='/external:I',
-            })
-          end)
-        },
-        {
-          vers'<16.10' {
-            flag'/experimental:external'
-          },
-          flag'/external:W0',
-
+        opt'switch_warnings' {
           match {
-            lvl'anglebrackets' {
-              flag'/external:anglebrackets',
+            Or(lvl'on', lvl'mandatory_default') {
+              flag'/w14062',
             },
-            -- include_and_caexcludepath
-            {
-              flag'/external:env:INCLUDE',
-              flag'/external:env:CAExcludePath',
+            Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
+              flag'/w14061',
+              flag'/w14062',
             },
+            { --[[lvl'off']]
+              flag'/wd4061',
+              flag'/wd4062',
+            }
           }
-        }
+        },
       },
-
-      opt'msvc_isystem_with_template_from_non_external' {
-        match {
-          lvl'off' {
-            flag'/external:template',
-          }, {
-            flag'/external:template-',
-          }
-        }
-      },
-
       opt'warnings' {
         match {
-          lvl'off' {
-            flag'/W0'
+          lvl'off' { flag'/W0' },
+          lvl'on' {
+            flag'/W4',
+            flag'/wd4514', -- Unreferenced inline function has been removed
+            flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
           },
+          -- strict / very_strict
           {
-            -- /external:... ignores warnings start with C47XX
+            flag'/Wall',
+
+            -- Warnings in MSVC's std
+            flag'/wd4355', -- 'this' used in base member initializing list
+            flag'/wd4514', -- Unreferenced inline function has been removed
+            flag'/wd4548', -- Expression before comma has no effect
+            flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
+            flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
+            flag'/wd4625', -- Copy constructor implicitly deleted
+            flag'/wd4626', -- Copy assignment operator implicitly deleted
+            flag'/wd4668', -- Preprocessor macro not defined
             flag'/wd4710', -- Function not inlined
             flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-
             vers'<19.21' {
               flag'/wd4774', -- format not a string literal
             },
+            flag'/wd4820', -- Added padding to members
+            flag'/wd5026', -- Move constructor implicitly deleted
+            flag'/wd5027', -- Move assignment operator implicitly deleted
+            flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
 
-            match {
-              lvl'on' {
-                flag'/W4',
-                flag'/wd4514', -- Unreferenced inline function has been removed
-              },
-              -- strict / very_strict
-              {
-                flag'/Wall',
+            -- Warnings in other libs
+            flag'/wd4464', -- relative include path contains '..'
+            flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
+            flag'/wd5045', -- Spectre mitigation
 
-                flag'/wd4514', -- Unreferenced inline function has been removed
+            lvl'strict' {
+              flag'/wd4061', -- Enum value in a switch not explicitly handled by a case label
+              flag'/wd4266', -- No override available (function is hidden)
+              flag'/wd4583', -- Destructor not implicitly called
+              flag'/wd4619', -- Unknown warning number
+              flag'/wd4623', -- Default constructor implicitly deleted
+              flag'/wd5204', -- Class with virtual functions but no virtual destructor
+            },
+          }
+        }
+      }
+    },
 
-                flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
-                flag'/wd4355', -- 'this' used in base member initializing list
-                flag'/wd4548', -- Expression before comma has no effect
-                flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
-                flag'/wd4820', -- Added padding to members
-                flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
+    opt'conversion_warnings' {
+      match {
+        lvl'on' {
+          flag'/w14244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
+          flag'/w14245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
+          flag'/w14388', -- Signed/unsigned mismatch (equality comparison)
+          flag'/w14365', -- Signed/unsigned mismatch (implicit conversion)
+        },
+        lvl'conversion'{
+          flag'/w14244',
+          flag'/w14365',
+        },
+        lvl'sign'{
+          flag'/w14388',
+          flag'/w14245',
+        },
+        {
+          flag'/wd4244',
+          flag'/wd4365',
+          flag'/wd4388',
+          flag'/wd4245',
+        },
+      }
+    },
 
-                flag'/wd4464', -- relative include path contains '..'
-                flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
-                flag'/wd5045', -- Spectre mitigation
+    opt'shadow_warnings' {
+      match {
+        lvl'off' {
+          flag'/wd4456', -- declaration of 'identifier' hides previous local declaration
+          flag'/wd4459', -- declaration of 'identifier' hides global declaration
+        },
+        Or(lvl'on', lvl'all') {
+          flag'/w4456',
+          flag'/w4459',
+        },
+        lvl'local' {
+          flag'/w4456',
+          flag'/wd4459'
+        }
+      }
+    },
 
-                lvl'strict' {
-                  flag'/wd4583', -- Destructor not implicitly called
-                  flag'/wd4619', -- Unknown warning number
-                },
-              }
+    opt'warnings_as_error' {
+      match {
+        lvl'on' { flag'/WX' },
+        lvl'off' { flag'/WX-' },
+        { -- lvl'basic'
+          cxx'/we4455', -- Wliteral-suffix
+          cxx'/we4150', -- Wdelete-incomplete
+          flag'/we4716', -- Wreturn-type
+          flag'/we2124', -- Wdivision-by-zero
+        }
+      }
+    },
+
+    opt'lto' {
+      match {
+        lvl'off' {
+          flag'/LTCG:OFF'
+        },
+        {
+          flag'/GL',
+          link'/LTCG'
+        }
+      }
+    },
+
+    opt'sanitizers' {
+      match {
+        vers'>=16.9' {
+          flag'/fsanitize=address',
+          flag'/fsanitize-address-use-after-return'
+        },
+        match {
+          lvl'on' {
+            flag'/sdl',
+          },
+          opt'stack_protector' {
+            -lvl'off' { flag'/sdl-' },
+          },
+        }
+      }
+    },
+  },
+
+  icl {
+    opt'warnings' {
+      match {
+        lvl'off' {
+          flag'/w'
+        },
+        {
+          flag'/W2',
+          flag'/Qdiag-disable:1418,2259', -- external function definition with no prior declaration
+                                          -- "type" to "type" may lose significant bits
+        }
+      }
+    },
+
+    opt'warnings_as_error' {
+      match {
+        lvl'on' {
+          flag'/WX',
+        },
+        lvl'basic' {
+          flag'/Qdiag-error:1079,39,109' -- return-type, div-by-zero, array-bounds
+        }
+      }
+    },
+
+    opt'windows_bigobj' {
+      flag'/bigobj',
+    },
+
+    opt'msvc_conformance' {
+      Or(lvl'all', lvl'all_without_throwing_new') {
+        flag'/Zc:inline',
+        flag'/Zc:strictStrings',
+        lvl'all' {
+          flag'/Zc:throwingNew',
+        },
+      }
+    },
+
+    opt'debug_level' {
+      Or(lvl'line_tables_only', lvl'line_directives_only') {
+        flag'/debug:minimal',
+      }
+    },
+
+    opt'debug' {
+      match {
+        lvl'off' { link'/DEBUG:NONE' },
+        {
+          flag'/RTC1',
+          flag'/Od',
+          match {
+            lvl'on' { flag'/debug:full' },
+          },
+          match {
+            has_opt'optimization':with(lvl'g') {
+              flag'/Zi'
+            },
+            -- /ZI cannot be used with /GL
+            opt'whole_program' {
+              match { lvl'off' { flag'/ZI' }, flag'/Zi' }
+            },
+            flag'/ZI',
+          }
+        }
+      }
+    },
+
+    opt'optimization' {
+      match {
+        lvl'0' {
+          flag'/Ob0',
+          flag'/Od',
+          flag'/Oi-',
+          flag'/Oy-',
+        },
+        lvl'g' { flag'/Ob1' },
+        {
+          flag'/GF',
+          match {
+            lvl'1' { flag'/O1', },
+            lvl'2' { flag'/O2', },
+            lvl'3' { flag'/O2', },
+            lvl'z' { flag'/O3', },
+            lvl'size' { flag'/Os', },
+            --[[lvl'fast']] { flag'/fast' }
+          }
+        }
+      }
+    },
+
+    opt'stack_protector' {
+      match {
+        lvl'off' {
+          flag'/GS-',
+        },
+        {
+          flag'/GS',
+          match {
+            lvl'strong' {
+              flag'/RTC1', -- /RTCsu
+            },
+            lvl'all' {
+              flag'/RTC1',
+              flag'/RTCc',
+            },
+          }
+        },
+      }
+    },
+
+    opt'sanitizers' {
+      lvl'on' { flag'/Qtrapuv' }
+    },
+
+    opt'float_sanitizers' {
+      lvl'on' {
+        flag'/Qfp-stack-check',
+        flag'/Qfp-trap:common',
+      -- flag'/Qfp-trap=all',
+      }
+    },
+
+    opt'control_flow' {
+      match {
+        lvl'off' {
+          flag'/guard:cf-',
+          flag'/mconditional-branch=keep',
+        },
+        {
+          flag'/guard:cf',
+          match {
+            lvl'branch' {
+              flag'/mconditional-branch:all-fix',
+              flag'/Qcf-protection:branch',
+            },
+            lvl'on' {
+              flag'/mconditional-branch:all-fix',
+              flag'/Qcf-protection:full',
             }
           }
         }
-      },
-
-      opt'switch_warnings' {
-        match {
-          Or(lvl'on', lvl'mandatory_default') {
-            flag'/w14062',
-          },
-          Or(lvl'exhaustive_enum', lvl'exhaustive_enum_and_mandatory_default') {
-            flag'/w14061',
-            flag'/w14062',
-          },
-          { --[[lvl'off']]
-            flag'/wd4061',
-            flag'/wd4062',
-          }
-        }
-      },
+      }
     },
+
+    opt'cpu' {
+      match { lvl'generic' { fl'/Qtune:generic' }, fl'/QxHost' },
+    },
+  },
+
+  icc {
     opt'warnings' {
       match {
-        lvl'off' { flag'/W0' },
-        lvl'on' {
-          flag'/W4',
-          flag'/wd4514', -- Unreferenced inline function has been removed
-          flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+        lvl'off' {
+          flag'-w'
         },
-        -- strict / very_strict
         {
-          flag'/Wall',
-
-          -- Warnings in MSVC's std
-          flag'/wd4355', -- 'this' used in base member initializing list
-          flag'/wd4514', -- Unreferenced inline function has been removed
-          flag'/wd4548', -- Expression before comma has no effect
-          flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
-          flag'/wd4577', -- 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed.
-          flag'/wd4625', -- Copy constructor implicitly deleted
-          flag'/wd4626', -- Copy assignment operator implicitly deleted
-          flag'/wd4668', -- Preprocessor macro not defined
-          flag'/wd4710', -- Function not inlined
-          flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-          vers'<19.21' {
-            flag'/wd4774', -- format not a string literal
-          },
-          flag'/wd4820', -- Added padding to members
-          flag'/wd5026', -- Move constructor implicitly deleted
-          flag'/wd5027', -- Move assignment operator implicitly deleted
-          flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
-
-          -- Warnings in other libs
-          flag'/wd4464', -- relative include path contains '..'
-          flag'/wd4868', -- Evaluation order not guaranteed in braced initializing list
-          flag'/wd5045', -- Spectre mitigation
-
-          lvl'strict' {
-            flag'/wd4061', -- Enum value in a switch not explicitly handled by a case label
-            flag'/wd4266', -- No override available (function is hidden)
-            flag'/wd4583', -- Destructor not implicitly called
-            flag'/wd4619', -- Unknown warning number
-            flag'/wd4623', -- Default constructor implicitly deleted
-            flag'/wd5204', -- Class with virtual functions but no virtual destructor
-          },
+          flag'-Wall',
+          flag'-Warray-bounds',
+          flag'-Wcast-qual',
+          flag'-Wchar-subscripts',
+          flag'-Wdisabled-optimization',
+          flag'-Wenum-compare',
+          flag'-Wextra',
+          flag'-Wfloat-equal',
+          flag'-Wformat-security',
+          flag'-Wformat=2',
+          flag'-Winit-self',
+          -- flag'-Winline',
+          flag'-Winvalid-pch',
+          flag'-Wmaybe-uninitialized',
+          flag'-Wmissing-include-dirs',
+          flag'-Wnarrowing',
+          flag'-Wnonnull',
+          flag'-Wparentheses',
+          flag'-Wpointer-sign',
+          flag'-Wreorder',
+          flag'-Wsequence-point',
+          flag'-Wtrigraphs',
+          flag'-Wundef',
+          flag'-Wunused-function',
+          flag'-Wunused-but-set-variable',
+          flag'-Wunused-variable',
+          flag'-Wpointer-arith',
+          cxx'-Wdeprecated',
+          cxx'-Wnon-virtual-dtor',
+          cxx'-Woverloaded-virtual',
+          c'-Wold-style-definition',
+          c'-Wstrict-prototypes',
+          c'-Wwrite-strings',
         }
-      }
-    }
-  },
-
-  opt'conversion_warnings' {
-    match {
-      lvl'on' {
-        flag'/w14244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
-        flag'/w14245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
-        flag'/w14388', -- Signed/unsigned mismatch (equality comparison)
-        flag'/w14365', -- Signed/unsigned mismatch (implicit conversion)
-      },
-      lvl'conversion'{
-        flag'/w14244',
-        flag'/w14365',
-      },
-      lvl'sign'{
-        flag'/w14388',
-        flag'/w14245',
-      },
-      {
-        flag'/wd4244',
-        flag'/wd4365',
-        flag'/wd4388',
-        flag'/wd4245',
-      },
-    }
-  },
-
-  opt'shadow_warnings' {
-    match {
-      lvl'off' {
-        flag'/wd4456', -- declaration of 'identifier' hides previous local declaration
-        flag'/wd4459', -- declaration of 'identifier' hides global declaration
-      },
-      Or(lvl'on', lvl'all') {
-        flag'/w4456',
-        flag'/w4459',
-      },
-      lvl'local' {
-        flag'/w4456',
-        flag'/wd4459'
-      }
-    }
-  },
-
-  opt'warnings_as_error' {
-    match {
-      lvl'on' { flag'/WX' },
-      lvl'off' { flag'/WX-' },
-      { -- lvl'basic'
-        cxx'/we4455', -- Wliteral-suffix
-        cxx'/we4150', -- Wdelete-incomplete
-        flag'/we4716', -- Wreturn-type
-        flag'/we2124', -- Wdivision-by-zero
-      }
-    }
-  },
-
-  opt'lto' {
-    match {
-      lvl'off' {
-        flag'/LTCG:OFF'
-      },
-      {
-        flag'/GL',
-        link'/LTCG'
-      }
-    }
-  },
-
-  opt'sanitizers' {
-    match {
-      vers'>=16.9' {
-        flag'/fsanitize=address',
-        flag'/fsanitize-address-use-after-return'
-      },
-      match {
-        lvl'on' {
-          flag'/sdl',
-        },
-        opt'stack_protector' {
-          -lvl'off' { flag'/sdl-' },
-        },
-      }
-    }
-  },
-},
-
-icl {
-  opt'warnings' {
-    match {
-      lvl'off' {
-        flag'/w'
-      },
-      {
-        flag'/W2',
-        flag'/Qdiag-disable:1418,2259', -- external function definition with no prior declaration
-                                        -- "type" to "type" may lose significant bits
-      }
-    }
-  },
-
-  opt'warnings_as_error' {
-    match {
-      lvl'on' {
-        flag'/WX',
-      },
-      lvl'basic' {
-        flag'/Qdiag-error:1079,39,109' -- return-type, div-by-zero, array-bounds
-      }
-    }
-  },
-
-  opt'windows_bigobj' {
-    flag'/bigobj',
-  },
-
-  opt'msvc_conformance' {
-    Or(lvl'all', lvl'all_without_throwing_new') {
-      flag'/Zc:inline',
-      flag'/Zc:strictStrings',
-      lvl'all' {
-        flag'/Zc:throwingNew',
-      },
-    }
-  },
-
-  opt'debug_level' {
-    Or(lvl'line_tables_only', lvl'line_directives_only') {
-      flag'/debug:minimal',
-    }
-  },
-
-  opt'debug' {
-    match {
-      lvl'off' { link'/DEBUG:NONE' },
-      {
-        flag'/RTC1',
-        flag'/Od',
-        match {
-          lvl'on' { flag'/debug:full' },
-        },
-        match {
-          has_opt'optimization':with(lvl'g') {
-            flag'/Zi'
-          },
-          -- /ZI cannot be used with /GL
-          opt'whole_program' {
-            lvl'off' { flag'/ZI' } / flag'/Zi'
-          },
-          flag'/ZI',
-        }
-      }
-    }
-  },
-
-  opt'optimization' {
-    match {
-      lvl'0' {
-        flag'/Ob0',
-        flag'/Od',
-        flag'/Oi-',
-        flag'/Oy-',
-      },
-      lvl'g' { flag'/Ob1' },
-      {
-        flag'/GF',
-        match {
-          lvl'1' { flag'/O1', },
-          lvl'2' { flag'/O2', },
-          lvl'3' { flag'/O2', },
-          lvl'z' { flag'/O3', },
-          lvl'size' { flag'/Os', },
-          --[[lvl'fast']] { flag'/fast' }
-        }
-      }
-    }
-  },
-
-  opt'stack_protector' {
-    match {
-      lvl'off' {
-        flag'/GS-',
-      },
-      {
-        flag'/GS',
-        match {
-          lvl'strong' {
-            flag'/RTC1', -- /RTCsu
-          },
-          lvl'all' {
-            flag'/RTC1',
-            flag'/RTCc',
-          },
-        }
-      },
-    }
-  },
-
-  opt'sanitizers' {
-    lvl'on' { flag'/Qtrapuv' }
-  },
-
-  opt'float_sanitizers' {
-    lvl'on' {
-      flag'/Qfp-stack-check',
-      flag'/Qfp-trap:common',
-    -- flag'/Qfp-trap=all',
-    }
-  },
-
-  opt'control_flow' {
-    match {
-      lvl'off' {
-        flag'/guard:cf-',
-        flag'/mconditional-branch=keep',
-      },
-      {
-        flag'/guard:cf',
-        match {
-          lvl'branch' {
-            flag'/mconditional-branch:all-fix',
-            flag'/Qcf-protection:branch',
-          },
-          lvl'on' {
-            flag'/mconditional-branch:all-fix',
-            flag'/Qcf-protection:full',
-          }
-        }
-      }
-    }
-  },
-
-  opt'cpu' {
-    lvl'generic' { fl'/Qtune:generic' } / fl'/QxHost',
-  },
-
-}
-
-/
-
-icc {
-  opt'warnings' {
-    match {
-      lvl'off' {
-        flag'-w'
-      },
-      {
-        flag'-Wall',
-        flag'-Warray-bounds',
-        flag'-Wcast-qual',
-        flag'-Wchar-subscripts',
-        flag'-Wdisabled-optimization',
-        flag'-Wenum-compare',
-        flag'-Wextra',
-        flag'-Wfloat-equal',
-        flag'-Wformat-security',
-        flag'-Wformat=2',
-        flag'-Winit-self',
-        -- flag'-Winline',
-        flag'-Winvalid-pch',
-        flag'-Wmaybe-uninitialized',
-        flag'-Wmissing-include-dirs',
-        flag'-Wnarrowing',
-        flag'-Wnonnull',
-        flag'-Wparentheses',
-        flag'-Wpointer-sign',
-        flag'-Wreorder',
-        flag'-Wsequence-point',
-        flag'-Wtrigraphs',
-        flag'-Wundef',
-        flag'-Wunused-function',
-        flag'-Wunused-but-set-variable',
-        flag'-Wunused-variable',
-        flag'-Wpointer-arith',
-        cxx'-Wdeprecated',
-        cxx'-Wnon-virtual-dtor',
-        cxx'-Woverloaded-virtual',
-        c'-Wold-style-definition',
-        c'-Wstrict-prototypes',
-        c'-Wwrite-strings',
-      }
-    }
-  },
-
-  opt'switch_warnings' {
-    match {
-      Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' },
-      lvl'mandatory_default' { flag'-Wswitch-default' },
-      lvl'exhaustive_enum_and_mandatory_default' {
-        flag'-Wswitch',
-      },
-      {
-        flag'-Wno-switch'
-      },
-    }
-  },
-
-  opt'warnings_as_error' {
-    match {
-      lvl'on' {
-        flag'-Werror',
-      },
-      lvl'basic' {
-        flag'-diag-error=1079,39,109' -- return-type, div-by-zero, array-bounds
-      }
-      -- flag'-Wno-error', does not work
-    }
-  },
-
-  -- opt'pedantic' -- -pedantic does not work ???
-  opt'pedantic' {
-    match {
-      lvl'off' {
-        flag'-fgnu-keywords',
-      },
-      {
-        flag'-fno-gnu-keywords',
-      }
-    }
-  },
-
-  opt'shadow_warnings' {
-    match {
-      lvl'off' {
-        flag'-Wno-shadow',
-      },
-      Or(lvl'on', lvl'all') {
-        flag'-Wshadow'
-      }
-    }
-  },
-
-  opt'stl_debug' {
-    -lvl'off' {
-      match {
-        Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
-          cxx'-D_GLIBCXX_DEBUG',
-        },
-        cxx'-D_GLIBCXX_ASSERTIONS',
       }
     },
-  },
 
-  opt'debug' {
-    match {
-      lvl'off' { flag '-g0' },
-      flag'-g',
-    }
-  },
+    opt'switch_warnings' {
+      match {
+        Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' },
+        lvl'mandatory_default' { flag'-Wswitch-default' },
+        lvl'exhaustive_enum_and_mandatory_default' {
+          flag'-Wswitch',
+        },
+        {
+          flag'-Wno-switch'
+        },
+      }
+    },
 
-  opt'optimization' {
-    match {
-      lvl'0' { flag'-O0', },
-      lvl'g' { flag'-O1', },
-      lvl'1' { flag'-O1', },
-      lvl'2' { flag'-O2', },
-      lvl'3' { flag'-O3', },
-      lvl'z' { flag'-fast', },
-      lvl'size' { flag'-Os', },
-      --[[lvl'fast']] { flag'-Ofast' }
-    }
-  },
+    opt'warnings_as_error' {
+      match {
+        lvl'on' {
+          flag'-Werror',
+        },
+        lvl'basic' {
+          flag'-diag-error=1079,39,109' -- return-type, div-by-zero, array-bounds
+        }
+        -- flag'-Wno-error', does not work
+      }
+    },
 
-  opt'stack_protector' {
-    match {
-      lvl'off' {
-        fl'-fno-protector-strong',
-        flag'-U_FORTIFY_SOURCE'
-      },
-      {
-        flag'-D_FORTIFY_SOURCE=2',
+    -- opt'pedantic' -- -pedantic does not work ???
+    opt'pedantic' {
+      match {
+        lvl'off' {
+          flag'-fgnu-keywords',
+        },
+        {
+          flag'-fno-gnu-keywords',
+        }
+      }
+    },
+
+    opt'shadow_warnings' {
+      match {
+        lvl'off' {
+          flag'-Wno-shadow',
+        },
+        Or(lvl'on', lvl'all') {
+          flag'-Wshadow'
+        }
+      }
+    },
+
+    opt'stl_debug' {
+      -lvl'off' {
         match {
-          lvl'strong' { fl'-fstack-protector-strong', },
-          lvl'all' { fl'-fstack-protector-all', },
-          fl'-fstack-protector',
+          Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
+            cxx'-D_GLIBCXX_DEBUG',
+          },
+          cxx'-D_GLIBCXX_ASSERTIONS',
         }
       },
-    }
-  },
+    },
 
-  opt'relro' {
-    match {
-      lvl'off' { link'-Xlinker-znorelro', },
-      lvl'on'  { link'-Xlinker-zrelro', },
-      { --[[lvl'full']]
-        link'-Xlinker-zrelro',
-        link'-Xlinker-znow',
-        link'-Xlinker-znoexecstack',
-      },
-    }
-  },
+    opt'debug' {
+      match {
+        lvl'off' { flag '-g0' },
+        flag'-g',
+      }
+    },
 
-  opt'pie' {
-    match {
-      lvl'off'{ link'-no-pic', },
-      lvl'on' { link'-pie', },
-      lvl'fpie'{ flag'-fpie', },
-      lvl'fpic'{ flag'-fpic', },
-      lvl'fPIE'{ flag'-fPIE', },
-      lvl'fPIC'{ flag'-fPIC', },
-    }
-  },
+    opt'optimization' {
+      match {
+        lvl'0' { flag'-O0', },
+        lvl'g' { flag'-O1', },
+        lvl'1' { flag'-O1', },
+        lvl'2' { flag'-O2', },
+        lvl'3' { flag'-O3', },
+        lvl'z' { flag'-fast', },
+        lvl'size' { flag'-Os', },
+        --[[lvl'fast']] { flag'-Ofast' }
+      }
+    },
 
-  opt'sanitizers' {
-    lvl'on' { flag'-ftrapuv' }
-  },
+    opt'stack_protector' {
+      match {
+        lvl'off' {
+          fl'-fno-protector-strong',
+          flag'-U_FORTIFY_SOURCE'
+        },
+        {
+          flag'-D_FORTIFY_SOURCE=2',
+          match {
+            lvl'strong' { fl'-fstack-protector-strong', },
+            lvl'all' { fl'-fstack-protector-all', },
+            fl'-fstack-protector',
+          }
+        },
+      }
+    },
 
-  opt'integer_sanitizers' {
-    match {
-      lvl'on' { flag'-funsigned-bitfields' },
-      flag'-fno-unsigned-bitfields'
-    }
-  },
+    opt'relro' {
+      match {
+        lvl'off' { link'-Xlinker-znorelro', },
+        lvl'on'  { link'-Xlinker-zrelro', },
+        { --[[lvl'full']]
+          link'-Xlinker-zrelro',
+          link'-Xlinker-znow',
+          link'-Xlinker-znoexecstack',
+        },
+      }
+    },
 
-  opt'float_sanitizers' {
-    lvl'on' {
-      flag'-fp-stack-check',
-      flag'-fp-trap=common',
-      -- flag'-fp-trap=all',
-    }
-  },
+    opt'pie' {
+      match {
+        lvl'off'{ link'-no-pic', },
+        lvl'on' { link'-pie', },
+        lvl'fpie'{ flag'-fpie', },
+        lvl'fpic'{ flag'-fpic', },
+        lvl'fPIE'{ flag'-fPIE', },
+        lvl'fPIC'{ flag'-fPIC', },
+      }
+    },
 
-  opt'linker' {
-    match {
-      lvl'bfd' { link'-fuse-ld=bfd' },
-      lvl'gold' { link'-fuse-ld=gold' },
-      lvl'mold' { link'-fuse-ld=mold' },
-      link'-fuse-ld=lld'
-    }
-  },
+    opt'sanitizers' {
+      lvl'on' { flag'-ftrapuv' }
+    },
 
-  opt'lto' {
-    match {
-      lvl'off' { fl'-no-ipo', },
-      {
-        fl'-ipo',
-        lvl'fat' {
-          linux {
-            fl'-ffat-lto-objects',
+    opt'integer_sanitizers' {
+      match {
+        lvl'on' { flag'-funsigned-bitfields' },
+        flag'-fno-unsigned-bitfields'
+      }
+    },
+
+    opt'float_sanitizers' {
+      lvl'on' {
+        flag'-fp-stack-check',
+        flag'-fp-trap=common',
+        -- flag'-fp-trap=all',
+      }
+    },
+
+    opt'linker' {
+      match {
+        lvl'bfd' { link'-fuse-ld=bfd' },
+        lvl'gold' { link'-fuse-ld=gold' },
+        lvl'mold' { link'-fuse-ld=mold' },
+        link'-fuse-ld=lld'
+      }
+    },
+
+    opt'lto' {
+      match {
+        lvl'off' { fl'-no-ipo', },
+        {
+          fl'-ipo',
+          lvl'fat' {
+            linux {
+              fl'-ffat-lto-objects',
+            }
           }
         }
       }
-    }
-  },
+    },
 
-  opt'control_flow' {
-    match {
-      lvl'off' {
-        flag'-mconditional-branch=keep',
-        flag'-fcf-protection=none',
-      },
-      lvl'branch' {
-        flag'-mconditional-branch=all-fix',
-        flag'-fcf-protection=branch',
-      },
-      lvl'on' {
-        flag'-mconditional-branch=all-fix',
-        flag'-fcf-protection=full',
+    opt'control_flow' {
+      match {
+        lvl'off' {
+          flag'-mconditional-branch=keep',
+          flag'-fcf-protection=none',
+        },
+        lvl'branch' {
+          flag'-mconditional-branch=all-fix',
+          flag'-fcf-protection=branch',
+        },
+        lvl'on' {
+          flag'-mconditional-branch=all-fix',
+          flag'-fcf-protection=full',
+        }
       }
-    }
+    },
+
+    opt'exceptions' {
+      match { lvl'on' { flag'-fexceptions' }, flag'-fno-exceptions' },
+    },
+
+    opt'rtti' {
+      match { lvl'on' { cxx'-frtti' }, cxx'-fno-rtti' },
+    },
+
+    opt'cpu' {
+      match { lvl'generic' { fl'-mtune=generic' }, fl'-xHost' },
+    },
+
   },
 
-  opt'exceptions' {
-    lvl'on' { flag'-fexceptions', } / flag'-fno-exceptions',
+  mingw {
+    opt'windows_bigobj' {
+      flag'-Wa,-mbig-obj',
+    },
   },
-
-  opt'rtti' {
-    lvl'on' { cxx'-frtti' } / cxx'-fno-rtti',
-  },
-
-  opt'cpu' {
-    lvl'generic' { fl'-mtune=generic' } / fl'-xHost',
-  },
-
-},
-
-mingw {
-  opt'windows_bigobj' {
-    flag'-Wa,-mbig-obj',
-  },
-},
+}
 
 }
 end -- MakeAST
