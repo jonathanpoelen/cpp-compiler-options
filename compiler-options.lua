@@ -356,6 +356,10 @@ Or(gcc, clang_like) {
                           Or(lvl'strict', lvl'very_strict') {
                             flag'-Wcast-align=strict'
                           },
+
+                          vers'>=14' {
+                            cxx'-Walloc-size',
+                          }
                         }
                       }
                     }
@@ -410,8 +414,8 @@ Or(gcc, clang_like) {
                     vers'>=16' {
                       -has_opt'unsafe_buffer_usage_warnings' {
                         flag'-Wno-unsafe-buffer-usage'
-                      }
-                    },
+                      },
+                    }
                   }
                 }
               }
