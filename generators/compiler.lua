@@ -303,7 +303,22 @@ return {
         elseif v._and then return self:_cond(v._and, false)
         elseif v._not then return not self:cond(v._not)
         elseif v.lvl  then return v.lvl == opts[current_optname]
-        elseif v.major    then return major > v.major or (major == v.major and minor >= v.minor)
+        elseif v.major then
+          if v.op == '>=' then
+            return major > v.major or (major == v.major and minor >= v.minor)
+          elseif v.op == '>' then
+            return major > v.major or (major == v.major and minor > v.minor)
+          elseif v.op == '<' then
+            return major < v.major or (major == v.major and minor < v.minor)
+          elseif v.op == '<=' then
+            return major < v.major or (major == v.major and minor <= v.minor)
+          elseif v.op == '=' then
+            return major == v.major and minor == v.minor
+          elseif v.op == '!=' then
+            return major ~= v.major or minor ~= v.minor
+          else
+            assert('Unknown op: ' .. v.op)
+          end
         elseif v.compiler then return compiler == v.compiler
         elseif v.platform then return platform == v.platform
         elseif v.compiler_like then
