@@ -603,6 +603,9 @@ function jln_getoptions(values, disable_others, print_compiler)
                           if ( values['warnings'] == 'strict' or values['warnings'] == 'very_strict' ) then
                             table_insert(jln_buildoptions, "-Wcast-align=strict")
                           end
+                          if version >= 1400000 then
+                            table_insert(jln_buildoptions, "-Walloc-size")
+                          end
                         end
                       end
                     end

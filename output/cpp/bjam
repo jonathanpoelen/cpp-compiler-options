@@ -657,6 +657,12 @@ rule jln_flags ( properties * )
                               <cxxflags>"-Wcast-align=strict"
                             ;
                           }
+                          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1400000 ]
+                          {
+                            flags +=
+                              <cxxflags>"-Walloc-size"
+                            ;
+                          }
                         }
                       }
                     }

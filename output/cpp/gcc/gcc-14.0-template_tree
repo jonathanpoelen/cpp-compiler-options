@@ -1,0 +1,3 @@
+-fdiagnostics-show-template-tree
+-ffold-simple-inlines
+-fno-elide-type

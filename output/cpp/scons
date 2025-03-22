@@ -416,6 +416,8 @@ def get_flags(options, env=None):
                           flags += ('-Wclass-memaccess', )
                           if ( x_warnings == 'strict' or x_warnings == 'very_strict' ) :
                             flags += ('-Wcast-align=strict', )
+                          if compversion >= 1400000 :
+                            flags += ('-Walloc-size', )
         else:
           flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-c++98-compat', '-Wno-c++98-compat-pedantic', '-Wno-padded', '-Wno-global-constructors', '-Wno-weak-vtables', '-Wno-exit-time-destructors', )
           if  not ( ( x_switch_warnings == 'off' or x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) ) :
