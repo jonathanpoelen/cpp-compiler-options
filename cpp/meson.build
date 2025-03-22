@@ -325,6 +325,9 @@ foreach ___jln_flags : ___jln_custom_flags
                           if (  ( ___jln_flags.get('warnings', 'default') == 'strict' or ___jln_flags.get('warnings', 'default') == 'very_strict' ) )
                             jln_cpp_flags += ['-Wcast-align=strict', ]
                           endif
+                          if (  ___jln_compiler_version.version_compare('>=14.0') )
+                            jln_cpp_flags += ['-Walloc-size', ]
+                          endif
                         endif
                       endif
                     endif
