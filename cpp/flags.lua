@@ -697,6 +697,9 @@ function get_flags(options, extra_options)
                           if ( options.warnings == "strict" or options.warnings == "very_strict" ) then
                             insert(jln_cxflags, "-Wcast-align=strict")
                           end
+                          if version >= 1400000 then
+                            insert(jln_cxflags, "-Walloc-size")
+                          end
                         end
                       end
                     end
