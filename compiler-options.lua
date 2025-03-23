@@ -1047,8 +1047,15 @@ Or(gcc, clang) {
           lvl'2' { flag'-O2' },
           lvl'3' { flag'-O3' },
           lvl'size' { flag'-Os' },
-          lvl'z' { clang { flag'-Oz' } / flag'-Os' },
-          --[[lvl'fast']] { flag'-Ofast' }
+          lvl'z' {
+            Or(clang, gcc'>=12') { flag'-Oz' }
+            / flag'-Os'
+          },
+          --[[lvl'fast']] {
+            -- -Ofast is deprecated with clang-19
+            clang { flag'-O3', flag'-ffast-math' }
+            / flag'-Ofast'
+          }
         }
       }
     }
@@ -2433,7 +2440,7 @@ local Vbase = {
         {'3', 'Optimize yet more'},
         {'fast', 'Enables all optimization=3 and disregard strict standards compliance'},
         {'size', 'Optimize for size'},
-        {'z', 'Optimize for size aggressively (/!\\ possible slow compilation)'},
+        {'z', 'Optimize for size aggressively (/!\\ possible slow compilation with emcc)'},
       },
       description='Optimization level',
     },
