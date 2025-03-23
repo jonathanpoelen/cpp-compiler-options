@@ -1465,6 +1465,7 @@ Or(msvc, clang_cl, icl) {
       }
     },
 
+    -- https://airbus-seclab.github.io/c-compiler-security/
     opt'stack_protector' {
       match {
         lvl'off' {
@@ -1482,7 +1483,10 @@ Or(msvc, clang_cl, icl) {
               },
             },
             lvl'all' { flag'/RTC1', flag'/RTCc', },
-          }
+          },
+          has_opt'control_flow':without(lvl'off') {
+            flag'/guard:cf',
+          },
         }
       }
     },
