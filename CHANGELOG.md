@@ -1,5 +1,14 @@
 # ChangeLog
 
+## 2024-03-23
+
+- remove `debug=line_tables_only`
+- add `debug=gdb`
+- add `debug=vms`
+- add `debug=dbx`
+- add `debug=sce`
+- add `debug_level` (`0`, `1`, `2`, `3`, `line_tables_only`, `line_directives_only`)
+
 ## 2023-09-30
 
 - add `unsafe_buffer_usage_warnings` (`on`, `off`).

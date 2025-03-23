@@ -952,10 +952,21 @@ clang_emcc {
     }
   },
 
+  opt'debug_level' {
+    match {
+      lvl'0' { flag'-g0' },
+      lvl'1' { flag'-g1' },
+      lvl'2' { flag'-g2' },
+      lvl'3' { flag'-g3' },
+    }
+  },
+
   opt'debug' {
     match {
       lvl'off' { flag'-g0' },
-      flag'-g',
+      -has_opt'debug_level' {
+        flag'-g',
+      }
     }
   },
 }
@@ -980,19 +991,47 @@ Or(gcc, clang) {
     },
   },
 
+  opt'debug_level' {
+    match {
+      lvl'0' { flag'-g0' },
+      lvl'1' { has_opt'debug':with(lvl'gdb') { flag'-ggdb1' } / flag'-g1' },
+      lvl'2' { has_opt'debug':with(lvl'gdb') { flag'-ggdb2' } / flag'-g2' },
+      lvl'3' { has_opt'debug':with(lvl'gdb') { flag'-ggdb3' } / flag'-g3' },
+      lvl'line_tables_only' {
+        clang { flag'-gline-tables-only' }
+        / { flag'-g' }
+      },
+      lvl'line_directives_only' {
+        clang { flag'-gline-directives-only' }
+        / { flag'-g' }
+      },
+    }
+  },
+
   opt'debug' {
     match {
       lvl'off' { flag'-g0' },
-      lvl'gdb' { flag'-ggdb' },
-      clang {
-        match {
-          lvl'line_tables_only' { flag'-gline-tables-only' },
-          lvl'lldb' { flag'-glldb' },
-          lvl'sce' { flag'-gsce' },
+      lvl'on' {
+        -has_opt'debug_level' {
           flag'-g',
         }
       },
-      flag'-g',
+      lvl'gdb' {
+        -has_opt'debug_level' {
+          flag'-ggdb'
+        },
+      },
+      clang {
+        match {
+          lvl'lldb' { flag'-glldb' },
+          lvl'sce' { flag'-gsce' },
+          lvl'dbx' { flag'-gdbx' },
+          flag'-g',
+        }
+      }
+      / --[[gcc]] {
+        lvl'vms' { flag'-gvms' },
+      },
       -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
     }
   },
@@ -1310,6 +1349,16 @@ Or(msvc, clang_cl, icl) {
 
   -- msvc and clang_cl
   -icl {
+    opt'debug_level' {
+      lvl'line_tables_only' {
+        clang_cl { flag'-gline-tables-only' },
+        flag'/DEBUG:FASTLINK'
+      },
+      lvl'line_directives_only' {
+        clang_cl { flag'-gline-directives-only' }
+      },
+    },
+
     opt'debug' {
       match {
         lvl'off' { link'/DEBUG:NONE' },
@@ -1318,12 +1367,11 @@ Or(msvc, clang_cl, icl) {
           flag'/Od',
           match {
             lvl'on' { flag'/DEBUG' }, -- /DEBUG:FULL
-            lvl'line_tables_only' {
-              clang_cl { flag'-gline-tables-only' },
-              flag'/DEBUG:FASTLINK'
-            }
           },
 
+          -- The /Zo option is available starting in Visual Studio 2013 Update 3.
+          -- It's enabled by default when you specify debugging information with /Zi or /Z7.
+          -- It's disabled by the /ZI compiler option.
           match {
             opt'optimization' {
               match {
@@ -1753,6 +1801,12 @@ icl {
     }
   },
 
+  opt'debug_level' {
+    Or(lvl'line_tables_only', lvl'line_directives_only') {
+      flag'/debug:minimal',
+    }
+  },
+
   opt'debug' {
     match {
       lvl'off' { link'/DEBUG:NONE' },
@@ -1761,7 +1815,6 @@ icl {
         flag'/Od',
         match {
           lvl'on' { flag'/debug:full' },
-          lvl'line_tables_only' { flag'/debug:minimal' }
         },
         match {
           has_opt'optimization':with(lvl'g') {
@@ -2237,8 +2290,26 @@ local Vbase = {
     },
 
     debug={
-      values={'off', 'on', 'line_tables_only', 'gdb', 'lldb', 'sce'},
+      values={
+        'off',
+        'on',
+        'gdb',
+        'lldb',
+        {'vms',  'Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems)'},
+        {'codeview', 'CodeView debug format (used by Microsoft Visual C++ on Windows)'},
+        'dbx',
+        'sce',
+      },
       description='Produce debugging information in the operating system\'s',
+    },
+
+    debug_level={
+      values={
+        '0', '1', '2', '3',
+        {'line_tables_only', 'Emit debug line number tables only'},
+        {'line_directives_only', 'Emit debug line info directives only'},
+      },
+      description='Specify debugging level',
     },
 
     diagnostics_format={
@@ -2351,7 +2422,7 @@ local Vbase = {
         {'3', 'Optimize yet more'},
         {'fast', 'Enables all optimization=3 and disregard strict standards compliance'},
         {'size', 'Optimize for size'},
-        {'z', 'Optimize for size aggressively (/!\\ possible slow compilation)'}
+        {'z', 'Optimize for size aggressively (/!\\ possible slow compilation)'},
       },
       description='Optimization level',
     },
@@ -2505,6 +2576,7 @@ local Vbase = {
     {'Debug', {
       'control_flow',
       'debug',
+      'debug_level',
       'float_sanitizers',
       'integer_sanitizers',
       'ndebug',
