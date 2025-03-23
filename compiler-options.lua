@@ -1063,6 +1063,9 @@ Or(gcc, clang) {
 
   opt'linker' {
     match {
+      lvl'mold' {
+        link'-fuse-ld=mold'  -- >= gcc-12
+      },
       lvl'native' {
         match {
           gcc { link'-fuse-ld=gold' },
@@ -1186,6 +1189,7 @@ Or(gcc, clang) {
     }
   },
 
+  -- https://airbus-seclab.github.io/c-compiler-security/
   opt'relro' {
     match {
       lvl'off' { link'-Wl,-z,norelro', },
@@ -1193,6 +1197,7 @@ Or(gcc, clang) {
       { --[[lvl'full']]
         link'-Wl,-z,relro,-z,now,-z,noexecstack',
         opt'linker' {
+          -- -Wl,-z,separate-code is invalid with gold linker
           -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
             link'-Wl,-z,separate-code'
           }
@@ -1414,8 +1419,13 @@ Or(msvc, clang_cl, icl) {
 
     opt'linker' {
       clang_cl {
-        Or(lvl'lld', lvl'native') {
-          link'-fuse-ld=lld'
+        match {
+          Or(lvl'lld', lvl'native') {
+            link'-fuse-ld=lld'
+          },
+          lvl'mold' {
+            link'-fuse-ld=mold'
+          },
         }
       }
     },
@@ -2101,6 +2111,7 @@ icc {
     match {
       lvl'bfd' { link'-fuse-ld=bfd' },
       lvl'gold' { link'-fuse-ld=gold' },
+      lvl'mold' { link'-fuse-ld=mold' },
       link'-fuse-ld=lld'
     }
   },
@@ -2353,7 +2364,7 @@ local Vbase = {
     },
 
     linker={
-      values={'bfd', 'gold', 'lld', 'native'},
+      values={'bfd', 'gold', 'lld', 'mold', 'native'},
       description='Configure linker',
       incidental=true,
     },

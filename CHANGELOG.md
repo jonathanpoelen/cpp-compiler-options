@@ -8,6 +8,7 @@
 - add `debug=dbx`
 - add `debug=sce`
 - add `debug_level` (`0`, `1`, `2`, `3`, `line_tables_only`, `line_directives_only`)
+- add `linker=mold`
 
 ## 2023-09-30
 
