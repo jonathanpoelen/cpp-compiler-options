@@ -1,0 +1,2 @@
+-fdiagnostics-show-template-tree
+-fno-elide-type
