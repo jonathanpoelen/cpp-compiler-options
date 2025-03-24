@@ -697,6 +697,10 @@ Or(gcc, clang_like) {
           vers'>=4.9' {
             fl'-fsanitize=undefined',
             fl'-fsanitize=leak', -- requires the address sanitizer
+
+            vers'>=12' {
+              fl'-fsanitize=bounds-strict',
+            }
           }
         }
       }
