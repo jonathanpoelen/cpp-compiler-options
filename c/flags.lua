@@ -161,7 +161,7 @@
 --
 --  category | options
 --  ---------|---------
---  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>
+--  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>`optimization=g` or `optimization=0` + `debug_level=3`
 --  release | `cpu=native`<br>`linker=gold`, `lld` or `native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
 --  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=PIE`
 --  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
@@ -198,8 +198,10 @@ local _flag_names = {
   ["covered_switch_default_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["jln-cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
-  ["jln-debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["line_tables_only"]="line_tables_only", ["gdb"]="gdb", ["lldb"]="lldb", ["sce"]="sce", [""]=""},
-  ["debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["line_tables_only"]="line_tables_only", ["gdb"]="gdb", ["lldb"]="lldb", ["sce"]="sce", [""]=""},
+  ["jln-debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["gdb"]="gdb", ["lldb"]="lldb", ["vms"]="vms", ["codeview"]="codeview", ["dbx"]="dbx", ["sce"]="sce", [""]=""},
+  ["debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["gdb"]="gdb", ["lldb"]="lldb", ["vms"]="vms", ["codeview"]="codeview", ["dbx"]="dbx", ["sce"]="sce", [""]=""},
+  ["jln-debug-level"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", ["line_tables_only"]="line_tables_only", ["line_directives_only"]="line_directives_only", [""]=""},
+  ["debug_level"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", ["line_tables_only"]="line_tables_only", ["line_directives_only"]="line_directives_only", [""]=""},
   ["jln-diagnostics-format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
   ["diagnostics_format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
   ["jln-exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -210,8 +212,8 @@ local _flag_names = {
   ["float_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-integer-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["integer_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
-  ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["native"]="native", [""]=""},
+  ["jln-linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
+  ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
   ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["normal"]="normal", ["fat"]="fat", ["thin"]="thin", [""]=""},
   ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["normal"]="normal", ["fat"]="fat", ["thin"]="thin", [""]=""},
   ["jln-msvc-conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
@@ -308,6 +310,7 @@ function create_options(options, extra_options)
       covered_switch_default_warnings = options.covered_switch_default_warnings or options["jln-covered-switch-default-warnings"] or (disable_other_options and "" or _flag_names.covered_switch_default_warnings[get_config("jln-covered-switch-default-warnings")]),
       cpu = options.cpu or options["jln-cpu"] or (disable_other_options and "" or _flag_names.cpu[get_config("jln-cpu")]),
       debug = options.debug or options["jln-debug"] or (disable_other_options and "" or _flag_names.debug[get_config("jln-debug")]),
+      debug_level = options.debug_level or options["jln-debug-level"] or (disable_other_options and "" or _flag_names.debug_level[get_config("jln-debug-level")]),
       diagnostics_format = options.diagnostics_format or options["jln-diagnostics-format"] or (disable_other_options and "" or _flag_names.diagnostics_format[get_config("jln-diagnostics-format")]),
       exceptions = options.exceptions or options["jln-exceptions"] or (disable_other_options and "" or _flag_names.exceptions[get_config("jln-exceptions")]),
       fix_compiler_error = options.fix_compiler_error or options["jln-fix-compiler-error"] or (disable_other_options and "" or _flag_names.fix_compiler_error[get_config("jln-fix-compiler-error")]),
@@ -354,6 +357,7 @@ function create_options(options, extra_options)
       ["covered_switch_default_warnings"] = _flag_names["covered_switch_default_warnings"][get_config("jln-covered-switch-default-warnings")],
       ["cpu"] = _flag_names["cpu"][get_config("jln-cpu")],
       ["debug"] = _flag_names["debug"][get_config("jln-debug")],
+      ["debug_level"] = _flag_names["debug_level"][get_config("jln-debug-level")],
       ["diagnostics_format"] = _flag_names["diagnostics_format"][get_config("jln-diagnostics-format")],
       ["exceptions"] = _flag_names["exceptions"][get_config("jln-exceptions")],
       ["fix_compiler_error"] = _flag_names["fix_compiler_error"][get_config("jln-fix-compiler-error")],
@@ -589,10 +593,8 @@ function get_flags(options, extra_options)
         if options.ndebug == "on" then
           insert(jln_cxflags, "/DNDEBUG")
         else
-          if options.optimization ~= "" then
-            if not ( ( options.optimization == "0" or options.optimization == "g" ) ) then
-              insert(jln_cxflags, "/DNDEBUG")
-            end
+          if options.optimization ~= "" and not ( options.optimization == "0" or options.optimization == "g" ) then
+            insert(jln_cxflags, "/DNDEBUG")
           end
         end
       end
@@ -603,10 +605,8 @@ function get_flags(options, extra_options)
         if options.ndebug == "on" then
           insert(jln_cxflags, "-DNDEBUG")
         else
-          if options.optimization ~= "" then
-            if not ( ( options.optimization == "0" or options.optimization == "g" ) ) then
-              insert(jln_cxflags, "-DNDEBUG")
-            end
+          if options.optimization ~= "" and not ( options.optimization == "0" or options.optimization == "g" ) then
+            insert(jln_cxflags, "-DNDEBUG")
           end
         end
       end
@@ -874,6 +874,10 @@ function get_flags(options, extra_options)
                 insert(jln_cxflags, "-fsanitize=leak")
                 insert(jln_ldflags, "-fsanitize=undefined")
                 insert(jln_ldflags, "-fsanitize=leak")
+                if version >= 1200000 then
+                  insert(jln_cxflags, "-fsanitize=bounds-strict")
+                  insert(jln_ldflags, "-fsanitize=bounds-strict")
+                end
               end
             end
           end
@@ -1097,41 +1101,41 @@ function get_flags(options, extra_options)
         end
       end
     end
-  end
-  if compiler == 'clang-emcc' then
-    if options.optimization ~= "" then
-      if options.optimization == "0" then
-        insert(jln_cxflags, "-O0")
-        insert(jln_ldflags, "-O0")
-      else
-        if options.optimization == "g" then
-          insert(jln_cxflags, "-Og")
-          insert(jln_ldflags, "-Og")
+    if compiler == 'clang-emcc' then
+      if options.optimization ~= "" then
+        if options.optimization == "0" then
+          insert(jln_cxflags, "-O0")
+          insert(jln_ldflags, "-O0")
         else
-          if options.optimization == "1" then
-            insert(jln_cxflags, "-O1")
-            insert(jln_ldflags, "-O1")
+          if options.optimization == "g" then
+            insert(jln_cxflags, "-Og")
+            insert(jln_ldflags, "-Og")
           else
-            if options.optimization == "2" then
-              insert(jln_cxflags, "-O2")
-              insert(jln_ldflags, "-O2")
+            if options.optimization == "1" then
+              insert(jln_cxflags, "-O1")
+              insert(jln_ldflags, "-O1")
             else
-              if options.optimization == "3" then
-                insert(jln_cxflags, "-O3")
-                insert(jln_ldflags, "-O3")
+              if options.optimization == "2" then
+                insert(jln_cxflags, "-O2")
+                insert(jln_ldflags, "-O2")
               else
-                if options.optimization == "fast" then
+                if options.optimization == "3" then
                   insert(jln_cxflags, "-O3")
-                  insert(jln_cxflags, "-mnontrapping-fptoint")
                   insert(jln_ldflags, "-O3")
-                  insert(jln_ldflags, "-mnontrapping-fptoint")
                 else
-                  if options.optimization == "size" then
-                    insert(jln_cxflags, "-Os")
-                    insert(jln_ldflags, "-Os")
+                  if options.optimization == "fast" then
+                    insert(jln_cxflags, "-O3")
+                    insert(jln_cxflags, "-mnontrapping-fptoint")
+                    insert(jln_ldflags, "-O3")
+                    insert(jln_ldflags, "-mnontrapping-fptoint")
                   else
-                    insert(jln_cxflags, "-Oz")
-                    insert(jln_ldflags, "-Oz")
+                    if options.optimization == "size" then
+                      insert(jln_cxflags, "-Os")
+                      insert(jln_ldflags, "-Os")
+                    else
+                      insert(jln_cxflags, "-Oz")
+                      insert(jln_ldflags, "-Oz")
+                    end
                   end
                 end
               end
@@ -1139,16 +1143,33 @@ function get_flags(options, extra_options)
           end
         end
       end
-    end
-    if options.debug ~= "" then
-      if options.debug == "off" then
-        insert(jln_cxflags, "-g0")
-      else
-        insert(jln_cxflags, "-g")
+      if options.debug_level ~= "" then
+        if options.debug_level == "0" then
+          insert(jln_cxflags, "-g0")
+        else
+          if options.debug_level == "1" then
+            insert(jln_cxflags, "-g1")
+          else
+            if options.debug_level == "2" then
+              insert(jln_cxflags, "-g2")
+            else
+              if options.debug_level == "3" then
+                insert(jln_cxflags, "-g3")
+              end
+            end
+          end
+        end
       end
-    end
-  else
-    if ( compiler == 'gcc' or compiler == 'clang' ) then
+      if options.debug ~= "" then
+        if options.debug == "off" then
+          insert(jln_cxflags, "-g0")
+        else
+          if options.debug_level == "" then
+            insert(jln_cxflags, "-g")
+          end
+        end
+      end
+    else
       if options.coverage ~= "" then
         if options.coverage == "on" then
           insert(jln_cxflags, "--coverage")
@@ -1158,29 +1179,84 @@ function get_flags(options, extra_options)
           end
         end
       end
+      if options.debug_level ~= "" then
+        if options.debug_level == "0" then
+          insert(jln_cxflags, "-g0")
+        else
+          if options.debug_level == "1" then
+            if ( options.debug == "gdb" ) then
+              insert(jln_cxflags, "-ggdb1")
+            else
+              insert(jln_cxflags, "-g1")
+            end
+          else
+            if options.debug_level == "2" then
+              if ( options.debug == "gdb" ) then
+                insert(jln_cxflags, "-ggdb2")
+              else
+                insert(jln_cxflags, "-g2")
+              end
+            else
+              if options.debug_level == "3" then
+                if ( options.debug == "gdb" ) then
+                  insert(jln_cxflags, "-ggdb3")
+                else
+                  insert(jln_cxflags, "-g3")
+                end
+              else
+                if options.debug_level == "line_tables_only" then
+                  if compiler == 'clang' then
+                    insert(jln_cxflags, "-gline-tables-only")
+                  else
+                    insert(jln_cxflags, "-g")
+                  end
+                else
+                  if options.debug_level == "line_directives_only" then
+                    if compiler == 'clang' then
+                      insert(jln_cxflags, "-gline-directives-only")
+                    else
+                      insert(jln_cxflags, "-g")
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
       if options.debug ~= "" then
         if options.debug == "off" then
           insert(jln_cxflags, "-g0")
         else
-          if options.debug == "gdb" then
-            insert(jln_cxflags, "-ggdb")
+          if options.debug == "on" then
+            if options.debug_level == "" then
+              insert(jln_cxflags, "-g")
+            end
           else
-            if compiler == 'clang' then
-              if options.debug == "line_tables_only" then
-                insert(jln_cxflags, "-gline-tables-only")
-              else
+            if options.debug == "gdb" then
+              if options.debug_level == "" then
+                insert(jln_cxflags, "-ggdb")
+              end
+            else
+              if compiler == 'clang' then
                 if options.debug == "lldb" then
                   insert(jln_cxflags, "-glldb")
                 else
                   if options.debug == "sce" then
                     insert(jln_cxflags, "-gsce")
                   else
-                    insert(jln_cxflags, "-g")
+                    if options.debug == "dbx" then
+                      insert(jln_cxflags, "-gdbx")
+                    else
+                      insert(jln_cxflags, "-g")
+                    end
                   end
                 end
+              else
+                if options.debug == "vms" then
+                  insert(jln_cxflags, "-gvms")
+                end
               end
-            else
-              insert(jln_cxflags, "-g")
             end
           end
         end
@@ -1206,13 +1282,18 @@ function get_flags(options, extra_options)
                     insert(jln_cxflags, "-Os")
                   else
                     if options.optimization == "z" then
-                      if compiler == 'clang' then
+                      if ( compiler == 'clang' or ( compiler == 'gcc' and version >= 1200000 ) ) then
                         insert(jln_cxflags, "-Oz")
                       else
                         insert(jln_cxflags, "-Os")
                       end
                     else
-                      insert(jln_cxflags, "-Ofast")
+                      if compiler == 'clang' then
+                        insert(jln_cxflags, "-O3")
+                        insert(jln_cxflags, "-ffast-math")
+                      else
+                        insert(jln_cxflags, "-Ofast")
+                      end
                     end
                   end
                 end
@@ -1233,27 +1314,31 @@ function get_flags(options, extra_options)
         end
       end
       if options.linker ~= "" then
-        if options.linker == "native" then
-          if compiler == 'gcc' then
-            insert(jln_ldflags, "-fuse-ld=gold")
-          else
-            insert(jln_ldflags, "-fuse-ld=lld")
-          end
+        if options.linker == "mold" then
+          insert(jln_ldflags, "-fuse-ld=mold")
         else
-          if options.linker == "bfd" then
-            insert(jln_ldflags, "-fuse-ld=bfd")
-          else
-            if ( options.linker == "gold" or ( compiler == 'gcc' and version < 900000 ) ) then
+          if options.linker == "native" then
+            if compiler == 'gcc' then
               insert(jln_ldflags, "-fuse-ld=gold")
             else
-              if options.lto ~= "" then
-                if ( options.lto ~= "off" and compiler == 'gcc' ) then
-                  insert(jln_ldflags, "-fuse-ld=gold")
+              insert(jln_ldflags, "-fuse-ld=lld")
+            end
+          else
+            if options.linker == "bfd" then
+              insert(jln_ldflags, "-fuse-ld=bfd")
+            else
+              if ( options.linker == "gold" or ( compiler == 'gcc' and version < 900000 ) ) then
+                insert(jln_ldflags, "-fuse-ld=gold")
+              else
+                if options.lto ~= "" then
+                  if ( options.lto ~= "off" and compiler == 'gcc' ) then
+                    insert(jln_ldflags, "-fuse-ld=gold")
+                  else
+                    insert(jln_ldflags, "-fuse-ld=lld")
+                  end
                 else
                   insert(jln_ldflags, "-fuse-ld=lld")
                 end
-              else
-                insert(jln_ldflags, "-fuse-ld=lld")
               end
             end
           end
@@ -1498,11 +1583,23 @@ function get_flags(options, extra_options)
       end
     end
     if options.stl_debug ~= "" then
-      if options.stl_debug == "off" then
-        insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=0")
+      if ( ( compiler == 'cl' and version >= 1600007 ) or compiler == 'clang-cl' ) then
+        if options.stl_debug == "off" then
+          insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=0")
+        else
+          if ( options.stl_debug == "on" or options.stl_debug == "extensive" ) then
+            insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=1")
+          else
+            insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=2")
+          end
+        end
       else
-        insert(jln_cxflags, "/D_DEBUG")
-        insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=1")
+        if options.stl_debug == "off" then
+          insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=0")
+        else
+          insert(jln_cxflags, "/D_DEBUG")
+          insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=1")
+        end
       end
     end
     if options.stl_fix ~= "" then
@@ -1511,6 +1608,19 @@ function get_flags(options, extra_options)
       end
     end
     if compiler ~= 'icl' then
+      if options.debug_level ~= "" then
+        if options.debug_level == "line_tables_only" then
+          if compiler == 'clang-cl' then
+            insert(jln_cxflags, "-gline-tables-only")
+          end
+          insert(jln_cxflags, "/DEBUG:FASTLINK")
+        end
+        if options.debug_level == "line_directives_only" then
+          if compiler == 'clang-cl' then
+            insert(jln_cxflags, "-gline-directives-only")
+          end
+        end
+      end
       if options.debug ~= "" then
         if options.debug == "off" then
           insert(jln_ldflags, "/DEBUG:NONE")
@@ -1519,13 +1629,6 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "/Od")
           if options.debug == "on" then
             insert(jln_cxflags, "/DEBUG")
-          else
-            if options.debug == "line_tables_only" then
-              if compiler == 'clang-cl' then
-                insert(jln_cxflags, "-gline-tables-only")
-              end
-              insert(jln_cxflags, "/DEBUG:FASTLINK")
-            end
           end
           if options.optimization ~= "" then
             if options.optimization == "g" then
@@ -1591,6 +1694,10 @@ function get_flags(options, extra_options)
         if compiler == 'clang-cl' then
           if ( options.linker == "lld" or options.linker == "native" ) then
             insert(jln_ldflags, "-fuse-ld=lld")
+          else
+            if options.linker == "mold" then
+              insert(jln_ldflags, "-fuse-ld=mold")
+            end
           end
         end
       end
@@ -1635,6 +1742,9 @@ function get_flags(options, extra_options)
               insert(jln_cxflags, "/RTC1")
               insert(jln_cxflags, "/RTCc")
             end
+          end
+          if options.control_flow ~= "" and not ( options.control_flow == "off" ) then
+            insert(jln_cxflags, "/guard:cf")
           end
         end
       end
@@ -1871,259 +1981,93 @@ function get_flags(options, extra_options)
         end
       end
     end
-  end
-  if compiler == 'icl' then
-    if options.warnings ~= "" then
-      if options.warnings == "off" then
-        insert(jln_cxflags, "/w")
-      else
-        insert(jln_cxflags, "/W2")
-        insert(jln_cxflags, "/Qdiag-disable:1418,2259")
-      end
-    end
-    if options.warnings_as_error ~= "" then
-      if options.warnings_as_error == "on" then
-        insert(jln_cxflags, "/WX")
-      else
-        if options.warnings_as_error == "basic" then
-          insert(jln_cxflags, "/Qdiag-error:1079,39,109")
-        end
-      end
-    end
-    if options.windows_bigobj ~= "" then
-      insert(jln_cxflags, "/bigobj")
-    end
-    if options.msvc_conformance ~= "" then
-      if ( options.msvc_conformance == "all" or options.msvc_conformance == "all_without_throwing_new" ) then
-        insert(jln_cxflags, "/Zc:inline")
-        insert(jln_cxflags, "/Zc:strictStrings")
-        if options.msvc_conformance == "all" then
-          insert(jln_cxflags, "/Zc:throwingNew")
-        end
-      end
-    end
-    if options.debug ~= "" then
-      if options.debug == "off" then
-        insert(jln_ldflags, "/DEBUG:NONE")
-      else
-        insert(jln_cxflags, "/RTC1")
-        insert(jln_cxflags, "/Od")
-        if options.debug == "on" then
-          insert(jln_cxflags, "/debug:full")
-        else
-          if options.debug == "line_tables_only" then
-            insert(jln_cxflags, "/debug:minimal")
-          end
-        end
-        if ( options.optimization == "g" ) then
-          insert(jln_cxflags, "/Zi")
-        else
-          if options.whole_program ~= "" then
-            if options.whole_program == "off" then
-              insert(jln_cxflags, "/ZI")
-            else
-              insert(jln_cxflags, "/Zi")
-            end
-          else
-            insert(jln_cxflags, "/ZI")
-          end
-        end
-      end
-    end
-    if options.optimization ~= "" then
-      if options.optimization == "0" then
-        insert(jln_cxflags, "/Ob0")
-        insert(jln_cxflags, "/Od")
-        insert(jln_cxflags, "/Oi-")
-        insert(jln_cxflags, "/Oy-")
-      else
-        if options.optimization == "g" then
-          insert(jln_cxflags, "/Ob1")
-        else
-          insert(jln_cxflags, "/GF")
-          if options.optimization == "1" then
-            insert(jln_cxflags, "/O1")
-          else
-            if options.optimization == "2" then
-              insert(jln_cxflags, "/O2")
-            else
-              if options.optimization == "3" then
-                insert(jln_cxflags, "/O2")
-              else
-                if options.optimization == "z" then
-                  insert(jln_cxflags, "/O3")
-                else
-                  if options.optimization == "size" then
-                    insert(jln_cxflags, "/Os")
-                  else
-                    insert(jln_cxflags, "/fast")
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-    if options.stack_protector ~= "" then
-      if options.stack_protector == "off" then
-        insert(jln_cxflags, "/GS-")
-      else
-        insert(jln_cxflags, "/GS")
-        if options.stack_protector == "strong" then
-          insert(jln_cxflags, "/RTC1")
-        else
-          if options.stack_protector == "all" then
-            insert(jln_cxflags, "/RTC1")
-            insert(jln_cxflags, "/RTCc")
-          end
-        end
-      end
-    end
-    if options.sanitizers ~= "" then
-      if options.sanitizers == "on" then
-        insert(jln_cxflags, "/Qtrapuv")
-      end
-    end
-    if options.float_sanitizers ~= "" then
-      if options.float_sanitizers == "on" then
-        insert(jln_cxflags, "/Qfp-stack-check")
-        insert(jln_cxflags, "/Qfp-trap:common")
-      end
-    end
-    if options.control_flow ~= "" then
-      if options.control_flow == "off" then
-        insert(jln_cxflags, "/guard:cf-")
-        insert(jln_cxflags, "/mconditional-branch=keep")
-      else
-        insert(jln_cxflags, "/guard:cf")
-        if options.control_flow == "branch" then
-          insert(jln_cxflags, "/mconditional-branch:all-fix")
-          insert(jln_cxflags, "/Qcf-protection:branch")
-        else
-          if options.control_flow == "on" then
-            insert(jln_cxflags, "/mconditional-branch:all-fix")
-            insert(jln_cxflags, "/Qcf-protection:full")
-          end
-        end
-      end
-    end
-    if options.cpu ~= "" then
-      if options.cpu == "generic" then
-        insert(jln_cxflags, "/Qtune:generic")
-        insert(jln_ldflags, "/Qtune:generic")
-      else
-        insert(jln_cxflags, "/QxHost")
-        insert(jln_ldflags, "/QxHost")
-      end
-    end
   else
-    if compiler == 'icc' then
+    if compiler == 'icl' then
       if options.warnings ~= "" then
         if options.warnings == "off" then
-          insert(jln_cxflags, "-w")
+          insert(jln_cxflags, "/w")
         else
-          insert(jln_cxflags, "-Wall")
-          insert(jln_cxflags, "-Warray-bounds")
-          insert(jln_cxflags, "-Wcast-qual")
-          insert(jln_cxflags, "-Wchar-subscripts")
-          insert(jln_cxflags, "-Wdisabled-optimization")
-          insert(jln_cxflags, "-Wenum-compare")
-          insert(jln_cxflags, "-Wextra")
-          insert(jln_cxflags, "-Wfloat-equal")
-          insert(jln_cxflags, "-Wformat-security")
-          insert(jln_cxflags, "-Wformat=2")
-          insert(jln_cxflags, "-Winit-self")
-          insert(jln_cxflags, "-Winvalid-pch")
-          insert(jln_cxflags, "-Wmaybe-uninitialized")
-          insert(jln_cxflags, "-Wmissing-include-dirs")
-          insert(jln_cxflags, "-Wnarrowing")
-          insert(jln_cxflags, "-Wnonnull")
-          insert(jln_cxflags, "-Wparentheses")
-          insert(jln_cxflags, "-Wpointer-sign")
-          insert(jln_cxflags, "-Wreorder")
-          insert(jln_cxflags, "-Wsequence-point")
-          insert(jln_cxflags, "-Wtrigraphs")
-          insert(jln_cxflags, "-Wundef")
-          insert(jln_cxflags, "-Wunused-function")
-          insert(jln_cxflags, "-Wunused-but-set-variable")
-          insert(jln_cxflags, "-Wunused-variable")
-          insert(jln_cxflags, "-Wpointer-arith")
-          insert(jln_cxflags, "-Wold-style-definition")
-          insert(jln_cxflags, "-Wstrict-prototypes")
-          insert(jln_cxflags, "-Wwrite-strings")
-        end
-      end
-      if options.switch_warnings ~= "" then
-        if ( options.switch_warnings == "on" or options.switch_warnings == "exhaustive_enum" ) then
-          insert(jln_cxflags, "-Wswitch-enum")
-        else
-          if options.switch_warnings == "mandatory_default" then
-            insert(jln_cxflags, "-Wswitch-default")
-          else
-            if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
-              insert(jln_cxflags, "-Wswitch")
-            else
-              insert(jln_cxflags, "-Wno-switch")
-            end
-          end
+          insert(jln_cxflags, "/W2")
+          insert(jln_cxflags, "/Qdiag-disable:1418,2259")
         end
       end
       if options.warnings_as_error ~= "" then
         if options.warnings_as_error == "on" then
-          insert(jln_cxflags, "-Werror")
+          insert(jln_cxflags, "/WX")
         else
           if options.warnings_as_error == "basic" then
-            insert(jln_cxflags, "-diag-error=1079,39,109")
+            insert(jln_cxflags, "/Qdiag-error:1079,39,109")
           end
         end
       end
-      if options.pedantic ~= "" then
-        if options.pedantic == "off" then
-          insert(jln_cxflags, "-fgnu-keywords")
-        else
-          insert(jln_cxflags, "-fno-gnu-keywords")
+      if options.windows_bigobj ~= "" then
+        insert(jln_cxflags, "/bigobj")
+      end
+      if options.msvc_conformance ~= "" then
+        if ( options.msvc_conformance == "all" or options.msvc_conformance == "all_without_throwing_new" ) then
+          insert(jln_cxflags, "/Zc:inline")
+          insert(jln_cxflags, "/Zc:strictStrings")
+          if options.msvc_conformance == "all" then
+            insert(jln_cxflags, "/Zc:throwingNew")
+          end
         end
       end
-      if options.shadow_warnings ~= "" then
-        if options.shadow_warnings == "off" then
-          insert(jln_cxflags, "-Wno-shadow")
-        else
-          if ( options.shadow_warnings == "on" or options.shadow_warnings == "all" ) then
-            insert(jln_cxflags, "-Wshadow")
-          end
+      if options.debug_level ~= "" then
+        if ( options.debug_level == "line_tables_only" or options.debug_level == "line_directives_only" ) then
+          insert(jln_cxflags, "/debug:minimal")
         end
       end
       if options.debug ~= "" then
         if options.debug == "off" then
-          insert(jln_cxflags, "-g0")
+          insert(jln_ldflags, "/DEBUG:NONE")
         else
-          insert(jln_cxflags, "-g")
+          insert(jln_cxflags, "/RTC1")
+          insert(jln_cxflags, "/Od")
+          if options.debug == "on" then
+            insert(jln_cxflags, "/debug:full")
+          end
+          if ( options.optimization == "g" ) then
+            insert(jln_cxflags, "/Zi")
+          else
+            if options.whole_program ~= "" then
+              if options.whole_program == "off" then
+                insert(jln_cxflags, "/ZI")
+              else
+                insert(jln_cxflags, "/Zi")
+              end
+            else
+              insert(jln_cxflags, "/ZI")
+            end
+          end
         end
       end
       if options.optimization ~= "" then
         if options.optimization == "0" then
-          insert(jln_cxflags, "-O0")
+          insert(jln_cxflags, "/Ob0")
+          insert(jln_cxflags, "/Od")
+          insert(jln_cxflags, "/Oi-")
+          insert(jln_cxflags, "/Oy-")
         else
           if options.optimization == "g" then
-            insert(jln_cxflags, "-O1")
+            insert(jln_cxflags, "/Ob1")
           else
+            insert(jln_cxflags, "/GF")
             if options.optimization == "1" then
-              insert(jln_cxflags, "-O1")
+              insert(jln_cxflags, "/O1")
             else
               if options.optimization == "2" then
-                insert(jln_cxflags, "-O2")
+                insert(jln_cxflags, "/O2")
               else
                 if options.optimization == "3" then
-                  insert(jln_cxflags, "-O3")
+                  insert(jln_cxflags, "/O2")
                 else
                   if options.optimization == "z" then
-                    insert(jln_cxflags, "-fast")
+                    insert(jln_cxflags, "/O3")
                   else
                     if options.optimization == "size" then
-                      insert(jln_cxflags, "-Os")
+                      insert(jln_cxflags, "/Os")
                     else
-                      insert(jln_cxflags, "-Ofast")
+                      insert(jln_cxflags, "/fast")
                     end
                   end
                 end
@@ -2134,144 +2078,317 @@ function get_flags(options, extra_options)
       end
       if options.stack_protector ~= "" then
         if options.stack_protector == "off" then
-          insert(jln_cxflags, "-fno-protector-strong")
-          insert(jln_cxflags, "-U_FORTIFY_SOURCE")
-          insert(jln_ldflags, "-fno-protector-strong")
+          insert(jln_cxflags, "/GS-")
         else
-          insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
+          insert(jln_cxflags, "/GS")
           if options.stack_protector == "strong" then
-            insert(jln_cxflags, "-fstack-protector-strong")
-            insert(jln_ldflags, "-fstack-protector-strong")
+            insert(jln_cxflags, "/RTC1")
           else
             if options.stack_protector == "all" then
-              insert(jln_cxflags, "-fstack-protector-all")
-              insert(jln_ldflags, "-fstack-protector-all")
-            else
-              insert(jln_cxflags, "-fstack-protector")
-              insert(jln_ldflags, "-fstack-protector")
-            end
-          end
-        end
-      end
-      if options.relro ~= "" then
-        if options.relro == "off" then
-          insert(jln_ldflags, "-Xlinker-znorelro")
-        else
-          if options.relro == "on" then
-            insert(jln_ldflags, "-Xlinker-zrelro")
-          else
-            insert(jln_ldflags, "-Xlinker-zrelro")
-            insert(jln_ldflags, "-Xlinker-znow")
-            insert(jln_ldflags, "-Xlinker-znoexecstack")
-          end
-        end
-      end
-      if options.pie ~= "" then
-        if options.pie == "off" then
-          insert(jln_ldflags, "-no-pic")
-        else
-          if options.pie == "on" then
-            insert(jln_ldflags, "-pie")
-          else
-            if options.pie == "fpie" then
-              insert(jln_cxflags, "-fpie")
-            else
-              if options.pie == "fpic" then
-                insert(jln_cxflags, "-fpic")
-              else
-                if options.pie == "fPIE" then
-                  insert(jln_cxflags, "-fPIE")
-                else
-                  if options.pie == "fPIC" then
-                    insert(jln_cxflags, "-fPIC")
-                  end
-                end
-              end
+              insert(jln_cxflags, "/RTC1")
+              insert(jln_cxflags, "/RTCc")
             end
           end
         end
       end
       if options.sanitizers ~= "" then
         if options.sanitizers == "on" then
-          insert(jln_cxflags, "-ftrapuv")
-        end
-      end
-      if options.integer_sanitizers ~= "" then
-        if options.integer_sanitizers == "on" then
-          insert(jln_cxflags, "-funsigned-bitfields")
-        else
-          insert(jln_cxflags, "-fno-unsigned-bitfields")
+          insert(jln_cxflags, "/Qtrapuv")
         end
       end
       if options.float_sanitizers ~= "" then
         if options.float_sanitizers == "on" then
-          insert(jln_cxflags, "-fp-stack-check")
-          insert(jln_cxflags, "-fp-trap=common")
-        end
-      end
-      if options.linker ~= "" then
-        if options.linker == "bfd" then
-          insert(jln_ldflags, "-fuse-ld=bfd")
-        else
-          if options.linker == "gold" then
-            insert(jln_ldflags, "-fuse-ld=gold")
-          else
-            insert(jln_ldflags, "-fuse-ld=lld")
-          end
-        end
-      end
-      if options.lto ~= "" then
-        if options.lto == "off" then
-          insert(jln_cxflags, "-no-ipo")
-          insert(jln_ldflags, "-no-ipo")
-        else
-          insert(jln_cxflags, "-ipo")
-          insert(jln_ldflags, "-ipo")
-          if options.lto == "fat" then
-            if is_plat("linux") then
-              insert(jln_cxflags, "-ffat-lto-objects")
-              insert(jln_ldflags, "-ffat-lto-objects")
-            end
-          end
+          insert(jln_cxflags, "/Qfp-stack-check")
+          insert(jln_cxflags, "/Qfp-trap:common")
         end
       end
       if options.control_flow ~= "" then
         if options.control_flow == "off" then
-          insert(jln_cxflags, "-mconditional-branch=keep")
-          insert(jln_cxflags, "-fcf-protection=none")
+          insert(jln_cxflags, "/guard:cf-")
+          insert(jln_cxflags, "/mconditional-branch=keep")
         else
+          insert(jln_cxflags, "/guard:cf")
           if options.control_flow == "branch" then
-            insert(jln_cxflags, "-mconditional-branch=all-fix")
-            insert(jln_cxflags, "-fcf-protection=branch")
+            insert(jln_cxflags, "/mconditional-branch:all-fix")
+            insert(jln_cxflags, "/Qcf-protection:branch")
           else
             if options.control_flow == "on" then
-              insert(jln_cxflags, "-mconditional-branch=all-fix")
-              insert(jln_cxflags, "-fcf-protection=full")
+              insert(jln_cxflags, "/mconditional-branch:all-fix")
+              insert(jln_cxflags, "/Qcf-protection:full")
             end
           end
         end
       end
-      if options.exceptions ~= "" then
-        if options.exceptions == "on" then
-          insert(jln_cxflags, "-fexceptions")
-        else
-          insert(jln_cxflags, "-fno-exceptions")
-        end
-      end
       if options.cpu ~= "" then
         if options.cpu == "generic" then
-          insert(jln_cxflags, "-mtune=generic")
-          insert(jln_ldflags, "-mtune=generic")
+          insert(jln_cxflags, "/Qtune:generic")
+          insert(jln_ldflags, "/Qtune:generic")
         else
-          insert(jln_cxflags, "-xHost")
-          insert(jln_ldflags, "-xHost")
+          insert(jln_cxflags, "/QxHost")
+          insert(jln_ldflags, "/QxHost")
         end
       end
-    end
-  end
-  if is_plat("mingw") then
-    if options.windows_bigobj ~= "" then
-      insert(jln_cxflags, "-Wa,-mbig-obj")
+    else
+      if compiler == 'icc' then
+        if options.warnings ~= "" then
+          if options.warnings == "off" then
+            insert(jln_cxflags, "-w")
+          else
+            insert(jln_cxflags, "-Wall")
+            insert(jln_cxflags, "-Warray-bounds")
+            insert(jln_cxflags, "-Wcast-qual")
+            insert(jln_cxflags, "-Wchar-subscripts")
+            insert(jln_cxflags, "-Wdisabled-optimization")
+            insert(jln_cxflags, "-Wenum-compare")
+            insert(jln_cxflags, "-Wextra")
+            insert(jln_cxflags, "-Wfloat-equal")
+            insert(jln_cxflags, "-Wformat-security")
+            insert(jln_cxflags, "-Wformat=2")
+            insert(jln_cxflags, "-Winit-self")
+            insert(jln_cxflags, "-Winvalid-pch")
+            insert(jln_cxflags, "-Wmaybe-uninitialized")
+            insert(jln_cxflags, "-Wmissing-include-dirs")
+            insert(jln_cxflags, "-Wnarrowing")
+            insert(jln_cxflags, "-Wnonnull")
+            insert(jln_cxflags, "-Wparentheses")
+            insert(jln_cxflags, "-Wpointer-sign")
+            insert(jln_cxflags, "-Wreorder")
+            insert(jln_cxflags, "-Wsequence-point")
+            insert(jln_cxflags, "-Wtrigraphs")
+            insert(jln_cxflags, "-Wundef")
+            insert(jln_cxflags, "-Wunused-function")
+            insert(jln_cxflags, "-Wunused-but-set-variable")
+            insert(jln_cxflags, "-Wunused-variable")
+            insert(jln_cxflags, "-Wpointer-arith")
+            insert(jln_cxflags, "-Wold-style-definition")
+            insert(jln_cxflags, "-Wstrict-prototypes")
+            insert(jln_cxflags, "-Wwrite-strings")
+          end
+        end
+        if options.switch_warnings ~= "" then
+          if ( options.switch_warnings == "on" or options.switch_warnings == "exhaustive_enum" ) then
+            insert(jln_cxflags, "-Wswitch-enum")
+          else
+            if options.switch_warnings == "mandatory_default" then
+              insert(jln_cxflags, "-Wswitch-default")
+            else
+              if options.switch_warnings == "exhaustive_enum_and_mandatory_default" then
+                insert(jln_cxflags, "-Wswitch")
+              else
+                insert(jln_cxflags, "-Wno-switch")
+              end
+            end
+          end
+        end
+        if options.warnings_as_error ~= "" then
+          if options.warnings_as_error == "on" then
+            insert(jln_cxflags, "-Werror")
+          else
+            if options.warnings_as_error == "basic" then
+              insert(jln_cxflags, "-diag-error=1079,39,109")
+            end
+          end
+        end
+        if options.pedantic ~= "" then
+          if options.pedantic == "off" then
+            insert(jln_cxflags, "-fgnu-keywords")
+          else
+            insert(jln_cxflags, "-fno-gnu-keywords")
+          end
+        end
+        if options.shadow_warnings ~= "" then
+          if options.shadow_warnings == "off" then
+            insert(jln_cxflags, "-Wno-shadow")
+          else
+            if ( options.shadow_warnings == "on" or options.shadow_warnings == "all" ) then
+              insert(jln_cxflags, "-Wshadow")
+            end
+          end
+        end
+        if options.debug ~= "" then
+          if options.debug == "off" then
+            insert(jln_cxflags, "-g0")
+          else
+            insert(jln_cxflags, "-g")
+          end
+        end
+        if options.optimization ~= "" then
+          if options.optimization == "0" then
+            insert(jln_cxflags, "-O0")
+          else
+            if options.optimization == "g" then
+              insert(jln_cxflags, "-O1")
+            else
+              if options.optimization == "1" then
+                insert(jln_cxflags, "-O1")
+              else
+                if options.optimization == "2" then
+                  insert(jln_cxflags, "-O2")
+                else
+                  if options.optimization == "3" then
+                    insert(jln_cxflags, "-O3")
+                  else
+                    if options.optimization == "z" then
+                      insert(jln_cxflags, "-fast")
+                    else
+                      if options.optimization == "size" then
+                        insert(jln_cxflags, "-Os")
+                      else
+                        insert(jln_cxflags, "-Ofast")
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+        if options.stack_protector ~= "" then
+          if options.stack_protector == "off" then
+            insert(jln_cxflags, "-fno-protector-strong")
+            insert(jln_cxflags, "-U_FORTIFY_SOURCE")
+            insert(jln_ldflags, "-fno-protector-strong")
+          else
+            insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
+            if options.stack_protector == "strong" then
+              insert(jln_cxflags, "-fstack-protector-strong")
+              insert(jln_ldflags, "-fstack-protector-strong")
+            else
+              if options.stack_protector == "all" then
+                insert(jln_cxflags, "-fstack-protector-all")
+                insert(jln_ldflags, "-fstack-protector-all")
+              else
+                insert(jln_cxflags, "-fstack-protector")
+                insert(jln_ldflags, "-fstack-protector")
+              end
+            end
+          end
+        end
+        if options.relro ~= "" then
+          if options.relro == "off" then
+            insert(jln_ldflags, "-Xlinker-znorelro")
+          else
+            if options.relro == "on" then
+              insert(jln_ldflags, "-Xlinker-zrelro")
+            else
+              insert(jln_ldflags, "-Xlinker-zrelro")
+              insert(jln_ldflags, "-Xlinker-znow")
+              insert(jln_ldflags, "-Xlinker-znoexecstack")
+            end
+          end
+        end
+        if options.pie ~= "" then
+          if options.pie == "off" then
+            insert(jln_ldflags, "-no-pic")
+          else
+            if options.pie == "on" then
+              insert(jln_ldflags, "-pie")
+            else
+              if options.pie == "fpie" then
+                insert(jln_cxflags, "-fpie")
+              else
+                if options.pie == "fpic" then
+                  insert(jln_cxflags, "-fpic")
+                else
+                  if options.pie == "fPIE" then
+                    insert(jln_cxflags, "-fPIE")
+                  else
+                    if options.pie == "fPIC" then
+                      insert(jln_cxflags, "-fPIC")
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+        if options.sanitizers ~= "" then
+          if options.sanitizers == "on" then
+            insert(jln_cxflags, "-ftrapuv")
+          end
+        end
+        if options.integer_sanitizers ~= "" then
+          if options.integer_sanitizers == "on" then
+            insert(jln_cxflags, "-funsigned-bitfields")
+          else
+            insert(jln_cxflags, "-fno-unsigned-bitfields")
+          end
+        end
+        if options.float_sanitizers ~= "" then
+          if options.float_sanitizers == "on" then
+            insert(jln_cxflags, "-fp-stack-check")
+            insert(jln_cxflags, "-fp-trap=common")
+          end
+        end
+        if options.linker ~= "" then
+          if options.linker == "bfd" then
+            insert(jln_ldflags, "-fuse-ld=bfd")
+          else
+            if options.linker == "gold" then
+              insert(jln_ldflags, "-fuse-ld=gold")
+            else
+              if options.linker == "mold" then
+                insert(jln_ldflags, "-fuse-ld=mold")
+              else
+                insert(jln_ldflags, "-fuse-ld=lld")
+              end
+            end
+          end
+        end
+        if options.lto ~= "" then
+          if options.lto == "off" then
+            insert(jln_cxflags, "-no-ipo")
+            insert(jln_ldflags, "-no-ipo")
+          else
+            insert(jln_cxflags, "-ipo")
+            insert(jln_ldflags, "-ipo")
+            if options.lto == "fat" then
+              if is_plat("linux") then
+                insert(jln_cxflags, "-ffat-lto-objects")
+                insert(jln_ldflags, "-ffat-lto-objects")
+              end
+            end
+          end
+        end
+        if options.control_flow ~= "" then
+          if options.control_flow == "off" then
+            insert(jln_cxflags, "-mconditional-branch=keep")
+            insert(jln_cxflags, "-fcf-protection=none")
+          else
+            if options.control_flow == "branch" then
+              insert(jln_cxflags, "-mconditional-branch=all-fix")
+              insert(jln_cxflags, "-fcf-protection=branch")
+            else
+              if options.control_flow == "on" then
+                insert(jln_cxflags, "-mconditional-branch=all-fix")
+                insert(jln_cxflags, "-fcf-protection=full")
+              end
+            end
+          end
+        end
+        if options.exceptions ~= "" then
+          if options.exceptions == "on" then
+            insert(jln_cxflags, "-fexceptions")
+          else
+            insert(jln_cxflags, "-fno-exceptions")
+          end
+        end
+        if options.cpu ~= "" then
+          if options.cpu == "generic" then
+            insert(jln_cxflags, "-mtune=generic")
+            insert(jln_ldflags, "-mtune=generic")
+          else
+            insert(jln_cxflags, "-xHost")
+            insert(jln_ldflags, "-xHost")
+          end
+        end
+      else
+        if is_plat("mingw") then
+          if options.windows_bigobj ~= "" then
+            insert(jln_cxflags, "-Wa,-mbig-obj")
+          end
+        end
+      end
     end
   end
   return {cflags=jln_cxflags, ldflags=jln_ldflags}
