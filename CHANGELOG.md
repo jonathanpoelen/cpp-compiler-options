@@ -2,6 +2,9 @@
 
 ## 2024-03-23
 
+- remove `stl_debug=assert_as_exception`
+- add `stl_debug=extensive`
+- add `stl_debug=debug`
 - remove `debug=line_tables_only`
 - add `debug=gdb`
 - add `debug=vms`

@@ -931,30 +931,51 @@ opt'conversion_warnings' {
 
 Or(gcc, clang, clang_emcc) {
   opt'stl_debug' {
+    -- https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_macros.html
+    -- https://libcxx.llvm.org/Hardening.html (libc++-18)
+    -- _LIBCPP_DEBUG is a pre-hardening mode
     -lvl'off' {
-      lvl'assert_as_exception' {
-        cxx'-D_LIBCPP_DEBUG_USE_EXCEPTIONS'
-      },
-
       match {
-        Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
-          clang {
-            -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
-            Or(vers'>=8', lvl'allow_broken_abi_and_bugs') {
-              cxx'-D_LIBCPP_DEBUG=1',
+        clang'<18' {
+          match {
+            Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
+              -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
+              Or(vers'>=8', lvl'allow_broken_abi_and_bugs') {
+                cxx'-D_LIBCPP_DEBUG=1',
+              },
+              cxx'-D_GLIBCXX_DEBUG',
             },
-          },
-          cxx'-D_GLIBCXX_DEBUG',
+            cxx'-D_GLIBCXX_ASSERTIONS',
+          }
         },
-        cxx'-D_GLIBCXX_ASSERTIONS',
+        lvl'on' {
+          cxx'-D_GLIBCXX_ASSERTIONS',
+          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST',
+        },
+        lvl'extensive' {
+          cxx'-D_GLIBCXX_ASSERTIONS',
+          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE',
+        },
+        lvl'debug' {
+          cxx'-D_GLIBCXX_ASSERTIONS',
+          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
+        },
+        -- Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs')
+        {
+          cxx'-D_GLIBCXX_DEBUG',
+          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
+          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS',
+          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING',
+          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR',
+          cxx'-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR',
+          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY',
+        },
       },
 
-      opt'pedantic' {
-        -lvl'off' {
-          cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
-        },
+      has_opt'pedantic':without(lvl'off') {
+        cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
       },
-    }
+    },
   },
 
   opt'pedantic' {
@@ -1393,13 +1414,18 @@ Or(msvc, clang_cl, icl) {
 
   opt'stl_debug' {
     match {
-      lvl'off' {
-        flag'/D_HAS_ITERATOR_DEBUGGING=0'
+      Or(msvc'>=16.7', clang_cl) {
+        match {
+          lvl'off' { flag'/D_ITERATOR_DEBUG_LEVEL=0' },
+          Or(lvl'on', lvl'extensive') { flag'/D_ITERATOR_DEBUG_LEVEL=1' },
+          flag'/D_ITERATOR_DEBUG_LEVEL=2',
+        }
       },
+      lvl'off' { flag'/D_HAS_ITERATOR_DEBUGGING=0' },
       {
         flag'/D_DEBUG', -- set by /MDd /MTd or /LDd
         flag'/D_HAS_ITERATOR_DEBUGGING=1',
-      }
+      },
     }
   },
 
@@ -2535,7 +2561,14 @@ local Vbase = {
     },
 
     stl_debug={
-      values={'off', 'on', 'allow_broken_abi', 'allow_broken_abi_and_bugs', 'assert_as_exception'},
+      values={
+        'off',
+        {'on', 'Enable stl assertion or fast hardening mode with libc++'},
+        {'extensive', 'Enable stl assertion or extensive hardening mode with libc++'},
+        {'debug', 'Enable stl assertion or debug hardening mode with libc++'},
+        {'allow_broken_abi', 'Debug mode with ABI incompatibility for more check'},
+        {'allow_broken_abi_and_bugs', 'Like allow_broken_abi, but can make crash with libc++-7 or less'},
+      },
       description='Controls the debug level of the STL',
       unavailable='c',
     },
@@ -2670,6 +2703,7 @@ local Vbase = {
       'control_flow',
       'relro',
       'stack_protector',
+      'stl_debug',
     }},
     -- other categories are automatically put in Other
   },
