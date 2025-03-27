@@ -267,7 +267,9 @@ end
 -- all warnings by version: https://github.com/pkolbus/compiler-warnings
 
 -- clang:
+-- https://clang.llvm.org/docs/index.html
 -- https://clang.llvm.org/docs/DiagnosticsReference.html
+-- https://clang.llvm.org/docs/ClangCommandLineReference.html
 -- https://releases.llvm.org/10.0.0/tools/clang/docs/DiagnosticsReference.html
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Driver/Options.td
 -- https://github.com/llvm-mirror/clang/blob/master/include/clang/Basic/Diagnostic.td
@@ -1207,6 +1209,8 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- https://airbus-seclab.github.io/c-compiler-security/
+      -- g++ --help=hardened
       opt'stack_protector' {
         match {
           lvl'off' {
@@ -1214,8 +1218,14 @@ Or(gcc, clang, clang_emcc) {
             flag'-U_FORTIFY_SOURCE'
           },
           {
-            flag'-D_FORTIFY_SOURCE=2',
             flag'-Wstack-protector',
+            match {
+              Or(gcc'>=12', clang'>=14') {
+                flag'-D_FORTIFY_SOURCE=3'
+              },
+              -- >= gcc-4.1
+              flag'-D_FORTIFY_SOURCE=2',
+            },
             match {
               lvl'strong' {
                 match {
@@ -1227,7 +1237,7 @@ Or(gcc, clang, clang_emcc) {
                       }
                     }
                   },
-                  clang {
+                  --[[clang]] {
                     fl'-fstack-protector-strong',
                     fl'-fsanitize=safe-stack',
                     vers'>=11' {
@@ -1242,7 +1252,7 @@ Or(gcc, clang, clang_emcc) {
                   gcc'>=8' {
                     fl'-fstack-clash-protection'
                   },
-                  clang {
+                  --[[clang]] {
                     fl'-fsanitize=safe-stack',
                     vers'>=11' {
                       fl'-fstack-clash-protection'
@@ -1264,6 +1274,7 @@ Or(gcc, clang, clang_emcc) {
       },
 
       -- https://airbus-seclab.github.io/c-compiler-security/
+      -- g++ --help=hardened
       opt'relro' {
         match {
           lvl'off' { link'-Wl,-z,norelro', },
