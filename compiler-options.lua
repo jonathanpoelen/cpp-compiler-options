@@ -1343,24 +1343,22 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- https://gcc.gnu.org/onlinedocs/gcc/Static-Analyzer-Options.html
       opt'analyzer' {
         gcc'>=10' {
           match {
             lvl'off' {
               flag'-fno-analyzer'
             },
-            {
+            { -- lvl'on'
               flag'-fanalyzer',
-              lvl'taint' {
-                flag'-fanalyzer-checker=taint'
-              },
 
               opt'analyzer_too_complex_warning' {
                 match {
                   lvl'on' {
                     flag'-Wanalyzer-too-complex'
                   },
-                  { --[[lvl'off']]
+                  { -- lvl'off'
                     flag'-Wno-analyzer-too-complex'
                   }
                 }
@@ -1621,6 +1619,20 @@ match {
   -- https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-c4000-c5999?view=vs-2019
   -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-option-warning-level?view=vs-2019
   msvc {
+    -- https://learn.microsoft.com/en-us/cpp/build/reference/analyze-code-analysis
+    opt'analyzer' {
+      vers'>=15' {
+        match {
+          lvl'off' {
+            flag'/analyze-'
+          },
+          { -- lvl'on'
+            flag'/analyze'
+          }
+        }
+      }
+    },
+
     opt'windows_bigobj' {
       flag'/bigobj',
     },
@@ -2382,14 +2394,14 @@ local Vbase = {
   ]]
   _koptions={
     analyzer={
-      values={'off', 'on', 'taint'},
-      description='Enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)',
+      values={'off', 'on'},
+      description='Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.',
       incidental=true,
     },
 
     analyzer_too_complex_warning={
       values={'off', 'on'},
-      description='By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.',
+      description='By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs. Available only with GCC.',
       incidental=true,
     },
 
@@ -2400,7 +2412,7 @@ local Vbase = {
         {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'},
         {'3', 'As per the previous level, but show all control flow events, not just significant ones.'},
       },
-      description='Controls the complexity of the control flow paths that are emitted for analyzer diagnostics',
+      description='Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.',
       incidental=true,
     },
 
