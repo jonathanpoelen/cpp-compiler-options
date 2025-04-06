@@ -94,18 +94,19 @@ local function create_debug_file(prefix, files_contents)
   local lines = tokeys(
     split_lines(files_contents['debug'],
       split_lines(files_contents['sanitizers'])))
+
+  -- debug_full file
   local debug_full = tokeys(split_lines(files_contents['stl_debug']), tokeys(lines))
-  local debug_full_broken_abi = tokeys(split_lines(files_contents['stl_debug_broken_abi']), lines)
   write_ktable(debug_full, prefix .. 'debug_full')
-  if files_contents['stl_debug_broken_abi'] then
-    write_ktable(debug_full_broken_abi, prefix .. 'debug_full_broken_abi')
+
+  -- remove stl_debug file when duplicate stl_hardening
+  if files_contents['stl_hardening'] == files_contents['stl_debug'] then
+    remove_file(prefix .. 'stl_debug')
   end
-  if files_contents['stl_debug_broken_abi'] == files_contents['stl_debug_broken_abi_and_bugs'] then
-    remove_file(prefix .. 'stl_debug_broken_abi_and_bugs')
-  else
-    local kt = tokeys(split_lines(files_contents['stl_debug_broken_abi_and_bugs']), debug_full_broken_abi)
-    write_ktable(kt, prefix .. 'debug_full_broken_abi_and_bugs')
-  end
+
+  -- debug_full_broken_abi file
+  local debug_full_broken_abi = tokeys(split_lines(files_contents['stl_debug_broken_abi']), lines)
+  write_ktable(debug_full_broken_abi, prefix .. 'debug_full_broken_abi')
 end
 
 for comp,versions in pairs(tree) do

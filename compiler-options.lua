@@ -265,6 +265,7 @@ end
 -- gcc and clang:
 -- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 -- all warnings by version: https://github.com/pkolbus/compiler-warnings
+-- https://gcc.gnu.org/onlinedocs/
 
 -- clang:
 -- https://clang.llvm.org/docs/index.html
@@ -276,6 +277,12 @@ end
 
 -- clang-cl
 -- https://clang.llvm.org/docs/UsersManual.html#id9
+-- or clang --driver-mode=cl -help
+
+-- msvc
+-- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE
+-- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
+-- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
 
 -- icc, icpc and icl:
 -- icc / icpc (linux) -diag-enable warn -diag-dump
@@ -932,25 +939,15 @@ opt'conversion_warnings' {
 },
 
 Or(gcc, clang, clang_emcc) {
-  opt'stl_debug' {
+  opt'stl_hardening' {
     -- https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_macros.html
     -- https://libcxx.llvm.org/Hardening.html (libc++-18)
     -- _LIBCPP_DEBUG is a pre-hardening mode
+    -- Note: gcc-11 supports `-stdlib=libc++` (if configured to support this).
+    --       clang supports `-stdlib=libstdc++`.
     -lvl'off' {
       match {
-        clang'<18' {
-          match {
-            Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
-              -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
-              Or(vers'>=8', lvl'allow_broken_abi_and_bugs') {
-                cxx'-D_LIBCPP_DEBUG=1',
-              },
-              cxx'-D_GLIBCXX_DEBUG',
-            },
-            cxx'-D_GLIBCXX_ASSERTIONS',
-          }
-        },
-        lvl'on' {
+        lvl'fast' {
           cxx'-D_GLIBCXX_ASSERTIONS',
           cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST',
         },
@@ -962,20 +959,30 @@ Or(gcc, clang, clang_emcc) {
           cxx'-D_GLIBCXX_ASSERTIONS',
           cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
         },
-        -- Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs')
-        {
+        --[[lvl'debug_with_broken_abi']] {
           cxx'-D_GLIBCXX_DEBUG',
-          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
-          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS',
-          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING',
-          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR',
-          cxx'-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR',
-          cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY',
-        },
-      },
-
-      has_opt'pedantic':without(lvl'off') {
-        cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
+          has_opt'pedantic':without(lvl'off') {
+            cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
+          },
+          match {
+            clang_like'<18' {
+              -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
+              vers'>=8' {
+                cxx'-D_LIBCPP_DEBUG=1',
+              },
+            },
+            -- gcc or recent clang
+            {
+              cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
+              -- https://libcxx.llvm.org/Hardening.html#abi-options
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS',
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING',
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR',
+              cxx'-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR',
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY',
+            }
+          },
+        }
       },
     },
   },
@@ -1396,10 +1403,6 @@ lld_link {
   },
 },
 
--- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options?view=vs-2019
--- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically?view=vs-2019
--- https://clang.llvm.org/docs/UsersManual.html#id9
--- or clang --driver-mode=cl -help
 Or(msvc, clang_cl, icl) {
   opt'exceptions' {
     match {
@@ -1423,20 +1426,55 @@ Or(msvc, clang_cl, icl) {
     }
   },
 
-  opt'stl_debug' {
+  -- https://github.com/microsoft/STL/wiki/STL-Hardening
+  -- https://learn.microsoft.com/en-us/cpp/standard-library/iterator-debug-level
+  -- https://github.com/MicrosoftDocs/cpp-docs/blob/main/docs/standard-library/iterator-debug-level.md
+  -- _MSVC_STL_HARDENING (Controlled by some other setting, e.g. implied by /sdl TODO check that, not with _MSC_VER=1941 / VS 2022 17.11)
+  -- _MSVC_STL_HARDENING_* ("Fine-Grained")
+  -- _MSVC_STL_DESTRUCTOR_TOMBSTONES
+  -- _ITERATOR_DEBUG_LEVEL (break ABI)
+  -- _HAS_ITERATOR_DEBUGGING (deprecated(?) in 16.x)
+  -- _SECURE_SCL (deprecated in 12.x)
+  --
+  -- _ITERATOR_DEBUG_LEVEL  _SECURE_SCL    _HAS_ITERATOR_DEBUGGING
+  -- 0 (Release default) =  0 (disabled) + 0 (disabled)
+  -- 1                   =  1 (enabled)  + 0 (disabled)
+  -- 2 (Debug default)   = (not relevant)+ 1 (enabled in Debug mode)
+  --
+  -- deduce from stl/inc/yvals.h
+  --                         _SECURE_SCL=0  _SECURE_SCL=1
+  -- _ITERATOR_DEBUG_LEVEL=0      ok            error
+  -- _ITERATOR_DEBUG_LEVEL=1     error           ok
+  -- _ITERATOR_DEBUG_LEVEL=2     error           ok
+  --
+  --                         _HAS_ITERATOR_DEBUGGING=0  _HAS_ITERATOR_DEBUGGING=1
+  -- _ITERATOR_DEBUG_LEVEL=0            ok                        error
+  -- _ITERATOR_DEBUG_LEVEL=1            ok                        error
+  -- _ITERATOR_DEBUG_LEVEL=2           error                       ok
+  opt'stl_hardening' {
+    -- Or(msvc'>=17', clang_cl'>=12') -> hardening mode
     match {
-      Or(msvc'>=16.7', clang_cl) {
-        match {
-          lvl'off' { flag'/D_ITERATOR_DEBUG_LEVEL=0' },
-          Or(lvl'on', lvl'extensive') { flag'/D_ITERATOR_DEBUG_LEVEL=1' },
-          flag'/D_ITERATOR_DEBUG_LEVEL=2',
-        }
+      lvl'off' {
+        -- cxx'/U_DEBUG',
+        cxx'/D_MSVC_STL_HARDENING=0',
+        cxx'/D_ITERATOR_DEBUG_LEVEL=0',
+        -- old macros
+        flag'/D_SECURE_SCL=0',
+        cxx'/D_HAS_ITERATOR_DEBUGGING=0',
       },
-      lvl'off' { flag'/D_HAS_ITERATOR_DEBUGGING=0' },
-      {
-        flag'/D_DEBUG', -- set by /MDd /MTd or /LDd
-        flag'/D_HAS_ITERATOR_DEBUGGING=1',
+      Or(lvl'fast', lvl'extensive') {
+        cxx'/D_MSVC_STL_HARDENING=1',
       },
+      lvl'debug' {
+        cxx'/D_MSVC_STL_HARDENING=1',
+        cxx'/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1',
+      },
+      --[[lvl'debug_with_broken_abi']] {
+        flag'/D_DEBUG',
+        -- cxx'/D_ITERATOR_DEBUG_LEVEL=2', -- enabled with /D_DEBUG
+        cxx'/D_MSVC_STL_HARDENING=1',
+        cxx'/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1',
+      }
     }
   },
 
@@ -2111,12 +2149,15 @@ match {
       }
     },
 
-    opt'stl_debug' {
-      -lvl'off' {
-        match {
-          Or(lvl'allow_broken_abi', lvl'allow_broken_abi_and_bugs') {
-            cxx'-D_GLIBCXX_DEBUG',
+    opt'stl_hardening' {
+      match {
+        lvl'debug_with_broken_abi' {
+          cxx'-D_GLIBCXX_DEBUG',
+          has_opt'pedantic':without(lvl'off') {
+            cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
           },
+        },
+        -lvl'off' {
           cxx'-D_GLIBCXX_ASSERTIONS',
         }
       },
@@ -2571,16 +2612,15 @@ local Vbase = {
       description='Enable sanitizers (asan, ubsan, etc)',
     },
 
-    stl_debug={
+    stl_hardening={
       values={
-        'off',
-        {'on', 'Enable stl assertion or fast hardening mode with libc++'},
-        {'extensive', 'Enable stl assertion or extensive hardening mode with libc++'},
-        {'debug', 'Enable stl assertion or debug hardening mode with libc++'},
-        {'allow_broken_abi', 'Debug mode with ABI incompatibility for more check'},
-        {'allow_broken_abi_and_bugs', 'Like allow_broken_abi, but can make crash with libc++-7 or less'},
+        {'off'},
+        {'fast', 'A set of security-critical checks that can be done with relatively little overhead in constant time and are intended to be used in production. (no impact on the ABI)'},
+        {'extensive', 'All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren’t security-critical. (no impact on the ABI)'},
+        {'debug', 'Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. (no impact on the ABI)'},
+        {'debug_with_broken_abi', 'Debug mode with ABI incompatibility for more check.'},
       },
-      description='Controls the debug level of the STL',
+      description='Hardening allows turning some instances of undefined behavior in the standard library into a contract violation',
       unavailable='c',
     },
 
@@ -2670,7 +2710,6 @@ local Vbase = {
       'conversion_warnings',
       'covered_switch_default_warnings',
       'fix_compiler_error',
-      'windows_abi_compatibility_warnings',
       'msvc_crt_secure_no_warnings',
       'noexcept_warnings',
       'reproducible_build_warnings',
@@ -2678,13 +2717,14 @@ local Vbase = {
       'suggestions',
       'switch_warnings',
       'unsafe_buffer_usage_warnings',
+      'windows_abi_compatibility_warnings',
       'warnings',
       'warnings_as_error',
     }},
     {'Pedantic', {
+      'msvc_conformance',
       'pedantic',
       'stl_fix',
-      'msvc_conformance',
     }},
     {'Debug', {
       'control_flow',
@@ -2696,7 +2736,7 @@ local Vbase = {
       'optimization',
       'other_sanitizers',
       'sanitizers',
-      'stl_debug',
+      'stl_hardening',
       'var_init',
     }},
     {'Optimization', {
@@ -2714,16 +2754,34 @@ local Vbase = {
       'control_flow',
       'relro',
       'stack_protector',
-      'stl_debug',
+      'stl_hardening',
     }},
     -- other categories are automatically put in Other
   },
 
   _opts_build_type={
-    debug={debug='on', stl_debug='on', control_flow='on', sanitizers='on',},
-    release={linker='native', lto='on', optimization='3',},
-    debug_optimized={linker='native', lto='on', optimization='g', debug='on',},
-    minimum_size_release={linker='native', lto='on', optimization='size',},
+    debug={
+      control_flow='on',
+      debug='on',
+      sanitizers='on',
+      stl_hardening='debug',
+    },
+    release={
+      linker='native',
+      lto='on',
+      optimization='3',
+    },
+    debug_optimized={
+      debug='on',
+      linker='native',
+      lto='on',
+      optimization='g',
+    },
+    minimum_size_release={
+      linker='native',
+      lto='on',
+      optimization='size',
+    },
   },
 
   indent = '  ',

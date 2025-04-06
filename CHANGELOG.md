@@ -1,5 +1,11 @@
 # ChangeLog
 
+## 2024-04-06
+
+- remove `stl_debug` (replaced by `stl_hardening`)
+- add `stl_hardening` (default off fast extensive debug debug_with_broken_abi)
+
+
 ## 2024-03-23
 
 - remove `stl_debug=assert_as_exception`

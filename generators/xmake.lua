@@ -201,7 +201,7 @@ end
 -- `options_by_modes` = {
 --   [modename]: {
 --     function() ... end, -- optional callback
---     stl_debug='on', ... -- options (see create_options())
+--     stl_hardening='debug_with_broken_abi', ... -- options (see create_options())
 --   }
 -- }
 -- `extra_options` = {

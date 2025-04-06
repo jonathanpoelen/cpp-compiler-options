@@ -107,12 +107,12 @@ while read comp ; do
   gencompopt 2 warnings                   $warn_opts
   gencompopt 2 warnings_with_conversions  $warn_opts conversion_warnings
   gencompopt 2 suggestions                suggestions
-  gencompopt 2 stl_debug                  stl_debug
   gencompopt 2 debug                      debug
   gencompopt 2 sanitizers                 sanitizers
   # C++ only
-  gencompopt 1 stl_debug_broken_abi          stl_fix stl_debug=allow_broken_abi
-  gencompopt 1 stl_debug_broken_abi_and_bugs stl_fix stl_debug=allow_broken_abi_and_bugs
+  gencompopt 1 stl_hardening                 stl_hardening=fast
+  gencompopt 1 stl_debug                     stl_hardening=debug
+  gencompopt 1 stl_debug_broken_abi          stl_hardening=debug_with_broken_abi
   gencompopt 1 sanitizers-pointer            other_sanitizers=pointer
   gencompopt 1 template_tree                 elide_type=off diagnostics_show_template_tree=on
 done < <($LUA ./compiler-options.lua generators/compiler.lua)
