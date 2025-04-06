@@ -2789,18 +2789,18 @@ local Vbase = {
       stl_hardening='debug',
     },
     release={
-      linker='native',
+      -- linker='native',
       lto='on',
       optimization='3',
     },
     debug_optimized={
       debug='on',
-      linker='native',
+      -- linker='native',
       lto='on',
       optimization='g',
     },
     minimum_size_release={
-      linker='native',
+      -- linker='native',
       lto='on',
       optimization='size',
     },
