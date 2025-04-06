@@ -1,5 +1,5 @@
 -D_GLIBCXX_ASSERTIONS
--D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST
+-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
 -ffold-simple-inlines
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls

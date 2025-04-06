@@ -10,8 +10,8 @@ local _extraopt_flag_names = {
 }
 
 local _flag_names = {
-  ["jln-analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["taint"]="taint", [""]=""},
-  ["analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["taint"]="taint", [""]=""},
+  ["jln-analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-analyzer-too-complex-warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["analyzer_too_complex_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-analyzer-verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
@@ -1219,8 +1219,12 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "-U_FORTIFY_SOURCE")
           insert(jln_ldflags, "-Wno-stack-protector")
         else
-          insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
           insert(jln_cxflags, "-Wstack-protector")
+          if ( ( compiler == 'gcc' and version >= 1200000 ) or ( compiler == 'clang' and version >= 1400000 ) ) then
+            insert(jln_cxflags, "-D_FORTIFY_SOURCE=3")
+          else
+            insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
+          end
           if options.stack_protector == "strong" then
             if compiler == 'gcc' then
               if version >= 400009 then
@@ -1232,15 +1236,13 @@ function get_flags(options, extra_options)
                 end
               end
             else
-              if compiler == 'clang' then
-                insert(jln_cxflags, "-fstack-protector-strong")
-                insert(jln_cxflags, "-fsanitize=safe-stack")
-                insert(jln_ldflags, "-fstack-protector-strong")
-                insert(jln_ldflags, "-fsanitize=safe-stack")
-                if version >= 1100000 then
-                  insert(jln_cxflags, "-fstack-clash-protection")
-                  insert(jln_ldflags, "-fstack-clash-protection")
-                end
+              insert(jln_cxflags, "-fstack-protector-strong")
+              insert(jln_cxflags, "-fsanitize=safe-stack")
+              insert(jln_ldflags, "-fstack-protector-strong")
+              insert(jln_ldflags, "-fsanitize=safe-stack")
+              if version >= 1100000 then
+                insert(jln_cxflags, "-fstack-clash-protection")
+                insert(jln_ldflags, "-fstack-clash-protection")
               end
             end
           else
@@ -1251,13 +1253,11 @@ function get_flags(options, extra_options)
                 insert(jln_cxflags, "-fstack-clash-protection")
                 insert(jln_ldflags, "-fstack-clash-protection")
               else
-                if compiler == 'clang' then
-                  insert(jln_cxflags, "-fsanitize=safe-stack")
-                  insert(jln_ldflags, "-fsanitize=safe-stack")
-                  if version >= 1100000 then
-                    insert(jln_cxflags, "-fstack-clash-protection")
-                    insert(jln_ldflags, "-fstack-clash-protection")
-                  end
+                insert(jln_cxflags, "-fsanitize=safe-stack")
+                insert(jln_ldflags, "-fsanitize=safe-stack")
+                if version >= 1100000 then
+                  insert(jln_cxflags, "-fstack-clash-protection")
+                  insert(jln_ldflags, "-fstack-clash-protection")
                 end
               end
             else
@@ -1339,9 +1339,6 @@ function get_flags(options, extra_options)
             insert(jln_cxflags, "-fno-analyzer")
           else
             insert(jln_cxflags, "-fanalyzer")
-            if options.analyzer == "taint" then
-              insert(jln_cxflags, "-fanalyzer-checker=taint")
-            end
             if options.analyzer_too_complex_warning ~= "" then
               if options.analyzer_too_complex_warning == "on" then
                 insert(jln_cxflags, "-Wanalyzer-too-complex")
@@ -1412,23 +1409,12 @@ function get_flags(options, extra_options)
         insert(jln_cxflags, "/GR-")
       end
     end
-    if options.stl_debug ~= "" then
-      if ( ( compiler == 'cl' and version >= 1600007 ) or compiler == 'clang-cl' ) then
-        if options.stl_debug == "off" then
-          insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=0")
-        else
-          if ( options.stl_debug == "on" or options.stl_debug == "extensive" ) then
-            insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=1")
-          else
-            insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=2")
-          end
-        end
+    if options.stl_hardening ~= "" then
+      if options.stl_hardening == "off" then
+        insert(jln_cxflags, "/D_SECURE_SCL=0")
       else
-        if options.stl_debug == "off" then
-          insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=0")
-        else
+        if ( not ( ( options.stl_hardening == "fast" or options.stl_hardening == "extensive" ) ) and options.stl_hardening ~= "debug" ) then
           insert(jln_cxflags, "/D_DEBUG")
-          insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=1")
         end
       end
     end
@@ -1581,6 +1567,15 @@ function get_flags(options, extra_options)
     end
   end
   if compiler == 'cl' then
+    if options.analyzer ~= "" then
+      if version >= 1500000 then
+        if options.analyzer == "off" then
+          insert(jln_cxflags, "/analyze-")
+        else
+          insert(jln_cxflags, "/analyze")
+        end
+      end
+    end
     if options.windows_bigobj ~= "" then
       insert(jln_cxflags, "/bigobj")
     end

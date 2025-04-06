@@ -2,7 +2,8 @@
 -fsanitize=address
 -fsanitize=undefined
 /DEBUG
-/D_ITERATOR_DEBUG_LEVEL=1
+/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1
+/D_MSVC_STL_HARDENING=1
 /Od
 /RTC1
 /ZI

@@ -2,7 +2,6 @@
 -fsanitize=address
 -fsanitize=undefined
 /DEBUG
-/D_ITERATOR_DEBUG_LEVEL=1
 /Od
 /RTC1
 /ZI

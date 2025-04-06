@@ -11,118 +11,117 @@ import string ;
 
 JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
-# Enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)
-feature <jln-analyzer> : _ default off on taint : propagated ;
-# By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.
+# Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.
+feature <jln-analyzer> : _ default off on : propagated ;
+# By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs. Available only with GCC.
 feature <jln-analyzer-too-complex-warning> : _ default off on : propagated ;
-# Controls the complexity of the control flow paths that are emitted for analyzer diagnostics
+# Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.
 #  - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.
 #  - 1: As per the previous level, but also show events for the entry to each function.
 #  - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.
 #  - 3: As per the previous level, but show all control flow events, not just significant ones.
 feature <jln-analyzer-verbosity> : _ default 0 1 2 3 : propagated ;
 feature <jln-color> : _ default auto never always : propagated ;
-# Insert extra runtime security checks to detect attempts to compromise your code
+# Insert extra runtime security checks to detect attempts to compromise your code.
 feature <jln-control-flow> : _ default off on branch return allow-bugs : incidental ;
-# Warn for implicit conversions that may alter a value
+# Warn for implicit conversions that may alter a value.
 feature <jln-conversion-warnings> : _ on default off sign conversion : propagated ;
 feature <jln-coverage> : _ default off on : incidental ;
-# Warning for default label in switch which covers all enumeration values
+# Warning for default label in switch which covers all enumeration values.
 feature <jln-covered-switch-default-warnings> : _ on default off : propagated ;
 feature <jln-cpu> : _ default generic native : incidental ;
-# Produce debugging information in the operating system's
+# Produce debugging information in the operating system's.
 feature <jln-debug> : _ default off on gdb lldb vms codeview dbx sce : incidental ;
 # Specify debugging level
 feature <jln-debug-level> : _ default 0 1 2 3 line-tables-only line-directives-only : incidental ;
-# Emit fix-it hints in a machine-parseable format
+# Emit fix-it hints in a machine-parseable format.
 feature <jln-diagnostics-format> : _ default fixits patch print-source-range-info : propagated ;
-# Enables printing a tree-like structure showing the common and differing parts of the types
+# Enables printing a tree-like structure showing the common and differing parts of the types.
 feature <jln-diagnostics-show-template-tree> : _ default off on : propagated ;
-# Prints diagnostics showing common parts of template types as "[...]"
+# Prints diagnostics showing common parts of template types as "[...]".
 feature <jln-elide-type> : _ default off on : propagated ;
-# Enable C++ exception
+# Enable C++ exceptions.
 feature <jln-exceptions> : _ default off on : incidental ;
-# Transforms some warnings into errors to comply with the standard
+# Transforms some warnings into errors to comply with the standard.
 feature <jln-fix-compiler-error> : _ on default off : propagated ;
 feature <jln-float-sanitizers> : _ default off on : incidental ;
 feature <jln-integer-sanitizers> : _ default off on : incidental ;
-# Configure linker
+# Configure linker.
 feature <jln-linker> : _ default bfd gold lld mold native : propagated ;
-# Enable Link Time Optimization
+# Enable Link Time Optimization.
 feature <jln-lto> : _ default off on normal fat thin : incidental ;
-# Standard conformance options
+# Standard conformance options.
 feature <jln-msvc-conformance> : _ all default all-without-throwing-new : incidental ;
-# Disable CRT warnings
+# Disable CRT warnings with MSVC.
 feature <jln-msvc-crt-secure-no-warnings> : _ on default off : propagated ;
-# Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)
+# Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).
 #  - classic: Which reports only the line number where the issue was found.
-#  - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue
-#  - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected
+#  - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.
+#  - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.
 feature <jln-msvc-diagnostics-format> : _ caret default classic column : propagated ;
-# Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)
+# Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).
 feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath : propagated ;
-# Warnings concerning template in an external header (requires msvc_isystem)
+# Warnings concerning template in an external header (requires msvc_isystem).
 feature <jln-msvc-isystem-with-template-from-non-external> : _ default off on : propagated ;
-# Enable NDEBUG macro (disable assert macro)
+# Enable NDEBUG macro (disable assert macro).
 feature <jln-ndebug> : _ with-optimization-1-or-above default off on : incidental ;
 # Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception.
 feature <jln-noexcept-warnings> : _ default off on : propagated ;
-# Optimization level
-#  - 0: Not optimize
-#  - g: Enable debugging experience
-#  - 1: Optimize
-#  - 2: Optimize even more
-#  - 3: Optimize yet more
-#  - fast: Enables all optimization=3 and disregard strict standards compliance
-#  - size: Optimize for size
-#  - z: Optimize for size aggressively (/!\ possible slow compilation with emcc)
+# Optimization level.
+#  - 0: Not optimize.
+#  - g: Enable debugging experience.
+#  - 1: Optimize.
+#  - 2: Optimize even more.
+#  - 3: Optimize yet more.
+#  - fast: Enables all optimization=3 and disregard strict standards compliance.
+#  - size: Optimize for size.
+#  - z: Optimize for size aggressively (/!\ possible slow compilation with emcc).
 feature <jln-optimization> : _ default 0 g 1 2 3 fast size z : incidental ;
-# Enable other sanitizers
+# Enable other sanitizers.
 feature <jln-other-sanitizers> : _ default off thread pointer memory : incidental ;
-# Issue all the warnings demanded by strict ISO C and ISO C++
+# Issue all the warnings demanded by strict ISO C and ISO C++.
 feature <jln-pedantic> : _ on default off as-error : incidental ;
-# Controls position-independent code generation
+# Controls position-independent code generation.
 feature <jln-pie> : _ default off on static fpic fPIC fpie fPIE : incidental ;
 # Specifies a memory segment that should be made read-only after relocation, if supported.
 feature <jln-relro> : _ default off on full : incidental ;
-# Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations
+# Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations.
 feature <jln-reproducible-build-warnings> : _ default off on : propagated ;
-# Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid")
+# Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid").
 feature <jln-rtti> : _ default off on : incidental ;
-# Enable sanitizers (asan, ubsan, etc)
+# Enable sanitizers (asan, ubsan, etc).
 feature <jln-sanitizers> : _ default off on : incidental ;
 feature <jln-shadow-warnings> : _ off default on local compatible-local all : propagated ;
-# Emit extra code to check for buffer overflows, such as stack smashing attacks
+# Emit extra code to check for buffer overflows, such as stack smashing attacks.
 feature <jln-stack-protector> : _ default off on strong all : incidental ;
-# Controls the debug level of the STL
-#  - on: Enable stl assertion or fast hardening mode with libc++
-#  - extensive: Enable stl assertion or extensive hardening mode with libc++
-#  - debug: Enable stl assertion or debug hardening mode with libc++
-#  - allow_broken_abi: Debug mode with ABI incompatibility for more check
-#  - allow_broken_abi_and_bugs: Like allow_broken_abi, but can make crash with libc++-7 or less
-feature <jln-stl-debug> : _ default off on extensive debug allow-broken-abi allow-broken-abi-and-bugs : incidental ;
-# Enable /DNOMINMAX with msvc
+# Enable /DNOMINMAX with msvc.
 feature <jln-stl-fix> : _ on default off : incidental ;
-# Warn for cases where adding an attribute may be beneficial
+# Hardening allows turning some instances of undefined behavior in the standard library into a contract violation.
+#  - fast: A set of security-critical checks that can be done with relatively little overhead in constant time and are intended to be used in production. No impact on the ABI.
+#  - extensive: All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren’t security-critical. No impact on the ABI.
+#  - debug: Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. No impact on the ABI.
+#  - debug_with_broken_abi: Debug mode with ABI incompatibility for more check.
+feature <jln-stl-hardening> : _ default off fast extensive debug debug-with-broken-abi : incidental ;
+# Warn for cases where adding an attribute may be beneficial.
 feature <jln-suggestions> : _ default off on : propagated ;
-# Warnings concerning the switch keyword
+# Warnings concerning the switch keyword.
 feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
-# Enable -Wunsafe-buffer-usage with clang
+# Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html).
 feature <jln-unsafe-buffer-usage-warnings> : _ default on off : propagated ;
-# Initialize all stack variables implicitly, including padding
-#  - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang)
-#  - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)
-#  - zero: zero Initialize automatic variables with zeroes
+# Initialize all stack variables implicitly, including padding.
+#  - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang).
+#  - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).
+#  - zero: zero Initialize automatic variables with zeroes.
 feature <jln-var-init> : _ default uninitialized pattern zero : incidental ;
-# Warning level
+# Warning level.
 feature <jln-warnings> : _ on default off strict very-strict : propagated ;
-# Make all or some warnings into errors
+# Make all or some warnings into errors.
 feature <jln-warnings-as-error> : _ default off on basic : incidental ;
 # Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.
 feature <jln-whole-program> : _ default off on strip-all : incidental ;
-# In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys
+# In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys.
 feature <jln-windows-abi-compatibility-warnings> : _ off default on : propagated ;
-# Increases that addressable sections capacity
+# Increases that addressable sections capacity.
 feature <jln-windows-bigobj> : _ on default : incidental ;
 
 feature <jln-control-flow-incidental> : _ default off on branch return allow-bugs : incidental ;
@@ -144,14 +143,14 @@ feature <jln-relro-incidental> : _ default off on full : incidental ;
 feature <jln-rtti-incidental> : _ default off on : incidental ;
 feature <jln-sanitizers-incidental> : _ default off on : incidental ;
 feature <jln-stack-protector-incidental> : _ default off on strong all : incidental ;
-feature <jln-stl-debug-incidental> : _ default off on extensive debug allow-broken-abi allow-broken-abi-and-bugs : incidental ;
 feature <jln-stl-fix-incidental> : _ on default off : incidental ;
+feature <jln-stl-hardening-incidental> : _ default off fast extensive debug debug-with-broken-abi : incidental ;
 feature <jln-var-init-incidental> : _ default uninitialized pattern zero : incidental ;
 feature <jln-warnings-as-error-incidental> : _ default off on basic : incidental ;
 feature <jln-whole-program-incidental> : _ default off on strip-all : incidental ;
 feature <jln-windows-bigobj-incidental> : _ on default : incidental ;
 
-feature <jln-analyzer-default> : default off on taint : incidental ;
+feature <jln-analyzer-default> : default off on : incidental ;
 feature <jln-analyzer-too-complex-warning-default> : default off on : incidental ;
 feature <jln-analyzer-verbosity-default> : default 0 1 2 3 : incidental ;
 feature <jln-color-default> : default auto never always : incidental ;
@@ -188,8 +187,8 @@ feature <jln-rtti-default> : default off on : incidental ;
 feature <jln-sanitizers-default> : default off on : incidental ;
 feature <jln-shadow-warnings-default> : off default on local compatible-local all : incidental ;
 feature <jln-stack-protector-default> : default off on strong all : incidental ;
-feature <jln-stl-debug-default> : default off on extensive debug allow-broken-abi allow-broken-abi-and-bugs : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
+feature <jln-stl-hardening-default> : default off fast extensive debug debug-with-broken-abi : incidental ;
 feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
 feature <jln-unsafe-buffer-usage-warnings-default> : default on off : incidental ;
@@ -221,7 +220,7 @@ rule jln-get-env ( env : values * )
   }
 }
 
-constant jln_env_analyzer : [ jln-get-env jln_analyzer : default off on taint ] ;
+constant jln_env_analyzer : [ jln-get-env jln_analyzer : default off on ] ;
 constant jln_env_analyzer_too_complex_warning : [ jln-get-env jln_analyzer_too_complex_warning : default off on ] ;
 constant jln_env_analyzer_verbosity : [ jln-get-env jln_analyzer_verbosity : default 0 1 2 3 ] ;
 constant jln_env_color : [ jln-get-env jln_color : default auto never always ] ;
@@ -258,8 +257,8 @@ constant jln_env_rtti : [ jln-get-env jln_rtti : default off on ] ;
 constant jln_env_sanitizers : [ jln-get-env jln_sanitizers : default off on ] ;
 constant jln_env_shadow_warnings : [ jln-get-env jln_shadow_warnings : off default on local compatible-local all ] ;
 constant jln_env_stack_protector : [ jln-get-env jln_stack_protector : default off on strong all ] ;
-constant jln_env_stl_debug : [ jln-get-env jln_stl_debug : default off on extensive debug allow-broken-abi allow-broken-abi-and-bugs ] ;
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
+constant jln_env_stl_hardening : [ jln-get-env jln_stl_hardening : default off fast extensive debug debug-with-broken-abi ] ;
 constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
 constant jln_env_switch_warnings : [ jln-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
 constant jln_env_unsafe_buffer_usage_warnings : [ jln-get-env jln_unsafe_buffer_usage_warnings : default on off ] ;
@@ -311,10 +310,10 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-sanitizers-incidental JLN_SANITIZERS_INCIDENTAL : <jln-sanitizers-incidental> ;
   toolset.flags jln-stack-protector JLN_STACK_PROTECTOR : <jln-stack-protector> ;
   toolset.flags jln-stack-protector-incidental JLN_STACK_PROTECTOR_INCIDENTAL : <jln-stack-protector-incidental> ;
-  toolset.flags jln-stl-debug JLN_STL_DEBUG : <jln-stl-debug> ;
-  toolset.flags jln-stl-debug-incidental JLN_STL_DEBUG_INCIDENTAL : <jln-stl-debug-incidental> ;
   toolset.flags jln-stl-fix JLN_STL_FIX : <jln-stl-fix> ;
   toolset.flags jln-stl-fix-incidental JLN_STL_FIX_INCIDENTAL : <jln-stl-fix-incidental> ;
+  toolset.flags jln-stl-hardening JLN_STL_HARDENING : <jln-stl-hardening> ;
+  toolset.flags jln-stl-hardening-incidental JLN_STL_HARDENING_INCIDENTAL : <jln-stl-hardening-incidental> ;
   toolset.flags jln-var-init JLN_VAR_INIT : <jln-var-init> ;
   toolset.flags jln-var-init-incidental JLN_VAR_INIT_INCIDENTAL : <jln-var-init-incidental> ;
   toolset.flags jln-warnings-as-error JLN_WARNINGS_AS_ERROR : <jln-warnings-as-error> ;
@@ -456,8 +455,8 @@ rule jln_flags ( properties * )
       <relevant>jln-rtti
       <relevant>jln-sanitizers
       <relevant>jln-stack-protector
-      <relevant>jln-stl-debug
       <relevant>jln-stl-fix
+      <relevant>jln-stl-hardening
       <relevant>jln-var-init
       <relevant>jln-warnings-as-error
       <relevant>jln-whole-program
@@ -502,8 +501,8 @@ rule jln_flags ( properties * )
   local x_sanitizers = [ jln-get-value2 $(ps) : jln-sanitizers : jln-sanitizers-incidental : $(jln_env_sanitizers) ] ;
   local x_shadow_warnings = [ jln-get-value $(ps) : jln-shadow-warnings : $(jln_env_shadow_warnings) ] ;
   local x_stack_protector = [ jln-get-value2 $(ps) : jln-stack-protector : jln-stack-protector-incidental : $(jln_env_stack_protector) ] ;
-  local x_stl_debug = [ jln-get-value2 $(ps) : jln-stl-debug : jln-stl-debug-incidental : $(jln_env_stl_debug) ] ;
   local x_stl_fix = [ jln-get-value2 $(ps) : jln-stl-fix : jln-stl-fix-incidental : $(jln_env_stl_fix) ] ;
+  local x_stl_hardening = [ jln-get-value2 $(ps) : jln-stl-hardening : jln-stl-hardening-incidental : $(jln_env_stl_hardening) ] ;
   local x_suggestions = [ jln-get-value $(ps) : jln-suggestions : $(jln_env_suggestions) ] ;
   local x_switch_warnings = [ jln-get-value $(ps) : jln-switch-warnings : $(jln_env_switch_warnings) ] ;
   local x_unsafe_buffer_usage_warnings = [ jln-get-value $(ps) : jln-unsafe-buffer-usage-warnings : $(jln_env_unsafe_buffer_usage_warnings) ] ;
@@ -1621,62 +1620,58 @@ rule jln_flags ( properties * )
   }
   if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_COMP) = "clang" || $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc" )
   {
-    if $(x_stl_debug) != "default"
+    if $(x_stl_hardening) != "default"
     {
-      if $(x_stl_debug) != "off"
+      if $(x_stl_hardening) != "off"
       {
-        if ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1800000 ] )
+        if $(x_stl_hardening) = "fast"
         {
-          if ( $(x_stl_debug) = "allow-broken-abi" || $(x_stl_debug) = "allow-broken-abi-and-bugs" )
-          {
-            if ( ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] || $(x_stl_debug) = "allow-broken-abi-and-bugs" )
-            {
-              flags +=
-                <cxxflags>"-D_LIBCPP_DEBUG=1"
-              ;
-            }
-            flags +=
-              <cxxflags>"-D_GLIBCXX_DEBUG"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-            ;
-          }
+          flags +=
+            <cxxflags>"-D_GLIBCXX_ASSERTIONS"
+            <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST"
+          ;
         }
         else
         {
-          if $(x_stl_debug) = "on"
+          if $(x_stl_hardening) = "extensive"
           {
             flags +=
               <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-              <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST"
+              <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE"
             ;
           }
           else
           {
-            if $(x_stl_debug) = "extensive"
+            if $(x_stl_hardening) = "debug"
             {
               flags +=
                 <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-                <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE"
+                <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
               ;
             }
             else
             {
-              if $(x_stl_debug) = "debug"
+              flags +=
+                <cxxflags>"-D_GLIBCXX_DEBUG"
+              ;
+              if $(x_pedantic) != "default" && ! ( $(x_pedantic) = "off" )
               {
                 flags +=
-                  <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-                  <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
+                  <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
                 ;
+              }
+              if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1800000 ] )
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ]
+                {
+                  flags +=
+                    <cxxflags>"-D_LIBCPP_DEBUG=1"
+                  ;
+                }
               }
               else
               {
                 flags +=
-                  <cxxflags>"-D_GLIBCXX_DEBUG"
                   <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
                   <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS"
                   <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING"
@@ -1687,12 +1682,6 @@ rule jln_flags ( properties * )
               }
             }
           }
-        }
-        if $(x_pedantic) != "default" && ! ( $(x_pedantic) = "off" )
-        {
-          flags +=
-            <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
-          ;
         }
       }
     }
@@ -2312,9 +2301,20 @@ rule jln_flags ( properties * )
         else
         {
           flags +=
-            <cxxflags>"-D_FORTIFY_SOURCE=2"
             <cxxflags>"-Wstack-protector"
           ;
+          if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1400000 ] ) )
+          {
+            flags +=
+              <cxxflags>"-D_FORTIFY_SOURCE=3"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cxxflags>"-D_FORTIFY_SOURCE=2"
+            ;
+          }
           if $(x_stack_protector) = "strong"
           {
             if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
@@ -2336,21 +2336,18 @@ rule jln_flags ( properties * )
             }
             else
             {
-              if $(JLN_NORMALIZED_CXX_COMP) = "clang"
+              flags +=
+                <cxxflags>"-fstack-protector-strong"
+                <cxxflags>"-fsanitize=safe-stack"
+                <linkflags>"-fstack-protector-strong"
+                <linkflags>"-fsanitize=safe-stack"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1100000 ]
               {
                 flags +=
-                  <cxxflags>"-fstack-protector-strong"
-                  <cxxflags>"-fsanitize=safe-stack"
-                  <linkflags>"-fstack-protector-strong"
-                  <linkflags>"-fsanitize=safe-stack"
+                  <cxxflags>"-fstack-clash-protection"
+                  <linkflags>"-fstack-clash-protection"
                 ;
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1100000 ]
-                {
-                  flags +=
-                    <cxxflags>"-fstack-clash-protection"
-                    <linkflags>"-fstack-clash-protection"
-                  ;
-                }
               }
             }
           }
@@ -2371,19 +2368,16 @@ rule jln_flags ( properties * )
               }
               else
               {
-                if $(JLN_NORMALIZED_CXX_COMP) = "clang"
+                flags +=
+                  <cxxflags>"-fsanitize=safe-stack"
+                  <linkflags>"-fsanitize=safe-stack"
+                ;
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1100000 ]
                 {
                   flags +=
-                    <cxxflags>"-fsanitize=safe-stack"
-                    <linkflags>"-fsanitize=safe-stack"
+                    <cxxflags>"-fstack-clash-protection"
+                    <linkflags>"-fstack-clash-protection"
                   ;
-                  if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1100000 ]
-                  {
-                    flags +=
-                      <cxxflags>"-fstack-clash-protection"
-                      <linkflags>"-fstack-clash-protection"
-                    ;
-                  }
                 }
               }
             }
@@ -2565,12 +2559,6 @@ rule jln_flags ( properties * )
             flags +=
               <cxxflags>"-fanalyzer"
             ;
-            if $(x_analyzer) = "taint"
-            {
-              flags +=
-                <cxxflags>"-fanalyzer-checker=taint"
-              ;
-            }
             if $(x_analyzer_too_complex_warning) != "default"
             {
               if $(x_analyzer_too_complex_warning) = "on"
@@ -2708,46 +2696,42 @@ rule jln_flags ( properties * )
         ;
       }
     }
-    if $(x_stl_debug) != "default"
+    if $(x_stl_hardening) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "msvc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600007 ] ) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" )
+      if $(x_stl_hardening) = "off"
       {
-        if $(x_stl_debug) = "off"
+        flags +=
+          <cxxflags>"/D_MSVC_STL_HARDENING=0"
+          <cxxflags>"/D_ITERATOR_DEBUG_LEVEL=0"
+          <cxxflags>"/D_SECURE_SCL=0"
+          <cxxflags>"/D_HAS_ITERATOR_DEBUGGING=0"
+        ;
+      }
+      else
+      {
+        if ( $(x_stl_hardening) = "fast" || $(x_stl_hardening) = "extensive" )
         {
           flags +=
-            <cxxflags>"/D_ITERATOR_DEBUG_LEVEL=0"
+            <cxxflags>"/D_MSVC_STL_HARDENING=1"
           ;
         }
         else
         {
-          if ( $(x_stl_debug) = "on" || $(x_stl_debug) = "extensive" )
+          if $(x_stl_hardening) = "debug"
           {
             flags +=
-              <cxxflags>"/D_ITERATOR_DEBUG_LEVEL=1"
+              <cxxflags>"/D_MSVC_STL_HARDENING=1"
+              <cxxflags>"/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1"
             ;
           }
           else
           {
             flags +=
-              <cxxflags>"/D_ITERATOR_DEBUG_LEVEL=2"
+              <cxxflags>"/D_DEBUG"
+              <cxxflags>"/D_MSVC_STL_HARDENING=1"
+              <cxxflags>"/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1"
             ;
           }
-        }
-      }
-      else
-      {
-        if $(x_stl_debug) = "off"
-        {
-          flags +=
-            <cxxflags>"/D_HAS_ITERATOR_DEBUGGING=0"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"/D_DEBUG"
-            <cxxflags>"/D_HAS_ITERATOR_DEBUGGING=1"
-          ;
         }
       }
     }
@@ -3049,6 +3033,24 @@ rule jln_flags ( properties * )
   }
   if $(JLN_NORMALIZED_CXX_COMP) = "msvc"
   {
+    if $(x_analyzer) != "default"
+    {
+      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1500000 ]
+      {
+        if $(x_analyzer) = "off"
+        {
+          flags +=
+            <cxxflags>"/analyze-"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cxxflags>"/analyze"
+          ;
+        }
+      }
+    }
     if $(x_windows_bigobj) != "default"
     {
       flags +=
@@ -3921,17 +3923,23 @@ rule jln_flags ( properties * )
             }
           }
         }
-        if $(x_stl_debug) != "default"
+        if $(x_stl_hardening) != "default"
         {
-          if $(x_stl_debug) != "off"
+          if $(x_stl_hardening) = "debug-with-broken-abi"
           {
-            if ( $(x_stl_debug) = "allow-broken-abi" || $(x_stl_debug) = "allow-broken-abi-and-bugs" )
+            flags +=
+              <cxxflags>"-D_GLIBCXX_DEBUG"
+            ;
+            if $(x_pedantic) != "default" && ! ( $(x_pedantic) = "off" )
             {
               flags +=
-                <cxxflags>"-D_GLIBCXX_DEBUG"
+                <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
               ;
             }
-            else
+          }
+          else
+          {
+            if $(x_stl_hardening) != "off"
             {
               flags +=
                 <cxxflags>"-D_GLIBCXX_ASSERTIONS"
