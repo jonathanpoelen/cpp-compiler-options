@@ -2423,13 +2423,13 @@ local Vbase = {
 
     control_flow={
       values={'off', 'on', 'branch', 'return', 'allow_bugs'},
-      description='Insert extra runtime security checks to detect attempts to compromise your code',
+      description='Insert extra runtime security checks to detect attempts to compromise your code.',
     },
 
     conversion_warnings={
       values={'off', 'on', 'sign', 'conversion'},
       default='on',
-      description='Warn for implicit conversions that may alter a value',
+      description='Warn for implicit conversions that may alter a value.',
       incidental=true,
     },
 
@@ -2440,7 +2440,7 @@ local Vbase = {
     covered_switch_default_warnings={
       values={'on', 'off'},
       default='on',
-      description='Warning for default label in switch which covers all enumeration values',
+      description='Warning for default label in switch which covers all enumeration values.',
       incidental=true,
     },
 
@@ -2454,52 +2454,52 @@ local Vbase = {
         'on',
         'gdb',
         'lldb',
-        {'vms',  'Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems)'},
-        {'codeview', 'CodeView debug format (used by Microsoft Visual C++ on Windows)'},
+        {'vms',  'Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).'},
+        {'codeview', 'CodeView debug format (used by Microsoft Visual C++ on Windows).'},
         'dbx',
         'sce',
       },
-      description='Produce debugging information in the operating system\'s',
+      description='Produce debugging information in the operating system\'s.',
     },
 
     debug_level={
       values={
         '0', '1', '2', '3',
-        {'line_tables_only', 'Emit debug line number tables only'},
-        {'line_directives_only', 'Emit debug line info directives only'},
+        {'line_tables_only', 'Emit debug line number tables only.'},
+        {'line_directives_only', 'Emit debug line info directives only.'},
       },
       description='Specify debugging level',
     },
 
     diagnostics_format={
       values={'fixits', 'patch', 'print_source_range_info'},
-      description='Emit fix-it hints in a machine-parseable format',
+      description='Emit fix-it hints in a machine-parseable format.',
       incidental=true,
     },
 
     diagnostics_show_template_tree={
       values={'off', 'on'},
-      description='Enables printing a tree-like structure showing the common and differing parts of the types',
+      description='Enables printing a tree-like structure showing the common and differing parts of the types.',
       incidental=true,
       unavailable='c',
     },
 
     elide_type={
       values={'off', 'on'},
-      description='Prints diagnostics showing common parts of template types as "[...]"',
+      description='Prints diagnostics showing common parts of template types as "[...]".',
       incidental=true,
       unavailable='c',
     },
 
     exceptions={
       values={'off', 'on'},
-      description='Enable C++ exception',
+      description='Enable C++ exceptions.',
     },
 
     fix_compiler_error={
       values={'off', 'on'},
       default='on',
-      description='Transforms some warnings into errors to comply with the standard',
+      description='Transforms some warnings into errors to comply with the standard.',
       incidental=true,
     },
 
@@ -2513,48 +2513,48 @@ local Vbase = {
 
     linker={
       values={'bfd', 'gold', 'lld', 'mold', 'native'},
-      description='Configure linker',
+      description='Configure linker.',
       incidental=true,
     },
 
     lto={
       values={'off', 'on', 'normal', 'fat', 'thin'},
-      description='Enable Link Time Optimization',
+      description='Enable Link Time Optimization.',
     },
 
     msvc_conformance={
       values={'all', 'all_without_throwing_new'},
       default='all',
-      description='Standard conformance options',
+      description='Standard conformance options.',
     },
 
     msvc_crt_secure_no_warnings={
       values={'off', 'on'},
       default='on',
-      description='Disable CRT warnings',
+      description='Disable CRT warnings with MSVC.',
       incidental=true,
     },
 
     msvc_diagnostics_format={
       values={
         {'classic', 'Which reports only the line number where the issue was found.'},
-        {'column', 'Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue'},
-        {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected'},
+        {'column', 'Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.'},
+        {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.'},
       },
       default='caret',
-      description='Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)',
+      description='Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).',
       incidental=true,
     },
 
     msvc_isystem={
       values={'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},
-      description='Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)',
+      description='Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).',
       incidental=true,
     },
 
     msvc_isystem_with_template_from_non_external={
       values={'off', 'on'},
-      description='Warnings concerning template in an external header (requires msvc_isystem)',
+      description='Warnings concerning template in an external header (requires msvc_isystem).',
       incidental=true,
       unavailable='c',
     },
@@ -2562,7 +2562,7 @@ local Vbase = {
     ndebug={
       values={'off', 'on', 'with_optimization_1_or_above'},
       default='with_optimization_1_or_above',
-      description='Enable NDEBUG macro (disable assert macro)',
+      description='Enable NDEBUG macro (disable assert macro).',
     },
 
     noexcept_warnings={
@@ -2574,32 +2574,32 @@ local Vbase = {
 
     optimization={
       values={
-        {'0', 'Not optimize'},
-        {'g', 'Enable debugging experience'},
-        {'1', 'Optimize'},
-        {'2', 'Optimize even more'},
-        {'3', 'Optimize yet more'},
-        {'fast', 'Enables all optimization=3 and disregard strict standards compliance'},
-        {'size', 'Optimize for size'},
-        {'z', 'Optimize for size aggressively (/!\\ possible slow compilation with emcc)'},
+        {'0', 'Not optimize.'},
+        {'g', 'Enable debugging experience.'},
+        {'1', 'Optimize.'},
+        {'2', 'Optimize even more.'},
+        {'3', 'Optimize yet more.'},
+        {'fast', 'Enables all optimization=3 and disregard strict standards compliance.'},
+        {'size', 'Optimize for size.'},
+        {'z', 'Optimize for size aggressively (/!\\ possible slow compilation with emcc).'},
       },
-      description='Optimization level',
+      description='Optimization level.',
     },
 
     other_sanitizers={
       values={'off', 'thread', 'pointer', 'memory'},
-      description='Enable other sanitizers',
+      description='Enable other sanitizers.',
     },
 
     pedantic={
       values={'off', 'on', 'as_error'},
       default='on',
-      description='Issue all the warnings demanded by strict ISO C and ISO C++',
+      description='Issue all the warnings demanded by strict ISO C and ISO C++.',
     },
 
     pie={
       values={'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE'},
-      description='Controls position-independent code generation',
+      description='Controls position-independent code generation.',
     },
 
     relro={
@@ -2609,37 +2609,37 @@ local Vbase = {
 
     reproducible_build_warnings={
       values={'off', 'on'},
-      description='Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations',
+      description='Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations.',
       incidental=true,
     },
 
     rtti={
       values={'off', 'on'},
-      description='Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid")',
+      description='Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid").',
       unavailable='c',
     },
 
     sanitizers={
       values={'off', 'on'},
-      description='Enable sanitizers (asan, ubsan, etc)',
+      description='Enable sanitizers (asan, ubsan, etc).',
     },
 
     stl_hardening={
       values={
         {'off'},
-        {'fast', 'A set of security-critical checks that can be done with relatively little overhead in constant time and are intended to be used in production. (no impact on the ABI)'},
-        {'extensive', 'All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren’t security-critical. (no impact on the ABI)'},
-        {'debug', 'Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. (no impact on the ABI)'},
+        {'fast', 'A set of security-critical checks that can be done with relatively little overhead in constant time and are intended to be used in production. No impact on the ABI.'},
+        {'extensive', 'All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren’t security-critical. No impact on the ABI.'},
+        {'debug', 'Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. No impact on the ABI.'},
         {'debug_with_broken_abi', 'Debug mode with ABI incompatibility for more check.'},
       },
-      description='Hardening allows turning some instances of undefined behavior in the standard library into a contract violation',
+      description='Hardening allows turning some instances of undefined behavior in the standard library into a contract violation.',
       unavailable='c',
     },
 
     stl_fix={
       values={'off', 'on'},
       default='on',
-      description='Enable /DNOMINMAX with msvc',
+      description='Enable /DNOMINMAX with msvc.',
     },
 
     shadow_warnings={
@@ -2650,47 +2650,47 @@ local Vbase = {
 
     stack_protector={
       values={'off', 'on', 'strong', 'all'},
-      description='Emit extra code to check for buffer overflows, such as stack smashing attacks',
+      description='Emit extra code to check for buffer overflows, such as stack smashing attacks.',
     },
 
     suggestions={
       values={'off', 'on'},
-      description='Warn for cases where adding an attribute may be beneficial',
+      description='Warn for cases where adding an attribute may be beneficial.',
       incidental=true,
     },
 
     switch_warnings={
       values={'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default'},
       default='on',
-      description='Warnings concerning the switch keyword',
+      description='Warnings concerning the switch keyword.',
       incidental=true,
     },
 
     unsafe_buffer_usage_warnings={
       values={'on', 'off'},
-      description='Enable -Wunsafe-buffer-usage with clang',
+      description='Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html).',
       incidental=true,
     },
 
     var_init={
       values={
-        {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)'},
-        {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)'},
-        {'zero', 'zero Initialize automatic variables with zeroes'},
+        {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang).'},
+        {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).'},
+        {'zero', 'zero Initialize automatic variables with zeroes.'},
       },
-      description='Initialize all stack variables implicitly, including padding',
+      description='Initialize all stack variables implicitly, including padding.',
     },
 
     warnings={
       values={'off', 'on', 'strict', 'very_strict'},
       default='on',
-      description='Warning level',
+      description='Warning level.',
       incidental=true,
     },
 
     warnings_as_error={
       values={'off', 'on', 'basic'},
-      description='Make all or some warnings into errors',
+      description='Make all or some warnings into errors.',
       -- incidental=true,
     },
 
@@ -2702,7 +2702,7 @@ local Vbase = {
     windows_abi_compatibility_warnings={
       values={'off', 'on'},
       default='off',
-      description='In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys',
+      description='In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys.',
       incidental=true,
       unavailable='c',
     },
@@ -2710,7 +2710,7 @@ local Vbase = {
     windows_bigobj={
       values={'on'},
       default='on',
-      description='Increases that addressable sections capacity',
+      description='Increases that addressable sections capacity.',
     },
   },
 
