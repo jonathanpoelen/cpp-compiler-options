@@ -2714,11 +2714,11 @@ local Vbase = {
     },
   },
 
+  -- sorted by "importance"
   _opts_by_category={
     {'Warning', {
-      'analyzer',
-      'analyzer_too_complex_warning',
-      'analyzer_verbosity',
+      'warnings',
+      'warnings_as_error',
       'conversion_warnings',
       'covered_switch_default_warnings',
       'fix_compiler_error',
@@ -2730,27 +2730,28 @@ local Vbase = {
       'switch_warnings',
       'unsafe_buffer_usage_warnings',
       'windows_abi_compatibility_warnings',
-      'warnings',
-      'warnings_as_error',
     }},
+
     {'Pedantic', {
       'msvc_conformance',
       'pedantic',
       'stl_fix',
     }},
+
     {'Debug', {
-      'control_flow',
       'debug',
       'debug_level',
+      'stl_hardening',
+      'control_flow',
+      'sanitizers',
       'float_sanitizers',
       'integer_sanitizers',
+      'other_sanitizers',
+      'var_init',
       'ndebug',
       'optimization',
-      'other_sanitizers',
-      'sanitizers',
-      'stl_hardening',
-      'var_init',
     }},
+
     {'Optimization', {
       'cpu',
       'linker',
@@ -2758,16 +2759,25 @@ local Vbase = {
       'optimization',
       'whole_program',
     }},
+
     {'C++', {
       'exceptions',
       'rtti',
     }},
+
     {'Hardening', {
       'control_flow',
       'relro',
       'stack_protector',
       'stl_hardening',
     }},
+
+    {'Analyzer', {
+      'analyzer',
+      'analyzer_too_complex_warning',
+      'analyzer_verbosity',
+    }},
+
     -- other categories are automatically put in Other
   },
 

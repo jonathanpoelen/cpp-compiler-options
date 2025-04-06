@@ -178,7 +178,6 @@ return {
       string_parts = {}
       for _,infos in ipairs(self._opts_by_category) do
         push_title(infos[1])
-        table.sort(infos[2])
         for _,optname in ipairs(infos[2]) do
           opt = stringify_options[optname]
           opt[2] = true

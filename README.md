@@ -57,15 +57,20 @@ main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninit
 
 # Options
 
-Supported options are (alphabetically in a category):
+Supported options are listed below by category.
+The same option can be found in several categories.
 
-<!-- ./compiler-options.lua generators/list_options.lua --color -->
+The first value corresponds to the one used by default,
+and the value `default` has no associated behavior.
+
+Options with a default value other than `default` are listed below.
+
+<!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 ```ini
 # Warning:
 
-analyzer = default off on taint
-analyzer_too_complex_warning = default off on
-analyzer_verbosity = default 0 1 2 3
+warnings = on default off strict very_strict
+warnings_as_error = default off on basic
 conversion_warnings = on default off sign conversion
 covered_switch_default_warnings = on default off
 fix_compiler_error = on default off
@@ -76,8 +81,6 @@ shadow_warnings = off default on local compatible_local all
 suggestions = default off on
 switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 unsafe_buffer_usage_warnings = default on off
-warnings = on default off strict very_strict
-warnings_as_error = default off on basic
 windows_abi_compatibility_warnings = off default on
 
 # Pedantic:
@@ -88,17 +91,17 @@ stl_fix = on default off
 
 # Debug:
 
-control_flow = default off on branch return allow_bugs
 debug = default off on gdb lldb vms codeview dbx sce
 debug_level = default 0 1 2 3 line_tables_only line_directives_only
+stl_hardening = default off fast extensive debug debug_with_broken_abi
+control_flow = default off on branch return allow_bugs
+sanitizers = default off on
 float_sanitizers = default off on
 integer_sanitizers = default off on
+other_sanitizers = default off thread pointer memory
+var_init = default uninitialized pattern zero
 ndebug = with_optimization_1_or_above default off on
 optimization = default 0 g 1 2 3 fast size z
-other_sanitizers = default off thread pointer memory
-sanitizers = default off on
-stl_hardening = default off fast extensive debug debug_with_broken_abi
-var_init = default uninitialized pattern zero
 
 # Optimization:
 
@@ -119,6 +122,12 @@ control_flow = default off on branch return allow_bugs
 relro = default off on full
 stack_protector = default off on strong all
 stl_hardening = default off fast extensive debug debug_with_broken_abi
+
+# Analyzer:
+
+analyzer = default off on
+analyzer_too_complex_warning = default off on
+analyzer_verbosity = default 0 1 2 3
 
 # Other:
 
