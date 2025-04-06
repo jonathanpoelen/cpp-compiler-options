@@ -49,15 +49,20 @@
 #
 #  # Options
 #
-#  Supported options are (alphabetically in a category):
+#  Supported options are listed below by category.
+#  The same option can be found in several categories.
 #
-#  <!-- ./compiler-options.lua generators/list_options.lua --color -->
+#  The first value corresponds to the one used by default,
+#  and the value `default` has no associated behavior.
+#
+#  Options with a default value other than `default` are listed below.
+#
+#  <!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 #  ```ini
 #  # Warning:
 #
-#  analyzer = default off on taint
-#  analyzer_too_complex_warning = default off on
-#  analyzer_verbosity = default 0 1 2 3
+#  warnings = on default off strict very_strict
+#  warnings_as_error = default off on basic
 #  conversion_warnings = on default off sign conversion
 #  covered_switch_default_warnings = on default off
 #  fix_compiler_error = on default off
@@ -68,8 +73,6 @@
 #  suggestions = default off on
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 #  unsafe_buffer_usage_warnings = default on off
-#  warnings = on default off strict very_strict
-#  warnings_as_error = default off on basic
 #  windows_abi_compatibility_warnings = off default on
 #
 #  # Pedantic:
@@ -80,19 +83,22 @@
 #
 #  # Debug:
 #
-#  debug = default off on line_tables_only gdb lldb sce
+#  debug = default off on gdb lldb vms codeview dbx sce
+#  debug_level = default 0 1 2 3 line_tables_only line_directives_only
+#  stl_hardening = default off fast extensive debug debug_with_broken_abi
+#  control_flow = default off on branch return allow_bugs
+#  sanitizers = default off on
 #  float_sanitizers = default off on
 #  integer_sanitizers = default off on
-#  ndebug = with_optimization_1_or_above default off on
 #  other_sanitizers = default off thread pointer memory
-#  sanitizers = default off on
-#  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
 #  var_init = default uninitialized pattern zero
+#  ndebug = with_optimization_1_or_above default off on
+#  optimization = default 0 g 1 2 3 fast size z
 #
 #  # Optimization:
 #
 #  cpu = default generic native
-#  linker = default bfd gold lld native
+#  linker = default bfd gold lld mold native
 #  lto = default off on normal fat thin
 #  optimization = default 0 g 1 2 3 fast size z
 #  whole_program = default off on strip_all
@@ -107,6 +113,13 @@
 #  control_flow = default off on branch return allow_bugs
 #  relro = default off on full
 #  stack_protector = default off on strong all
+#  stl_hardening = default off fast extensive debug debug_with_broken_abi
+#
+#  # Analyzer:
+#
+#  analyzer = default off on
+#  analyzer_too_complex_warning = default off on
+#  analyzer_verbosity = default 0 1 2 3
 #
 #  # Other:
 #
@@ -146,27 +159,29 @@
 #
 #  <!-- enddefault -->
 #
+#  ### To know
+#
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
-#  - `stl_debug=allow_broken_abi_and_bugs`
-#    - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
 #  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
+#  - `stl_hardening=debug`
+#    - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 #
 #
 #  ## Recommended options
 #
 #  category | options
 #  ---------|---------
-#  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>`optimization=g` or `optimization=0` + `debug_level=3`
-#  release | `cpu=native`<br>`linker=gold`, `lld` or `native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
-#  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=PIE`
+#  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
+#  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+#  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
 #  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
 #
 #  
 
 # File generated with https://github.com/jonathanpoelen/cpp-compiler-options
 
-set(_JLN_ANALYZER_VALUES default off on taint)
+set(_JLN_ANALYZER_VALUES default off on)
 set(_JLN_ANALYZER_TOO_COMPLEX_WARNING_VALUES default off on)
 set(_JLN_ANALYZER_VERBOSITY_VALUES default 0 1 2 3)
 set(_JLN_COLOR_VALUES default auto never always)
@@ -212,15 +227,15 @@ set(_JLN_AUTO_PROFILE_VALUES on off)
 set(_JLN_DISABLE_OTHERS_VALUES on off)
 
 
-set(JLN_ANALYZER "${JLN_ANALYZER}" CACHE STRING "Enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)")
-set_property(CACHE JLN_ANALYZER PROPERTY STRINGS "default" "off" "on" "taint")
+set(JLN_ANALYZER "${JLN_ANALYZER}" CACHE STRING "Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.")
+set_property(CACHE JLN_ANALYZER PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_ANALYZER}" STREQUAL ""))
   string(TOLOWER "${JLN_ANALYZER}" JLN_ANALYZER)
-  if(NOT(("default" STREQUAL JLN_ANALYZER) OR ("off" STREQUAL JLN_ANALYZER) OR ("on" STREQUAL JLN_ANALYZER) OR ("taint" STREQUAL JLN_ANALYZER)))
-    message(FATAL_ERROR "Unknow value \"${JLN_ANALYZER}\" for JLN_ANALYZER, expected: default, off, on, taint")
+  if(NOT(("default" STREQUAL JLN_ANALYZER) OR ("off" STREQUAL JLN_ANALYZER) OR ("on" STREQUAL JLN_ANALYZER)))
+    message(FATAL_ERROR "Unknow value \"${JLN_ANALYZER}\" for JLN_ANALYZER, expected: default, off, on")
   endif()
 endif()
-set(JLN_ANALYZER_TOO_COMPLEX_WARNING "${JLN_ANALYZER_TOO_COMPLEX_WARNING}" CACHE STRING "By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.")
+set(JLN_ANALYZER_TOO_COMPLEX_WARNING "${JLN_ANALYZER_TOO_COMPLEX_WARNING}" CACHE STRING "By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs. Available only with GCC.")
 set_property(CACHE JLN_ANALYZER_TOO_COMPLEX_WARNING PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_ANALYZER_TOO_COMPLEX_WARNING}" STREQUAL ""))
   string(TOLOWER "${JLN_ANALYZER_TOO_COMPLEX_WARNING}" JLN_ANALYZER_TOO_COMPLEX_WARNING)
@@ -228,7 +243,7 @@ if(NOT("${JLN_ANALYZER_TOO_COMPLEX_WARNING}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_ANALYZER_TOO_COMPLEX_WARNING}\" for JLN_ANALYZER_TOO_COMPLEX_WARNING, expected: default, off, on")
   endif()
 endif()
-set(JLN_ANALYZER_VERBOSITY "${JLN_ANALYZER_VERBOSITY}" CACHE STRING "Controls the complexity of the control flow paths that are emitted for analyzer diagnostics\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\n - 1: As per the previous level, but also show events for the entry to each function.\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.\n - 3: As per the previous level, but show all control flow events, not just significant ones.")
+set(JLN_ANALYZER_VERBOSITY "${JLN_ANALYZER_VERBOSITY}" CACHE STRING "Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\n - 1: As per the previous level, but also show events for the entry to each function.\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.\n - 3: As per the previous level, but show all control flow events, not just significant ones.")
 set_property(CACHE JLN_ANALYZER_VERBOSITY PROPERTY STRINGS "default" "0" "1" "2" "3")
 if(NOT("${JLN_ANALYZER_VERBOSITY}" STREQUAL ""))
   string(TOLOWER "${JLN_ANALYZER_VERBOSITY}" JLN_ANALYZER_VERBOSITY)
@@ -244,7 +259,7 @@ if(NOT("${JLN_COLOR}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_COLOR}\" for JLN_COLOR, expected: default, auto, never, always")
   endif()
 endif()
-set(JLN_CONTROL_FLOW "${JLN_CONTROL_FLOW}" CACHE STRING "Insert extra runtime security checks to detect attempts to compromise your code")
+set(JLN_CONTROL_FLOW "${JLN_CONTROL_FLOW}" CACHE STRING "Insert extra runtime security checks to detect attempts to compromise your code.")
 set_property(CACHE JLN_CONTROL_FLOW PROPERTY STRINGS "default" "off" "on" "branch" "return" "allow_bugs")
 if(NOT("${JLN_CONTROL_FLOW}" STREQUAL ""))
   string(TOLOWER "${JLN_CONTROL_FLOW}" JLN_CONTROL_FLOW)
@@ -252,7 +267,7 @@ if(NOT("${JLN_CONTROL_FLOW}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_CONTROL_FLOW}\" for JLN_CONTROL_FLOW, expected: default, off, on, branch, return, allow_bugs")
   endif()
 endif()
-set(JLN_CONVERSION_WARNINGS "${JLN_CONVERSION_WARNINGS}" CACHE STRING "Warn for implicit conversions that may alter a value")
+set(JLN_CONVERSION_WARNINGS "${JLN_CONVERSION_WARNINGS}" CACHE STRING "Warn for implicit conversions that may alter a value.")
 set_property(CACHE JLN_CONVERSION_WARNINGS PROPERTY STRINGS "default" "off" "on" "sign" "conversion")
 if(NOT("${JLN_CONVERSION_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_CONVERSION_WARNINGS}" JLN_CONVERSION_WARNINGS)
@@ -268,7 +283,7 @@ if(NOT("${JLN_COVERAGE}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_COVERAGE}\" for JLN_COVERAGE, expected: default, off, on")
   endif()
 endif()
-set(JLN_COVERED_SWITCH_DEFAULT_WARNINGS "${JLN_COVERED_SWITCH_DEFAULT_WARNINGS}" CACHE STRING "Warning for default label in switch which covers all enumeration values")
+set(JLN_COVERED_SWITCH_DEFAULT_WARNINGS "${JLN_COVERED_SWITCH_DEFAULT_WARNINGS}" CACHE STRING "Warning for default label in switch which covers all enumeration values.")
 set_property(CACHE JLN_COVERED_SWITCH_DEFAULT_WARNINGS PROPERTY STRINGS "default" "on" "off")
 if(NOT("${JLN_COVERED_SWITCH_DEFAULT_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_COVERED_SWITCH_DEFAULT_WARNINGS}" JLN_COVERED_SWITCH_DEFAULT_WARNINGS)
@@ -284,7 +299,7 @@ if(NOT("${JLN_CPU}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_CPU}\" for JLN_CPU, expected: default, generic, native")
   endif()
 endif()
-set(JLN_DEBUG "${JLN_DEBUG}" CACHE STRING "Produce debugging information in the operating system's")
+set(JLN_DEBUG "${JLN_DEBUG}" CACHE STRING "Produce debugging information in the operating system's.")
 set_property(CACHE JLN_DEBUG PROPERTY STRINGS "default" "off" "on" "gdb" "lldb" "vms" "codeview" "dbx" "sce")
 if(NOT("${JLN_DEBUG}" STREQUAL ""))
   string(TOLOWER "${JLN_DEBUG}" JLN_DEBUG)
@@ -300,7 +315,7 @@ if(NOT("${JLN_DEBUG_LEVEL}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_DEBUG_LEVEL}\" for JLN_DEBUG_LEVEL, expected: default, 0, 1, 2, 3, line_tables_only, line_directives_only")
   endif()
 endif()
-set(JLN_DIAGNOSTICS_FORMAT "${JLN_DIAGNOSTICS_FORMAT}" CACHE STRING "Emit fix-it hints in a machine-parseable format")
+set(JLN_DIAGNOSTICS_FORMAT "${JLN_DIAGNOSTICS_FORMAT}" CACHE STRING "Emit fix-it hints in a machine-parseable format.")
 set_property(CACHE JLN_DIAGNOSTICS_FORMAT PROPERTY STRINGS "default" "fixits" "patch" "print_source_range_info")
 if(NOT("${JLN_DIAGNOSTICS_FORMAT}" STREQUAL ""))
   string(TOLOWER "${JLN_DIAGNOSTICS_FORMAT}" JLN_DIAGNOSTICS_FORMAT)
@@ -308,7 +323,7 @@ if(NOT("${JLN_DIAGNOSTICS_FORMAT}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_DIAGNOSTICS_FORMAT}\" for JLN_DIAGNOSTICS_FORMAT, expected: default, fixits, patch, print_source_range_info")
   endif()
 endif()
-set(JLN_EXCEPTIONS "${JLN_EXCEPTIONS}" CACHE STRING "Enable C++ exception")
+set(JLN_EXCEPTIONS "${JLN_EXCEPTIONS}" CACHE STRING "Enable C++ exceptions.")
 set_property(CACHE JLN_EXCEPTIONS PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_EXCEPTIONS}" STREQUAL ""))
   string(TOLOWER "${JLN_EXCEPTIONS}" JLN_EXCEPTIONS)
@@ -316,7 +331,7 @@ if(NOT("${JLN_EXCEPTIONS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_EXCEPTIONS}\" for JLN_EXCEPTIONS, expected: default, off, on")
   endif()
 endif()
-set(JLN_FIX_COMPILER_ERROR "${JLN_FIX_COMPILER_ERROR}" CACHE STRING "Transforms some warnings into errors to comply with the standard")
+set(JLN_FIX_COMPILER_ERROR "${JLN_FIX_COMPILER_ERROR}" CACHE STRING "Transforms some warnings into errors to comply with the standard.")
 set_property(CACHE JLN_FIX_COMPILER_ERROR PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_FIX_COMPILER_ERROR}" STREQUAL ""))
   string(TOLOWER "${JLN_FIX_COMPILER_ERROR}" JLN_FIX_COMPILER_ERROR)
@@ -340,7 +355,7 @@ if(NOT("${JLN_INTEGER_SANITIZERS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_INTEGER_SANITIZERS}\" for JLN_INTEGER_SANITIZERS, expected: default, off, on")
   endif()
 endif()
-set(JLN_LINKER "${JLN_LINKER}" CACHE STRING "Configure linker")
+set(JLN_LINKER "${JLN_LINKER}" CACHE STRING "Configure linker.")
 set_property(CACHE JLN_LINKER PROPERTY STRINGS "default" "bfd" "gold" "lld" "mold" "native")
 if(NOT("${JLN_LINKER}" STREQUAL ""))
   string(TOLOWER "${JLN_LINKER}" JLN_LINKER)
@@ -348,7 +363,7 @@ if(NOT("${JLN_LINKER}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_LINKER}\" for JLN_LINKER, expected: default, bfd, gold, lld, mold, native")
   endif()
 endif()
-set(JLN_LTO "${JLN_LTO}" CACHE STRING "Enable Link Time Optimization")
+set(JLN_LTO "${JLN_LTO}" CACHE STRING "Enable Link Time Optimization.")
 set_property(CACHE JLN_LTO PROPERTY STRINGS "default" "off" "on" "normal" "fat" "thin")
 if(NOT("${JLN_LTO}" STREQUAL ""))
   string(TOLOWER "${JLN_LTO}" JLN_LTO)
@@ -356,7 +371,7 @@ if(NOT("${JLN_LTO}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_LTO}\" for JLN_LTO, expected: default, off, on, normal, fat, thin")
   endif()
 endif()
-set(JLN_MSVC_CONFORMANCE "${JLN_MSVC_CONFORMANCE}" CACHE STRING "Standard conformance options")
+set(JLN_MSVC_CONFORMANCE "${JLN_MSVC_CONFORMANCE}" CACHE STRING "Standard conformance options.")
 set_property(CACHE JLN_MSVC_CONFORMANCE PROPERTY STRINGS "default" "all" "all_without_throwing_new")
 if(NOT("${JLN_MSVC_CONFORMANCE}" STREQUAL ""))
   string(TOLOWER "${JLN_MSVC_CONFORMANCE}" JLN_MSVC_CONFORMANCE)
@@ -364,7 +379,7 @@ if(NOT("${JLN_MSVC_CONFORMANCE}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_MSVC_CONFORMANCE}\" for JLN_MSVC_CONFORMANCE, expected: default, all, all_without_throwing_new")
   endif()
 endif()
-set(JLN_MSVC_CRT_SECURE_NO_WARNINGS "${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" CACHE STRING "Disable CRT warnings")
+set(JLN_MSVC_CRT_SECURE_NO_WARNINGS "${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" CACHE STRING "Disable CRT warnings with MSVC.")
 set_property(CACHE JLN_MSVC_CRT_SECURE_NO_WARNINGS PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" JLN_MSVC_CRT_SECURE_NO_WARNINGS)
@@ -372,7 +387,7 @@ if(NOT("${JLN_MSVC_CRT_SECURE_NO_WARNINGS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_MSVC_CRT_SECURE_NO_WARNINGS}\" for JLN_MSVC_CRT_SECURE_NO_WARNINGS, expected: default, off, on")
   endif()
 endif()
-set(JLN_MSVC_DIAGNOSTICS_FORMAT "${JLN_MSVC_DIAGNOSTICS_FORMAT}" CACHE STRING "Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)\n - classic: Which reports only the line number where the issue was found.\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected")
+set(JLN_MSVC_DIAGNOSTICS_FORMAT "${JLN_MSVC_DIAGNOSTICS_FORMAT}" CACHE STRING "Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).\n - classic: Which reports only the line number where the issue was found.\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.")
 set_property(CACHE JLN_MSVC_DIAGNOSTICS_FORMAT PROPERTY STRINGS "default" "classic" "column" "caret")
 if(NOT("${JLN_MSVC_DIAGNOSTICS_FORMAT}" STREQUAL ""))
   string(TOLOWER "${JLN_MSVC_DIAGNOSTICS_FORMAT}" JLN_MSVC_DIAGNOSTICS_FORMAT)
@@ -380,7 +395,7 @@ if(NOT("${JLN_MSVC_DIAGNOSTICS_FORMAT}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_MSVC_DIAGNOSTICS_FORMAT}\" for JLN_MSVC_DIAGNOSTICS_FORMAT, expected: default, classic, column, caret")
   endif()
 endif()
-set(JLN_MSVC_ISYSTEM "${JLN_MSVC_ISYSTEM}" CACHE STRING "Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)")
+set(JLN_MSVC_ISYSTEM "${JLN_MSVC_ISYSTEM}" CACHE STRING "Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).")
 set_property(CACHE JLN_MSVC_ISYSTEM PROPERTY STRINGS "default" "anglebrackets" "include_and_caexcludepath" "external_as_include_system_flag")
 if(NOT("${JLN_MSVC_ISYSTEM}" STREQUAL ""))
   string(TOLOWER "${JLN_MSVC_ISYSTEM}" JLN_MSVC_ISYSTEM)
@@ -388,7 +403,7 @@ if(NOT("${JLN_MSVC_ISYSTEM}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_MSVC_ISYSTEM}\" for JLN_MSVC_ISYSTEM, expected: default, anglebrackets, include_and_caexcludepath, external_as_include_system_flag")
   endif()
 endif()
-set(JLN_NDEBUG "${JLN_NDEBUG}" CACHE STRING "Enable NDEBUG macro (disable assert macro)")
+set(JLN_NDEBUG "${JLN_NDEBUG}" CACHE STRING "Enable NDEBUG macro (disable assert macro).")
 set_property(CACHE JLN_NDEBUG PROPERTY STRINGS "default" "off" "on" "with_optimization_1_or_above")
 if(NOT("${JLN_NDEBUG}" STREQUAL ""))
   string(TOLOWER "${JLN_NDEBUG}" JLN_NDEBUG)
@@ -396,7 +411,7 @@ if(NOT("${JLN_NDEBUG}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_NDEBUG}\" for JLN_NDEBUG, expected: default, off, on, with_optimization_1_or_above")
   endif()
 endif()
-set(JLN_OPTIMIZATION "${JLN_OPTIMIZATION}" CACHE STRING "Optimization level\n - 0: Not optimize\n - g: Enable debugging experience\n - 1: Optimize\n - 2: Optimize even more\n - 3: Optimize yet more\n - fast: Enables all optimization=3 and disregard strict standards compliance\n - size: Optimize for size\n - z: Optimize for size aggressively (/!\ possible slow compilation with emcc)")
+set(JLN_OPTIMIZATION "${JLN_OPTIMIZATION}" CACHE STRING "Optimization level.\n - 0: Not optimize.\n - g: Enable debugging experience.\n - 1: Optimize.\n - 2: Optimize even more.\n - 3: Optimize yet more.\n - fast: Enables all optimization=3 and disregard strict standards compliance.\n - size: Optimize for size.\n - z: Optimize for size aggressively (/!\ possible slow compilation with emcc).")
 set_property(CACHE JLN_OPTIMIZATION PROPERTY STRINGS "default" "0" "g" "1" "2" "3" "fast" "size" "z")
 if(NOT("${JLN_OPTIMIZATION}" STREQUAL ""))
   string(TOLOWER "${JLN_OPTIMIZATION}" JLN_OPTIMIZATION)
@@ -404,7 +419,7 @@ if(NOT("${JLN_OPTIMIZATION}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_OPTIMIZATION}\" for JLN_OPTIMIZATION, expected: default, 0, g, 1, 2, 3, fast, size, z")
   endif()
 endif()
-set(JLN_OTHER_SANITIZERS "${JLN_OTHER_SANITIZERS}" CACHE STRING "Enable other sanitizers")
+set(JLN_OTHER_SANITIZERS "${JLN_OTHER_SANITIZERS}" CACHE STRING "Enable other sanitizers.")
 set_property(CACHE JLN_OTHER_SANITIZERS PROPERTY STRINGS "default" "off" "thread" "pointer" "memory")
 if(NOT("${JLN_OTHER_SANITIZERS}" STREQUAL ""))
   string(TOLOWER "${JLN_OTHER_SANITIZERS}" JLN_OTHER_SANITIZERS)
@@ -412,7 +427,7 @@ if(NOT("${JLN_OTHER_SANITIZERS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_OTHER_SANITIZERS}\" for JLN_OTHER_SANITIZERS, expected: default, off, thread, pointer, memory")
   endif()
 endif()
-set(JLN_PEDANTIC "${JLN_PEDANTIC}" CACHE STRING "Issue all the warnings demanded by strict ISO C and ISO C++")
+set(JLN_PEDANTIC "${JLN_PEDANTIC}" CACHE STRING "Issue all the warnings demanded by strict ISO C and ISO C++.")
 set_property(CACHE JLN_PEDANTIC PROPERTY STRINGS "default" "off" "on" "as_error")
 if(NOT("${JLN_PEDANTIC}" STREQUAL ""))
   string(TOLOWER "${JLN_PEDANTIC}" JLN_PEDANTIC)
@@ -420,7 +435,7 @@ if(NOT("${JLN_PEDANTIC}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_PEDANTIC}\" for JLN_PEDANTIC, expected: default, off, on, as_error")
   endif()
 endif()
-set(JLN_PIE "${JLN_PIE}" CACHE STRING "Controls position-independent code generation")
+set(JLN_PIE "${JLN_PIE}" CACHE STRING "Controls position-independent code generation.")
 set_property(CACHE JLN_PIE PROPERTY STRINGS "default" "off" "on" "static" "fpic" "fPIC" "fpie" "fPIE")
 if(NOT("${JLN_PIE}" STREQUAL ""))
   string(TOLOWER "${JLN_PIE}" JLN_PIE)
@@ -436,7 +451,7 @@ if(NOT("${JLN_RELRO}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_RELRO}\" for JLN_RELRO, expected: default, off, on, full")
   endif()
 endif()
-set(JLN_REPRODUCIBLE_BUILD_WARNINGS "${JLN_REPRODUCIBLE_BUILD_WARNINGS}" CACHE STRING "Warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations")
+set(JLN_REPRODUCIBLE_BUILD_WARNINGS "${JLN_REPRODUCIBLE_BUILD_WARNINGS}" CACHE STRING "Warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations.")
 set_property(CACHE JLN_REPRODUCIBLE_BUILD_WARNINGS PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_REPRODUCIBLE_BUILD_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_REPRODUCIBLE_BUILD_WARNINGS}" JLN_REPRODUCIBLE_BUILD_WARNINGS)
@@ -444,7 +459,7 @@ if(NOT("${JLN_REPRODUCIBLE_BUILD_WARNINGS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_REPRODUCIBLE_BUILD_WARNINGS}\" for JLN_REPRODUCIBLE_BUILD_WARNINGS, expected: default, off, on")
   endif()
 endif()
-set(JLN_SANITIZERS "${JLN_SANITIZERS}" CACHE STRING "Enable sanitizers (asan, ubsan, etc)")
+set(JLN_SANITIZERS "${JLN_SANITIZERS}" CACHE STRING "Enable sanitizers (asan, ubsan, etc).")
 set_property(CACHE JLN_SANITIZERS PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_SANITIZERS}" STREQUAL ""))
   string(TOLOWER "${JLN_SANITIZERS}" JLN_SANITIZERS)
@@ -460,7 +475,7 @@ if(NOT("${JLN_SHADOW_WARNINGS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_SHADOW_WARNINGS}\" for JLN_SHADOW_WARNINGS, expected: default, off, on, local, compatible_local, all")
   endif()
 endif()
-set(JLN_STACK_PROTECTOR "${JLN_STACK_PROTECTOR}" CACHE STRING "Emit extra code to check for buffer overflows, such as stack smashing attacks")
+set(JLN_STACK_PROTECTOR "${JLN_STACK_PROTECTOR}" CACHE STRING "Emit extra code to check for buffer overflows, such as stack smashing attacks.")
 set_property(CACHE JLN_STACK_PROTECTOR PROPERTY STRINGS "default" "off" "on" "strong" "all")
 if(NOT("${JLN_STACK_PROTECTOR}" STREQUAL ""))
   string(TOLOWER "${JLN_STACK_PROTECTOR}" JLN_STACK_PROTECTOR)
@@ -468,7 +483,7 @@ if(NOT("${JLN_STACK_PROTECTOR}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_STACK_PROTECTOR}\" for JLN_STACK_PROTECTOR, expected: default, off, on, strong, all")
   endif()
 endif()
-set(JLN_STL_FIX "${JLN_STL_FIX}" CACHE STRING "Enable /DNOMINMAX with msvc")
+set(JLN_STL_FIX "${JLN_STL_FIX}" CACHE STRING "Enable /DNOMINMAX with msvc.")
 set_property(CACHE JLN_STL_FIX PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_STL_FIX}" STREQUAL ""))
   string(TOLOWER "${JLN_STL_FIX}" JLN_STL_FIX)
@@ -476,7 +491,7 @@ if(NOT("${JLN_STL_FIX}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_STL_FIX}\" for JLN_STL_FIX, expected: default, off, on")
   endif()
 endif()
-set(JLN_SUGGESTIONS "${JLN_SUGGESTIONS}" CACHE STRING "Warn for cases where adding an attribute may be beneficial")
+set(JLN_SUGGESTIONS "${JLN_SUGGESTIONS}" CACHE STRING "Warn for cases where adding an attribute may be beneficial.")
 set_property(CACHE JLN_SUGGESTIONS PROPERTY STRINGS "default" "off" "on")
 if(NOT("${JLN_SUGGESTIONS}" STREQUAL ""))
   string(TOLOWER "${JLN_SUGGESTIONS}" JLN_SUGGESTIONS)
@@ -484,7 +499,7 @@ if(NOT("${JLN_SUGGESTIONS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_SUGGESTIONS}\" for JLN_SUGGESTIONS, expected: default, off, on")
   endif()
 endif()
-set(JLN_SWITCH_WARNINGS "${JLN_SWITCH_WARNINGS}" CACHE STRING "Warnings concerning the switch keyword")
+set(JLN_SWITCH_WARNINGS "${JLN_SWITCH_WARNINGS}" CACHE STRING "Warnings concerning the switch keyword.")
 set_property(CACHE JLN_SWITCH_WARNINGS PROPERTY STRINGS "default" "on" "off" "exhaustive_enum" "mandatory_default" "exhaustive_enum_and_mandatory_default")
 if(NOT("${JLN_SWITCH_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_SWITCH_WARNINGS}" JLN_SWITCH_WARNINGS)
@@ -492,7 +507,7 @@ if(NOT("${JLN_SWITCH_WARNINGS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_SWITCH_WARNINGS}\" for JLN_SWITCH_WARNINGS, expected: default, on, off, exhaustive_enum, mandatory_default, exhaustive_enum_and_mandatory_default")
   endif()
 endif()
-set(JLN_UNSAFE_BUFFER_USAGE_WARNINGS "${JLN_UNSAFE_BUFFER_USAGE_WARNINGS}" CACHE STRING "Enable -Wunsafe-buffer-usage with clang")
+set(JLN_UNSAFE_BUFFER_USAGE_WARNINGS "${JLN_UNSAFE_BUFFER_USAGE_WARNINGS}" CACHE STRING "Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html).")
 set_property(CACHE JLN_UNSAFE_BUFFER_USAGE_WARNINGS PROPERTY STRINGS "default" "on" "off")
 if(NOT("${JLN_UNSAFE_BUFFER_USAGE_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_UNSAFE_BUFFER_USAGE_WARNINGS}" JLN_UNSAFE_BUFFER_USAGE_WARNINGS)
@@ -500,7 +515,7 @@ if(NOT("${JLN_UNSAFE_BUFFER_USAGE_WARNINGS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_UNSAFE_BUFFER_USAGE_WARNINGS}\" for JLN_UNSAFE_BUFFER_USAGE_WARNINGS, expected: default, on, off")
   endif()
 endif()
-set(JLN_VAR_INIT "${JLN_VAR_INIT}" CACHE STRING "Initialize all stack variables implicitly, including padding\n - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang)\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)\n - zero: zero Initialize automatic variables with zeroes")
+set(JLN_VAR_INIT "${JLN_VAR_INIT}" CACHE STRING "Initialize all stack variables implicitly, including padding.\n - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang).\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).\n - zero: zero Initialize automatic variables with zeroes.")
 set_property(CACHE JLN_VAR_INIT PROPERTY STRINGS "default" "uninitialized" "pattern" "zero")
 if(NOT("${JLN_VAR_INIT}" STREQUAL ""))
   string(TOLOWER "${JLN_VAR_INIT}" JLN_VAR_INIT)
@@ -508,7 +523,7 @@ if(NOT("${JLN_VAR_INIT}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_VAR_INIT}\" for JLN_VAR_INIT, expected: default, uninitialized, pattern, zero")
   endif()
 endif()
-set(JLN_WARNINGS "${JLN_WARNINGS}" CACHE STRING "Warning level")
+set(JLN_WARNINGS "${JLN_WARNINGS}" CACHE STRING "Warning level.")
 set_property(CACHE JLN_WARNINGS PROPERTY STRINGS "default" "off" "on" "strict" "very_strict")
 if(NOT("${JLN_WARNINGS}" STREQUAL ""))
   string(TOLOWER "${JLN_WARNINGS}" JLN_WARNINGS)
@@ -516,7 +531,7 @@ if(NOT("${JLN_WARNINGS}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_WARNINGS}\" for JLN_WARNINGS, expected: default, off, on, strict, very_strict")
   endif()
 endif()
-set(JLN_WARNINGS_AS_ERROR "${JLN_WARNINGS_AS_ERROR}" CACHE STRING "Make all or some warnings into errors")
+set(JLN_WARNINGS_AS_ERROR "${JLN_WARNINGS_AS_ERROR}" CACHE STRING "Make all or some warnings into errors.")
 set_property(CACHE JLN_WARNINGS_AS_ERROR PROPERTY STRINGS "default" "off" "on" "basic")
 if(NOT("${JLN_WARNINGS_AS_ERROR}" STREQUAL ""))
   string(TOLOWER "${JLN_WARNINGS_AS_ERROR}" JLN_WARNINGS_AS_ERROR)
@@ -532,7 +547,7 @@ if(NOT("${JLN_WHOLE_PROGRAM}" STREQUAL ""))
     message(FATAL_ERROR "Unknow value \"${JLN_WHOLE_PROGRAM}\" for JLN_WHOLE_PROGRAM, expected: default, off, on, strip_all")
   endif()
 endif()
-set(JLN_WINDOWS_BIGOBJ "${JLN_WINDOWS_BIGOBJ}" CACHE STRING "Increases that addressable sections capacity")
+set(JLN_WINDOWS_BIGOBJ "${JLN_WINDOWS_BIGOBJ}" CACHE STRING "Increases that addressable sections capacity.")
 set_property(CACHE JLN_WINDOWS_BIGOBJ PROPERTY STRINGS "default" "on")
 if(NOT("${JLN_WINDOWS_BIGOBJ}" STREQUAL ""))
   string(TOLOWER "${JLN_WINDOWS_BIGOBJ}" JLN_WINDOWS_BIGOBJ)
@@ -641,17 +656,14 @@ function(jln_c_init_flags)
       if(NOT DEFINED JLN_DEFAULT_FLAG_SANITIZERS)
         set(JLN_DEFAULT_FLAG_SANITIZERS "on")
       endif()
-      if(NOT DEFINED JLN_DEFAULT_FLAG_STL_DEBUG)
-        set(JLN_DEFAULT_FLAG_STL_DEBUG "on")
+      if(NOT DEFINED JLN_DEFAULT_FLAG_STL_HARDENING)
+        set(JLN_DEFAULT_FLAG_STL_HARDENING "debug")
       endif()
     endif()
 
     if("RelWithDebInfo" STREQUAL "${_JLN_BUILD_TYPE}")
       if(NOT DEFINED JLN_DEFAULT_FLAG_DEBUG)
         set(JLN_DEFAULT_FLAG_DEBUG "on")
-      endif()
-      if(NOT DEFINED JLN_DEFAULT_FLAG_LINKER)
-        set(JLN_DEFAULT_FLAG_LINKER "native")
       endif()
       if(NOT DEFINED JLN_DEFAULT_FLAG_LTO)
         set(JLN_DEFAULT_FLAG_LTO "on")
@@ -662,9 +674,6 @@ function(jln_c_init_flags)
     endif()
 
     if("MinSizeRel" STREQUAL "${_JLN_BUILD_TYPE}")
-      if(NOT DEFINED JLN_DEFAULT_FLAG_LINKER)
-        set(JLN_DEFAULT_FLAG_LINKER "native")
-      endif()
       if(NOT DEFINED JLN_DEFAULT_FLAG_LTO)
         set(JLN_DEFAULT_FLAG_LTO "on")
       endif()
@@ -674,9 +683,6 @@ function(jln_c_init_flags)
     endif()
 
     if("Release" STREQUAL "${_JLN_BUILD_TYPE}")
-      if(NOT DEFINED JLN_DEFAULT_FLAG_LINKER)
-        set(JLN_DEFAULT_FLAG_LINKER "native")
-      endif()
       if(NOT DEFINED JLN_DEFAULT_FLAG_LTO)
         set(JLN_DEFAULT_FLAG_LTO "on")
       endif()
@@ -1016,7 +1022,7 @@ function(jln_c_init_flags)
 
   if("${JLN_VERBOSE_D}" STREQUAL "on" OR "${JLN_VERBOSE_D}" STREQUAL "1")
     message(STATUS "JLN_AUTO_PROFILE = ${JLN_AUTO_PROFILE_D}	[off, on]")
-    message(STATUS "JLN_ANALYZER = ${JLN_ANALYZER_D}	[default, off, on, taint]")
+    message(STATUS "JLN_ANALYZER = ${JLN_ANALYZER_D}	[default, off, on]")
     message(STATUS "JLN_ANALYZER_TOO_COMPLEX_WARNING = ${JLN_ANALYZER_TOO_COMPLEX_WARNING_D}	[default, off, on]")
     message(STATUS "JLN_ANALYZER_VERBOSITY = ${JLN_ANALYZER_VERBOSITY_D}	[default, 0, 1, 2, 3]")
     message(STATUS "JLN_COLOR = ${JLN_COLOR_D}	[default, auto, never, always]")
@@ -2183,7 +2189,12 @@ function(jln_c_flags)
           list(APPEND CXX_FLAGS  "-Wno-stack-protector" "-U_FORTIFY_SOURCE")
           list(APPEND LINK_FLAGS  "-Wno-stack-protector")
         else()
-          list(APPEND CXX_FLAGS  "-D_FORTIFY_SOURCE=2" "-Wstack-protector")
+          list(APPEND CXX_FLAGS  "-Wstack-protector")
+          if (  ( ( JLN_GCC_C_COMPILER AND JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "12.0" ) OR ( JLN_CLANG_C_COMPILER AND JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "14.0" ) ) )
+            list(APPEND CXX_FLAGS  "-D_FORTIFY_SOURCE=3")
+          else()
+            list(APPEND CXX_FLAGS  "-D_FORTIFY_SOURCE=2")
+          endif()
           if (  JLN_FLAGS_STACK_PROTECTOR STREQUAL "strong" )
             if (  JLN_GCC_C_COMPILER )
               if (  JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "4.9" )
@@ -2195,13 +2206,11 @@ function(jln_c_flags)
                 endif()
               endif()
             else()
-              if (  JLN_CLANG_C_COMPILER )
-                list(APPEND CXX_FLAGS  "-fstack-protector-strong" "-fsanitize=safe-stack")
-                list(APPEND LINK_FLAGS  "-fstack-protector-strong" "-fsanitize=safe-stack")
-                if (  JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0" )
-                  list(APPEND CXX_FLAGS  "-fstack-clash-protection")
-                  list(APPEND LINK_FLAGS  "-fstack-clash-protection")
-                endif()
+              list(APPEND CXX_FLAGS  "-fstack-protector-strong" "-fsanitize=safe-stack")
+              list(APPEND LINK_FLAGS  "-fstack-protector-strong" "-fsanitize=safe-stack")
+              if (  JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0" )
+                list(APPEND CXX_FLAGS  "-fstack-clash-protection")
+                list(APPEND LINK_FLAGS  "-fstack-clash-protection")
               endif()
             endif()
           else()
@@ -2212,13 +2221,11 @@ function(jln_c_flags)
                 list(APPEND CXX_FLAGS  "-fstack-clash-protection")
                 list(APPEND LINK_FLAGS  "-fstack-clash-protection")
               else()
-                if (  JLN_CLANG_C_COMPILER )
-                  list(APPEND CXX_FLAGS  "-fsanitize=safe-stack")
-                  list(APPEND LINK_FLAGS  "-fsanitize=safe-stack")
-                  if (  JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0" )
-                    list(APPEND CXX_FLAGS  "-fstack-clash-protection")
-                    list(APPEND LINK_FLAGS  "-fstack-clash-protection")
-                  endif()
+                list(APPEND CXX_FLAGS  "-fsanitize=safe-stack")
+                list(APPEND LINK_FLAGS  "-fsanitize=safe-stack")
+                if (  JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "11.0" )
+                  list(APPEND CXX_FLAGS  "-fstack-clash-protection")
+                  list(APPEND LINK_FLAGS  "-fstack-clash-protection")
                 endif()
               endif()
             else()
@@ -2298,9 +2305,6 @@ function(jln_c_flags)
             list(APPEND CXX_FLAGS  "-fno-analyzer")
           else()
             list(APPEND CXX_FLAGS  "-fanalyzer")
-            if (  JLN_FLAGS_ANALYZER STREQUAL "taint" )
-              list(APPEND CXX_FLAGS  "-fanalyzer-checker=taint")
-            endif()
             if (   NOT ( JLN_FLAGS_ANALYZER_TOO_COMPLEX_WARNING STREQUAL "default" ) )
               if (  JLN_FLAGS_ANALYZER_TOO_COMPLEX_WARNING STREQUAL "on" )
                 list(APPEND CXX_FLAGS  "-Wanalyzer-too-complex")
@@ -2369,22 +2373,12 @@ function(jln_c_flags)
         list(APPEND CXX_FLAGS  "/GR-")
       endif()
     endif()
-    if (   NOT ( JLN_FLAGS_STL_DEBUG STREQUAL "default" ) )
-      if (  ( ( JLN_MSVC_C_COMPILER AND JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "16.7" ) OR JLN_CLANG_CL_C_COMPILER ) )
-        if (  JLN_FLAGS_STL_DEBUG STREQUAL "off" )
-          list(APPEND CXX_FLAGS  "/D_ITERATOR_DEBUG_LEVEL=0")
-        else()
-          if (  ( JLN_FLAGS_STL_DEBUG STREQUAL "on" OR JLN_FLAGS_STL_DEBUG STREQUAL "extensive" ) )
-            list(APPEND CXX_FLAGS  "/D_ITERATOR_DEBUG_LEVEL=1")
-          else()
-            list(APPEND CXX_FLAGS  "/D_ITERATOR_DEBUG_LEVEL=2")
-          endif()
-        endif()
+    if (   NOT ( JLN_FLAGS_STL_HARDENING STREQUAL "default" ) )
+      if (  JLN_FLAGS_STL_HARDENING STREQUAL "off" )
+        list(APPEND CXX_FLAGS  "/D_SECURE_SCL=0")
       else()
-        if (  JLN_FLAGS_STL_DEBUG STREQUAL "off" )
-          list(APPEND CXX_FLAGS  "/D_HAS_ITERATOR_DEBUGGING=0")
-        else()
-          list(APPEND CXX_FLAGS  "/D_DEBUG" "/D_HAS_ITERATOR_DEBUGGING=1")
+        if (  ( NOT ( ( JLN_FLAGS_STL_HARDENING STREQUAL "fast" OR JLN_FLAGS_STL_HARDENING STREQUAL "extensive" ) ) AND  NOT ( JLN_FLAGS_STL_HARDENING STREQUAL "debug" ) ) )
+          list(APPEND CXX_FLAGS  "/D_DEBUG")
         endif()
       endif()
     endif()
@@ -2527,6 +2521,15 @@ function(jln_c_flags)
     endif()
   endif()
   if (  JLN_MSVC_C_COMPILER )
+    if (   NOT ( JLN_FLAGS_ANALYZER STREQUAL "default" ) )
+      if (  JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "15.0" )
+        if (  JLN_FLAGS_ANALYZER STREQUAL "off" )
+          list(APPEND CXX_FLAGS  "/analyze-")
+        else()
+          list(APPEND CXX_FLAGS  "/analyze")
+        endif()
+      endif()
+    endif()
     if (   NOT ( JLN_FLAGS_WINDOWS_BIGOBJ STREQUAL "default" ) )
       list(APPEND CXX_FLAGS  "/bigobj")
     endif()
