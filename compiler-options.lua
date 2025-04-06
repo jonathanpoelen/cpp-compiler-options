@@ -3049,7 +3049,7 @@ local Vbase = {
   --   incidental=bool,
   -- }
   getoptions=function(self)
-    local computed_options = self.__computed_options
+    local computed_options = self._computed_options
 
     if not computed_options then
       computed_options = {}
