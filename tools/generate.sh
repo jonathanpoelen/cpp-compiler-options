@@ -110,7 +110,6 @@ while read comp ; do
   gencompopt 2 debug                      debug
   gencompopt 2 sanitizers                 sanitizers
   # C++ only
-  gencompopt 1 stl_hardening                 stl_hardening=fast
   gencompopt 1 stl_debug                     stl_hardening=debug
   gencompopt 1 stl_debug_broken_abi          stl_hardening=debug_with_broken_abi
   gencompopt 1 sanitizers-pointer            other_sanitizers=pointer

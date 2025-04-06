@@ -99,11 +99,6 @@ local function create_debug_file(prefix, files_contents)
   local debug_full = tokeys(split_lines(files_contents['stl_debug']), tokeys(lines))
   write_ktable(debug_full, prefix .. 'debug_full')
 
-  -- remove stl_debug file when duplicate stl_hardening
-  if files_contents['stl_hardening'] == files_contents['stl_debug'] then
-    remove_file(prefix .. 'stl_debug')
-  end
-
   -- debug_full_broken_abi file
   local debug_full_broken_abi = tokeys(split_lines(files_contents['stl_debug_broken_abi']), lines)
   write_ktable(debug_full_broken_abi, prefix .. 'debug_full_broken_abi')
