@@ -45,15 +45,20 @@
 #
 #  # Options
 #
-#  Supported options are (alphabetically in a category):
+#  Supported options are listed below by category.
+#  The same option can be found in several categories.
 #
-#  <!-- ./compiler-options.lua generators/list_options.lua --color -->
+#  The first value corresponds to the one used by default,
+#  and the value `default` has no associated behavior.
+#
+#  Options with a default value other than `default` are listed below.
+#
+#  <!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 #  ```ini
 #  # Warning:
 #
-#  analyzer = default off on taint
-#  analyzer_too_complex_warning = default off on
-#  analyzer_verbosity = default 0 1 2 3
+#  warnings = on default off strict very_strict
+#  warnings_as_error = default off on basic
 #  conversion_warnings = on default off sign conversion
 #  covered_switch_default_warnings = on default off
 #  fix_compiler_error = on default off
@@ -64,8 +69,6 @@
 #  suggestions = default off on
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 #  unsafe_buffer_usage_warnings = default on off
-#  warnings = on default off strict very_strict
-#  warnings_as_error = default off on basic
 #  windows_abi_compatibility_warnings = off default on
 #
 #  # Pedantic:
@@ -76,19 +79,22 @@
 #
 #  # Debug:
 #
-#  debug = default off on line_tables_only gdb lldb sce
+#  debug = default off on gdb lldb vms codeview dbx sce
+#  debug_level = default 0 1 2 3 line_tables_only line_directives_only
+#  stl_hardening = default off fast extensive debug debug_with_broken_abi
+#  control_flow = default off on branch return allow_bugs
+#  sanitizers = default off on
 #  float_sanitizers = default off on
 #  integer_sanitizers = default off on
-#  ndebug = with_optimization_1_or_above default off on
 #  other_sanitizers = default off thread pointer memory
-#  sanitizers = default off on
-#  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
 #  var_init = default uninitialized pattern zero
+#  ndebug = with_optimization_1_or_above default off on
+#  optimization = default 0 g 1 2 3 fast size z
 #
 #  # Optimization:
 #
 #  cpu = default generic native
-#  linker = default bfd gold lld native
+#  linker = default bfd gold lld mold native
 #  lto = default off on normal fat thin
 #  optimization = default 0 g 1 2 3 fast size z
 #  whole_program = default off on strip_all
@@ -103,6 +109,13 @@
 #  control_flow = default off on branch return allow_bugs
 #  relro = default off on full
 #  stack_protector = default off on strong all
+#  stl_hardening = default off fast extensive debug debug_with_broken_abi
+#
+#  # Analyzer:
+#
+#  analyzer = default off on
+#  analyzer_too_complex_warning = default off on
+#  analyzer_verbosity = default 0 1 2 3
 #
 #  # Other:
 #
@@ -142,20 +155,22 @@
 #
 #  <!-- enddefault -->
 #
+#  ### To know
+#
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
-#  - `stl_debug=allow_broken_abi_and_bugs`
-#    - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
 #  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
+#  - `stl_hardening=debug`
+#    - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 #
 #
 #  ## Recommended options
 #
 #  category | options
 #  ---------|---------
-#  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>`optimization=g` or `optimization=0` + `debug_level=3`
-#  release | `cpu=native`<br>`linker=gold`, `lld` or `native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
-#  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=PIE`
+#  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
+#  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+#  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
 #  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
 #
 #  
@@ -168,21 +183,18 @@ if get_variable('jln_use_profile_buildtype', false)
       'control_flow': 'on',
       'debug': 'on',
       'sanitizers': 'on',
-      'stl_debug': 'on',
+      'stl_hardening': 'debug',
     },
     'debugoptimized': {
       'debug': 'on',
-      'linker': 'native',
       'lto': 'on',
       'optimization': 'g',
     },
     'minsize': {
-      'linker': 'native',
       'lto': 'on',
       'optimization': 'size',
     },
     'release': {
-      'linker': 'native',
       'lto': 'on',
       'optimization': '3',
     },
@@ -235,8 +247,8 @@ ___jln_flags = {
   'sanitizers': ___jln_default_flags.get('sanitizers', get_option('jln_sanitizers')),
   'shadow_warnings': ___jln_default_flags.get('shadow_warnings', get_option('jln_shadow_warnings')),
   'stack_protector': ___jln_default_flags.get('stack_protector', get_option('jln_stack_protector')),
-  'stl_debug': ___jln_default_flags.get('stl_debug', get_option('jln_stl_debug')),
   'stl_fix': ___jln_default_flags.get('stl_fix', get_option('jln_stl_fix')),
+  'stl_hardening': ___jln_default_flags.get('stl_hardening', get_option('jln_stl_hardening')),
   'suggestions': ___jln_default_flags.get('suggestions', get_option('jln_suggestions')),
   'switch_warnings': ___jln_default_flags.get('switch_warnings', get_option('jln_switch_warnings')),
   'unsafe_buffer_usage_warnings': ___jln_default_flags.get('unsafe_buffer_usage_warnings', get_option('jln_unsafe_buffer_usage_warnings')),
@@ -774,34 +786,30 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
   endif
   if (  ( ___jln_compiler_id == 'gcc' or ___jln_compiler_id == 'clang' or ___jln_compiler_id == 'emscripten' ) )
-    if (  ___jln_flags.get('stl_debug', 'default') != 'default' )
-      if (  ___jln_flags.get('stl_debug', 'default') != 'off' )
-        if (  ( ___jln_compiler_id == 'clang' and ___jln_compiler_version.version_compare('<18.0') ) )
-          if (  ( ___jln_flags.get('stl_debug', 'default') == 'allow_broken_abi' or ___jln_flags.get('stl_debug', 'default') == 'allow_broken_abi_and_bugs' ) )
-            if (  ( ___jln_compiler_version.version_compare('>=8.0') or ___jln_flags.get('stl_debug', 'default') == 'allow_broken_abi_and_bugs' ) )
-              jln_cpp_flags += ['-D_LIBCPP_DEBUG=1', ]
-            endif
-            jln_cpp_flags += ['-D_GLIBCXX_DEBUG', ]
-          else
-            jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', ]
-          endif
+    if (  ___jln_flags.get('stl_hardening', 'default') != 'default' )
+      if (  ___jln_flags.get('stl_hardening', 'default') != 'off' )
+        if (  ___jln_flags.get('stl_hardening', 'default') == 'fast' )
+          jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST', ]
         else
-          if (  ___jln_flags.get('stl_debug', 'default') == 'on' )
-            jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST', ]
+          if (  ___jln_flags.get('stl_hardening', 'default') == 'extensive' )
+            jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE', ]
           else
-            if (  ___jln_flags.get('stl_debug', 'default') == 'extensive' )
-              jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE', ]
+            if (  ___jln_flags.get('stl_hardening', 'default') == 'debug' )
+              jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG', ]
             else
-              if (  ___jln_flags.get('stl_debug', 'default') == 'debug' )
-                jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG', ]
+              jln_cpp_flags += ['-D_GLIBCXX_DEBUG', ]
+              if (  ___jln_flags.get('pedantic', 'default') != 'default' and not ( ___jln_flags.get('pedantic', 'default') == 'off' ) )
+                jln_cpp_flags += ['-D_GLIBCXX_DEBUG_PEDANTIC', ]
+              endif
+              if (  ( ___jln_is_clang_like and ___jln_compiler_version.version_compare('<18.0') ) )
+                if (  ___jln_compiler_version.version_compare('>=8.0') )
+                  jln_cpp_flags += ['-D_LIBCPP_DEBUG=1', ]
+                endif
               else
-                jln_cpp_flags += ['-D_GLIBCXX_DEBUG', '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG', '-D_LIBCPP_ABI_BOUNDED_ITERATORS', '-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING', '-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR', '-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR', '-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY', ]
+                jln_cpp_flags += ['-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG', '-D_LIBCPP_ABI_BOUNDED_ITERATORS', '-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING', '-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR', '-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR', '-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY', ]
               endif
             endif
           endif
-        endif
-        if (  ___jln_flags.get('pedantic', 'default') != 'default' and not ( ___jln_flags.get('pedantic', 'default') == 'off' ) )
-          jln_cpp_flags += ['-D_GLIBCXX_DEBUG_PEDANTIC', ]
         endif
       endif
     endif
@@ -1096,7 +1104,12 @@ foreach ___jln_flags : ___jln_custom_flags
           jln_cpp_flags += ['-Wno-stack-protector', '-U_FORTIFY_SOURCE', ]
           jln_link_flags += ['-Wno-stack-protector', ]
         else
-          jln_cpp_flags += ['-D_FORTIFY_SOURCE=2', '-Wstack-protector', ]
+          jln_cpp_flags += ['-Wstack-protector', ]
+          if (  ( ( ___jln_compiler_id == 'gcc' and ___jln_compiler_version.version_compare('>=12.0') ) or ( ___jln_compiler_id == 'clang' and ___jln_compiler_version.version_compare('>=14.0') ) ) )
+            jln_cpp_flags += ['-D_FORTIFY_SOURCE=3', ]
+          else
+            jln_cpp_flags += ['-D_FORTIFY_SOURCE=2', ]
+          endif
           if (  ___jln_flags.get('stack_protector', 'default') == 'strong' )
             if (  ___jln_compiler_id == 'gcc' )
               if (  ___jln_compiler_version.version_compare('>=4.9') )
@@ -1108,13 +1121,11 @@ foreach ___jln_flags : ___jln_custom_flags
                 endif
               endif
             else
-              if (  ___jln_compiler_id == 'clang' )
-                jln_cpp_flags += ['-fstack-protector-strong', '-fsanitize=safe-stack', ]
-                jln_link_flags += ['-fstack-protector-strong', '-fsanitize=safe-stack', ]
-                if (  ___jln_compiler_version.version_compare('>=11.0') )
-                  jln_cpp_flags += ['-fstack-clash-protection', ]
-                  jln_link_flags += ['-fstack-clash-protection', ]
-                endif
+              jln_cpp_flags += ['-fstack-protector-strong', '-fsanitize=safe-stack', ]
+              jln_link_flags += ['-fstack-protector-strong', '-fsanitize=safe-stack', ]
+              if (  ___jln_compiler_version.version_compare('>=11.0') )
+                jln_cpp_flags += ['-fstack-clash-protection', ]
+                jln_link_flags += ['-fstack-clash-protection', ]
               endif
             endif
           else
@@ -1125,13 +1136,11 @@ foreach ___jln_flags : ___jln_custom_flags
                 jln_cpp_flags += ['-fstack-clash-protection', ]
                 jln_link_flags += ['-fstack-clash-protection', ]
               else
-                if (  ___jln_compiler_id == 'clang' )
-                  jln_cpp_flags += ['-fsanitize=safe-stack', ]
-                  jln_link_flags += ['-fsanitize=safe-stack', ]
-                  if (  ___jln_compiler_version.version_compare('>=11.0') )
-                    jln_cpp_flags += ['-fstack-clash-protection', ]
-                    jln_link_flags += ['-fstack-clash-protection', ]
-                  endif
+                jln_cpp_flags += ['-fsanitize=safe-stack', ]
+                jln_link_flags += ['-fsanitize=safe-stack', ]
+                if (  ___jln_compiler_version.version_compare('>=11.0') )
+                  jln_cpp_flags += ['-fstack-clash-protection', ]
+                  jln_link_flags += ['-fstack-clash-protection', ]
                 endif
               endif
             else
@@ -1220,9 +1229,6 @@ foreach ___jln_flags : ___jln_custom_flags
             jln_cpp_flags += ['-fno-analyzer', ]
           else
             jln_cpp_flags += ['-fanalyzer', ]
-            if (  ___jln_flags.get('analyzer', 'default') == 'taint' )
-              jln_cpp_flags += ['-fanalyzer-checker=taint', ]
-            endif
             if (  ___jln_flags.get('analyzer_too_complex_warning', 'default') != 'default' )
               if (  ___jln_flags.get('analyzer_too_complex_warning', 'default') == 'on' )
                 jln_cpp_flags += ['-Wanalyzer-too-complex', ]
@@ -1291,22 +1297,18 @@ foreach ___jln_flags : ___jln_custom_flags
         jln_cpp_flags += ['/GR-', ]
       endif
     endif
-    if (  ___jln_flags.get('stl_debug', 'default') != 'default' )
-      if (  ( ( ___jln_compiler_id == 'msvc' and ___jln_compiler_version.version_compare('>=16.7') ) or ___jln_compiler_id == 'clang-cl' ) )
-        if (  ___jln_flags.get('stl_debug', 'default') == 'off' )
-          jln_cpp_flags += ['/D_ITERATOR_DEBUG_LEVEL=0', ]
-        else
-          if (  ( ___jln_flags.get('stl_debug', 'default') == 'on' or ___jln_flags.get('stl_debug', 'default') == 'extensive' ) )
-            jln_cpp_flags += ['/D_ITERATOR_DEBUG_LEVEL=1', ]
-          else
-            jln_cpp_flags += ['/D_ITERATOR_DEBUG_LEVEL=2', ]
-          endif
-        endif
+    if (  ___jln_flags.get('stl_hardening', 'default') != 'default' )
+      if (  ___jln_flags.get('stl_hardening', 'default') == 'off' )
+        jln_cpp_flags += ['/D_MSVC_STL_HARDENING=0', '/D_ITERATOR_DEBUG_LEVEL=0', '/D_SECURE_SCL=0', '/D_HAS_ITERATOR_DEBUGGING=0', ]
       else
-        if (  ___jln_flags.get('stl_debug', 'default') == 'off' )
-          jln_cpp_flags += ['/D_HAS_ITERATOR_DEBUGGING=0', ]
+        if (  ( ___jln_flags.get('stl_hardening', 'default') == 'fast' or ___jln_flags.get('stl_hardening', 'default') == 'extensive' ) )
+          jln_cpp_flags += ['/D_MSVC_STL_HARDENING=1', ]
         else
-          jln_cpp_flags += ['/D_DEBUG', '/D_HAS_ITERATOR_DEBUGGING=1', ]
+          if (  ___jln_flags.get('stl_hardening', 'default') == 'debug' )
+            jln_cpp_flags += ['/D_MSVC_STL_HARDENING=1', '/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1', ]
+          else
+            jln_cpp_flags += ['/D_DEBUG', '/D_MSVC_STL_HARDENING=1', '/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1', ]
+          endif
         endif
       endif
     endif
@@ -1449,6 +1451,15 @@ foreach ___jln_flags : ___jln_custom_flags
     endif
   endif
   if (  ___jln_compiler_id == 'msvc' )
+    if (  ___jln_flags.get('analyzer', 'default') != 'default' )
+      if (  ___jln_compiler_version.version_compare('>=15.0') )
+        if (  ___jln_flags.get('analyzer', 'default') == 'off' )
+          jln_cpp_flags += ['/analyze-', ]
+        else
+          jln_cpp_flags += ['/analyze', ]
+        endif
+      endif
+    endif
     if (  ___jln_flags.get('windows_bigobj', 'default') != 'default' )
       jln_cpp_flags += ['/bigobj', ]
     endif
@@ -1821,11 +1832,14 @@ foreach ___jln_flags : ___jln_custom_flags
             endif
           endif
         endif
-        if (  ___jln_flags.get('stl_debug', 'default') != 'default' )
-          if (  ___jln_flags.get('stl_debug', 'default') != 'off' )
-            if (  ( ___jln_flags.get('stl_debug', 'default') == 'allow_broken_abi' or ___jln_flags.get('stl_debug', 'default') == 'allow_broken_abi_and_bugs' ) )
-              jln_cpp_flags += ['-D_GLIBCXX_DEBUG', ]
-            else
+        if (  ___jln_flags.get('stl_hardening', 'default') != 'default' )
+          if (  ___jln_flags.get('stl_hardening', 'default') == 'debug_with_broken_abi' )
+            jln_cpp_flags += ['-D_GLIBCXX_DEBUG', ]
+            if (  ___jln_flags.get('pedantic', 'default') != 'default' and not ( ___jln_flags.get('pedantic', 'default') == 'off' ) )
+              jln_cpp_flags += ['-D_GLIBCXX_DEBUG_PEDANTIC', ]
+            endif
+          else
+            if (  ___jln_flags.get('stl_hardening', 'default') != 'off' )
               jln_cpp_flags += ['-D_GLIBCXX_ASSERTIONS', ]
             endif
           endif
