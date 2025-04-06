@@ -3131,6 +3131,8 @@ for optname,option in pairs(Vbase._koptions) do
   local value_descriptions = {}
   for k,v in ipairs(option.values) do
     if type(v) == 'table' then
+      -- 'default' will be inserted later at index 1
+      -- it is therefore necessary to shift the description index of 1
       value_descriptions[k+1] = v[2]
       v = v[1]
       option.values[k] = v
