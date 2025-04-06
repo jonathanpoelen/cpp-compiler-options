@@ -16,15 +16,20 @@ flags2 = jln.get_flags({'debug':'on'})
 
 # Options
 
-Supported options are (alphabetically in a category):
+Supported options are listed below by category.
+The same option can be found in several categories.
 
-<!-- ./compiler-options.lua generators/list_options.lua --color -->
+The first value corresponds to the one used by default,
+and the value `default` has no associated behavior.
+
+Options with a default value other than `default` are listed below.
+
+<!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 ```ini
 # Warning:
 
-analyzer = default off on taint
-analyzer_too_complex_warning = default off on
-analyzer_verbosity = default 0 1 2 3
+warnings = on default off strict very_strict
+warnings_as_error = default off on basic
 conversion_warnings = on default off sign conversion
 covered_switch_default_warnings = on default off
 fix_compiler_error = on default off
@@ -35,8 +40,6 @@ shadow_warnings = off default on local compatible_local all
 suggestions = default off on
 switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 unsafe_buffer_usage_warnings = default on off
-warnings = on default off strict very_strict
-warnings_as_error = default off on basic
 windows_abi_compatibility_warnings = off default on
 
 # Pedantic:
@@ -47,19 +50,22 @@ stl_fix = on default off
 
 # Debug:
 
-debug = default off on line_tables_only gdb lldb sce
+debug = default off on gdb lldb vms codeview dbx sce
+debug_level = default 0 1 2 3 line_tables_only line_directives_only
+stl_hardening = default off fast extensive debug debug_with_broken_abi
+control_flow = default off on branch return allow_bugs
+sanitizers = default off on
 float_sanitizers = default off on
 integer_sanitizers = default off on
-ndebug = with_optimization_1_or_above default off on
 other_sanitizers = default off thread pointer memory
-sanitizers = default off on
-stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
 var_init = default uninitialized pattern zero
+ndebug = with_optimization_1_or_above default off on
+optimization = default 0 g 1 2 3 fast size z
 
 # Optimization:
 
 cpu = default generic native
-linker = default bfd gold lld native
+linker = default bfd gold lld mold native
 lto = default off on normal fat thin
 optimization = default 0 g 1 2 3 fast size z
 whole_program = default off on strip_all
@@ -74,6 +80,13 @@ rtti = default off on
 control_flow = default off on branch return allow_bugs
 relro = default off on full
 stack_protector = default off on strong all
+stl_hardening = default off fast extensive debug debug_with_broken_abi
+
+# Analyzer:
+
+analyzer = default off on
+analyzer_too_complex_warning = default off on
+analyzer_verbosity = default 0 1 2 3
 
 # Other:
 
@@ -113,19 +126,21 @@ If not specified:
 
 <!-- enddefault -->
 
+### To know
+
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
-- `stl_debug=allow_broken_abi_and_bugs`
-  - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
 - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
+- `stl_hardening=debug`
+  - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 
 
 ## Recommended options
 
 category | options
 ---------|---------
-debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>`optimization=g` or `optimization=0` + `debug_level=3`
-release | `cpu=native`<br>`linker=gold`, `lld` or `native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
-security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=PIE`
+debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
+release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
 really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
 

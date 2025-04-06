@@ -16,15 +16,20 @@
 #
 #  # Options
 #
-#  Supported options are (alphabetically in a category):
+#  Supported options are listed below by category.
+#  The same option can be found in several categories.
 #
-#  <!-- ./compiler-options.lua generators/list_options.lua --color -->
+#  The first value corresponds to the one used by default,
+#  and the value `default` has no associated behavior.
+#
+#  Options with a default value other than `default` are listed below.
+#
+#  <!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 #  ```ini
 #  # Warning:
 #
-#  analyzer = default off on taint
-#  analyzer_too_complex_warning = default off on
-#  analyzer_verbosity = default 0 1 2 3
+#  warnings = on default off strict very_strict
+#  warnings_as_error = default off on basic
 #  conversion_warnings = on default off sign conversion
 #  covered_switch_default_warnings = on default off
 #  fix_compiler_error = on default off
@@ -35,8 +40,6 @@
 #  suggestions = default off on
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 #  unsafe_buffer_usage_warnings = default on off
-#  warnings = on default off strict very_strict
-#  warnings_as_error = default off on basic
 #  windows_abi_compatibility_warnings = off default on
 #
 #  # Pedantic:
@@ -47,19 +50,22 @@
 #
 #  # Debug:
 #
-#  debug = default off on line_tables_only gdb lldb sce
+#  debug = default off on gdb lldb vms codeview dbx sce
+#  debug_level = default 0 1 2 3 line_tables_only line_directives_only
+#  stl_hardening = default off fast extensive debug debug_with_broken_abi
+#  control_flow = default off on branch return allow_bugs
+#  sanitizers = default off on
 #  float_sanitizers = default off on
 #  integer_sanitizers = default off on
-#  ndebug = with_optimization_1_or_above default off on
 #  other_sanitizers = default off thread pointer memory
-#  sanitizers = default off on
-#  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
 #  var_init = default uninitialized pattern zero
+#  ndebug = with_optimization_1_or_above default off on
+#  optimization = default 0 g 1 2 3 fast size z
 #
 #  # Optimization:
 #
 #  cpu = default generic native
-#  linker = default bfd gold lld native
+#  linker = default bfd gold lld mold native
 #  lto = default off on normal fat thin
 #  optimization = default 0 g 1 2 3 fast size z
 #  whole_program = default off on strip_all
@@ -74,6 +80,13 @@
 #  control_flow = default off on branch return allow_bugs
 #  relro = default off on full
 #  stack_protector = default off on strong all
+#  stl_hardening = default off fast extensive debug debug_with_broken_abi
+#
+#  # Analyzer:
+#
+#  analyzer = default off on
+#  analyzer_too_complex_warning = default off on
+#  analyzer_verbosity = default 0 1 2 3
 #
 #  # Other:
 #
@@ -113,20 +126,22 @@
 #
 #  <!-- enddefault -->
 #
+#  ### To know
+#
 #  - `control_flow=allow_bugs`
 #    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
-#  - `stl_debug=allow_broken_abi_and_bugs`
-#    - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
 #  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
+#  - `stl_hardening=debug`
+#    - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 #
 #
 #  ## Recommended options
 #
 #  category | options
 #  ---------|---------
-#  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>`optimization=g` or `optimization=0` + `debug_level=3`
-#  release | `cpu=native`<br>`linker=gold`, `lld` or `native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
-#  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=PIE`
+#  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
+#  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+#  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
 #  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
 #
 #  
@@ -275,87 +290,87 @@ def set_global_flags(default_values):
 
 def add_variables(vars, default_values={}):
   vars.AddVariables(
-    EnumVariable('jln_analyzer', 'Enables an static analysis of program flow which looks for “interesting” interprocedural paths through the code, and issues warnings for problems found on them (much more expensive than other GCC warnings)', default_values.get('analyzer', _default_flags['analyzer']),
-                 allowed_values=('default', 'off', 'on', 'taint')),
-    EnumVariable('jln_analyzer_too_complex_warning', 'By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs.', default_values.get('analyzer_too_complex_warning', _default_flags['analyzer_too_complex_warning']),
+    EnumVariable('jln_analyzer', 'Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.', default_values.get('analyzer', _default_flags['analyzer']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_analyzer_verbosity', 'Controls the complexity of the control flow paths that are emitted for analyzer diagnostics\\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\\n - 1: As per the previous level, but also show events for the entry to each function.\\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.\\n - 3: As per the previous level, but show all control flow events, not just significant ones.', default_values.get('analyzer_verbosity', _default_flags['analyzer_verbosity']),
+    EnumVariable('jln_analyzer_too_complex_warning', 'By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs. Available only with GCC.', default_values.get('analyzer_too_complex_warning', _default_flags['analyzer_too_complex_warning']),
+                 allowed_values=('default', 'off', 'on')),
+    EnumVariable('jln_analyzer_verbosity', 'Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.\\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\\n - 1: As per the previous level, but also show events for the entry to each function.\\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.\\n - 3: As per the previous level, but show all control flow events, not just significant ones.', default_values.get('analyzer_verbosity', _default_flags['analyzer_verbosity']),
                  allowed_values=('default', '0', '1', '2', '3')),
     EnumVariable('jln_color', '', default_values.get('color', _default_flags['color']),
                  allowed_values=('default', 'auto', 'never', 'always')),
-    EnumVariable('jln_control_flow', 'Insert extra runtime security checks to detect attempts to compromise your code', default_values.get('control_flow', _default_flags['control_flow']),
+    EnumVariable('jln_control_flow', 'Insert extra runtime security checks to detect attempts to compromise your code.', default_values.get('control_flow', _default_flags['control_flow']),
                  allowed_values=('default', 'off', 'on', 'branch', 'return', 'allow_bugs')),
-    EnumVariable('jln_conversion_warnings', 'Warn for implicit conversions that may alter a value', default_values.get('conversion_warnings', _default_flags['conversion_warnings']),
+    EnumVariable('jln_conversion_warnings', 'Warn for implicit conversions that may alter a value.', default_values.get('conversion_warnings', _default_flags['conversion_warnings']),
                  allowed_values=('default', 'off', 'on', 'sign', 'conversion')),
     EnumVariable('jln_coverage', '', default_values.get('coverage', _default_flags['coverage']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_covered_switch_default_warnings', 'Warning for default label in switch which covers all enumeration values', default_values.get('covered_switch_default_warnings', _default_flags['covered_switch_default_warnings']),
+    EnumVariable('jln_covered_switch_default_warnings', 'Warning for default label in switch which covers all enumeration values.', default_values.get('covered_switch_default_warnings', _default_flags['covered_switch_default_warnings']),
                  allowed_values=('default', 'on', 'off')),
     EnumVariable('jln_cpu', '', default_values.get('cpu', _default_flags['cpu']),
                  allowed_values=('default', 'generic', 'native')),
-    EnumVariable('jln_debug', 'Produce debugging information in the operating system\'s', default_values.get('debug', _default_flags['debug']),
+    EnumVariable('jln_debug', 'Produce debugging information in the operating system\'s.', default_values.get('debug', _default_flags['debug']),
                  allowed_values=('default', 'off', 'on', 'gdb', 'lldb', 'vms', 'codeview', 'dbx', 'sce')),
     EnumVariable('jln_debug_level', 'Specify debugging level', default_values.get('debug_level', _default_flags['debug_level']),
                  allowed_values=('default', '0', '1', '2', '3', 'line_tables_only', 'line_directives_only')),
-    EnumVariable('jln_diagnostics_format', 'Emit fix-it hints in a machine-parseable format', default_values.get('diagnostics_format', _default_flags['diagnostics_format']),
+    EnumVariable('jln_diagnostics_format', 'Emit fix-it hints in a machine-parseable format.', default_values.get('diagnostics_format', _default_flags['diagnostics_format']),
                  allowed_values=('default', 'fixits', 'patch', 'print_source_range_info')),
-    EnumVariable('jln_exceptions', 'Enable C++ exception', default_values.get('exceptions', _default_flags['exceptions']),
+    EnumVariable('jln_exceptions', 'Enable C++ exceptions.', default_values.get('exceptions', _default_flags['exceptions']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_fix_compiler_error', 'Transforms some warnings into errors to comply with the standard', default_values.get('fix_compiler_error', _default_flags['fix_compiler_error']),
+    EnumVariable('jln_fix_compiler_error', 'Transforms some warnings into errors to comply with the standard.', default_values.get('fix_compiler_error', _default_flags['fix_compiler_error']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_float_sanitizers', '', default_values.get('float_sanitizers', _default_flags['float_sanitizers']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_integer_sanitizers', '', default_values.get('integer_sanitizers', _default_flags['integer_sanitizers']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_linker', 'Configure linker', default_values.get('linker', _default_flags['linker']),
+    EnumVariable('jln_linker', 'Configure linker.', default_values.get('linker', _default_flags['linker']),
                  allowed_values=('default', 'bfd', 'gold', 'lld', 'mold', 'native')),
-    EnumVariable('jln_lto', 'Enable Link Time Optimization', default_values.get('lto', _default_flags['lto']),
+    EnumVariable('jln_lto', 'Enable Link Time Optimization.', default_values.get('lto', _default_flags['lto']),
                  allowed_values=('default', 'off', 'on', 'normal', 'fat', 'thin')),
-    EnumVariable('jln_msvc_conformance', 'Standard conformance options', default_values.get('msvc_conformance', _default_flags['msvc_conformance']),
+    EnumVariable('jln_msvc_conformance', 'Standard conformance options.', default_values.get('msvc_conformance', _default_flags['msvc_conformance']),
                  allowed_values=('default', 'all', 'all_without_throwing_new')),
-    EnumVariable('jln_msvc_crt_secure_no_warnings', 'Disable CRT warnings', default_values.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings']),
+    EnumVariable('jln_msvc_crt_secure_no_warnings', 'Disable CRT warnings with MSVC.', default_values.get('msvc_crt_secure_no_warnings', _default_flags['msvc_crt_secure_no_warnings']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_msvc_diagnostics_format', 'Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)\\n - classic: Which reports only the line number where the issue was found.\\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue\\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected', default_values.get('msvc_diagnostics_format', _default_flags['msvc_diagnostics_format']),
+    EnumVariable('jln_msvc_diagnostics_format', 'Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).\\n - classic: Which reports only the line number where the issue was found.\\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.\\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.', default_values.get('msvc_diagnostics_format', _default_flags['msvc_diagnostics_format']),
                  allowed_values=('default', 'classic', 'column', 'caret')),
-    EnumVariable('jln_msvc_isystem', 'Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)', default_values.get('msvc_isystem', _default_flags['msvc_isystem']),
+    EnumVariable('jln_msvc_isystem', 'Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).', default_values.get('msvc_isystem', _default_flags['msvc_isystem']),
                  allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
-    EnumVariable('jln_ndebug', 'Enable NDEBUG macro (disable assert macro)', default_values.get('ndebug', _default_flags['ndebug']),
+    EnumVariable('jln_ndebug', 'Enable NDEBUG macro (disable assert macro).', default_values.get('ndebug', _default_flags['ndebug']),
                  allowed_values=('default', 'off', 'on', 'with_optimization_1_or_above')),
-    EnumVariable('jln_optimization', 'Optimization level\\n - 0: Not optimize\\n - g: Enable debugging experience\\n - 1: Optimize\\n - 2: Optimize even more\\n - 3: Optimize yet more\\n - fast: Enables all optimization=3 and disregard strict standards compliance\\n - size: Optimize for size\\n - z: Optimize for size aggressively (/!\\ possible slow compilation with emcc)', default_values.get('optimization', _default_flags['optimization']),
+    EnumVariable('jln_optimization', 'Optimization level.\\n - 0: Not optimize.\\n - g: Enable debugging experience.\\n - 1: Optimize.\\n - 2: Optimize even more.\\n - 3: Optimize yet more.\\n - fast: Enables all optimization=3 and disregard strict standards compliance.\\n - size: Optimize for size.\\n - z: Optimize for size aggressively (/!\\ possible slow compilation with emcc).', default_values.get('optimization', _default_flags['optimization']),
                  allowed_values=('default', '0', 'g', '1', '2', '3', 'fast', 'size', 'z')),
-    EnumVariable('jln_other_sanitizers', 'Enable other sanitizers', default_values.get('other_sanitizers', _default_flags['other_sanitizers']),
+    EnumVariable('jln_other_sanitizers', 'Enable other sanitizers.', default_values.get('other_sanitizers', _default_flags['other_sanitizers']),
                  allowed_values=('default', 'off', 'thread', 'pointer', 'memory')),
-    EnumVariable('jln_pedantic', 'Issue all the warnings demanded by strict ISO C and ISO C++', default_values.get('pedantic', _default_flags['pedantic']),
+    EnumVariable('jln_pedantic', 'Issue all the warnings demanded by strict ISO C and ISO C++.', default_values.get('pedantic', _default_flags['pedantic']),
                  allowed_values=('default', 'off', 'on', 'as_error')),
-    EnumVariable('jln_pie', 'Controls position-independent code generation', default_values.get('pie', _default_flags['pie']),
+    EnumVariable('jln_pie', 'Controls position-independent code generation.', default_values.get('pie', _default_flags['pie']),
                  allowed_values=('default', 'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE')),
     EnumVariable('jln_relro', 'Specifies a memory segment that should be made read-only after relocation, if supported.', default_values.get('relro', _default_flags['relro']),
                  allowed_values=('default', 'off', 'on', 'full')),
-    EnumVariable('jln_reproducible_build_warnings', 'Warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations', default_values.get('reproducible_build_warnings', _default_flags['reproducible_build_warnings']),
+    EnumVariable('jln_reproducible_build_warnings', 'Warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations.', default_values.get('reproducible_build_warnings', _default_flags['reproducible_build_warnings']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_sanitizers', 'Enable sanitizers (asan, ubsan, etc)', default_values.get('sanitizers', _default_flags['sanitizers']),
+    EnumVariable('jln_sanitizers', 'Enable sanitizers (asan, ubsan, etc).', default_values.get('sanitizers', _default_flags['sanitizers']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_shadow_warnings', '', default_values.get('shadow_warnings', _default_flags['shadow_warnings']),
                  allowed_values=('default', 'off', 'on', 'local', 'compatible_local', 'all')),
-    EnumVariable('jln_stack_protector', 'Emit extra code to check for buffer overflows, such as stack smashing attacks', default_values.get('stack_protector', _default_flags['stack_protector']),
+    EnumVariable('jln_stack_protector', 'Emit extra code to check for buffer overflows, such as stack smashing attacks.', default_values.get('stack_protector', _default_flags['stack_protector']),
                  allowed_values=('default', 'off', 'on', 'strong', 'all')),
-    EnumVariable('jln_stl_fix', 'Enable /DNOMINMAX with msvc', default_values.get('stl_fix', _default_flags['stl_fix']),
+    EnumVariable('jln_stl_fix', 'Enable /DNOMINMAX with msvc.', default_values.get('stl_fix', _default_flags['stl_fix']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_suggestions', 'Warn for cases where adding an attribute may be beneficial', default_values.get('suggestions', _default_flags['suggestions']),
+    EnumVariable('jln_suggestions', 'Warn for cases where adding an attribute may be beneficial.', default_values.get('suggestions', _default_flags['suggestions']),
                  allowed_values=('default', 'off', 'on')),
-    EnumVariable('jln_switch_warnings', 'Warnings concerning the switch keyword', default_values.get('switch_warnings', _default_flags['switch_warnings']),
+    EnumVariable('jln_switch_warnings', 'Warnings concerning the switch keyword.', default_values.get('switch_warnings', _default_flags['switch_warnings']),
                  allowed_values=('default', 'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default')),
-    EnumVariable('jln_unsafe_buffer_usage_warnings', 'Enable -Wunsafe-buffer-usage with clang', default_values.get('unsafe_buffer_usage_warnings', _default_flags['unsafe_buffer_usage_warnings']),
+    EnumVariable('jln_unsafe_buffer_usage_warnings', 'Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html).', default_values.get('unsafe_buffer_usage_warnings', _default_flags['unsafe_buffer_usage_warnings']),
                  allowed_values=('default', 'on', 'off')),
-    EnumVariable('jln_var_init', 'Initialize all stack variables implicitly, including padding\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang)\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang)\\n - zero: zero Initialize automatic variables with zeroes', default_values.get('var_init', _default_flags['var_init']),
+    EnumVariable('jln_var_init', 'Initialize all stack variables implicitly, including padding.\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang).\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).\\n - zero: zero Initialize automatic variables with zeroes.', default_values.get('var_init', _default_flags['var_init']),
                  allowed_values=('default', 'uninitialized', 'pattern', 'zero')),
-    EnumVariable('jln_warnings', 'Warning level', default_values.get('warnings', _default_flags['warnings']),
+    EnumVariable('jln_warnings', 'Warning level.', default_values.get('warnings', _default_flags['warnings']),
                  allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
-    EnumVariable('jln_warnings_as_error', 'Make all or some warnings into errors', default_values.get('warnings_as_error', _default_flags['warnings_as_error']),
+    EnumVariable('jln_warnings_as_error', 'Make all or some warnings into errors.', default_values.get('warnings_as_error', _default_flags['warnings_as_error']),
                  allowed_values=('default', 'off', 'on', 'basic')),
     EnumVariable('jln_whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.', default_values.get('whole_program', _default_flags['whole_program']),
                  allowed_values=('default', 'off', 'on', 'strip_all')),
-    EnumVariable('jln_windows_bigobj', 'Increases that addressable sections capacity', default_values.get('windows_bigobj', _default_flags['windows_bigobj']),
+    EnumVariable('jln_windows_bigobj', 'Increases that addressable sections capacity.', default_values.get('windows_bigobj', _default_flags['windows_bigobj']),
                  allowed_values=('default', 'on'))  )
 
 def varname_to_optname(options):
@@ -976,7 +991,11 @@ def get_flags(options, env=None):
           flags += ('-Wno-stack-protector', '-U_FORTIFY_SOURCE', )
           linkflags += ('-Wno-stack-protector', )
         else:
-          flags += ('-D_FORTIFY_SOURCE=2', '-Wstack-protector', )
+          flags += ('-Wstack-protector', )
+          if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( compiler == 'clang' and compversion >= 1400000 ) ) :
+            flags += ('-D_FORTIFY_SOURCE=3', )
+          else:
+            flags += ('-D_FORTIFY_SOURCE=2', )
           if x_stack_protector == 'strong' :
             if compiler == 'gcc' :
               if compversion >= 400009 :
@@ -986,12 +1005,11 @@ def get_flags(options, env=None):
                   flags += ('-fstack-clash-protection', )
                   linkflags += ('-fstack-clash-protection', )
             else:
-              if compiler == 'clang' :
-                flags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
-                linkflags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
-                if compversion >= 1100000 :
-                  flags += ('-fstack-clash-protection', )
-                  linkflags += ('-fstack-clash-protection', )
+              flags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
+              linkflags += ('-fstack-protector-strong', '-fsanitize=safe-stack', )
+              if compversion >= 1100000 :
+                flags += ('-fstack-clash-protection', )
+                linkflags += ('-fstack-clash-protection', )
           else:
             if x_stack_protector == 'all' :
               flags += ('-fstack-protector-all', )
@@ -1000,12 +1018,11 @@ def get_flags(options, env=None):
                 flags += ('-fstack-clash-protection', )
                 linkflags += ('-fstack-clash-protection', )
               else:
-                if compiler == 'clang' :
-                  flags += ('-fsanitize=safe-stack', )
-                  linkflags += ('-fsanitize=safe-stack', )
-                  if compversion >= 1100000 :
-                    flags += ('-fstack-clash-protection', )
-                    linkflags += ('-fstack-clash-protection', )
+                flags += ('-fsanitize=safe-stack', )
+                linkflags += ('-fsanitize=safe-stack', )
+                if compversion >= 1100000 :
+                  flags += ('-fstack-clash-protection', )
+                  linkflags += ('-fstack-clash-protection', )
             else:
               flags += ('-fstack-protector', )
               linkflags += ('-fstack-protector', )
@@ -1060,8 +1077,6 @@ def get_flags(options, env=None):
             flags += ('-fno-analyzer', )
           else:
             flags += ('-fanalyzer', )
-            if x_analyzer == 'taint' :
-              flags += ('-fanalyzer-checker=taint', )
             if x_analyzer_too_complex_warning != 'default' :
               if x_analyzer_too_complex_warning == 'on' :
                 flags += ('-Wanalyzer-too-complex', )
@@ -1107,20 +1122,12 @@ def get_flags(options, env=None):
         flags += ('/GR', )
       else:
         flags += ('/GR-', )
-    if x_stl_debug != 'default' :
-      if ( ( compiler == 'msvc' and compversion >= 1600007 ) or compiler == 'clang-cl' ) :
-        if x_stl_debug == 'off' :
-          flags += ('/D_ITERATOR_DEBUG_LEVEL=0', )
-        else:
-          if ( x_stl_debug == 'on' or x_stl_debug == 'extensive' ) :
-            flags += ('/D_ITERATOR_DEBUG_LEVEL=1', )
-          else:
-            flags += ('/D_ITERATOR_DEBUG_LEVEL=2', )
+    if x_stl_hardening != 'default' :
+      if x_stl_hardening == 'off' :
+        flags += ('/D_SECURE_SCL=0', )
       else:
-        if x_stl_debug == 'off' :
-          flags += ('/D_HAS_ITERATOR_DEBUGGING=0', )
-        else:
-          flags += ('/D_DEBUG', '/D_HAS_ITERATOR_DEBUGGING=1', )
+        if ( not ( ( x_stl_hardening == 'fast' or x_stl_hardening == 'extensive' ) ) and x_stl_hardening != 'debug' ) :
+          flags += ('/D_DEBUG', )
     if x_stl_fix != 'default' :
       if x_stl_fix == 'on' :
         flags += ('/DNOMINMAX', )
@@ -1218,6 +1225,12 @@ def get_flags(options, env=None):
           if x_control_flow != 'default' and not ( x_control_flow == 'off' ) :
             flags += ('/guard:cf', )
   if compiler == 'msvc' :
+    if x_analyzer != 'default' :
+      if compversion >= 1500000 :
+        if x_analyzer == 'off' :
+          flags += ('/analyze-', )
+        else:
+          flags += ('/analyze', )
     if x_windows_bigobj != 'default' :
       flags += ('/bigobj', )
     if x_msvc_conformance != 'default' :
