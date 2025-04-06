@@ -10,7 +10,7 @@
 --  -- When the first parameter is nil or unspecified, a default configuration is used.
 --  jln_cxx_init_modes({
 --    debug={
---      stl_debug='on',
+--      stl_hardening='debug_with_broken_abi',
 --    },
 --    release={
 --      function() ... end, -- callback for release mode
@@ -53,15 +53,20 @@
 --
 --  # Options
 --
---  Supported options are (alphabetically in a category):
+--  Supported options are listed below by category.
+--  The same option can be found in several categories.
 --
---  <!-- ./compiler-options.lua generators/list_options.lua --color -->
+--  The first value corresponds to the one used by default,
+--  and the value `default` has no associated behavior.
+--
+--  Options with a default value other than `default` are listed below.
+--
+--  <!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 --  ```ini
 --  # Warning:
 --
---  analyzer = default off on taint
---  analyzer_too_complex_warning = default off on
---  analyzer_verbosity = default 0 1 2 3
+--  warnings = on default off strict very_strict
+--  warnings_as_error = default off on basic
 --  conversion_warnings = on default off sign conversion
 --  covered_switch_default_warnings = on default off
 --  fix_compiler_error = on default off
@@ -72,8 +77,6 @@
 --  suggestions = default off on
 --  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 --  unsafe_buffer_usage_warnings = default on off
---  warnings = on default off strict very_strict
---  warnings_as_error = default off on basic
 --  windows_abi_compatibility_warnings = off default on
 --
 --  # Pedantic:
@@ -84,19 +87,22 @@
 --
 --  # Debug:
 --
---  debug = default off on line_tables_only gdb lldb sce
+--  debug = default off on gdb lldb vms codeview dbx sce
+--  debug_level = default 0 1 2 3 line_tables_only line_directives_only
+--  stl_hardening = default off fast extensive debug debug_with_broken_abi
+--  control_flow = default off on branch return allow_bugs
+--  sanitizers = default off on
 --  float_sanitizers = default off on
 --  integer_sanitizers = default off on
---  ndebug = with_optimization_1_or_above default off on
 --  other_sanitizers = default off thread pointer memory
---  sanitizers = default off on
---  stl_debug = default off on allow_broken_abi allow_broken_abi_and_bugs assert_as_exception
 --  var_init = default uninitialized pattern zero
+--  ndebug = with_optimization_1_or_above default off on
+--  optimization = default 0 g 1 2 3 fast size z
 --
 --  # Optimization:
 --
 --  cpu = default generic native
---  linker = default bfd gold lld native
+--  linker = default bfd gold lld mold native
 --  lto = default off on normal fat thin
 --  optimization = default 0 g 1 2 3 fast size z
 --  whole_program = default off on strip_all
@@ -111,6 +117,13 @@
 --  control_flow = default off on branch return allow_bugs
 --  relro = default off on full
 --  stack_protector = default off on strong all
+--  stl_hardening = default off fast extensive debug debug_with_broken_abi
+--
+--  # Analyzer:
+--
+--  analyzer = default off on
+--  analyzer_too_complex_warning = default off on
+--  analyzer_verbosity = default 0 1 2 3
 --
 --  # Other:
 --
@@ -150,20 +163,22 @@
 --
 --  <!-- enddefault -->
 --
+--  ### To know
+--
 --  - `control_flow=allow_bugs`
 --    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
---  - `stl_debug=allow_broken_abi_and_bugs`
---    - clang: libc++ can crash on dynamic memory releases in the standard classes. This bug is fixed with the library associated with version 8.
 --  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
+--  - `stl_hardening=debug`
+--    - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 --
 --
 --  ## Recommended options
 --
 --  category | options
 --  ---------|---------
---  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_debug=allow_broken_abi` or `on`<br>`optimization=g` or `optimization=0` + `debug_level=3`
---  release | `cpu=native`<br>`linker=gold`, `lld` or `native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
---  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=PIE`
+--  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
+--  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+--  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
 --  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
 --
 --  
@@ -180,8 +195,8 @@ local _extraopt_flag_names = {
 }
 
 local _flag_names = {
-  ["jln-analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["taint"]="taint", [""]=""},
-  ["analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["taint"]="taint", [""]=""},
+  ["jln-analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-analyzer-too-complex-warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["analyzer_too_complex_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-analyzer-verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
@@ -1389,8 +1404,12 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "-U_FORTIFY_SOURCE")
           insert(jln_ldflags, "-Wno-stack-protector")
         else
-          insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
           insert(jln_cxflags, "-Wstack-protector")
+          if ( ( compiler == 'gcc' and version >= 1200000 ) or ( compiler == 'clang' and version >= 1400000 ) ) then
+            insert(jln_cxflags, "-D_FORTIFY_SOURCE=3")
+          else
+            insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
+          end
           if options.stack_protector == "strong" then
             if compiler == 'gcc' then
               if version >= 400009 then
@@ -1402,15 +1421,13 @@ function get_flags(options, extra_options)
                 end
               end
             else
-              if compiler == 'clang' then
-                insert(jln_cxflags, "-fstack-protector-strong")
-                insert(jln_cxflags, "-fsanitize=safe-stack")
-                insert(jln_ldflags, "-fstack-protector-strong")
-                insert(jln_ldflags, "-fsanitize=safe-stack")
-                if version >= 1100000 then
-                  insert(jln_cxflags, "-fstack-clash-protection")
-                  insert(jln_ldflags, "-fstack-clash-protection")
-                end
+              insert(jln_cxflags, "-fstack-protector-strong")
+              insert(jln_cxflags, "-fsanitize=safe-stack")
+              insert(jln_ldflags, "-fstack-protector-strong")
+              insert(jln_ldflags, "-fsanitize=safe-stack")
+              if version >= 1100000 then
+                insert(jln_cxflags, "-fstack-clash-protection")
+                insert(jln_ldflags, "-fstack-clash-protection")
               end
             end
           else
@@ -1421,13 +1438,11 @@ function get_flags(options, extra_options)
                 insert(jln_cxflags, "-fstack-clash-protection")
                 insert(jln_ldflags, "-fstack-clash-protection")
               else
-                if compiler == 'clang' then
-                  insert(jln_cxflags, "-fsanitize=safe-stack")
-                  insert(jln_ldflags, "-fsanitize=safe-stack")
-                  if version >= 1100000 then
-                    insert(jln_cxflags, "-fstack-clash-protection")
-                    insert(jln_ldflags, "-fstack-clash-protection")
-                  end
+                insert(jln_cxflags, "-fsanitize=safe-stack")
+                insert(jln_ldflags, "-fsanitize=safe-stack")
+                if version >= 1100000 then
+                  insert(jln_cxflags, "-fstack-clash-protection")
+                  insert(jln_ldflags, "-fstack-clash-protection")
                 end
               end
             else
@@ -1509,9 +1524,6 @@ function get_flags(options, extra_options)
             insert(jln_cxflags, "-fno-analyzer")
           else
             insert(jln_cxflags, "-fanalyzer")
-            if options.analyzer == "taint" then
-              insert(jln_cxflags, "-fanalyzer-checker=taint")
-            end
             if options.analyzer_too_complex_warning ~= "" then
               if options.analyzer_too_complex_warning == "on" then
                 insert(jln_cxflags, "-Wanalyzer-too-complex")
@@ -1582,23 +1594,12 @@ function get_flags(options, extra_options)
         insert(jln_cxflags, "/GR-")
       end
     end
-    if options.stl_debug ~= "" then
-      if ( ( compiler == 'cl' and version >= 1600007 ) or compiler == 'clang-cl' ) then
-        if options.stl_debug == "off" then
-          insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=0")
-        else
-          if ( options.stl_debug == "on" or options.stl_debug == "extensive" ) then
-            insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=1")
-          else
-            insert(jln_cxflags, "/D_ITERATOR_DEBUG_LEVEL=2")
-          end
-        end
+    if options.stl_hardening ~= "" then
+      if options.stl_hardening == "off" then
+        insert(jln_cxflags, "/D_SECURE_SCL=0")
       else
-        if options.stl_debug == "off" then
-          insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=0")
-        else
+        if ( not ( ( options.stl_hardening == "fast" or options.stl_hardening == "extensive" ) ) and options.stl_hardening ~= "debug" ) then
           insert(jln_cxflags, "/D_DEBUG")
-          insert(jln_cxflags, "/D_HAS_ITERATOR_DEBUGGING=1")
         end
       end
     end
@@ -1751,6 +1752,15 @@ function get_flags(options, extra_options)
     end
   end
   if compiler == 'cl' then
+    if options.analyzer ~= "" then
+      if version >= 1500000 then
+        if options.analyzer == "off" then
+          insert(jln_cxflags, "/analyze-")
+        else
+          insert(jln_cxflags, "/analyze")
+        end
+      end
+    end
     if options.windows_bigobj ~= "" then
       insert(jln_cxflags, "/bigobj")
     end
