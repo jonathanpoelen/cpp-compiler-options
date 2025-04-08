@@ -1455,10 +1455,11 @@ Or(msvc, clang_cl, icl) {
       lvl'off' {
         -- cxx'/U_DEBUG',
         cxx'/D_MSVC_STL_HARDENING=0',
+        cxx'/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=0',
         cxx'/D_ITERATOR_DEBUG_LEVEL=0',
         -- old macros
-        flag'/D_SECURE_SCL=0',
         cxx'/D_HAS_ITERATOR_DEBUGGING=0',
+        flag'/D_SECURE_SCL=0',
       },
       Or(lvl'fast', lvl'extensive') {
         cxx'/D_MSVC_STL_HARDENING=1',
