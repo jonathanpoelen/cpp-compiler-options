@@ -593,14 +593,18 @@ Or(gcc, clang_like) {
   opt'var_init' {
     Or(gcc'>=12', clang_like'>=8') {
       clang_like'<=15' {
-        flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
+        lvl'zero' {
+          flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
+        }
       },
       match {
         lvl'pattern' {
-          flag'-ftrivial-auto-var-init=pattern'
+          flag'-ftrivial-auto-var-init=pattern',
+          gcc{ flag'-Wtrivial-auto-var-init' },
         },
         lvl'zero' {
-          flag'-ftrivial-auto-var-init=zero'
+          flag'-ftrivial-auto-var-init=zero',
+          gcc{ flag'-Wtrivial-auto-var-init' },
         },
         --[[lvl'uninitialized']] {
           flag'-ftrivial-auto-var-init=uninitialized',
