@@ -144,8 +144,6 @@ windows_bigobj = on default
 ```
 <!-- ./compiler-options.lua -->
 
-The value `default` does nothing.
-
 If not specified:
 
 - `msvc_conformance` is `all`

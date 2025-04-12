@@ -66,7 +66,7 @@ table.sort(strnotdefaults2)
 contents = contents
 :gsub('(<!%-%- summary %-%->)\n.+(\n<!%-%- /summary %-%->)', '%1' .. summary:gsub('%%%%', '%%') .. '%2')
 :gsub('(<!%-%- %./compiler%-options%.lua generators/list_options%.lua %-%-color %-%-categorized %-%->\n```ini\n)[^`]*(```\n<!%-%- %./compiler%-options%.lua %-%->).-[^<]*',
-  '%1' .. options .. '%2\n\nThe value `default` does nothing.\n\nIf not specified:\n\n'
+  '%1' .. options .. '%2\n\nIf not specified:\n\n'
   .. table.concat(strnotdefaults1, '\n') .. '\n'.. table.concat(strnotdefaults2, '\n') .. '\n\n')
 
 io.open(README, 'w'):write(contents)
