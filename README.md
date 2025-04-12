@@ -71,7 +71,7 @@ Options with a default value other than `default` are listed below.
 
 warnings = on default off strict very_strict
 warnings_as_error = default off on basic
-conversion_warnings = on default off sign conversion
+conversion_warnings = on default off sign float conversion all
 covered_switch_default_warnings = on default off
 fix_compiler_error = on default off
 msvc_crt_secure_no_warnings = on default off

@@ -1,5 +1,8 @@
 # ChangeLog
 
+- add `conversion_warnings=all`
+- add `conversion_warnings=float`
+
 ## 2024-04-06
 
 - remove `stl_debug` (replaced by `stl_hardening`)

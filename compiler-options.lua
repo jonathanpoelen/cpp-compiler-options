@@ -262,9 +262,11 @@ end
 
 -- opt'build' ? -pipe Avoid temporary files, speeding up builds
 
--- gcc and clang:
--- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
+-- gcc / clang:
 -- all warnings by version: https://github.com/pkolbus/compiler-warnings
+
+-- gcc:
+-- g++ -Q --help=optimizers,warnings,target,params,common,undocumented,joined,separate,language__ -O3
 -- https://gcc.gnu.org/onlinedocs/
 
 -- clang:
@@ -330,7 +332,9 @@ Or(gcc, clang_like) {
           flag'-Wall',
           -- flag'-Weffc++',
           flag'-Wextra',
-          flag'-Wcast-align',
+          vers'<8' {
+            flag'-Wcast-align',
+          },
           flag'-Wcast-qual',
           flag'-Wdisabled-optimization',
           flag'-Wfloat-equal',
@@ -338,13 +342,14 @@ Or(gcc, clang_like) {
           flag'-Wformat=2',
           -- flag'-Winline',
           flag'-Winvalid-pch',
+          flag'-Wmissing-declarations',
           flag'-Wmissing-include-dirs',
           flag'-Wpacked',
           flag'-Wredundant-decls',
           flag'-Wundef',
           flag'-Wunused-macros',
           flag'-Wpointer-arith',
-          cxx'-Wmissing-declarations',
+          -- flag'-Wstrict-overflow=2',
           cxx'-Wnon-virtual-dtor',
           cxx'-Wold-style-cast',
           cxx'-Woverloaded-virtual',
@@ -371,7 +376,6 @@ Or(gcc, clang_like) {
 
               vers'>=4.9' {
                 cxx'-Wconditionally-supported',
-                flag'-Wfloat-conversion',
 
                 vers'>=5.1' {
                   flag'-Wformat-signedness',
@@ -396,14 +400,15 @@ Or(gcc, clang_like) {
                         flag'-Wduplicated-branches',
 
                         vers'>=8' {
+                          flag'-Wcast-align=strict',
+                          flag'-Wformat-truncation=2', -- gcc-8 avoiding certain kinds of false positives
+                          flag'-Wshift-overflow=2',
                           cxx'-Wclass-memaccess',
 
-                          Or(lvl'strict', lvl'very_strict') {
-                            flag'-Wcast-align=strict'
-                          },
+                          -- flag'-Wstrict-overflow=3', -- gcc-9
 
                           vers'>=14' {
-                            cxx'-Walloc-size',
+                            flag'-Walloc-size',
                           }
                         }
                       }
@@ -427,7 +432,7 @@ Or(gcc, clang_like) {
           flag'-Wno-global-constructors',
           cxx'-Wno-weak-vtables',
           cxx'-Wno-exit-time-destructors',
-          -- cxx'-Qunused-arguments',
+          -- flag'-Qunused-arguments',
 
           -has_opt'switch_warnings':with(
             lvl'off',
@@ -439,6 +444,18 @@ Or(gcc, clang_like) {
 
           -has_opt'covered_switch_default_warnings' {
             flag'-Wno-covered-switch-default'
+          },
+
+          opt'conversion_warnings' {
+            match {
+              lvl'conversion' {
+                flag'-Wno-sign-compare',
+                flag'-Wno-sign-conversion',
+              },
+              Or(lvl'float', lvl'sign') {
+                flag'-Wno-conversion',
+              },
+            }
           },
 
           vers'>=3.9' {
@@ -922,12 +939,21 @@ opt'conversion_warnings' {
         flag'-Wsign-compare',
         flag'-Wsign-conversion',
       },
-      lvl'conversion'{
+      lvl'conversion' {
         flag'-Wconversion',
       },
-      lvl'sign'{
+      lvl'float' {
+        Or(-gcc, vers'>=4.9') {
+          flag'-Wfloat-conversion',
+        }
+      },
+      lvl'sign' {
         flag'-Wsign-compare',
         flag'-Wsign-conversion',
+      },
+      lvl'all' {
+        flag'-Wconversion',
+        gcc { flag'-Warith-conversion' }
       },
       { --[[lvl'off']]
         flag'-Wno-conversion',
@@ -1043,7 +1069,8 @@ Or(gcc, clang, clang_emcc) {
 
     --[[Or(gcc, clang)]] {
       gcc'>=12' {
-        -- contrary to what the doc says, this flag is not set with -O0
+        -- This flag is enabled by default unless -fno-inline is active.
+        -- But -fno-inline is the default when not optimizing.
         cxx'-ffold-simple-inlines',
       },
 
@@ -1225,7 +1252,7 @@ Or(gcc, clang, clang_emcc) {
             flag'-U_FORTIFY_SOURCE'
           },
           {
-            flag'-Wstack-protector',
+            flag'-Wstack-protector', -- only active when -fstack-protector is active
             match {
               Or(gcc'>=12', clang'>=14') {
                 flag'-D_FORTIFY_SOURCE=3'
@@ -1837,21 +1864,22 @@ match {
 
     opt'conversion_warnings' {
       match {
-        lvl'on' {
+        Or(lvl'on', lvl'all') {
           flag'/w14244', -- 'conversion_type': conversion from 'type1' to 'type2', possible loss of data
           flag'/w14245', -- 'conversion_type': conversion from 'type1' to 'type2', signed/unsigned mismatch
           flag'/w14388', -- Signed/unsigned mismatch (equality comparison)
           flag'/w14365', -- Signed/unsigned mismatch (implicit conversion)
         },
-        lvl'conversion'{
+        lvl'conversion' {
           flag'/w14244',
           flag'/w14365',
         },
-        lvl'sign'{
+        lvl'sign' {
           flag'/w14388',
           flag'/w14245',
         },
-        {
+        -lvl'float' {
+          --[[lvl'off']]
           flag'/wd4244',
           flag'/wd4365',
           flag'/wd4388',
@@ -2428,7 +2456,14 @@ local Vbase = {
     },
 
     conversion_warnings={
-      values={'off', 'on', 'sign', 'conversion'},
+      values={
+        'off',
+        {'on', 'Combine conversion and sign value'},
+        {'sign', 'Warn for implicit conversions that may change the sign (lke `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.'},
+        {'float', 'Warn for implicit conversions that reduce the precision of a real value.'},
+        {'conversion', 'Warn for implicit conversions that may alter a value.'},
+        {'all', 'Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.'},
+      },
       default='on',
       description='Warn for implicit conversions that may alter a value.',
       incidental=true,
