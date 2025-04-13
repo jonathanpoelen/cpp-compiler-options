@@ -1,0 +1,2 @@
+/fsanitize-address-use-after-return
+/fsanitize=address

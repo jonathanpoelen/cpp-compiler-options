@@ -6,7 +6,6 @@
 -Wdisabled-optimization
 -Wdouble-promotion
 -Wextra
--Wfloat-conversion
 -Wfloat-equal
 -Wformat-security
 -Wformat-signedness
@@ -15,6 +14,7 @@
 -Winvalid-pch
 -Wjump-misses-init
 -Wlogical-op
+-Wmissing-declarations
 -Wmissing-include-dirs
 -Wnested-externs
 -Wno-shadow

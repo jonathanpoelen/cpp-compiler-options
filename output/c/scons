@@ -152,8 +152,8 @@ def add_variables(vars, default_values={}):
                  allowed_values=('default', 'auto', 'never', 'always')),
     EnumVariable('jln_control_flow', 'Insert extra runtime security checks to detect attempts to compromise your code.', default_values.get('control_flow', _default_flags['control_flow']),
                  allowed_values=('default', 'off', 'on', 'branch', 'return', 'allow_bugs')),
-    EnumVariable('jln_conversion_warnings', 'Warn for implicit conversions that may alter a value.', default_values.get('conversion_warnings', _default_flags['conversion_warnings']),
-                 allowed_values=('default', 'off', 'on', 'sign', 'conversion')),
+    EnumVariable('jln_conversion_warnings', 'Warn for implicit conversions that may alter a value.\\n - on: Combine conversion and sign value\\n - sign: Warn for implicit conversions that may change the sign (lke `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.\\n - float: Warn for implicit conversions that reduce the precision of a real value.\\n - conversion: Warn for implicit conversions that may alter a value.\\n - all: Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.', default_values.get('conversion_warnings', _default_flags['conversion_warnings']),
+                 allowed_values=('default', 'off', 'on', 'sign', 'float', 'conversion', 'all')),
     EnumVariable('jln_coverage', '', default_values.get('coverage', _default_flags['coverage']),
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_covered_switch_default_warnings', 'Warning for default label in switch which covers all enumeration values.', default_values.get('covered_switch_default_warnings', _default_flags['covered_switch_default_warnings']),
@@ -185,7 +185,7 @@ def add_variables(vars, default_values={}):
     EnumVariable('jln_msvc_diagnostics_format', 'Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).\\n - classic: Which reports only the line number where the issue was found.\\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.\\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.', default_values.get('msvc_diagnostics_format', _default_flags['msvc_diagnostics_format']),
                  allowed_values=('default', 'classic', 'column', 'caret')),
     EnumVariable('jln_msvc_isystem', 'Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).', default_values.get('msvc_isystem', _default_flags['msvc_isystem']),
-                 allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath')),
+                 allowed_values=('default', 'anglebrackets', 'include_and_caexcludepath', 'assumed')),
     EnumVariable('jln_ndebug', 'Enable NDEBUG macro (disable assert macro).', default_values.get('ndebug', _default_flags['ndebug']),
                  allowed_values=('default', 'off', 'on', 'with_optimization_1_or_above')),
     EnumVariable('jln_optimization', 'Optimization level.\\n - 0: Not optimize.\\n - g: Enable debugging experience.\\n - 1: Optimize.\\n - 2: Optimize even more.\\n - 3: Optimize yet more.\\n - fast: Enables all optimization=3 and disregard strict standards compliance.\\n - size: Optimize for size.\\n - z: Optimize for size aggressively (/!\\ possible slow compilation with emcc).', default_values.get('optimization', _default_flags['optimization']),
@@ -216,8 +216,8 @@ def add_variables(vars, default_values={}):
                  allowed_values=('default', 'on', 'off')),
     EnumVariable('jln_var_init', 'Initialize all stack variables implicitly, including padding.\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang).\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).\\n - zero: zero Initialize automatic variables with zeroes.', default_values.get('var_init', _default_flags['var_init']),
                  allowed_values=('default', 'uninitialized', 'pattern', 'zero')),
-    EnumVariable('jln_warnings', 'Warning level.', default_values.get('warnings', _default_flags['warnings']),
-                 allowed_values=('default', 'off', 'on', 'strict', 'very_strict')),
+    EnumVariable('jln_warnings', 'Warning level.\\n - on: Activates essential warnings and extras.\\n - essential: Activates essential warnings, typically -Wall -Wextra or /W4).\\n - extensive: Activates essential warnings, extras and some that may raise false positives', default_values.get('warnings', _default_flags['warnings']),
+                 allowed_values=('default', 'off', 'on', 'essential', 'extensive')),
     EnumVariable('jln_warnings_as_error', 'Make all or some warnings into errors.', default_values.get('warnings_as_error', _default_flags['warnings_as_error']),
                  allowed_values=('default', 'off', 'on', 'basic')),
     EnumVariable('jln_whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.', default_values.get('whole_program', _default_flags['whole_program']),
@@ -358,37 +358,54 @@ def get_flags(options, env=None):
       if x_warnings == 'off' :
         flags += ('-w', )
       else:
-        if compiler == 'gcc' :
-          flags += ('-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winvalid-pch', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
-          if compversion >= 400007 :
-            flags += ('-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', )
-            if compversion >= 400008 :
-              if compversion >= 400009 :
-                flags += ('-Wfloat-conversion', )
-                if compversion >= 500001 :
-                  flags += ('-Wformat-signedness', '-Warray-bounds=2', )
-                  if compversion >= 600001 :
-                    flags += ('-Wduplicated-cond', '-Wnull-dereference', )
-                    if compversion >= 700000 :
-                      if compversion >= 700001 :
-                        flags += ('-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', )
-                        if compversion >= 800000 :
-                          if ( x_warnings == 'strict' or x_warnings == 'very_strict' ) :
-                            flags += ('-Wcast-align=strict', )
+        if x_warnings == 'essential' :
+          flags += ('-Wall', '-Wextra', '-Wwrite-strings', )
         else:
-          flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', )
-          if  not ( ( x_switch_warnings == 'off' or x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) ) :
-            flags += ('-Wno-switch-enum', )
-          if x_covered_switch_default_warnings == 'default' :
-            flags += ('-Wno-covered-switch-default', )
-          if compversion >= 300009 :
-            if compversion >= 500000 :
-              if compversion >= 900000 :
-                if compversion >= 1000000 :
-                  if compversion >= 1100000 :
-                    if compversion >= 1600000 :
-                      if x_unsafe_buffer_usage_warnings == 'default' :
-                        flags += ('-Wno-unsafe-buffer-usage', )
+          if compiler == 'gcc' :
+            flags += ('-Wall', '-Wextra', )
+            if compversion < 800000 :
+              flags += ('-Wcast-align', )
+            flags += ('-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winvalid-pch', '-Wmissing-declarations', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
+            if compversion >= 400007 :
+              flags += ('-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', )
+              if compversion >= 400008 :
+                if compversion >= 400009 :
+                  if compversion >= 500001 :
+                    flags += ('-Wformat-signedness', '-Warray-bounds=2', )
+                    if compversion >= 600001 :
+                      flags += ('-Wduplicated-cond', '-Wnull-dereference', )
+                      if compversion >= 700000 :
+                        if compversion >= 700001 :
+                          flags += ('-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', )
+                          if compversion >= 800000 :
+                            flags += ('-Wcast-align=strict', '-Wformat-truncation=2', '-Wshift-overflow=2', )
+                            if compversion >= 1400000 :
+                              flags += ('-Walloc-size', )
+            if x_warnings == 'extensive' :
+              if compversion >= 800000 :
+                flags += ('-Wstringop-overflow=4', )
+                if compversion >= 1200000 :
+                  flags += ('-Wuse-after-free=3', )
+          else:
+            flags += ('-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', )
+            if  not ( ( x_switch_warnings == 'off' or x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) ) :
+              flags += ('-Wno-switch-enum', )
+            if x_covered_switch_default_warnings == 'default' :
+              flags += ('-Wno-covered-switch-default', )
+            if x_conversion_warnings != 'default' :
+              if x_conversion_warnings == 'conversion' :
+                flags += ('-Wno-sign-compare', '-Wno-sign-conversion', )
+              else:
+                if ( x_conversion_warnings == 'float' or x_conversion_warnings == 'sign' ) :
+                  flags += ('-Wno-conversion', )
+            if compversion >= 300009 :
+              if compversion >= 500000 :
+                if compversion >= 900000 :
+                  if compversion >= 1000000 :
+                    if compversion >= 1100000 :
+                      if compversion >= 1600000 :
+                        if x_unsafe_buffer_usage_warnings == 'default' :
+                          flags += ('-Wno-unsafe-buffer-usage', )
     if compiler == 'gcc' :
       if x_switch_warnings != 'default' :
         if x_switch_warnings == 'on' :
@@ -438,12 +455,17 @@ def get_flags(options, env=None):
     if x_var_init != 'default' :
       if ( ( compiler == 'gcc' and compversion >= 1200000 ) or ( is_clang_like and compversion >= 800000 ) ) :
         if ( is_clang_like and compversion <= 1500000 ) :
-          flags += ('-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', )
+          if x_var_init == 'zero' :
+            flags += ('-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', )
         if x_var_init == 'pattern' :
           flags += ('-ftrivial-auto-var-init=pattern', )
+          if compiler == 'gcc' :
+            flags += ('-Wtrivial-auto-var-init', )
         else:
           if x_var_init == 'zero' :
             flags += ('-ftrivial-auto-var-init=zero', )
+            if compiler == 'gcc' :
+              flags += ('-Wtrivial-auto-var-init', )
           else:
             flags += ('-ftrivial-auto-var-init=uninitialized', )
     if x_warnings_as_error != 'default' :
@@ -626,10 +648,22 @@ def get_flags(options, env=None):
         if x_conversion_warnings == 'conversion' :
           flags += ('-Wconversion', )
         else:
-          if x_conversion_warnings == 'sign' :
-            flags += ('-Wsign-compare', '-Wsign-conversion', )
+          if x_conversion_warnings == 'float' :
+            if compiler == 'gcc' :
+              if compversion >= 400009 :
+                flags += ('-Wfloat-conversion', )
+            else:
+              flags += ('-Wfloat-conversion', )
           else:
-            flags += ('-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', )
+            if x_conversion_warnings == 'sign' :
+              flags += ('-Wsign-compare', '-Wsign-conversion', )
+            else:
+              if x_conversion_warnings == 'all' :
+                flags += ('-Wconversion', )
+                if compiler == 'gcc' :
+                  flags += ('-Warith-conversion', )
+              else:
+                flags += ('-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', )
   if ( compiler == 'gcc' or compiler == 'clang' or compiler == 'clang-emcc' ) :
     if x_pedantic != 'default' :
       if x_pedantic != 'off' :
@@ -1061,6 +1095,17 @@ def get_flags(options, env=None):
       if x_pedantic != 'default' :
         if x_pedantic != 'off' :
           flags += ('/permissive-', )
+          if compiler == 'msvc' :
+            if x_pedantic == 'as_error' :
+              flags += ('/we4608', )
+              if compversion >= 1900031 :
+                if compversion >= 1900038 :
+                  flags += ('/we5110', )
+            else:
+              flags += ('/w14608', )
+              if compversion >= 1900031 :
+                if compversion >= 1900038 :
+                  flags += ('/w15110', )
       if x_stack_protector != 'default' :
         if x_stack_protector == 'off' :
           flags += ('/GS-', )
@@ -1119,73 +1164,93 @@ def get_flags(options, env=None):
           # unimplementable
           pass
       else:
-        if compversion < 1600010 :
-          flags += ('/experimental:external', )
-        flags += ('/external:W0', )
-        if x_msvc_isystem == 'anglebrackets' :
-          flags += ('/external:anglebrackets', )
-        else:
-          flags += ('/external:env:INCLUDE', '/external:env:CAExcludePath', )
+        if x_msvc_isystem != 'assumed' :
+          if compversion < 1600010 :
+            flags += ('/experimental:external', )
+          flags += ('/external:W0', )
+          if x_msvc_isystem == 'anglebrackets' :
+            flags += ('/external:anglebrackets', )
+          else:
+            flags += ('/external:env:INCLUDE', '/external:env:CAExcludePath', )
       if x_msvc_isystem_with_template_from_non_external != 'default' :
         if x_msvc_isystem_with_template_from_non_external == 'off' :
           flags += ('/external:template', )
         else:
           flags += ('/external:template-', )
-      if x_warnings != 'default' :
-        if x_warnings == 'off' :
-          flags += ('/W0', )
-        else:
-          flags += ('/wd4710', '/wd4711', )
-          if compversion < 1900021 :
-            flags += ('/wd4774', )
-          if x_warnings == 'on' :
-            flags += ('/W4', '/wd4514', )
-          else:
-            flags += ('/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
-            if x_warnings == 'strict' :
-              flags += ('/wd4583', '/wd4619', )
-      if x_switch_warnings != 'default' :
-        if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
-          flags += ('/w14062', )
-        else:
-          if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
-            flags += ('/w14061', '/w14062', )
-          else:
-            flags += ('/wd4061', '/wd4062', )
-    else:
-      if x_warnings != 'default' :
-        if x_warnings == 'off' :
-          flags += ('/W0', )
+    if x_warnings != 'default' :
+      if x_warnings == 'off' :
+        flags += ('/W0', )
+      else:
+        if x_warnings == 'essential' :
+          flags += ('/W4', '/wd4711', )
         else:
           if x_warnings == 'on' :
-            flags += ('/W4', '/wd4514', '/wd4711', )
+            flags += ('/W4', '/wd4711', '/w14296', '/w14444', '/w14545', '/w14546', '/w14547', '/w14548', '/w14549', '/w14555', '/w14557', '/w14905', '/w14906', '/w14917', )
+            if compversion >= 1500003 :
+              if compversion >= 1600010 :
+                flags += ('/w15240', )
+                if compversion >= 1700004 :
+                  if x_msvc_isystem == 'default' :
+                    flags += ('/w15262', )
+                  if compversion >= 1900000 :
+                    flags += ('/w14426', )
+                    if x_msvc_isystem == 'default' :
+                      flags += ('/w14654', )
+                    flags += ('/w15031', '/w15032', )
+                    if compversion >= 1900015 :
+                      if compversion >= 1900022 :
+                        if compversion >= 1900025 :
+                          if compversion >= 1900029 :
+                            if compversion >= 1900030 :
+                              flags += ('/w15249', )
+                              if compversion >= 1900032 :
+                                flags += ('/w15258', )
           else:
-            flags += ('/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', )
-            if compversion < 1900021 :
-              flags += ('/wd4774', )
-            flags += ('/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', )
-            if x_warnings == 'strict' :
-              flags += ('/wd4061', '/wd4266', '/wd4583', '/wd4619', '/wd4623', '/wd5204', )
+            flags += ('/Wall', '/wd4370', '/wd4371', '/wd4514', '/wd4571', '/wd4577', '/wd4686', '/wd4710', '/wd4711', '/wd4820', '/wd4866', )
+            if x_msvc_isystem == 'default' :
+              flags += ('/wd4464', '/wd4548', '/wd4668', )
+              if compversion >= 1500000 :
+                if compversion >= 1700004 :
+                  flags += ('/wd5262', )
+                  if compversion >= 1900000 :
+                    flags += ('/wd4774', )
+            if compversion >= 1600000 :
+              flags += ('/wd4800', )
+              if compversion >= 1900039 :
+                flags += ('/wd4975', )
+                if compversion >= 1900040 :
+                  flags += ('/wd4860', '/wd4861', '/wd5273', '/wd5274', )
+                  if compversion >= 1900041 :
+                    flags += ('/wd5306', )
+                    if compversion >= 1900043 :
+                      flags += ('/wd5277', )
     if x_conversion_warnings != 'default' :
-      if x_conversion_warnings == 'on' :
-        flags += ('/w14244', '/w14245', '/w14388', '/w14365', )
+      if ( x_conversion_warnings == 'off' or x_conversion_warnings == 'sign' ) :
+        flags += ('/wd4244', '/wd4245', '/wd4365', )
       else:
-        if x_conversion_warnings == 'conversion' :
-          flags += ('/w14244', '/w14365', )
+        flags += ('/w14244', '/w14245', '/w14365', )
+      if ( x_conversion_warnings == 'on' or x_conversion_warnings == 'all' or x_conversion_warnings == 'sign' ) :
+        flags += ('/w14018', '/w14388', '/w14289', )
+      else:
+        flags += ('/wd4018', '/wd4388', '/wd4289', )
+    if x_switch_warnings != 'default' :
+      if ( x_switch_warnings == 'on' or x_switch_warnings == 'mandatory_default' ) :
+        flags += ('/wd4061', '/w14062', )
+      else:
+        if ( x_switch_warnings == 'exhaustive_enum' or x_switch_warnings == 'exhaustive_enum_and_mandatory_default' ) :
+          flags += ('/w14061', '/w14062', )
         else:
-          if x_conversion_warnings == 'sign' :
-            flags += ('/w14388', '/w14245', )
-          else:
-            flags += ('/wd4244', '/wd4365', '/wd4388', '/wd4245', )
+          flags += ('/wd4061', '/wd4062', )
     if x_shadow_warnings != 'default' :
-      if x_shadow_warnings == 'off' :
-        flags += ('/wd4456', '/wd4459', )
-      else:
-        if ( x_shadow_warnings == 'on' or x_shadow_warnings == 'all' ) :
-          flags += ('/w4456', '/w4459', )
+      if compversion >= 1900000 :
+        if x_shadow_warnings == 'off' :
+          flags += ('/wd4456', '/wd4459', )
         else:
-          if x_shadow_warnings == 'local' :
-            flags += ('/w4456', '/wd4459', )
+          if ( x_shadow_warnings == 'on' or x_shadow_warnings == 'all' ) :
+            flags += ('/w14456', '/w14459', )
+          else:
+            if x_shadow_warnings == 'local' :
+              flags += ('/w4456', '/wd4459', )
     if x_warnings_as_error != 'default' :
       if x_warnings_as_error == 'on' :
         flags += ('/WX', )
@@ -1313,7 +1378,10 @@ def get_flags(options, env=None):
           if x_warnings == 'off' :
             flags += ('-w', )
           else:
-            flags += ('-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wparentheses', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
+            if x_warnings == 'essential' :
+              flags += ('-Wall', )
+            else:
+              flags += ('-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', )
         if x_switch_warnings != 'default' :
           if ( x_switch_warnings == 'on' or x_switch_warnings == 'exhaustive_enum' ) :
             flags += ('-Wswitch-enum', )

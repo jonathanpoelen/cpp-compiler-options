@@ -16,7 +16,6 @@
 -Wno-shadow
 -Wnonnull
 -Wold-style-definition
--Wparentheses
 -Wpointer-arith
 -Wpointer-sign
 -Wreorder

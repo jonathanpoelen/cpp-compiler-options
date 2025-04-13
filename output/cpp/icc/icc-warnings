@@ -18,7 +18,6 @@
 -Wnon-virtual-dtor
 -Wnonnull
 -Woverloaded-virtual
--Wparentheses
 -Wpointer-arith
 -Wpointer-sign
 -Wreorder

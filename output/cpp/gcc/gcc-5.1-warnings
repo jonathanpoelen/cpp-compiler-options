@@ -6,7 +6,6 @@
 -Wdisabled-optimization
 -Wdouble-promotion
 -Wextra
--Wfloat-conversion
 -Wfloat-equal
 -Wformat-security
 -Wformat-signedness

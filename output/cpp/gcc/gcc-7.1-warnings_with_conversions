@@ -12,7 +12,6 @@
 -Wduplicated-branches
 -Wduplicated-cond
 -Wextra
--Wfloat-conversion
 -Wfloat-equal
 -Wformat-overflow=2
 -Wformat-security

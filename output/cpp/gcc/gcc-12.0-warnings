@@ -3,7 +3,7 @@
 -Walloc-zero
 -Walloca
 -Warray-bounds=2
--Wcast-align
+-Wcast-align=strict
 -Wcast-qual
 -Wclass-memaccess
 -Wconditionally-supported
@@ -12,11 +12,11 @@
 -Wduplicated-branches
 -Wduplicated-cond
 -Wextra
--Wfloat-conversion
 -Wfloat-equal
 -Wformat-overflow=2
 -Wformat-security
 -Wformat-signedness
+-Wformat-truncation=2
 -Wformat=2
 -Winvalid-pch
 -Wlogical-op
@@ -31,6 +31,7 @@
 -Wpacked
 -Wpointer-arith
 -Wredundant-decls
+-Wshift-overflow=2
 -Wstrict-null-sentinel
 -Wsuggest-attribute=noreturn
 -Wsuggest-override

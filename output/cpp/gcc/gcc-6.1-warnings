@@ -7,7 +7,6 @@
 -Wdouble-promotion
 -Wduplicated-cond
 -Wextra
--Wfloat-conversion
 -Wfloat-equal
 -Wformat-security
 -Wformat-signedness

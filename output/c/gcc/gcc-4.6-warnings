@@ -10,6 +10,7 @@
 -Winit-self
 -Winvalid-pch
 -Wjump-misses-init
+-Wmissing-declarations
 -Wmissing-include-dirs
 -Wnested-externs
 -Wno-shadow

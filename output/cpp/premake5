@@ -139,7 +139,7 @@ function jln_newoptions(defaults)
   newoption{trigger="jln-control-flow", allowed={{'default'}, {'off'}, {'on'}, {'branch'}, {'return'}, {'allow_bugs'}}, description="Insert extra runtime security checks to detect attempts to compromise your code."}
   if not _OPTIONS["jln-control-flow"] then _OPTIONS["jln-control-flow"] = (defaults["control_flow"] or defaults["jln-control-flow"] or "default") end
 
-  newoption{trigger="jln-conversion-warnings", allowed={{'default'}, {'off'}, {'on'}, {'sign'}, {'conversion'}}, description="Warn for implicit conversions that may alter a value."}
+  newoption{trigger="jln-conversion-warnings", allowed={{'default'}, {'off'}, {'on', 'Combine conversion and sign value'}, {'sign', 'Warn for implicit conversions that may change the sign (lke `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.'}, {'float', 'Warn for implicit conversions that reduce the precision of a real value.'}, {'conversion', 'Warn for implicit conversions that may alter a value.'}, {'all', 'Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.'}}, description="Warn for implicit conversions that may alter a value."}
   if not _OPTIONS["jln-conversion-warnings"] then _OPTIONS["jln-conversion-warnings"] = (defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on") end
 
   newoption{trigger="jln-coverage", allowed={{'default'}, {'off'}, {'on'}}, description=""}
@@ -193,7 +193,7 @@ function jln_newoptions(defaults)
   newoption{trigger="jln-msvc-diagnostics-format", allowed={{'default'}, {'classic', 'Which reports only the line number where the issue was found.'}, {'column', 'Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.'}, {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.'}}, description="Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)."}
   if not _OPTIONS["jln-msvc-diagnostics-format"] then _OPTIONS["jln-msvc-diagnostics-format"] = (defaults["msvc_diagnostics_format"] or defaults["jln-msvc-diagnostics-format"] or "caret") end
 
-  newoption{trigger="jln-msvc-isystem", allowed={{'default'}, {'anglebrackets'}, {'include_and_caexcludepath'}}, description="Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)."}
+  newoption{trigger="jln-msvc-isystem", allowed={{'default'}, {'anglebrackets'}, {'include_and_caexcludepath'}, {'assumed'}}, description="Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)."}
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
 
   newoption{trigger="jln-msvc-isystem-with-template-from-non-external", allowed={{'default'}, {'off'}, {'on'}}, description="Warnings concerning template in an external header (requires msvc_isystem)."}
@@ -253,7 +253,7 @@ function jln_newoptions(defaults)
   newoption{trigger="jln-var-init", allowed={{'default'}, {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang).'}, {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).'}, {'zero', 'zero Initialize automatic variables with zeroes.'}}, description="Initialize all stack variables implicitly, including padding."}
   if not _OPTIONS["jln-var-init"] then _OPTIONS["jln-var-init"] = (defaults["var_init"] or defaults["jln-var-init"] or "default") end
 
-  newoption{trigger="jln-warnings", allowed={{'default'}, {'off'}, {'on'}, {'strict'}, {'very_strict'}}, description="Warning level."}
+  newoption{trigger="jln-warnings", allowed={{'default'}, {'off'}, {'on', 'Activates essential warnings and extras.'}, {'essential', 'Activates essential warnings, typically -Wall -Wextra or /W4).'}, {'extensive', 'Activates essential warnings, extras and some that may raise false positives'}}, description="Warning level."}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "on") end
 
   newoption{trigger="jln-warnings-as-error", allowed={{'default'}, {'off'}, {'on'}, {'basic'}}, description="Make all or some warnings into errors."}
@@ -554,60 +554,66 @@ function jln_getoptions(values, disable_others, print_compiler)
       if values['warnings'] == 'off' then
         table_insert(jln_buildoptions, "-w")
       else
-        if compiler == 'gcc' then
+        if values['warnings'] == 'essential' then
           table_insert(jln_buildoptions, "-Wall")
           table_insert(jln_buildoptions, "-Wextra")
-          table_insert(jln_buildoptions, "-Wcast-align")
-          table_insert(jln_buildoptions, "-Wcast-qual")
-          table_insert(jln_buildoptions, "-Wdisabled-optimization")
-          table_insert(jln_buildoptions, "-Wfloat-equal")
-          table_insert(jln_buildoptions, "-Wformat-security")
-          table_insert(jln_buildoptions, "-Wformat=2")
-          table_insert(jln_buildoptions, "-Winvalid-pch")
-          table_insert(jln_buildoptions, "-Wmissing-include-dirs")
-          table_insert(jln_buildoptions, "-Wpacked")
-          table_insert(jln_buildoptions, "-Wredundant-decls")
-          table_insert(jln_buildoptions, "-Wundef")
-          table_insert(jln_buildoptions, "-Wunused-macros")
-          table_insert(jln_buildoptions, "-Wpointer-arith")
-          table_insert(jln_buildoptions, "-Wmissing-declarations")
-          table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
-          table_insert(jln_buildoptions, "-Wold-style-cast")
-          table_insert(jln_buildoptions, "-Woverloaded-virtual")
-          if version >= 400007 then
-            table_insert(jln_buildoptions, "-Wsuggest-attribute=noreturn")
-            table_insert(jln_buildoptions, "-Wzero-as-null-pointer-constant")
-            table_insert(jln_buildoptions, "-Wlogical-op")
-            table_insert(jln_buildoptions, "-Wvector-operation-performance")
-            table_insert(jln_buildoptions, "-Wdouble-promotion")
-            table_insert(jln_buildoptions, "-Wtrampolines")
-            if version >= 400008 then
-              table_insert(jln_buildoptions, "-Wuseless-cast")
-              if version >= 400009 then
-                table_insert(jln_buildoptions, "-Wconditionally-supported")
-                table_insert(jln_buildoptions, "-Wfloat-conversion")
-                if version >= 500001 then
-                  table_insert(jln_buildoptions, "-Wformat-signedness")
-                  table_insert(jln_buildoptions, "-Warray-bounds=2")
-                  table_insert(jln_buildoptions, "-Wstrict-null-sentinel")
-                  table_insert(jln_buildoptions, "-Wsuggest-override")
-                  if version >= 600001 then
-                    table_insert(jln_buildoptions, "-Wduplicated-cond")
-                    table_insert(jln_buildoptions, "-Wnull-dereference")
-                    if version >= 700000 then
-                      table_insert(jln_buildoptions, "-Waligned-new")
-                      if version >= 700001 then
-                        table_insert(jln_buildoptions, "-Walloc-zero")
-                        table_insert(jln_buildoptions, "-Walloca")
-                        table_insert(jln_buildoptions, "-Wformat-overflow=2")
-                        table_insert(jln_buildoptions, "-Wduplicated-branches")
-                        if version >= 800000 then
-                          table_insert(jln_buildoptions, "-Wclass-memaccess")
-                          if ( values['warnings'] == 'strict' or values['warnings'] == 'very_strict' ) then
+        else
+          if compiler == 'gcc' then
+            table_insert(jln_buildoptions, "-Wall")
+            table_insert(jln_buildoptions, "-Wextra")
+            if version < 800000 then
+              table_insert(jln_buildoptions, "-Wcast-align")
+            end
+            table_insert(jln_buildoptions, "-Wcast-qual")
+            table_insert(jln_buildoptions, "-Wdisabled-optimization")
+            table_insert(jln_buildoptions, "-Wfloat-equal")
+            table_insert(jln_buildoptions, "-Wformat-security")
+            table_insert(jln_buildoptions, "-Wformat=2")
+            table_insert(jln_buildoptions, "-Winvalid-pch")
+            table_insert(jln_buildoptions, "-Wmissing-declarations")
+            table_insert(jln_buildoptions, "-Wmissing-include-dirs")
+            table_insert(jln_buildoptions, "-Wpacked")
+            table_insert(jln_buildoptions, "-Wredundant-decls")
+            table_insert(jln_buildoptions, "-Wundef")
+            table_insert(jln_buildoptions, "-Wunused-macros")
+            table_insert(jln_buildoptions, "-Wpointer-arith")
+            table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
+            table_insert(jln_buildoptions, "-Wold-style-cast")
+            table_insert(jln_buildoptions, "-Woverloaded-virtual")
+            if version >= 400007 then
+              table_insert(jln_buildoptions, "-Wsuggest-attribute=noreturn")
+              table_insert(jln_buildoptions, "-Wzero-as-null-pointer-constant")
+              table_insert(jln_buildoptions, "-Wlogical-op")
+              table_insert(jln_buildoptions, "-Wvector-operation-performance")
+              table_insert(jln_buildoptions, "-Wdouble-promotion")
+              table_insert(jln_buildoptions, "-Wtrampolines")
+              if version >= 400008 then
+                table_insert(jln_buildoptions, "-Wuseless-cast")
+                if version >= 400009 then
+                  table_insert(jln_buildoptions, "-Wconditionally-supported")
+                  if version >= 500001 then
+                    table_insert(jln_buildoptions, "-Wformat-signedness")
+                    table_insert(jln_buildoptions, "-Warray-bounds=2")
+                    table_insert(jln_buildoptions, "-Wstrict-null-sentinel")
+                    table_insert(jln_buildoptions, "-Wsuggest-override")
+                    if version >= 600001 then
+                      table_insert(jln_buildoptions, "-Wduplicated-cond")
+                      table_insert(jln_buildoptions, "-Wnull-dereference")
+                      if version >= 700000 then
+                        table_insert(jln_buildoptions, "-Waligned-new")
+                        if version >= 700001 then
+                          table_insert(jln_buildoptions, "-Walloc-zero")
+                          table_insert(jln_buildoptions, "-Walloca")
+                          table_insert(jln_buildoptions, "-Wformat-overflow=2")
+                          table_insert(jln_buildoptions, "-Wduplicated-branches")
+                          if version >= 800000 then
                             table_insert(jln_buildoptions, "-Wcast-align=strict")
-                          end
-                          if version >= 1400000 then
-                            table_insert(jln_buildoptions, "-Walloc-size")
+                            table_insert(jln_buildoptions, "-Wformat-truncation=2")
+                            table_insert(jln_buildoptions, "-Wshift-overflow=2")
+                            table_insert(jln_buildoptions, "-Wclass-memaccess")
+                            if version >= 1400000 then
+                              table_insert(jln_buildoptions, "-Walloc-size")
+                            end
                           end
                         end
                       end
@@ -616,37 +622,55 @@ function jln_getoptions(values, disable_others, print_compiler)
                 end
               end
             end
-          end
-        else
-          table_insert(jln_buildoptions, "-Weverything")
-          table_insert(jln_buildoptions, "-Wno-documentation")
-          table_insert(jln_buildoptions, "-Wno-documentation-unknown-command")
-          table_insert(jln_buildoptions, "-Wno-newline-eof")
-          table_insert(jln_buildoptions, "-Wno-c++98-compat")
-          table_insert(jln_buildoptions, "-Wno-c++98-compat-pedantic")
-          table_insert(jln_buildoptions, "-Wno-padded")
-          table_insert(jln_buildoptions, "-Wno-global-constructors")
-          table_insert(jln_buildoptions, "-Wno-weak-vtables")
-          table_insert(jln_buildoptions, "-Wno-exit-time-destructors")
-          if  not ( ( values['switch_warnings'] == 'off' or values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) ) then
-            table_insert(jln_buildoptions, "-Wno-switch-enum")
-          end
-          if values['covered_switch_default_warnings'] == 'default' then
-            table_insert(jln_buildoptions, "-Wno-covered-switch-default")
-          end
-          if version >= 300009 then
-            table_insert(jln_buildoptions, "-Wno-undefined-var-template")
-            if version >= 500000 then
-              table_insert(jln_buildoptions, "-Wno-inconsistent-missing-destructor-override")
-              if version >= 900000 then
-                table_insert(jln_buildoptions, "-Wno-ctad-maybe-unsupported")
-                if version >= 1000000 then
-                  table_insert(jln_buildoptions, "-Wno-c++20-compat")
-                  if version >= 1100000 then
-                    table_insert(jln_buildoptions, "-Wno-suggest-destructor-override")
-                    if version >= 1600000 then
-                      if values['unsafe_buffer_usage_warnings'] == 'default' then
-                        table_insert(jln_buildoptions, "-Wno-unsafe-buffer-usage")
+            if values['warnings'] == 'extensive' then
+              if version >= 800000 then
+                table_insert(jln_buildoptions, "-Wstringop-overflow=4")
+                if version >= 1200000 then
+                  table_insert(jln_buildoptions, "-Wuse-after-free=3")
+                end
+              end
+            end
+          else
+            table_insert(jln_buildoptions, "-Weverything")
+            table_insert(jln_buildoptions, "-Wno-documentation")
+            table_insert(jln_buildoptions, "-Wno-documentation-unknown-command")
+            table_insert(jln_buildoptions, "-Wno-newline-eof")
+            table_insert(jln_buildoptions, "-Wno-c++98-compat")
+            table_insert(jln_buildoptions, "-Wno-c++98-compat-pedantic")
+            table_insert(jln_buildoptions, "-Wno-padded")
+            table_insert(jln_buildoptions, "-Wno-global-constructors")
+            table_insert(jln_buildoptions, "-Wno-weak-vtables")
+            table_insert(jln_buildoptions, "-Wno-exit-time-destructors")
+            if  not ( ( values['switch_warnings'] == 'off' or values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) ) then
+              table_insert(jln_buildoptions, "-Wno-switch-enum")
+            end
+            if values['covered_switch_default_warnings'] == 'default' then
+              table_insert(jln_buildoptions, "-Wno-covered-switch-default")
+            end
+            if values['conversion_warnings'] ~= 'default' then
+              if values['conversion_warnings'] == 'conversion' then
+                table_insert(jln_buildoptions, "-Wno-sign-compare")
+                table_insert(jln_buildoptions, "-Wno-sign-conversion")
+              else
+                if ( values['conversion_warnings'] == 'float' or values['conversion_warnings'] == 'sign' ) then
+                  table_insert(jln_buildoptions, "-Wno-conversion")
+                end
+              end
+            end
+            if version >= 300009 then
+              table_insert(jln_buildoptions, "-Wno-undefined-var-template")
+              if version >= 500000 then
+                table_insert(jln_buildoptions, "-Wno-inconsistent-missing-destructor-override")
+                if version >= 900000 then
+                  table_insert(jln_buildoptions, "-Wno-ctad-maybe-unsupported")
+                  if version >= 1000000 then
+                    table_insert(jln_buildoptions, "-Wno-c++20-compat")
+                    if version >= 1100000 then
+                      table_insert(jln_buildoptions, "-Wno-suggest-destructor-override")
+                      if version >= 1600000 then
+                        if values['unsafe_buffer_usage_warnings'] == 'default' then
+                          table_insert(jln_buildoptions, "-Wno-unsafe-buffer-usage")
+                        end
                       end
                     end
                   end
@@ -765,13 +789,21 @@ function jln_getoptions(values, disable_others, print_compiler)
     if values['var_init'] ~= 'default' then
       if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) ) then
         if ( is_clang_like and version <= 1500000 ) then
-          table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+          if values['var_init'] == 'zero' then
+            table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+          end
         end
         if values['var_init'] == 'pattern' then
           table_insert(jln_buildoptions, "-ftrivial-auto-var-init=pattern")
+          if compiler == 'gcc' then
+            table_insert(jln_buildoptions, "-Wtrivial-auto-var-init")
+          end
         else
           if values['var_init'] == 'zero' then
             table_insert(jln_buildoptions, "-ftrivial-auto-var-init=zero")
+            if compiler == 'gcc' then
+              table_insert(jln_buildoptions, "-Wtrivial-auto-var-init")
+            end
           else
             table_insert(jln_buildoptions, "-ftrivial-auto-var-init=uninitialized")
           end
@@ -1098,13 +1130,30 @@ function jln_getoptions(values, disable_others, print_compiler)
         if values['conversion_warnings'] == 'conversion' then
           table_insert(jln_buildoptions, "-Wconversion")
         else
-          if values['conversion_warnings'] == 'sign' then
-            table_insert(jln_buildoptions, "-Wsign-compare")
-            table_insert(jln_buildoptions, "-Wsign-conversion")
+          if values['conversion_warnings'] == 'float' then
+            if compiler == 'gcc' then
+              if version >= 400009 then
+                table_insert(jln_buildoptions, "-Wfloat-conversion")
+              end
+            else
+              table_insert(jln_buildoptions, "-Wfloat-conversion")
+            end
           else
-            table_insert(jln_buildoptions, "-Wno-conversion")
-            table_insert(jln_buildoptions, "-Wno-sign-compare")
-            table_insert(jln_buildoptions, "-Wno-sign-conversion")
+            if values['conversion_warnings'] == 'sign' then
+              table_insert(jln_buildoptions, "-Wsign-compare")
+              table_insert(jln_buildoptions, "-Wsign-conversion")
+            else
+              if values['conversion_warnings'] == 'all' then
+                table_insert(jln_buildoptions, "-Wconversion")
+                if compiler == 'gcc' then
+                  table_insert(jln_buildoptions, "-Warith-conversion")
+                end
+              else
+                table_insert(jln_buildoptions, "-Wno-conversion")
+                table_insert(jln_buildoptions, "-Wno-sign-compare")
+                table_insert(jln_buildoptions, "-Wno-sign-conversion")
+              end
+            end
           end
         end
       end
@@ -1647,9 +1696,10 @@ function jln_getoptions(values, disable_others, print_compiler)
     if values['stl_hardening'] ~= 'default' then
       if values['stl_hardening'] == 'off' then
         table_insert(jln_buildoptions, "/D_MSVC_STL_HARDENING=0")
+        table_insert(jln_buildoptions, "/D_MSVC_STL_DESTRUCTOR_TOMBSTONES=0")
         table_insert(jln_buildoptions, "/D_ITERATOR_DEBUG_LEVEL=0")
-        table_insert(jln_buildoptions, "/D_SECURE_SCL=0")
         table_insert(jln_buildoptions, "/D_HAS_ITERATOR_DEBUGGING=0")
+        table_insert(jln_buildoptions, "/D_SECURE_SCL=0")
       else
         if ( values['stl_hardening'] == 'fast' or values['stl_hardening'] == 'extensive' ) then
           table_insert(jln_buildoptions, "/D_MSVC_STL_HARDENING=1")
@@ -1787,6 +1837,33 @@ function jln_getoptions(values, disable_others, print_compiler)
         if values['pedantic'] ~= 'off' then
           table_insert(jln_buildoptions, "/permissive-")
           table_insert(jln_buildoptions, "/Zc:__cplusplus")
+          if compiler == 'msvc' then
+            if values['pedantic'] == 'as_error' then
+              table_insert(jln_buildoptions, "/we4608")
+              table_insert(jln_buildoptions, "/we4928")
+              if version >= 1900031 then
+                table_insert(jln_buildoptions, "/we5254")
+                if version >= 1900038 then
+                  table_insert(jln_buildoptions, "/we5110")
+                end
+              end
+            else
+              table_insert(jln_buildoptions, "/w14608")
+              table_insert(jln_buildoptions, "/w14928")
+              if version >= 1900031 then
+                table_insert(jln_buildoptions, "/w15254")
+                if version >= 1900038 then
+                  table_insert(jln_buildoptions, "/w15110")
+                end
+              end
+            end
+            if values['msvc_isystem'] ~= 'default' then
+              table_insert(jln_buildoptions, "/we4471")
+              table_insert(jln_buildoptions, "/we5052")
+            else
+              table_insert(jln_buildoptions, "/w14471")
+            end
+          end
         end
       end
       if values['stack_protector'] ~= 'default' then
@@ -1884,15 +1961,17 @@ function jln_getoptions(values, disable_others, print_compiler)
           -- unimplementable
         end
       else
-        if version < 1600010 then
-          table_insert(jln_buildoptions, "/experimental:external")
-        end
-        table_insert(jln_buildoptions, "/external:W0")
-        if values['msvc_isystem'] == 'anglebrackets' then
-          table_insert(jln_buildoptions, "/external:anglebrackets")
-        else
-          table_insert(jln_buildoptions, "/external:env:INCLUDE")
-          table_insert(jln_buildoptions, "/external:env:CAExcludePath")
+        if values['msvc_isystem'] ~= 'assumed' then
+          if version < 1600010 then
+            table_insert(jln_buildoptions, "/experimental:external")
+          end
+          table_insert(jln_buildoptions, "/external:W0")
+          if values['msvc_isystem'] == 'anglebrackets' then
+            table_insert(jln_buildoptions, "/external:anglebrackets")
+          else
+            table_insert(jln_buildoptions, "/external:env:INCLUDE")
+            table_insert(jln_buildoptions, "/external:env:CAExcludePath")
+          end
         end
       end
       if values['msvc_isystem_with_template_from_non_external'] ~= 'default' then
@@ -1902,130 +1981,210 @@ function jln_getoptions(values, disable_others, print_compiler)
           table_insert(jln_buildoptions, "/external:template-")
         end
       end
-      if values['warnings'] ~= 'default' then
-        if values['warnings'] == 'off' then
-          table_insert(jln_buildoptions, "/W0")
-        else
-          table_insert(jln_buildoptions, "/wd4710")
+    end
+    if values['warnings'] ~= 'default' then
+      if values['warnings'] == 'off' then
+        table_insert(jln_buildoptions, "/W0")
+      else
+        if values['warnings'] == 'essential' then
+          table_insert(jln_buildoptions, "/W4")
           table_insert(jln_buildoptions, "/wd4711")
-          if version < 1900021 then
-            table_insert(jln_buildoptions, "/wd4774")
-          end
-          if values['warnings'] == 'on' then
-            table_insert(jln_buildoptions, "/W4")
-            table_insert(jln_buildoptions, "/wd4514")
-          else
-            table_insert(jln_buildoptions, "/Wall")
-            table_insert(jln_buildoptions, "/wd4514")
-            table_insert(jln_buildoptions, "/wd4571")
-            table_insert(jln_buildoptions, "/wd4355")
-            table_insert(jln_buildoptions, "/wd4548")
-            table_insert(jln_buildoptions, "/wd4577")
-            table_insert(jln_buildoptions, "/wd4820")
-            table_insert(jln_buildoptions, "/wd5039")
-            table_insert(jln_buildoptions, "/wd4464")
-            table_insert(jln_buildoptions, "/wd4868")
-            table_insert(jln_buildoptions, "/wd5045")
-            if values['warnings'] == 'strict' then
-              table_insert(jln_buildoptions, "/wd4583")
-              table_insert(jln_buildoptions, "/wd4619")
-            end
-          end
-        end
-      end
-      if values['switch_warnings'] ~= 'default' then
-        if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'mandatory_default' ) then
-          table_insert(jln_buildoptions, "/w14062")
-        else
-          if ( values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) then
-            table_insert(jln_buildoptions, "/w14061")
-            table_insert(jln_buildoptions, "/w14062")
-          else
-            table_insert(jln_buildoptions, "/wd4061")
-            table_insert(jln_buildoptions, "/wd4062")
-          end
-        end
-      end
-    else
-      if values['warnings'] ~= 'default' then
-        if values['warnings'] == 'off' then
-          table_insert(jln_buildoptions, "/W0")
         else
           if values['warnings'] == 'on' then
             table_insert(jln_buildoptions, "/W4")
-            table_insert(jln_buildoptions, "/wd4514")
             table_insert(jln_buildoptions, "/wd4711")
+            table_insert(jln_buildoptions, "/w14265")
+            table_insert(jln_buildoptions, "/w14296")
+            table_insert(jln_buildoptions, "/w14444")
+            table_insert(jln_buildoptions, "/w14545")
+            table_insert(jln_buildoptions, "/w14546")
+            table_insert(jln_buildoptions, "/w14547")
+            table_insert(jln_buildoptions, "/w14548")
+            table_insert(jln_buildoptions, "/w14549")
+            table_insert(jln_buildoptions, "/w14555")
+            table_insert(jln_buildoptions, "/w14557")
+            table_insert(jln_buildoptions, "/w14608")
+            table_insert(jln_buildoptions, "/w14692")
+            table_insert(jln_buildoptions, "/w14822")
+            table_insert(jln_buildoptions, "/w14905")
+            table_insert(jln_buildoptions, "/w14906")
+            table_insert(jln_buildoptions, "/w14917")
+            table_insert(jln_buildoptions, "/w14928")
+            table_insert(jln_buildoptions, "/w14596")
+            if version >= 1500003 then
+              if values['msvc_isystem'] == 'default' then
+                table_insert(jln_buildoptions, "/w14263")
+                table_insert(jln_buildoptions, "/w14264")
+              end
+              table_insert(jln_buildoptions, "/w15038")
+              if version >= 1600010 then
+                table_insert(jln_buildoptions, "/w15233")
+                table_insert(jln_buildoptions, "/w15240")
+                if version >= 1700004 then
+                  table_insert(jln_buildoptions, "/w15263")
+                  if values['msvc_isystem'] == 'default' then
+                    table_insert(jln_buildoptions, "/w15262")
+                  end
+                  if version >= 1900000 then
+                    table_insert(jln_buildoptions, "/w14426")
+                    if values['msvc_isystem'] == 'default' then
+                      table_insert(jln_buildoptions, "/w14654")
+                    end
+                    table_insert(jln_buildoptions, "/w15031")
+                    table_insert(jln_buildoptions, "/w15032")
+                    if version >= 1900015 then
+                      table_insert(jln_buildoptions, "/w14643")
+                      if version >= 1900022 then
+                        table_insert(jln_buildoptions, "/w14855")
+                        if version >= 1900025 then
+                          if values['msvc_isystem'] == 'default' then
+                            table_insert(jln_buildoptions, "/w15204")
+                          end
+                          if version >= 1900029 then
+                            table_insert(jln_buildoptions, "/w15233")
+                            if version >= 1900030 then
+                              if values['msvc_isystem'] == 'default' then
+                                table_insert(jln_buildoptions, "/w15246")
+                              end
+                              table_insert(jln_buildoptions, "/w15249")
+                              if version >= 1900032 then
+                                table_insert(jln_buildoptions, "/w15258")
+                                if version >= 1900037 then
+                                  table_insert(jln_buildoptions, "/w15267")
+                                end
+                              end
+                            end
+                          end
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
           else
             table_insert(jln_buildoptions, "/Wall")
+            table_insert(jln_buildoptions, "/wd4342")
+            table_insert(jln_buildoptions, "/wd4350")
             table_insert(jln_buildoptions, "/wd4355")
+            table_insert(jln_buildoptions, "/wd4370")
+            table_insert(jln_buildoptions, "/wd4371")
             table_insert(jln_buildoptions, "/wd4514")
-            table_insert(jln_buildoptions, "/wd4548")
             table_insert(jln_buildoptions, "/wd4571")
             table_insert(jln_buildoptions, "/wd4577")
-            table_insert(jln_buildoptions, "/wd4625")
-            table_insert(jln_buildoptions, "/wd4626")
-            table_insert(jln_buildoptions, "/wd4668")
+            table_insert(jln_buildoptions, "/wd4582")
+            table_insert(jln_buildoptions, "/wd4583")
+            table_insert(jln_buildoptions, "/wd4587")
+            table_insert(jln_buildoptions, "/wd4588")
+            table_insert(jln_buildoptions, "/wd4686")
             table_insert(jln_buildoptions, "/wd4710")
             table_insert(jln_buildoptions, "/wd4711")
-            if version < 1900021 then
-              table_insert(jln_buildoptions, "/wd4774")
-            end
             table_insert(jln_buildoptions, "/wd4820")
+            table_insert(jln_buildoptions, "/wd4866")
+            table_insert(jln_buildoptions, "/wd4868")
+            table_insert(jln_buildoptions, "/wd5024")
+            table_insert(jln_buildoptions, "/wd5025")
             table_insert(jln_buildoptions, "/wd5026")
             table_insert(jln_buildoptions, "/wd5027")
-            table_insert(jln_buildoptions, "/wd5039")
-            table_insert(jln_buildoptions, "/wd4464")
-            table_insert(jln_buildoptions, "/wd4868")
-            table_insert(jln_buildoptions, "/wd5045")
-            if values['warnings'] == 'strict' then
-              table_insert(jln_buildoptions, "/wd4061")
-              table_insert(jln_buildoptions, "/wd4266")
-              table_insert(jln_buildoptions, "/wd4583")
-              table_insert(jln_buildoptions, "/wd4619")
+            table_insert(jln_buildoptions, "/wd5243")
+            if values['msvc_isystem'] == 'default' then
+              table_insert(jln_buildoptions, "/wd4464")
+              table_insert(jln_buildoptions, "/wd4548")
               table_insert(jln_buildoptions, "/wd4623")
+              table_insert(jln_buildoptions, "/wd4625")
+              table_insert(jln_buildoptions, "/wd4626")
+              table_insert(jln_buildoptions, "/wd4668")
               table_insert(jln_buildoptions, "/wd5204")
+              if version >= 1500000 then
+                table_insert(jln_buildoptions, "/wd4582")
+                table_insert(jln_buildoptions, "/wd4583")
+                if version >= 1700004 then
+                  table_insert(jln_buildoptions, "/wd5262")
+                  if version >= 1900000 then
+                    table_insert(jln_buildoptions, "/wd4774")
+                  end
+                end
+              end
+            end
+            if version >= 1600000 then
+              table_insert(jln_buildoptions, "/wd4800")
+              if version >= 1900039 then
+                table_insert(jln_buildoptions, "/wd4975")
+                if version >= 1900040 then
+                  table_insert(jln_buildoptions, "/wd4860")
+                  table_insert(jln_buildoptions, "/wd4861")
+                  table_insert(jln_buildoptions, "/wd5273")
+                  table_insert(jln_buildoptions, "/wd5274")
+                  if version >= 1900041 then
+                    table_insert(jln_buildoptions, "/wd5306")
+                    if version >= 1900043 then
+                      table_insert(jln_buildoptions, "/wd5277")
+                    end
+                  end
+                end
+              end
             end
           end
         end
       end
     end
     if values['conversion_warnings'] ~= 'default' then
-      if values['conversion_warnings'] == 'on' then
+      if ( values['conversion_warnings'] == 'off' or values['conversion_warnings'] == 'sign' ) then
+        table_insert(jln_buildoptions, "/wd4244")
+        table_insert(jln_buildoptions, "/wd4245")
+        table_insert(jln_buildoptions, "/wd4365")
+      else
         table_insert(jln_buildoptions, "/w14244")
         table_insert(jln_buildoptions, "/w14245")
-        table_insert(jln_buildoptions, "/w14388")
         table_insert(jln_buildoptions, "/w14365")
+      end
+      if ( values['conversion_warnings'] == 'on' or values['conversion_warnings'] == 'all' or values['conversion_warnings'] == 'sign' ) then
+        table_insert(jln_buildoptions, "/w14018")
+        table_insert(jln_buildoptions, "/w14388")
+        table_insert(jln_buildoptions, "/w14289")
       else
-        if values['conversion_warnings'] == 'conversion' then
-          table_insert(jln_buildoptions, "/w14244")
-          table_insert(jln_buildoptions, "/w14365")
+        table_insert(jln_buildoptions, "/wd4018")
+        table_insert(jln_buildoptions, "/wd4388")
+        table_insert(jln_buildoptions, "/wd4289")
+      end
+    end
+    if values['switch_warnings'] ~= 'default' then
+      if ( values['switch_warnings'] == 'on' or values['switch_warnings'] == 'mandatory_default' ) then
+        table_insert(jln_buildoptions, "/wd4061")
+        table_insert(jln_buildoptions, "/w14062")
+      else
+        if ( values['switch_warnings'] == 'exhaustive_enum' or values['switch_warnings'] == 'exhaustive_enum_and_mandatory_default' ) then
+          table_insert(jln_buildoptions, "/w14061")
+          table_insert(jln_buildoptions, "/w14062")
         else
-          if values['conversion_warnings'] == 'sign' then
-            table_insert(jln_buildoptions, "/w14388")
-            table_insert(jln_buildoptions, "/w14245")
-          else
-            table_insert(jln_buildoptions, "/wd4244")
-            table_insert(jln_buildoptions, "/wd4365")
-            table_insert(jln_buildoptions, "/wd4388")
-            table_insert(jln_buildoptions, "/wd4245")
-          end
+          table_insert(jln_buildoptions, "/wd4061")
+          table_insert(jln_buildoptions, "/wd4062")
         end
       end
     end
     if values['shadow_warnings'] ~= 'default' then
-      if values['shadow_warnings'] == 'off' then
-        table_insert(jln_buildoptions, "/wd4456")
-        table_insert(jln_buildoptions, "/wd4459")
-      else
-        if ( values['shadow_warnings'] == 'on' or values['shadow_warnings'] == 'all' ) then
-          table_insert(jln_buildoptions, "/w4456")
-          table_insert(jln_buildoptions, "/w4459")
+      if version >= 1900000 then
+        if values['shadow_warnings'] == 'off' then
+          table_insert(jln_buildoptions, "/wd4456")
+          table_insert(jln_buildoptions, "/wd4459")
         else
-          if values['shadow_warnings'] == 'local' then
-            table_insert(jln_buildoptions, "/w4456")
-            table_insert(jln_buildoptions, "/wd4459")
+          if ( values['shadow_warnings'] == 'on' or values['shadow_warnings'] == 'all' ) then
+            table_insert(jln_buildoptions, "/w14456")
+            table_insert(jln_buildoptions, "/w14459")
+          else
+            if values['shadow_warnings'] == 'local' then
+              table_insert(jln_buildoptions, "/w4456")
+              table_insert(jln_buildoptions, "/wd4459")
+            end
           end
         end
+      end
+    end
+    if values['suggestions'] ~= 'default' then
+      if values['suggestions'] == 'off' then
+        table_insert(jln_buildoptions, "/wd5239")
+      else
+        table_insert(jln_buildoptions, "/w15239")
       end
     end
     if values['warnings_as_error'] ~= 'default' then
@@ -2219,35 +2378,38 @@ function jln_getoptions(values, disable_others, print_compiler)
           if values['warnings'] == 'off' then
             table_insert(jln_buildoptions, "-w")
           else
-            table_insert(jln_buildoptions, "-Wall")
-            table_insert(jln_buildoptions, "-Warray-bounds")
-            table_insert(jln_buildoptions, "-Wcast-qual")
-            table_insert(jln_buildoptions, "-Wchar-subscripts")
-            table_insert(jln_buildoptions, "-Wdisabled-optimization")
-            table_insert(jln_buildoptions, "-Wenum-compare")
-            table_insert(jln_buildoptions, "-Wextra")
-            table_insert(jln_buildoptions, "-Wfloat-equal")
-            table_insert(jln_buildoptions, "-Wformat-security")
-            table_insert(jln_buildoptions, "-Wformat=2")
-            table_insert(jln_buildoptions, "-Winit-self")
-            table_insert(jln_buildoptions, "-Winvalid-pch")
-            table_insert(jln_buildoptions, "-Wmaybe-uninitialized")
-            table_insert(jln_buildoptions, "-Wmissing-include-dirs")
-            table_insert(jln_buildoptions, "-Wnarrowing")
-            table_insert(jln_buildoptions, "-Wnonnull")
-            table_insert(jln_buildoptions, "-Wparentheses")
-            table_insert(jln_buildoptions, "-Wpointer-sign")
-            table_insert(jln_buildoptions, "-Wreorder")
-            table_insert(jln_buildoptions, "-Wsequence-point")
-            table_insert(jln_buildoptions, "-Wtrigraphs")
-            table_insert(jln_buildoptions, "-Wundef")
-            table_insert(jln_buildoptions, "-Wunused-function")
-            table_insert(jln_buildoptions, "-Wunused-but-set-variable")
-            table_insert(jln_buildoptions, "-Wunused-variable")
-            table_insert(jln_buildoptions, "-Wpointer-arith")
-            table_insert(jln_buildoptions, "-Wdeprecated")
-            table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
-            table_insert(jln_buildoptions, "-Woverloaded-virtual")
+            if values['warnings'] == 'essential' then
+              table_insert(jln_buildoptions, "-Wall")
+            else
+              table_insert(jln_buildoptions, "-Wall")
+              table_insert(jln_buildoptions, "-Warray-bounds")
+              table_insert(jln_buildoptions, "-Wcast-qual")
+              table_insert(jln_buildoptions, "-Wchar-subscripts")
+              table_insert(jln_buildoptions, "-Wdisabled-optimization")
+              table_insert(jln_buildoptions, "-Wenum-compare")
+              table_insert(jln_buildoptions, "-Wextra")
+              table_insert(jln_buildoptions, "-Wfloat-equal")
+              table_insert(jln_buildoptions, "-Wformat-security")
+              table_insert(jln_buildoptions, "-Wformat=2")
+              table_insert(jln_buildoptions, "-Winit-self")
+              table_insert(jln_buildoptions, "-Winvalid-pch")
+              table_insert(jln_buildoptions, "-Wmaybe-uninitialized")
+              table_insert(jln_buildoptions, "-Wmissing-include-dirs")
+              table_insert(jln_buildoptions, "-Wnarrowing")
+              table_insert(jln_buildoptions, "-Wnonnull")
+              table_insert(jln_buildoptions, "-Wpointer-sign")
+              table_insert(jln_buildoptions, "-Wreorder")
+              table_insert(jln_buildoptions, "-Wsequence-point")
+              table_insert(jln_buildoptions, "-Wtrigraphs")
+              table_insert(jln_buildoptions, "-Wundef")
+              table_insert(jln_buildoptions, "-Wunused-function")
+              table_insert(jln_buildoptions, "-Wunused-but-set-variable")
+              table_insert(jln_buildoptions, "-Wunused-variable")
+              table_insert(jln_buildoptions, "-Wpointer-arith")
+              table_insert(jln_buildoptions, "-Wdeprecated")
+              table_insert(jln_buildoptions, "-Wnon-virtual-dtor")
+              table_insert(jln_buildoptions, "-Woverloaded-virtual")
+            end
           end
         end
         if values['switch_warnings'] ~= 'default' then
