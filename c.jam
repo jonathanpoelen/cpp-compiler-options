@@ -31,9 +31,9 @@
 #  ```ini
 #  # Warning:
 #
-#  warnings = on default off strict very_strict
+#  warnings = on default off essential extensive
 #  warnings_as_error = default off on basic
-#  conversion_warnings = on default off sign conversion
+#  conversion_warnings = on default off sign float conversion all
 #  covered_switch_default_warnings = on default off
 #  fix_compiler_error = on default off
 #  msvc_crt_secure_no_warnings = on default off
@@ -99,14 +99,12 @@
 #  diagnostics_show_template_tree = default off on
 #  elide_type = default off on
 #  msvc_diagnostics_format = caret default classic column
-#  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
+#  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
 #  msvc_isystem_with_template_from_non_external = default off on
 #  pie = default off on static fpic fPIC fpie fPIE
 #  windows_bigobj = on default
 #  ```
 #  <!-- ./compiler-options.lua -->
-#
-#  The value `default` does nothing.
 #
 #  If not specified:
 #
@@ -145,7 +143,7 @@
 #  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
 #  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
 #  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
-#  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
+#  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
 #
 #  
 
@@ -176,7 +174,12 @@ feature <jln-color> : _ default auto never always : propagated ;
 # Insert extra runtime security checks to detect attempts to compromise your code.
 feature <jln-control-flow> : _ default off on branch return allow-bugs : incidental ;
 # Warn for implicit conversions that may alter a value.
-feature <jln-conversion-warnings> : _ on default off sign conversion : propagated ;
+#  - on: Combine conversion and sign value
+#  - sign: Warn for implicit conversions that may change the sign (lke `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.
+#  - float: Warn for implicit conversions that reduce the precision of a real value.
+#  - conversion: Warn for implicit conversions that may alter a value.
+#  - all: Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.
+feature <jln-conversion-warnings> : _ on default off sign float conversion all : propagated ;
 feature <jln-coverage> : _ default off on : incidental ;
 # Warning for default label in switch which covers all enumeration values.
 feature <jln-covered-switch-default-warnings> : _ on default off : propagated ;
@@ -207,7 +210,7 @@ feature <jln-msvc-crt-secure-no-warnings> : _ on default off : propagated ;
 #  - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.
 feature <jln-msvc-diagnostics-format> : _ caret default classic column : propagated ;
 # Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).
-feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath : propagated ;
+feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath assumed : propagated ;
 # Enable NDEBUG macro (disable assert macro).
 feature <jln-ndebug> : _ with-optimization-1-or-above default off on : incidental ;
 # Optimization level.
@@ -249,7 +252,10 @@ feature <jln-unsafe-buffer-usage-warnings> : _ default on off : propagated ;
 #  - zero: zero Initialize automatic variables with zeroes.
 feature <jln-var-init> : _ default uninitialized pattern zero : incidental ;
 # Warning level.
-feature <jln-warnings> : _ on default off strict very-strict : propagated ;
+#  - on: Activates essential warnings and extras.
+#  - essential: Activates essential warnings, typically -Wall -Wextra or /W4).
+#  - extensive: Activates essential warnings, extras and some that may raise false positives
+feature <jln-warnings> : _ on default off essential extensive : propagated ;
 # Make all or some warnings into errors.
 feature <jln-warnings-as-error> : _ default off on basic : incidental ;
 # Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.
@@ -286,7 +292,7 @@ feature <jln-analyzer-too-complex-warning-default> : default off on : incidental
 feature <jln-analyzer-verbosity-default> : default 0 1 2 3 : incidental ;
 feature <jln-color-default> : default auto never always : incidental ;
 feature <jln-control-flow-default> : default off on branch return allow-bugs : incidental ;
-feature <jln-conversion-warnings-default> : on default off sign conversion : incidental ;
+feature <jln-conversion-warnings-default> : on default off sign float conversion all : incidental ;
 feature <jln-coverage-default> : default off on : incidental ;
 feature <jln-covered-switch-default-warnings-default> : on default off : incidental ;
 feature <jln-cpu-default> : default generic native : incidental ;
@@ -302,7 +308,7 @@ feature <jln-lto-default> : default off on normal fat thin : incidental ;
 feature <jln-msvc-conformance-default> : all default all-without-throwing-new : incidental ;
 feature <jln-msvc-crt-secure-no-warnings-default> : on default off : incidental ;
 feature <jln-msvc-diagnostics-format-default> : caret default classic column : incidental ;
-feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath : incidental ;
+feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath assumed : incidental ;
 feature <jln-ndebug-default> : with-optimization-1-or-above default off on : incidental ;
 feature <jln-optimization-default> : default 0 g 1 2 3 fast size z : incidental ;
 feature <jln-other-sanitizers-default> : default off thread pointer memory : incidental ;
@@ -318,7 +324,7 @@ feature <jln-suggestions-default> : default off on : incidental ;
 feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
 feature <jln-unsafe-buffer-usage-warnings-default> : default on off : incidental ;
 feature <jln-var-init-default> : default uninitialized pattern zero : incidental ;
-feature <jln-warnings-default> : on default off strict very-strict : incidental ;
+feature <jln-warnings-default> : on default off essential extensive : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
 feature <jln-whole-program-default> : default off on strip-all : incidental ;
 feature <jln-windows-bigobj-default> : on default : incidental ;
@@ -349,7 +355,7 @@ constant jln_c_env_analyzer_too_complex_warning : [ jln_c-get-env jln_analyzer_t
 constant jln_c_env_analyzer_verbosity : [ jln_c-get-env jln_analyzer_verbosity : default 0 1 2 3 ] ;
 constant jln_c_env_color : [ jln_c-get-env jln_color : default auto never always ] ;
 constant jln_c_env_control_flow : [ jln_c-get-env jln_control_flow : default off on branch return allow-bugs ] ;
-constant jln_c_env_conversion_warnings : [ jln_c-get-env jln_conversion_warnings : on default off sign conversion ] ;
+constant jln_c_env_conversion_warnings : [ jln_c-get-env jln_conversion_warnings : on default off sign float conversion all ] ;
 constant jln_c_env_coverage : [ jln_c-get-env jln_coverage : default off on ] ;
 constant jln_c_env_covered_switch_default_warnings : [ jln_c-get-env jln_covered_switch_default_warnings : on default off ] ;
 constant jln_c_env_cpu : [ jln_c-get-env jln_cpu : default generic native ] ;
@@ -365,7 +371,7 @@ constant jln_c_env_lto : [ jln_c-get-env jln_lto : default off on normal fat thi
 constant jln_c_env_msvc_conformance : [ jln_c-get-env jln_msvc_conformance : all default all-without-throwing-new ] ;
 constant jln_c_env_msvc_crt_secure_no_warnings : [ jln_c-get-env jln_msvc_crt_secure_no_warnings : on default off ] ;
 constant jln_c_env_msvc_diagnostics_format : [ jln_c-get-env jln_msvc_diagnostics_format : caret default classic column ] ;
-constant jln_c_env_msvc_isystem : [ jln_c-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath ] ;
+constant jln_c_env_msvc_isystem : [ jln_c-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath assumed ] ;
 constant jln_c_env_ndebug : [ jln_c-get-env jln_ndebug : with-optimization-1-or-above default off on ] ;
 constant jln_c_env_optimization : [ jln_c-get-env jln_optimization : default 0 g 1 2 3 fast size z ] ;
 constant jln_c_env_other_sanitizers : [ jln_c-get-env jln_other_sanitizers : default off thread pointer memory ] ;
@@ -381,7 +387,7 @@ constant jln_c_env_suggestions : [ jln_c-get-env jln_suggestions : default off o
 constant jln_c_env_switch_warnings : [ jln_c-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
 constant jln_c_env_unsafe_buffer_usage_warnings : [ jln_c-get-env jln_unsafe_buffer_usage_warnings : default on off ] ;
 constant jln_c_env_var_init : [ jln_c-get-env jln_var_init : default uninitialized pattern zero ] ;
-constant jln_c_env_warnings : [ jln_c-get-env jln_warnings : on default off strict very-strict ] ;
+constant jln_c_env_warnings : [ jln_c-get-env jln_warnings : on default off essential extensive ] ;
 constant jln_c_env_warnings_as_error : [ jln_c-get-env jln_warnings_as_error : default off on basic ] ;
 constant jln_c_env_whole_program : [ jln_c-get-env jln_whole_program : default off on strip-all ] ;
 constant jln_c_env_windows_bigobj : [ jln_c-get-env jln_windows_bigobj : on default ] ;
@@ -686,77 +692,98 @@ rule jln_c_flags ( properties * )
       }
       else
       {
-        if $(JLN_NORMALIZED_C_COMP) = "gcc"
+        if $(x_warnings) = "essential"
         {
           flags +=
             <cflags>"-Wall"
             <cflags>"-Wextra"
-            <cflags>"-Wcast-align"
-            <cflags>"-Wcast-qual"
-            <cflags>"-Wdisabled-optimization"
-            <cflags>"-Wfloat-equal"
-            <cflags>"-Wformat-security"
-            <cflags>"-Wformat=2"
-            <cflags>"-Winvalid-pch"
-            <cflags>"-Wmissing-include-dirs"
-            <cflags>"-Wpacked"
-            <cflags>"-Wredundant-decls"
-            <cflags>"-Wundef"
-            <cflags>"-Wunused-macros"
-            <cflags>"-Wpointer-arith"
-            <cflags>"-Wbad-function-cast"
-            <cflags>"-Winit-self"
-            <cflags>"-Wjump-misses-init"
-            <cflags>"-Wnested-externs"
-            <cflags>"-Wold-style-definition"
-            <cflags>"-Wstrict-prototypes"
             <cflags>"-Wwrite-strings"
           ;
-          if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400007 ]
+        }
+        else
+        {
+          if $(JLN_NORMALIZED_C_COMP) = "gcc"
           {
             flags +=
-              <cflags>"-Wsuggest-attribute=noreturn"
-              <cflags>"-Wlogical-op"
-              <cflags>"-Wvector-operation-performance"
-              <cflags>"-Wdouble-promotion"
-              <cflags>"-Wtrampolines"
+              <cflags>"-Wall"
+              <cflags>"-Wextra"
             ;
-            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400008 ]
+            if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ]
             {
-              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400009 ]
+              flags +=
+                <cflags>"-Wcast-align"
+              ;
+            }
+            flags +=
+              <cflags>"-Wcast-qual"
+              <cflags>"-Wdisabled-optimization"
+              <cflags>"-Wfloat-equal"
+              <cflags>"-Wformat-security"
+              <cflags>"-Wformat=2"
+              <cflags>"-Winvalid-pch"
+              <cflags>"-Wmissing-declarations"
+              <cflags>"-Wmissing-include-dirs"
+              <cflags>"-Wpacked"
+              <cflags>"-Wredundant-decls"
+              <cflags>"-Wundef"
+              <cflags>"-Wunused-macros"
+              <cflags>"-Wpointer-arith"
+              <cflags>"-Wbad-function-cast"
+              <cflags>"-Winit-self"
+              <cflags>"-Wjump-misses-init"
+              <cflags>"-Wnested-externs"
+              <cflags>"-Wold-style-definition"
+              <cflags>"-Wstrict-prototypes"
+              <cflags>"-Wwrite-strings"
+            ;
+            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400007 ]
+            {
+              flags +=
+                <cflags>"-Wsuggest-attribute=noreturn"
+                <cflags>"-Wlogical-op"
+                <cflags>"-Wvector-operation-performance"
+                <cflags>"-Wdouble-promotion"
+                <cflags>"-Wtrampolines"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400008 ]
               {
-                flags +=
-                  <cflags>"-Wfloat-conversion"
-                ;
-                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 500001 ]
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400009 ]
                 {
-                  flags +=
-                    <cflags>"-Wformat-signedness"
-                    <cflags>"-Warray-bounds=2"
-                  ;
-                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 600001 ]
+                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 500001 ]
                   {
                     flags +=
-                      <cflags>"-Wduplicated-cond"
-                      <cflags>"-Wnull-dereference"
+                      <cflags>"-Wformat-signedness"
+                      <cflags>"-Warray-bounds=2"
                     ;
-                    if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 700000 ]
+                    if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 600001 ]
                     {
-                      if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 700001 ]
+                      flags +=
+                        <cflags>"-Wduplicated-cond"
+                        <cflags>"-Wnull-dereference"
+                      ;
+                      if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 700000 ]
                       {
-                        flags +=
-                          <cflags>"-Walloc-zero"
-                          <cflags>"-Walloca"
-                          <cflags>"-Wformat-overflow=2"
-                          <cflags>"-Wduplicated-branches"
-                        ;
-                        if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ]
+                        if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 700001 ]
                         {
-                          if ( $(x_warnings) = "strict" || $(x_warnings) = "very-strict" )
+                          flags +=
+                            <cflags>"-Walloc-zero"
+                            <cflags>"-Walloca"
+                            <cflags>"-Wformat-overflow=2"
+                            <cflags>"-Wduplicated-branches"
+                          ;
+                          if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ]
                           {
                             flags +=
                               <cflags>"-Wcast-align=strict"
+                              <cflags>"-Wformat-truncation=2"
+                              <cflags>"-Wshift-overflow=2"
                             ;
+                            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1400000 ]
+                            {
+                              flags +=
+                                <cflags>"-Walloc-size"
+                              ;
+                            }
                           }
                         }
                       }
@@ -765,47 +792,81 @@ rule jln_c_flags ( properties * )
                 }
               }
             }
-          }
-        }
-        else
-        {
-          flags +=
-            <cflags>"-Weverything"
-            <cflags>"-Wno-documentation"
-            <cflags>"-Wno-documentation-unknown-command"
-            <cflags>"-Wno-newline-eof"
-            <cflags>"-Wno-padded"
-            <cflags>"-Wno-global-constructors"
-          ;
-          if  ! ( ( $(x_switch_warnings) = "off" || $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" ) )
-          {
-            flags +=
-              <cflags>"-Wno-switch-enum"
-            ;
-          }
-          if $(x_covered_switch_default_warnings) = "default"
-          {
-            flags +=
-              <cflags>"-Wno-covered-switch-default"
-            ;
-          }
-          if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 300009 ]
-          {
-            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 500000 ]
+            if $(x_warnings) = "extensive"
             {
-              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 900000 ]
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 800000 ]
               {
-                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1000000 ]
+                flags +=
+                  <cflags>"-Wstringop-overflow=4"
+                ;
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1200000 ]
                 {
-                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1100000 ]
+                  flags +=
+                    <cflags>"-Wuse-after-free=3"
+                  ;
+                }
+              }
+            }
+          }
+          else
+          {
+            flags +=
+              <cflags>"-Weverything"
+              <cflags>"-Wno-documentation"
+              <cflags>"-Wno-documentation-unknown-command"
+              <cflags>"-Wno-newline-eof"
+              <cflags>"-Wno-padded"
+              <cflags>"-Wno-global-constructors"
+            ;
+            if  ! ( ( $(x_switch_warnings) = "off" || $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" ) )
+            {
+              flags +=
+                <cflags>"-Wno-switch-enum"
+              ;
+            }
+            if $(x_covered_switch_default_warnings) = "default"
+            {
+              flags +=
+                <cflags>"-Wno-covered-switch-default"
+              ;
+            }
+            if $(x_conversion_warnings) != "default"
+            {
+              if $(x_conversion_warnings) = "conversion"
+              {
+                flags +=
+                  <cflags>"-Wno-sign-compare"
+                  <cflags>"-Wno-sign-conversion"
+                ;
+              }
+              else
+              {
+                if ( $(x_conversion_warnings) = "float" || $(x_conversion_warnings) = "sign" )
+                {
+                  flags +=
+                    <cflags>"-Wno-conversion"
+                  ;
+                }
+              }
+            }
+            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 300009 ]
+            {
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 500000 ]
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 900000 ]
+                {
+                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1000000 ]
                   {
-                    if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600000 ]
+                    if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1100000 ]
                     {
-                      if $(x_unsafe_buffer_usage_warnings) = "default"
+                      if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600000 ]
                       {
-                        flags +=
-                          <cflags>"-Wno-unsafe-buffer-usage"
-                        ;
+                        if $(x_unsafe_buffer_usage_warnings) = "default"
+                        {
+                          flags +=
+                            <cflags>"-Wno-unsafe-buffer-usage"
+                          ;
+                        }
                       }
                     }
                   }
@@ -971,15 +1032,24 @@ rule jln_c_flags ( properties * )
       {
         if ( $(JLN_NORMALIZED_C_IS_CLANG_LIKE) && ! [ numbers.less 1500000 $(JLN_NORMALIZED_C_COMP_VERSION) ] )
         {
-          flags +=
-            <cflags>"-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang"
-          ;
+          if $(x_var_init) = "zero"
+          {
+            flags +=
+              <cflags>"-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang"
+            ;
+          }
         }
         if $(x_var_init) = "pattern"
         {
           flags +=
             <cflags>"-ftrivial-auto-var-init=pattern"
           ;
+          if $(JLN_NORMALIZED_C_COMP) = "gcc"
+          {
+            flags +=
+              <cflags>"-Wtrivial-auto-var-init"
+            ;
+          }
         }
         else
         {
@@ -988,6 +1058,12 @@ rule jln_c_flags ( properties * )
             flags +=
               <cflags>"-ftrivial-auto-var-init=zero"
             ;
+            if $(JLN_NORMALIZED_C_COMP) = "gcc"
+            {
+              flags +=
+                <cflags>"-Wtrivial-auto-var-init"
+              ;
+            }
           }
           else
           {
@@ -1538,20 +1614,56 @@ rule jln_c_flags ( properties * )
         }
         else
         {
-          if $(x_conversion_warnings) = "sign"
+          if $(x_conversion_warnings) = "float"
           {
-            flags +=
-              <cflags>"-Wsign-compare"
-              <cflags>"-Wsign-conversion"
-            ;
+            if $(JLN_NORMALIZED_C_COMP) = "gcc"
+            {
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 400009 ]
+              {
+                flags +=
+                  <cflags>"-Wfloat-conversion"
+                ;
+              }
+            }
+            else
+            {
+              flags +=
+                <cflags>"-Wfloat-conversion"
+              ;
+            }
           }
           else
           {
-            flags +=
-              <cflags>"-Wno-conversion"
-              <cflags>"-Wno-sign-compare"
-              <cflags>"-Wno-sign-conversion"
-            ;
+            if $(x_conversion_warnings) = "sign"
+            {
+              flags +=
+                <cflags>"-Wsign-compare"
+                <cflags>"-Wsign-conversion"
+              ;
+            }
+            else
+            {
+              if $(x_conversion_warnings) = "all"
+              {
+                flags +=
+                  <cflags>"-Wconversion"
+                ;
+                if $(JLN_NORMALIZED_C_COMP) = "gcc"
+                {
+                  flags +=
+                    <cflags>"-Warith-conversion"
+                  ;
+                }
+              }
+              else
+              {
+                flags +=
+                  <cflags>"-Wno-conversion"
+                  <cflags>"-Wno-sign-compare"
+                  <cflags>"-Wno-sign-conversion"
+                ;
+              }
+            }
           }
         }
       }
@@ -2810,6 +2922,39 @@ rule jln_c_flags ( properties * )
           flags +=
             <cflags>"/permissive-"
           ;
+          if $(JLN_NORMALIZED_C_COMP) = "msvc"
+          {
+            if $(x_pedantic) = "as-error"
+            {
+              flags +=
+                <cflags>"/we4608"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900031 ]
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900038 ]
+                {
+                  flags +=
+                    <cflags>"/we5110"
+                  ;
+                }
+              }
+            }
+            else
+            {
+              flags +=
+                <cflags>"/w14608"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900031 ]
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900038 ]
+                {
+                  flags +=
+                    <cflags>"/w15110"
+                  ;
+                }
+              }
+            }
+          }
         }
       }
       if $(x_stack_protector) != "default"
@@ -2974,27 +3119,30 @@ rule jln_c_flags ( properties * )
       }
       else
       {
-        if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600010 ]
+        if $(x_msvc_isystem) != "assumed"
         {
+          if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600010 ]
+          {
+            flags +=
+              <cflags>"/experimental:external"
+            ;
+          }
           flags +=
-            <cflags>"/experimental:external"
+            <cflags>"/external:W0"
           ;
-        }
-        flags +=
-          <cflags>"/external:W0"
-        ;
-        if $(x_msvc_isystem) = "anglebrackets"
-        {
-          flags +=
-            <cflags>"/external:anglebrackets"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cflags>"/external:env:INCLUDE"
-            <cflags>"/external:env:CAExcludePath"
-          ;
+          if $(x_msvc_isystem) = "anglebrackets"
+          {
+            flags +=
+              <cflags>"/external:anglebrackets"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cflags>"/external:env:INCLUDE"
+              <cflags>"/external:env:CAExcludePath"
+            ;
+          }
         }
       }
       if $(x_msvc_isystem_with_template_from_non_external) != "default"
@@ -3012,145 +3160,173 @@ rule jln_c_flags ( properties * )
           ;
         }
       }
-      if $(x_warnings) != "default"
+    }
+    if $(x_warnings) != "default"
+    {
+      if $(x_warnings) = "off"
       {
-        if $(x_warnings) = "off"
+        flags +=
+          <cflags>"/W0"
+        ;
+      }
+      else
+      {
+        if $(x_warnings) = "essential"
         {
           flags +=
-            <cflags>"/W0"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cflags>"/wd4710"
+            <cflags>"/W4"
             <cflags>"/wd4711"
           ;
-          if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900021 ]
-          {
-            flags +=
-              <cflags>"/wd4774"
-            ;
-          }
+        }
+        else
+        {
           if $(x_warnings) = "on"
           {
             flags +=
               <cflags>"/W4"
-              <cflags>"/wd4514"
+              <cflags>"/wd4711"
+              <cflags>"/w14296"
+              <cflags>"/w14444"
+              <cflags>"/w14545"
+              <cflags>"/w14546"
+              <cflags>"/w14547"
+              <cflags>"/w14548"
+              <cflags>"/w14549"
+              <cflags>"/w14555"
+              <cflags>"/w14557"
+              <cflags>"/w14905"
+              <cflags>"/w14906"
+              <cflags>"/w14917"
             ;
-          }
-          else
-          {
-            flags +=
-              <cflags>"/Wall"
-              <cflags>"/wd4514"
-              <cflags>"/wd4571"
-              <cflags>"/wd4355"
-              <cflags>"/wd4548"
-              <cflags>"/wd4577"
-              <cflags>"/wd4820"
-              <cflags>"/wd5039"
-              <cflags>"/wd4464"
-              <cflags>"/wd4868"
-              <cflags>"/wd5045"
-            ;
-            if $(x_warnings) = "strict"
+            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1500003 ]
             {
-              flags +=
-                <cflags>"/wd4583"
-                <cflags>"/wd4619"
-              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600010 ]
+              {
+                flags +=
+                  <cflags>"/w15240"
+                ;
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1700004 ]
+                {
+                  if $(x_msvc_isystem) = "default"
+                  {
+                    flags +=
+                      <cflags>"/w15262"
+                    ;
+                  }
+                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900000 ]
+                  {
+                    flags +=
+                      <cflags>"/w14426"
+                    ;
+                    if $(x_msvc_isystem) = "default"
+                    {
+                      flags +=
+                        <cflags>"/w14654"
+                      ;
+                    }
+                    flags +=
+                      <cflags>"/w15031"
+                      <cflags>"/w15032"
+                    ;
+                    if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900015 ]
+                    {
+                      if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900022 ]
+                      {
+                        if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900025 ]
+                        {
+                          if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900029 ]
+                          {
+                            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900030 ]
+                            {
+                              flags +=
+                                <cflags>"/w15249"
+                              ;
+                              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900032 ]
+                              {
+                                flags +=
+                                  <cflags>"/w15258"
+                                ;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
-        }
-      }
-      if $(x_switch_warnings) != "default"
-      {
-        if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "mandatory-default" )
-        {
-          flags +=
-            <cflags>"/w14062"
-          ;
-        }
-        else
-        {
-          if ( $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
-          {
-            flags +=
-              <cflags>"/w14061"
-              <cflags>"/w14062"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cflags>"/wd4061"
-              <cflags>"/wd4062"
-            ;
-          }
-        }
-      }
-    }
-    else
-    {
-      if $(x_warnings) != "default"
-      {
-        if $(x_warnings) = "off"
-        {
-          flags +=
-            <cflags>"/W0"
-          ;
-        }
-        else
-        {
-          if $(x_warnings) = "on"
-          {
-            flags +=
-              <cflags>"/W4"
-              <cflags>"/wd4514"
-              <cflags>"/wd4711"
-            ;
-          }
           else
           {
             flags +=
               <cflags>"/Wall"
-              <cflags>"/wd4355"
+              <cflags>"/wd4370"
+              <cflags>"/wd4371"
               <cflags>"/wd4514"
-              <cflags>"/wd4548"
               <cflags>"/wd4571"
               <cflags>"/wd4577"
-              <cflags>"/wd4625"
-              <cflags>"/wd4626"
-              <cflags>"/wd4668"
+              <cflags>"/wd4686"
               <cflags>"/wd4710"
               <cflags>"/wd4711"
-            ;
-            if [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900021 ]
-            {
-              flags +=
-                <cflags>"/wd4774"
-              ;
-            }
-            flags +=
               <cflags>"/wd4820"
-              <cflags>"/wd5026"
-              <cflags>"/wd5027"
-              <cflags>"/wd5039"
-              <cflags>"/wd4464"
-              <cflags>"/wd4868"
-              <cflags>"/wd5045"
+              <cflags>"/wd4866"
             ;
-            if $(x_warnings) = "strict"
+            if $(x_msvc_isystem) = "default"
             {
               flags +=
-                <cflags>"/wd4061"
-                <cflags>"/wd4266"
-                <cflags>"/wd4583"
-                <cflags>"/wd4619"
-                <cflags>"/wd4623"
-                <cflags>"/wd5204"
+                <cflags>"/wd4464"
+                <cflags>"/wd4548"
+                <cflags>"/wd4668"
               ;
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1500000 ]
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1700004 ]
+                {
+                  flags +=
+                    <cflags>"/wd5262"
+                  ;
+                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900000 ]
+                  {
+                    flags +=
+                      <cflags>"/wd4774"
+                    ;
+                  }
+                }
+              }
+            }
+            if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1600000 ]
+            {
+              flags +=
+                <cflags>"/wd4800"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900039 ]
+              {
+                flags +=
+                  <cflags>"/wd4975"
+                ;
+                if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900040 ]
+                {
+                  flags +=
+                    <cflags>"/wd4860"
+                    <cflags>"/wd4861"
+                    <cflags>"/wd5273"
+                    <cflags>"/wd5274"
+                  ;
+                  if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900041 ]
+                  {
+                    flags +=
+                      <cflags>"/wd5306"
+                    ;
+                    if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900043 ]
+                    {
+                      flags +=
+                        <cflags>"/wd5277"
+                      ;
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -3158,71 +3334,95 @@ rule jln_c_flags ( properties * )
     }
     if $(x_conversion_warnings) != "default"
     {
-      if $(x_conversion_warnings) = "on"
+      if ( $(x_conversion_warnings) = "off" || $(x_conversion_warnings) = "sign" )
       {
         flags +=
-          <cflags>"/w14244"
-          <cflags>"/w14245"
-          <cflags>"/w14388"
-          <cflags>"/w14365"
+          <cflags>"/wd4244"
+          <cflags>"/wd4245"
+          <cflags>"/wd4365"
         ;
       }
       else
       {
-        if $(x_conversion_warnings) = "conversion"
+        flags +=
+          <cflags>"/w14244"
+          <cflags>"/w14245"
+          <cflags>"/w14365"
+        ;
+      }
+      if ( $(x_conversion_warnings) = "on" || $(x_conversion_warnings) = "all" || $(x_conversion_warnings) = "sign" )
+      {
+        flags +=
+          <cflags>"/w14018"
+          <cflags>"/w14388"
+          <cflags>"/w14289"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cflags>"/wd4018"
+          <cflags>"/wd4388"
+          <cflags>"/wd4289"
+        ;
+      }
+    }
+    if $(x_switch_warnings) != "default"
+    {
+      if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "mandatory-default" )
+      {
+        flags +=
+          <cflags>"/wd4061"
+          <cflags>"/w14062"
+        ;
+      }
+      else
+      {
+        if ( $(x_switch_warnings) = "exhaustive-enum" || $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default" )
         {
           flags +=
-            <cflags>"/w14244"
-            <cflags>"/w14365"
+            <cflags>"/w14061"
+            <cflags>"/w14062"
           ;
         }
         else
         {
-          if $(x_conversion_warnings) = "sign"
-          {
-            flags +=
-              <cflags>"/w14388"
-              <cflags>"/w14245"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cflags>"/wd4244"
-              <cflags>"/wd4365"
-              <cflags>"/wd4388"
-              <cflags>"/wd4245"
-            ;
-          }
+          flags +=
+            <cflags>"/wd4061"
+            <cflags>"/wd4062"
+          ;
         }
       }
     }
     if $(x_shadow_warnings) != "default"
     {
-      if $(x_shadow_warnings) = "off"
+      if ! [ numbers.less $(JLN_NORMALIZED_C_COMP_VERSION) 1900000 ]
       {
-        flags +=
-          <cflags>"/wd4456"
-          <cflags>"/wd4459"
-        ;
-      }
-      else
-      {
-        if ( $(x_shadow_warnings) = "on" || $(x_shadow_warnings) = "all" )
+        if $(x_shadow_warnings) = "off"
         {
           flags +=
-            <cflags>"/w4456"
-            <cflags>"/w4459"
+            <cflags>"/wd4456"
+            <cflags>"/wd4459"
           ;
         }
         else
         {
-          if $(x_shadow_warnings) = "local"
+          if ( $(x_shadow_warnings) = "on" || $(x_shadow_warnings) = "all" )
           {
             flags +=
-              <cflags>"/w4456"
-              <cflags>"/wd4459"
+              <cflags>"/w14456"
+              <cflags>"/w14459"
             ;
+          }
+          else
+          {
+            if $(x_shadow_warnings) = "local"
+            {
+              flags +=
+                <cflags>"/w4456"
+                <cflags>"/wd4459"
+              ;
+            }
           }
         }
       }
@@ -3611,37 +3811,45 @@ rule jln_c_flags ( properties * )
           }
           else
           {
-            flags +=
-              <cflags>"-Wall"
-              <cflags>"-Warray-bounds"
-              <cflags>"-Wcast-qual"
-              <cflags>"-Wchar-subscripts"
-              <cflags>"-Wdisabled-optimization"
-              <cflags>"-Wenum-compare"
-              <cflags>"-Wextra"
-              <cflags>"-Wfloat-equal"
-              <cflags>"-Wformat-security"
-              <cflags>"-Wformat=2"
-              <cflags>"-Winit-self"
-              <cflags>"-Winvalid-pch"
-              <cflags>"-Wmaybe-uninitialized"
-              <cflags>"-Wmissing-include-dirs"
-              <cflags>"-Wnarrowing"
-              <cflags>"-Wnonnull"
-              <cflags>"-Wparentheses"
-              <cflags>"-Wpointer-sign"
-              <cflags>"-Wreorder"
-              <cflags>"-Wsequence-point"
-              <cflags>"-Wtrigraphs"
-              <cflags>"-Wundef"
-              <cflags>"-Wunused-function"
-              <cflags>"-Wunused-but-set-variable"
-              <cflags>"-Wunused-variable"
-              <cflags>"-Wpointer-arith"
-              <cflags>"-Wold-style-definition"
-              <cflags>"-Wstrict-prototypes"
-              <cflags>"-Wwrite-strings"
-            ;
+            if $(x_warnings) = "essential"
+            {
+              flags +=
+                <cflags>"-Wall"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cflags>"-Wall"
+                <cflags>"-Warray-bounds"
+                <cflags>"-Wcast-qual"
+                <cflags>"-Wchar-subscripts"
+                <cflags>"-Wdisabled-optimization"
+                <cflags>"-Wenum-compare"
+                <cflags>"-Wextra"
+                <cflags>"-Wfloat-equal"
+                <cflags>"-Wformat-security"
+                <cflags>"-Wformat=2"
+                <cflags>"-Winit-self"
+                <cflags>"-Winvalid-pch"
+                <cflags>"-Wmaybe-uninitialized"
+                <cflags>"-Wmissing-include-dirs"
+                <cflags>"-Wnarrowing"
+                <cflags>"-Wnonnull"
+                <cflags>"-Wpointer-sign"
+                <cflags>"-Wreorder"
+                <cflags>"-Wsequence-point"
+                <cflags>"-Wtrigraphs"
+                <cflags>"-Wundef"
+                <cflags>"-Wunused-function"
+                <cflags>"-Wunused-but-set-variable"
+                <cflags>"-Wunused-variable"
+                <cflags>"-Wpointer-arith"
+                <cflags>"-Wold-style-definition"
+                <cflags>"-Wstrict-prototypes"
+                <cflags>"-Wwrite-strings"
+              ;
+            }
           }
         }
         if $(x_switch_warnings) != "default"
