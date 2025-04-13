@@ -345,6 +345,12 @@ Or(gcc, clang_like) {
   opt'warnings' {
     match {
       lvl'off' { flag'-w' },
+      lvl'essential' {
+        flag'-Wall',
+        flag'-Wextra',
+        c'-Wwrite-strings',
+      },
+      -- on, extensive
       match {
         gcc {
           flag'-Wall',
@@ -423,8 +429,6 @@ Or(gcc, clang_like) {
                           flag'-Wshift-overflow=2',
                           cxx'-Wclass-memaccess',
 
-                          -- flag'-Wstrict-overflow=3', -- gcc-9
-
                           vers'>=14' {
                             flag'-Walloc-size',
                           }
@@ -433,6 +437,16 @@ Or(gcc, clang_like) {
                     }
                   }
                 }
+              }
+            }
+          },
+
+          lvl'extensive' {
+            -- flag'-Wstrict-overflow=2',
+            vers'>=8' {
+              flag'-Wstringop-overflow=4',
+              vers'>=12' {
+                flag'-Wuse-after-free=3',
               }
             }
           },
@@ -1805,6 +1819,11 @@ match {
         lvl'off' {
           flag'/W0'
         },
+        lvl'essential' {
+          flag'/W4',
+          -- /external:... ignores warnings starting with C47XX
+          flag'/wd4711', -- function selected for inline expansion (enabled by /OB2)
+        },
         lvl'on' {
           -- enable warning that aren't off by default.
           flag'/W4',
@@ -1900,7 +1919,7 @@ match {
             }
           }
         },
-        -- strict / very_strict
+        -- extensive
         {
           flag'/Wall',
 
@@ -1971,15 +1990,7 @@ match {
                 }
               }
             }
-          },
-
-          lvl'strict' {
-            flag'/wd4266', -- No override available (function is hidden)
-            flag'/wd4619', -- Unknown warning number
-            flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
-            flag'/wd4191', -- unsafe conversion from 'type_of_expression' to 'type_required'
-            c'/wd4255', -- 'function' : no function prototype given: converting '()' to '(void)'
-          },
+          }
         }
       }
     },
@@ -2235,6 +2246,10 @@ match {
         lvl'off' {
           flag'-w'
         },
+        lvl'essential' {
+          flag'-Wall',
+        },
+        -- on, extensive
         {
           flag'-Wall',
           flag'-Warray-bounds',
@@ -2253,7 +2268,6 @@ match {
           flag'-Wmissing-include-dirs',
           flag'-Wnarrowing',
           flag'-Wnonnull',
-          flag'-Wparentheses',
           flag'-Wpointer-sign',
           flag'-Wreorder',
           flag'-Wsequence-point',
@@ -2854,7 +2868,12 @@ local Vbase = {
     },
 
     warnings={
-      values={'off', 'on', 'strict', 'very_strict'},
+      values={
+        'off',
+        {'on', 'Activates essential warnings and extras.'},
+        {'essential', 'Activates essential warnings, typically -Wall -Wextra or /W4).'},
+        {'extensive', 'Activates essential warnings, extras and some that may raise false positives'},
+      },
       default='on',
       description='Warning level.',
       incidental=true,

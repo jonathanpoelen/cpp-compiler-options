@@ -1,5 +1,7 @@
 # ChangeLog
 
+- remove `warnings=strict` and `warnings=very_strict`
+- add `warnings=essential` and `warnings=extensive`
 - add `conversion_warnings=all`
 - add `conversion_warnings=float`
 - add `msvc_isystem=assumed`
