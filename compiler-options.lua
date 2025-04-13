@@ -2047,6 +2047,12 @@ match {
       }
     },
 
+    opt'suggestions' {
+      msvc_select_warn(lvl'off', 'd', '1', function(f) return {
+        cxx(f(5239)), -- potentially-throwing function called from a function declared __declspec(nothrow).
+      } end)
+    },
+
     opt'warnings_as_error' {
       match {
         lvl'on' { flag'/WX' },
