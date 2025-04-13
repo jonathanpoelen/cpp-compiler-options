@@ -1801,92 +1801,94 @@ match {
     },
 
     opt'warnings' {
-      lvl'off' {
-        flag'/W0'
-      },
-      lvl'on' {
-        -- enable warning that aren't off by default.
-        flag'/W4',
+      match {
+        lvl'off' {
+          flag'/W0'
+        },
+        lvl'on' {
+          -- enable warning that aren't off by default.
+          flag'/W4',
 
-        -- /external:... ignores warnings starting with C47XX
-        flag'/wd4711', -- function selected for inline expansion (enabled by /OB2)
+          -- /external:... ignores warnings starting with C47XX
+          flag'/wd4711', -- function selected for inline expansion (enabled by /OB2)
 
-        -- off by default
+          -- off by default
 
-        cxx'/w14265', -- Class has virtual functions, but its non-trivial destructor (-Wnon-virtual-dtor)
-        flag'/w14296', -- expression is always false (-Wtautological-unsigned-zero-compare / -Wtype-limits)
-        flag'/w14444', -- top level '__unaligned' is not implemented in this context
-        flag'/w14545', -- expression before comma evaluates to a function which is missing an argument list
-        flag'/w14546', -- function call before comma missing argument list
-        flag'/w14547', -- 'operator' : operator before comma has no effect; expected operator with side-effect
-        flag'/w14548', -- expression before comma has no effect; expected expression with side-effect
-        flag'/w14549', -- 'operator' : operator before comma has no effect; did you intend 'operator'?
-        flag'/w14555', -- expression has no effect; expected expression with side-effect
-        flag'/w14557', -- '__assume' contains effect 'effect'
-        cxx'/w14608', -- 'union_member' has already been initialized by another union member in the initializer list, 'union_member'
-        cxx'/w14692', -- 'function': signature of non-private member contains assembly private native type 'native_type'
-        cxx'/w14822', -- 'member' : local class member function does not have a body
-        flag'/w14905', -- wide string literal cast to 'LPSTR'
-        flag'/w14906', -- string literal cast to 'LPWSTR'
-        flag'/w14917', -- 'declarator' : a GUID can only be associated with a class, interface or namespace
-        cxx'/w14928', -- illegal copy-initialization; more than one user-defined conversion has been implicitly applied
-        cxx'/w14596', -- illegal qualified name in member declaration
+          cxx'/w14265', -- Class has virtual functions, but its non-trivial destructor (-Wnon-virtual-dtor)
+          flag'/w14296', -- expression is always false (-Wtautological-unsigned-zero-compare / -Wtype-limits)
+          flag'/w14444', -- top level '__unaligned' is not implemented in this context
+          flag'/w14545', -- expression before comma evaluates to a function which is missing an argument list
+          flag'/w14546', -- function call before comma missing argument list
+          flag'/w14547', -- 'operator' : operator before comma has no effect; expected operator with side-effect
+          flag'/w14548', -- expression before comma has no effect; expected expression with side-effect
+          flag'/w14549', -- 'operator' : operator before comma has no effect; did you intend 'operator'?
+          flag'/w14555', -- expression has no effect; expected expression with side-effect
+          flag'/w14557', -- '__assume' contains effect 'effect'
+          cxx'/w14608', -- 'union_member' has already been initialized by another union member in the initializer list, 'union_member'
+          cxx'/w14692', -- 'function': signature of non-private member contains assembly private native type 'native_type'
+          cxx'/w14822', -- 'member' : local class member function does not have a body
+          flag'/w14905', -- wide string literal cast to 'LPSTR'
+          flag'/w14906', -- string literal cast to 'LPWSTR'
+          flag'/w14917', -- 'declarator' : a GUID can only be associated with a class, interface or namespace
+          cxx'/w14928', -- illegal copy-initialization; more than one user-defined conversion has been implicitly applied
+          cxx'/w14596', -- illegal qualified name in member declaration
 
-        vers'>=15.3' {
-          -has_opt'msvc_isystem' {
-            cxx'/w14263', -- member function does not override any base class virtual member function
-            cxx'/w14264', -- no override available for virtual member function from base 'class'; function is hidden (-Woverloaded-virtual)
-          },
-          cxx'/w15038', -- member 'member1' will be initialized after data member 'member2' (-Wreorder-ctor / -Wreorder)
+          vers'>=15.3' {
+            -has_opt'msvc_isystem' {
+              cxx'/w14263', -- member function does not override any base class virtual member function
+              cxx'/w14264', -- no override available for virtual member function from base 'class'; function is hidden (-Woverloaded-virtual)
+            },
+            cxx'/w15038', -- member 'member1' will be initialized after data member 'member2' (-Wreorder-ctor / -Wreorder)
 
-          vers'>=16.10' {
-            cxx'/w15233', -- explicit lambda capture 'identifier' is not used
-            flag'/w15240', -- attribute is ignored in this syntactic position
+            vers'>=16.10' {
+              cxx'/w15233', -- explicit lambda capture 'identifier' is not used
+              flag'/w15240', -- attribute is ignored in this syntactic position
 
-            vers'>=17.4' {
-              cxx'/w15263', -- calling 'std::move' on a temporary object prevents copy elision (-Wpessimizing-move)
-              -has_opt'msvc_isystem' {
-                flag'/w15262', -- -Wimplicit-fallthrough, active only with /std:c++17 or newer
-              },
-
-              vers'>=19.00' {
-                flag'/w14426', -- Optimization flags changed after including header
+              vers'>=17.4' {
+                cxx'/w15263', -- calling 'std::move' on a temporary object prevents copy elision (-Wpessimizing-move)
                 -has_opt'msvc_isystem' {
-                  flag'/w14654', -- Code placed before include of precompiled header line will be ignored.
+                  flag'/w15262', -- -Wimplicit-fallthrough, active only with /std:c++17 or newer
                 },
-                flag'/w15031', -- #pragma warning(pop): likely mismatch
-                flag'/w15032', -- detected #pragma warning(push) with no corresponding #pragma warning(pop)
 
-                vers'>=19.15' {
-                  cxx'/w14643', -- Forward declaring 'identifier' in namespace std is not permitted by the C++ Standard.
+                vers'>=19.00' {
+                  flag'/w14426', -- Optimization flags changed after including header
+                  -has_opt'msvc_isystem' {
+                    flag'/w14654', -- Code placed before include of precompiled header line will be ignored.
+                  },
+                  flag'/w15031', -- #pragma warning(pop): likely mismatch
+                  flag'/w15032', -- detected #pragma warning(push) with no corresponding #pragma warning(pop)
 
-                  vers'>=19.22' {
-                    cxx'/w14855', -- implicit capture of 'this' via '[=]' is deprecated in 'version'
+                  vers'>=19.15' {
+                    cxx'/w14643', -- Forward declaring 'identifier' in namespace std is not permitted by the C++ Standard.
 
-                    vers'>=19.25' {
-                      -has_opt'msvc_isystem' {
-                        cxx'/w15204', -- Class with virtual functions but trivial destructor destructor (-Wnon-virtual-dtor)
-                      },
+                    vers'>=19.22' {
+                      cxx'/w14855', -- implicit capture of 'this' via '[=]' is deprecated in 'version'
 
-                      vers'>=19.29' {
-                        cxx'/w15233', -- explicit lambda capture 'identifier' is not used
+                      vers'>=19.25' {
+                        -has_opt'msvc_isystem' {
+                          cxx'/w15204', -- Class with virtual functions but trivial destructor destructor (-Wnon-virtual-dtor)
+                        },
 
-                        vers'>=19.30' {
-                          -has_opt'msvc_isystem' {
-                            cxx'/w15246', -- the initialization of a subobject should be wrapped in braces
-                          },
-                          flag'/w15249', -- 'bitfield' of type 'enumeration_name' has named enumerators with values that cannot be represented in the given bit field width of 'bitfield_width'.
+                        vers'>=19.29' {
+                          cxx'/w15233', -- explicit lambda capture 'identifier' is not used
 
-                          vers'>=19.32' {
-                            flag'/w15258', -- explicit capture of 'symbol' is not required for this use
+                          vers'>=19.30' {
+                            -has_opt'msvc_isystem' {
+                              cxx'/w15246', -- the initialization of a subobject should be wrapped in braces
+                            },
+                            flag'/w15249', -- 'bitfield' of type 'enumeration_name' has named enumerators with values that cannot be represented in the given bit field width of 'bitfield_width'.
 
-                            vers'>=19.37' {
-                              cxx'/w15267', -- definition of implicit copy constructor/assignment operator for 'type' is deprecated because it has a user-provided assignment operator/copy constructor
+                            vers'>=19.32' {
+                              flag'/w15258', -- explicit capture of 'symbol' is not required for this use
 
-                              -- last compiler version: 19.43
-                              -- https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-by-compiler-version
-                              -- https://learn.microsoft.com/en-us/cpp/preprocessor/compiler-warnings-that-are-off-by-default
-                              -- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE
+                              vers'>=19.37' {
+                                cxx'/w15267', -- definition of implicit copy constructor/assignment operator for 'type' is deprecated because it has a user-provided assignment operator/copy constructor
+
+                                -- last compiler version: 19.43
+                                -- https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-by-compiler-version
+                                -- https://learn.microsoft.com/en-us/cpp/preprocessor/compiler-warnings-that-are-off-by-default
+                                -- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE
+                              }
                             }
                           }
                         }
@@ -1897,88 +1899,88 @@ match {
               }
             }
           }
-        }
-      },
-      -- strict / very_strict
-      {
-        flag'/Wall',
-
-        -- Warnings in MSVC's std or other libs
-        cxx'/wd4342', -- behavior change: 'function' called, but a member operator was called in previous versions
-        cxx'/wd4350', -- behavior change: 'member1' called instead of 'member2'
-        cxx'/wd4355', -- 'this' used in base member initializing list
-        flag'/wd4370', -- layout of class has changed from a previous version of the compiler
-        flag'/wd4371', -- layout of class may have changed from a previous version
-        flag'/wd4514', -- Unreferenced inline function has been removed
-        flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
-        flag'/wd4577', -- 'noexcept' used with no exception handling mode specified
-        cxx'/wd4582', -- Constructor is not implicitly called
-        cxx'/wd4583', -- Destructor not implicitly called
-        cxx'/wd4587', -- 'anonymous_structure': behavior change: constructor is no longer implicitly called
-        cxx'/wd4588', -- 'anonymous_structure': behavior change: destructor is no longer implicitly called
-        flag'/wd4686', -- 'user-defined type' : possible change in behavior, change in UDT return calling convention
-        flag'/wd4710', -- Function not inlined
-        flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
-        flag'/wd4820', -- Added padding to members
-        flag'/wd4866', -- compiler may not enforce left-to-right evaluation order for call to operator_name
-        cxx'/wd4868', -- Evaluation order not guaranteed in braced initializing list
-        -- flag'/wd5045', -- Spectre mitigation (15.7)
-        cxx'/wd5024', -- Move constructor was implicitly defined as deleted
-        cxx'/wd5025', -- Move assignment operator was implicitly defined as deleted
-        cxx'/wd5026', -- Move constructor implicitly deleted
-        cxx'/wd5027', -- Move assignment operator implicitly deleted
-        cxx'/wd5243', -- using incomplete class 'class-name' can cause ODR violation due to ABI l
-
-        -has_opt'msvc_isystem' {
-          flag'/wd4464', -- relative include path contains '..'
-          flag'/wd4548', -- Expression before comma has no effect
-          cxx'/wd4623', -- Default constructor implicitly deleted
-          cxx'/wd4625', -- Copy constructor implicitly deleted
-          cxx'/wd4626', -- Copy assignment operator implicitly deleted
-          flag'/wd4668', -- 'symbol' is not defined as a preprocessor macro
-          cxx'/wd5204', -- Class with virtual functions but trivial destructor (-Wnon-virtual-dtor)
-          vers'>=15' {
-            cxx'/wd4582', -- 'type': constructor is not implicitly called
-            cxx'/wd4583', -- 'type': destructor is not implicitly called
-            vers'>=17.4' {
-              flag'/wd5262', -- -Wimplicit-fallthrough, active only with /std:c++17 or newer
-              vers'>=19' {
-                flag'/wd4774', -- format not a string literal
-              }
-            }
-          }
         },
+        -- strict / very_strict
+        {
+          flag'/Wall',
 
-        vers'>=16' {
-          flag'/wd4800', -- Implicit conversion from 'type' to bool. Possible information loss
+          -- Warnings in MSVC's std or other libs
+          cxx'/wd4342', -- behavior change: 'function' called, but a member operator was called in previous versions
+          cxx'/wd4350', -- behavior change: 'member1' called instead of 'member2'
+          cxx'/wd4355', -- 'this' used in base member initializing list
+          flag'/wd4370', -- layout of class has changed from a previous version of the compiler
+          flag'/wd4371', -- layout of class may have changed from a previous version
+          flag'/wd4514', -- Unreferenced inline function has been removed
+          flag'/wd4571', -- SEH exceptions aren't caught since Visual C++ 7.1
+          flag'/wd4577', -- 'noexcept' used with no exception handling mode specified
+          cxx'/wd4582', -- Constructor is not implicitly called
+          cxx'/wd4583', -- Destructor not implicitly called
+          cxx'/wd4587', -- 'anonymous_structure': behavior change: constructor is no longer implicitly called
+          cxx'/wd4588', -- 'anonymous_structure': behavior change: destructor is no longer implicitly called
+          flag'/wd4686', -- 'user-defined type' : possible change in behavior, change in UDT return calling convention
+          flag'/wd4710', -- Function not inlined
+          flag'/wd4711', -- Function selected for inline expansion (enabled by /OB2)
+          flag'/wd4820', -- Added padding to members
+          flag'/wd4866', -- compiler may not enforce left-to-right evaluation order for call to operator_name
+          cxx'/wd4868', -- Evaluation order not guaranteed in braced initializing list
+          -- flag'/wd5045', -- Spectre mitigation (15.7)
+          cxx'/wd5024', -- Move constructor was implicitly defined as deleted
+          cxx'/wd5025', -- Move assignment operator was implicitly defined as deleted
+          cxx'/wd5026', -- Move constructor implicitly deleted
+          cxx'/wd5027', -- Move assignment operator implicitly deleted
+          cxx'/wd5243', -- using incomplete class 'class-name' can cause ODR violation due to ABI l
 
-          vers'>=19.39' {
-            flag'/wd4975', -- modopt '[modifier]' was ignored for formal parameter 'parameter'
-
-            vers'>=19.40' {
-              flag'/wd4860', -- 'object name': compiler zero initialized 'number' bytes of storage
-              flag'/wd4861', -- compiler zero initialized 'number' bytes of storage
-              flag'/wd5273', -- behavior change: _Alignas on anonymous type no longer ignored (promoted members will align)
-              flag'/wd5274', -- behavior change: _Alignas no longer applies to the type 'type' (only applies to declared data objects)
-
-              vers'>=19.41' {
-                flag'/wd5306', -- parameter array behavior change: overload 'identifier 1' resolved to 'identifier 2'
-
-                vers'>=19.43' {
-                  flag'/wd5277', -- type trait optimization for 'class name' is disabled
+          -has_opt'msvc_isystem' {
+            flag'/wd4464', -- relative include path contains '..'
+            flag'/wd4548', -- Expression before comma has no effect
+            cxx'/wd4623', -- Default constructor implicitly deleted
+            cxx'/wd4625', -- Copy constructor implicitly deleted
+            cxx'/wd4626', -- Copy assignment operator implicitly deleted
+            flag'/wd4668', -- 'symbol' is not defined as a preprocessor macro
+            cxx'/wd5204', -- Class with virtual functions but trivial destructor (-Wnon-virtual-dtor)
+            vers'>=15' {
+              cxx'/wd4582', -- 'type': constructor is not implicitly called
+              cxx'/wd4583', -- 'type': destructor is not implicitly called
+              vers'>=17.4' {
+                flag'/wd5262', -- -Wimplicit-fallthrough, active only with /std:c++17 or newer
+                vers'>=19' {
+                  flag'/wd4774', -- format not a string literal
                 }
               }
             }
-          }
-        },
+          },
 
-        lvl'strict' {
-          flag'/wd4266', -- No override available (function is hidden)
-          flag'/wd4619', -- Unknown warning number
-          flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
-          flag'/wd4191', -- unsafe conversion from 'type_of_expression' to 'type_required'
-          c'/wd4255', -- 'function' : no function prototype given: converting '()' to '(void)'
-        },
+          vers'>=16' {
+            flag'/wd4800', -- Implicit conversion from 'type' to bool. Possible information loss
+
+            vers'>=19.39' {
+              flag'/wd4975', -- modopt '[modifier]' was ignored for formal parameter 'parameter'
+
+              vers'>=19.40' {
+                flag'/wd4860', -- 'object name': compiler zero initialized 'number' bytes of storage
+                flag'/wd4861', -- compiler zero initialized 'number' bytes of storage
+                flag'/wd5273', -- behavior change: _Alignas on anonymous type no longer ignored (promoted members will align)
+                flag'/wd5274', -- behavior change: _Alignas no longer applies to the type 'type' (only applies to declared data objects)
+
+                vers'>=19.41' {
+                  flag'/wd5306', -- parameter array behavior change: overload 'identifier 1' resolved to 'identifier 2'
+
+                  vers'>=19.43' {
+                    flag'/wd5277', -- type trait optimization for 'class name' is disabled
+                  }
+                }
+              }
+            }
+          },
+
+          lvl'strict' {
+            flag'/wd4266', -- No override available (function is hidden)
+            flag'/wd4619', -- Unknown warning number
+            flag'/wd5039', -- Pointer/ref to a potentially throwing function passed to an 'extern "C"' function (with -EHc)
+            flag'/wd4191', -- unsafe conversion from 'type_of_expression' to 'type_required'
+            c'/wd4255', -- 'function' : no function prototype given: converting '()' to '(void)'
+          },
+        }
       }
     },
 
