@@ -1,5 +1,7 @@
 # ChangeLog
 
+## 2024-04-14
+
 - remove `warnings=strict` and `warnings=very_strict`
 - add `warnings=essential` and `warnings=extensive`
 - add `conversion_warnings=all`
