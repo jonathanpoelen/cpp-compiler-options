@@ -1769,7 +1769,7 @@ match {
               })
             end)
           },
-          {
+          -lvl'assumed' {
             vers'<16.10' {
               flag'/experimental:external'
             },
@@ -2714,7 +2714,12 @@ local Vbase = {
     },
 
     msvc_isystem={
-      values={'anglebrackets', 'include_and_caexcludepath', 'external_as_include_system_flag'},
+      values={
+        'anglebrackets',
+        'include_and_caexcludepath',
+        'external_as_include_system_flag',
+        {'assumed', 'Do not activate /external:W0, but considers the option as activated so that warning=on or more activates more warnings.'},
+      },
       description='Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).',
       incidental=true,
     },

@@ -2,6 +2,7 @@
 
 - add `conversion_warnings=all`
 - add `conversion_warnings=float`
+- add `msvc_isystem=assumed`
 
 ## 2024-04-06
 
