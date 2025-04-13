@@ -65,9 +65,9 @@
 --  ```ini
 --  # Warning:
 --
---  warnings = on default off strict very_strict
+--  warnings = on default off essential extensive
 --  warnings_as_error = default off on basic
---  conversion_warnings = on default off sign conversion
+--  conversion_warnings = on default off sign float conversion all
 --  covered_switch_default_warnings = on default off
 --  fix_compiler_error = on default off
 --  msvc_crt_secure_no_warnings = on default off
@@ -133,14 +133,12 @@
 --  diagnostics_show_template_tree = default off on
 --  elide_type = default off on
 --  msvc_diagnostics_format = caret default classic column
---  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
+--  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
 --  msvc_isystem_with_template_from_non_external = default off on
 --  pie = default off on static fpic fPIC fpie fPIE
 --  windows_bigobj = on default
 --  ```
 --  <!-- ./compiler-options.lua -->
---
---  The value `default` does nothing.
 --
 --  If not specified:
 --
@@ -179,7 +177,7 @@
 --  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
 --  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
 --  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
---  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
+--  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
 --
 --  
 
@@ -205,8 +203,8 @@ local _flag_names = {
   ["color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["jln-control-flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
   ["control_flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
-  ["jln-conversion-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["conversion"]="conversion", [""]=""},
-  ["conversion_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["conversion"]="conversion", [""]=""},
+  ["jln-conversion-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
+  ["conversion_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
   ["jln-coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-covered-switch-default-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
@@ -237,8 +235,8 @@ local _flag_names = {
   ["msvc_crt_secure_no_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-msvc-diagnostics-format"] = {["default"]="", ["classic"]="classic", ["column"]="column", ["caret"]="caret", [""]=""},
   ["msvc_diagnostics_format"] = {["default"]="", ["classic"]="classic", ["column"]="column", ["caret"]="caret", [""]=""},
-  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
-  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", [""]=""},
+  ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["assumed"]="assumed", [""]=""},
+  ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["assumed"]="assumed", [""]=""},
   ["jln-ndebug"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_optimization_1_or_above"]="with_optimization_1_or_above", [""]=""},
   ["ndebug"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_optimization_1_or_above"]="with_optimization_1_or_above", [""]=""},
   ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
@@ -269,8 +267,8 @@ local _flag_names = {
   ["unsafe_buffer_usage_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["jln-var-init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
   ["var_init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
-  ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
-  ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["strict"]="strict", ["very_strict"]="very_strict", [""]=""},
+  ["jln-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["essential"]="essential", ["extensive"]="extensive", [""]=""},
+  ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["essential"]="essential", ["extensive"]="extensive", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
@@ -632,53 +630,64 @@ function get_flags(options, extra_options)
       if options.warnings == "off" then
         insert(jln_cxflags, "-w")
       else
-        if compiler == 'gcc' then
+        if options.warnings == "essential" then
           insert(jln_cxflags, "-Wall")
           insert(jln_cxflags, "-Wextra")
-          insert(jln_cxflags, "-Wcast-align")
-          insert(jln_cxflags, "-Wcast-qual")
-          insert(jln_cxflags, "-Wdisabled-optimization")
-          insert(jln_cxflags, "-Wfloat-equal")
-          insert(jln_cxflags, "-Wformat-security")
-          insert(jln_cxflags, "-Wformat=2")
-          insert(jln_cxflags, "-Winvalid-pch")
-          insert(jln_cxflags, "-Wmissing-include-dirs")
-          insert(jln_cxflags, "-Wpacked")
-          insert(jln_cxflags, "-Wredundant-decls")
-          insert(jln_cxflags, "-Wundef")
-          insert(jln_cxflags, "-Wunused-macros")
-          insert(jln_cxflags, "-Wpointer-arith")
-          insert(jln_cxflags, "-Wbad-function-cast")
-          insert(jln_cxflags, "-Winit-self")
-          insert(jln_cxflags, "-Wjump-misses-init")
-          insert(jln_cxflags, "-Wnested-externs")
-          insert(jln_cxflags, "-Wold-style-definition")
-          insert(jln_cxflags, "-Wstrict-prototypes")
           insert(jln_cxflags, "-Wwrite-strings")
-          if version >= 400007 then
-            insert(jln_cxflags, "-Wsuggest-attribute=noreturn")
-            insert(jln_cxflags, "-Wlogical-op")
-            insert(jln_cxflags, "-Wvector-operation-performance")
-            insert(jln_cxflags, "-Wdouble-promotion")
-            insert(jln_cxflags, "-Wtrampolines")
-            if version >= 400008 then
-              if version >= 400009 then
-                insert(jln_cxflags, "-Wfloat-conversion")
-                if version >= 500001 then
-                  insert(jln_cxflags, "-Wformat-signedness")
-                  insert(jln_cxflags, "-Warray-bounds=2")
-                  if version >= 600001 then
-                    insert(jln_cxflags, "-Wduplicated-cond")
-                    insert(jln_cxflags, "-Wnull-dereference")
-                    if version >= 700000 then
-                      if version >= 700001 then
-                        insert(jln_cxflags, "-Walloc-zero")
-                        insert(jln_cxflags, "-Walloca")
-                        insert(jln_cxflags, "-Wformat-overflow=2")
-                        insert(jln_cxflags, "-Wduplicated-branches")
-                        if version >= 800000 then
-                          if ( options.warnings == "strict" or options.warnings == "very_strict" ) then
+        else
+          if compiler == 'gcc' then
+            insert(jln_cxflags, "-Wall")
+            insert(jln_cxflags, "-Wextra")
+            if version < 800000 then
+              insert(jln_cxflags, "-Wcast-align")
+            end
+            insert(jln_cxflags, "-Wcast-qual")
+            insert(jln_cxflags, "-Wdisabled-optimization")
+            insert(jln_cxflags, "-Wfloat-equal")
+            insert(jln_cxflags, "-Wformat-security")
+            insert(jln_cxflags, "-Wformat=2")
+            insert(jln_cxflags, "-Winvalid-pch")
+            insert(jln_cxflags, "-Wmissing-declarations")
+            insert(jln_cxflags, "-Wmissing-include-dirs")
+            insert(jln_cxflags, "-Wpacked")
+            insert(jln_cxflags, "-Wredundant-decls")
+            insert(jln_cxflags, "-Wundef")
+            insert(jln_cxflags, "-Wunused-macros")
+            insert(jln_cxflags, "-Wpointer-arith")
+            insert(jln_cxflags, "-Wbad-function-cast")
+            insert(jln_cxflags, "-Winit-self")
+            insert(jln_cxflags, "-Wjump-misses-init")
+            insert(jln_cxflags, "-Wnested-externs")
+            insert(jln_cxflags, "-Wold-style-definition")
+            insert(jln_cxflags, "-Wstrict-prototypes")
+            insert(jln_cxflags, "-Wwrite-strings")
+            if version >= 400007 then
+              insert(jln_cxflags, "-Wsuggest-attribute=noreturn")
+              insert(jln_cxflags, "-Wlogical-op")
+              insert(jln_cxflags, "-Wvector-operation-performance")
+              insert(jln_cxflags, "-Wdouble-promotion")
+              insert(jln_cxflags, "-Wtrampolines")
+              if version >= 400008 then
+                if version >= 400009 then
+                  if version >= 500001 then
+                    insert(jln_cxflags, "-Wformat-signedness")
+                    insert(jln_cxflags, "-Warray-bounds=2")
+                    if version >= 600001 then
+                      insert(jln_cxflags, "-Wduplicated-cond")
+                      insert(jln_cxflags, "-Wnull-dereference")
+                      if version >= 700000 then
+                        if version >= 700001 then
+                          insert(jln_cxflags, "-Walloc-zero")
+                          insert(jln_cxflags, "-Walloca")
+                          insert(jln_cxflags, "-Wformat-overflow=2")
+                          insert(jln_cxflags, "-Wduplicated-branches")
+                          if version >= 800000 then
                             insert(jln_cxflags, "-Wcast-align=strict")
+                            insert(jln_cxflags, "-Wformat-truncation=2")
+                            insert(jln_cxflags, "-Wshift-overflow=2")
+                            if version >= 1400000 then
+                              insert(jln_cxflags, "-Walloc-size")
+                            end
                           end
                         end
                       end
@@ -687,28 +696,46 @@ function get_flags(options, extra_options)
                 end
               end
             end
-          end
-        else
-          insert(jln_cxflags, "-Weverything")
-          insert(jln_cxflags, "-Wno-documentation")
-          insert(jln_cxflags, "-Wno-documentation-unknown-command")
-          insert(jln_cxflags, "-Wno-newline-eof")
-          insert(jln_cxflags, "-Wno-padded")
-          insert(jln_cxflags, "-Wno-global-constructors")
-          if  not ( ( options.switch_warnings == "off" or options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) ) then
-            insert(jln_cxflags, "-Wno-switch-enum")
-          end
-          if options.covered_switch_default_warnings == "" then
-            insert(jln_cxflags, "-Wno-covered-switch-default")
-          end
-          if version >= 300009 then
-            if version >= 500000 then
-              if version >= 900000 then
-                if version >= 1000000 then
-                  if version >= 1100000 then
-                    if version >= 1600000 then
-                      if options.unsafe_buffer_usage_warnings == "" then
-                        insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
+            if options.warnings == "extensive" then
+              if version >= 800000 then
+                insert(jln_cxflags, "-Wstringop-overflow=4")
+                if version >= 1200000 then
+                  insert(jln_cxflags, "-Wuse-after-free=3")
+                end
+              end
+            end
+          else
+            insert(jln_cxflags, "-Weverything")
+            insert(jln_cxflags, "-Wno-documentation")
+            insert(jln_cxflags, "-Wno-documentation-unknown-command")
+            insert(jln_cxflags, "-Wno-newline-eof")
+            insert(jln_cxflags, "-Wno-padded")
+            insert(jln_cxflags, "-Wno-global-constructors")
+            if  not ( ( options.switch_warnings == "off" or options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) ) then
+              insert(jln_cxflags, "-Wno-switch-enum")
+            end
+            if options.covered_switch_default_warnings == "" then
+              insert(jln_cxflags, "-Wno-covered-switch-default")
+            end
+            if options.conversion_warnings ~= "" then
+              if options.conversion_warnings == "conversion" then
+                insert(jln_cxflags, "-Wno-sign-compare")
+                insert(jln_cxflags, "-Wno-sign-conversion")
+              else
+                if ( options.conversion_warnings == "float" or options.conversion_warnings == "sign" ) then
+                  insert(jln_cxflags, "-Wno-conversion")
+                end
+              end
+            end
+            if version >= 300009 then
+              if version >= 500000 then
+                if version >= 900000 then
+                  if version >= 1000000 then
+                    if version >= 1100000 then
+                      if version >= 1600000 then
+                        if options.unsafe_buffer_usage_warnings == "" then
+                          insert(jln_cxflags, "-Wno-unsafe-buffer-usage")
+                        end
                       end
                     end
                   end
@@ -798,13 +825,21 @@ function get_flags(options, extra_options)
     if options.var_init ~= "" then
       if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) ) then
         if ( is_clang_like and version <= 1500000 ) then
-          insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+          if options.var_init == "zero" then
+            insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+          end
         end
         if options.var_init == "pattern" then
           insert(jln_cxflags, "-ftrivial-auto-var-init=pattern")
+          if compiler == 'gcc' then
+            insert(jln_cxflags, "-Wtrivial-auto-var-init")
+          end
         else
           if options.var_init == "zero" then
             insert(jln_cxflags, "-ftrivial-auto-var-init=zero")
+            if compiler == 'gcc' then
+              insert(jln_cxflags, "-Wtrivial-auto-var-init")
+            end
           else
             insert(jln_cxflags, "-ftrivial-auto-var-init=uninitialized")
           end
@@ -1095,13 +1130,30 @@ function get_flags(options, extra_options)
         if options.conversion_warnings == "conversion" then
           insert(jln_cxflags, "-Wconversion")
         else
-          if options.conversion_warnings == "sign" then
-            insert(jln_cxflags, "-Wsign-compare")
-            insert(jln_cxflags, "-Wsign-conversion")
+          if options.conversion_warnings == "float" then
+            if compiler == 'gcc' then
+              if version >= 400009 then
+                insert(jln_cxflags, "-Wfloat-conversion")
+              end
+            else
+              insert(jln_cxflags, "-Wfloat-conversion")
+            end
           else
-            insert(jln_cxflags, "-Wno-conversion")
-            insert(jln_cxflags, "-Wno-sign-compare")
-            insert(jln_cxflags, "-Wno-sign-conversion")
+            if options.conversion_warnings == "sign" then
+              insert(jln_cxflags, "-Wsign-compare")
+              insert(jln_cxflags, "-Wsign-conversion")
+            else
+              if options.conversion_warnings == "all" then
+                insert(jln_cxflags, "-Wconversion")
+                if compiler == 'gcc' then
+                  insert(jln_cxflags, "-Warith-conversion")
+                end
+              else
+                insert(jln_cxflags, "-Wno-conversion")
+                insert(jln_cxflags, "-Wno-sign-compare")
+                insert(jln_cxflags, "-Wno-sign-conversion")
+              end
+            end
           end
         end
       end
@@ -1724,6 +1776,23 @@ function get_flags(options, extra_options)
       if options.pedantic ~= "" then
         if options.pedantic ~= "off" then
           insert(jln_cxflags, "/permissive-")
+          if compiler == 'cl' then
+            if options.pedantic == "as_error" then
+              insert(jln_cxflags, "/we4608")
+              if version >= 1900031 then
+                if version >= 1900038 then
+                  insert(jln_cxflags, "/we5110")
+                end
+              end
+            else
+              insert(jln_cxflags, "/w14608")
+              if version >= 1900031 then
+                if version >= 1900038 then
+                  insert(jln_cxflags, "/w15110")
+                end
+              end
+            end
+          end
         end
       end
       if options.stack_protector ~= "" then
@@ -1811,15 +1880,17 @@ function get_flags(options, extra_options)
           -- unimplementable
         end
       else
-        if version < 1600010 then
-          insert(jln_cxflags, "/experimental:external")
-        end
-        insert(jln_cxflags, "/external:W0")
-        if options.msvc_isystem == "anglebrackets" then
-          insert(jln_cxflags, "/external:anglebrackets")
-        else
-          insert(jln_cxflags, "/external:env:INCLUDE")
-          insert(jln_cxflags, "/external:env:CAExcludePath")
+        if options.msvc_isystem ~= "assumed" then
+          if version < 1600010 then
+            insert(jln_cxflags, "/experimental:external")
+          end
+          insert(jln_cxflags, "/external:W0")
+          if options.msvc_isystem == "anglebrackets" then
+            insert(jln_cxflags, "/external:anglebrackets")
+          else
+            insert(jln_cxflags, "/external:env:INCLUDE")
+            insert(jln_cxflags, "/external:env:CAExcludePath")
+          end
         end
       end
       if options.msvc_isystem_with_template_from_non_external ~= "" then
@@ -1829,128 +1900,157 @@ function get_flags(options, extra_options)
           insert(jln_cxflags, "/external:template-")
         end
       end
-      if options.warnings ~= "" then
-        if options.warnings == "off" then
-          insert(jln_cxflags, "/W0")
-        else
-          insert(jln_cxflags, "/wd4710")
+    end
+    if options.warnings ~= "" then
+      if options.warnings == "off" then
+        insert(jln_cxflags, "/W0")
+      else
+        if options.warnings == "essential" then
+          insert(jln_cxflags, "/W4")
           insert(jln_cxflags, "/wd4711")
-          if version < 1900021 then
-            insert(jln_cxflags, "/wd4774")
-          end
-          if options.warnings == "on" then
-            insert(jln_cxflags, "/W4")
-            insert(jln_cxflags, "/wd4514")
-          else
-            insert(jln_cxflags, "/Wall")
-            insert(jln_cxflags, "/wd4514")
-            insert(jln_cxflags, "/wd4571")
-            insert(jln_cxflags, "/wd4355")
-            insert(jln_cxflags, "/wd4548")
-            insert(jln_cxflags, "/wd4577")
-            insert(jln_cxflags, "/wd4820")
-            insert(jln_cxflags, "/wd5039")
-            insert(jln_cxflags, "/wd4464")
-            insert(jln_cxflags, "/wd4868")
-            insert(jln_cxflags, "/wd5045")
-            if options.warnings == "strict" then
-              insert(jln_cxflags, "/wd4583")
-              insert(jln_cxflags, "/wd4619")
-            end
-          end
-        end
-      end
-      if options.switch_warnings ~= "" then
-        if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
-          insert(jln_cxflags, "/w14062")
-        else
-          if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
-            insert(jln_cxflags, "/w14061")
-            insert(jln_cxflags, "/w14062")
-          else
-            insert(jln_cxflags, "/wd4061")
-            insert(jln_cxflags, "/wd4062")
-          end
-        end
-      end
-    else
-      if options.warnings ~= "" then
-        if options.warnings == "off" then
-          insert(jln_cxflags, "/W0")
         else
           if options.warnings == "on" then
             insert(jln_cxflags, "/W4")
-            insert(jln_cxflags, "/wd4514")
             insert(jln_cxflags, "/wd4711")
+            insert(jln_cxflags, "/w14296")
+            insert(jln_cxflags, "/w14444")
+            insert(jln_cxflags, "/w14545")
+            insert(jln_cxflags, "/w14546")
+            insert(jln_cxflags, "/w14547")
+            insert(jln_cxflags, "/w14548")
+            insert(jln_cxflags, "/w14549")
+            insert(jln_cxflags, "/w14555")
+            insert(jln_cxflags, "/w14557")
+            insert(jln_cxflags, "/w14905")
+            insert(jln_cxflags, "/w14906")
+            insert(jln_cxflags, "/w14917")
+            if version >= 1500003 then
+              if version >= 1600010 then
+                insert(jln_cxflags, "/w15240")
+                if version >= 1700004 then
+                  if options.msvc_isystem == "" then
+                    insert(jln_cxflags, "/w15262")
+                  end
+                  if version >= 1900000 then
+                    insert(jln_cxflags, "/w14426")
+                    if options.msvc_isystem == "" then
+                      insert(jln_cxflags, "/w14654")
+                    end
+                    insert(jln_cxflags, "/w15031")
+                    insert(jln_cxflags, "/w15032")
+                    if version >= 1900015 then
+                      if version >= 1900022 then
+                        if version >= 1900025 then
+                          if version >= 1900029 then
+                            if version >= 1900030 then
+                              insert(jln_cxflags, "/w15249")
+                              if version >= 1900032 then
+                                insert(jln_cxflags, "/w15258")
+                              end
+                            end
+                          end
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
           else
             insert(jln_cxflags, "/Wall")
-            insert(jln_cxflags, "/wd4355")
+            insert(jln_cxflags, "/wd4370")
+            insert(jln_cxflags, "/wd4371")
             insert(jln_cxflags, "/wd4514")
-            insert(jln_cxflags, "/wd4548")
             insert(jln_cxflags, "/wd4571")
             insert(jln_cxflags, "/wd4577")
-            insert(jln_cxflags, "/wd4625")
-            insert(jln_cxflags, "/wd4626")
-            insert(jln_cxflags, "/wd4668")
+            insert(jln_cxflags, "/wd4686")
             insert(jln_cxflags, "/wd4710")
             insert(jln_cxflags, "/wd4711")
-            if version < 1900021 then
-              insert(jln_cxflags, "/wd4774")
-            end
             insert(jln_cxflags, "/wd4820")
-            insert(jln_cxflags, "/wd5026")
-            insert(jln_cxflags, "/wd5027")
-            insert(jln_cxflags, "/wd5039")
-            insert(jln_cxflags, "/wd4464")
-            insert(jln_cxflags, "/wd4868")
-            insert(jln_cxflags, "/wd5045")
-            if options.warnings == "strict" then
-              insert(jln_cxflags, "/wd4061")
-              insert(jln_cxflags, "/wd4266")
-              insert(jln_cxflags, "/wd4583")
-              insert(jln_cxflags, "/wd4619")
-              insert(jln_cxflags, "/wd4623")
-              insert(jln_cxflags, "/wd5204")
+            insert(jln_cxflags, "/wd4866")
+            if options.msvc_isystem == "" then
+              insert(jln_cxflags, "/wd4464")
+              insert(jln_cxflags, "/wd4548")
+              insert(jln_cxflags, "/wd4668")
+              if version >= 1500000 then
+                if version >= 1700004 then
+                  insert(jln_cxflags, "/wd5262")
+                  if version >= 1900000 then
+                    insert(jln_cxflags, "/wd4774")
+                  end
+                end
+              end
+            end
+            if version >= 1600000 then
+              insert(jln_cxflags, "/wd4800")
+              if version >= 1900039 then
+                insert(jln_cxflags, "/wd4975")
+                if version >= 1900040 then
+                  insert(jln_cxflags, "/wd4860")
+                  insert(jln_cxflags, "/wd4861")
+                  insert(jln_cxflags, "/wd5273")
+                  insert(jln_cxflags, "/wd5274")
+                  if version >= 1900041 then
+                    insert(jln_cxflags, "/wd5306")
+                    if version >= 1900043 then
+                      insert(jln_cxflags, "/wd5277")
+                    end
+                  end
+                end
+              end
             end
           end
         end
       end
     end
     if options.conversion_warnings ~= "" then
-      if options.conversion_warnings == "on" then
+      if ( options.conversion_warnings == "off" or options.conversion_warnings == "sign" ) then
+        insert(jln_cxflags, "/wd4244")
+        insert(jln_cxflags, "/wd4245")
+        insert(jln_cxflags, "/wd4365")
+      else
         insert(jln_cxflags, "/w14244")
         insert(jln_cxflags, "/w14245")
-        insert(jln_cxflags, "/w14388")
         insert(jln_cxflags, "/w14365")
+      end
+      if ( options.conversion_warnings == "on" or options.conversion_warnings == "all" or options.conversion_warnings == "sign" ) then
+        insert(jln_cxflags, "/w14018")
+        insert(jln_cxflags, "/w14388")
+        insert(jln_cxflags, "/w14289")
       else
-        if options.conversion_warnings == "conversion" then
-          insert(jln_cxflags, "/w14244")
-          insert(jln_cxflags, "/w14365")
+        insert(jln_cxflags, "/wd4018")
+        insert(jln_cxflags, "/wd4388")
+        insert(jln_cxflags, "/wd4289")
+      end
+    end
+    if options.switch_warnings ~= "" then
+      if ( options.switch_warnings == "on" or options.switch_warnings == "mandatory_default" ) then
+        insert(jln_cxflags, "/wd4061")
+        insert(jln_cxflags, "/w14062")
+      else
+        if ( options.switch_warnings == "exhaustive_enum" or options.switch_warnings == "exhaustive_enum_and_mandatory_default" ) then
+          insert(jln_cxflags, "/w14061")
+          insert(jln_cxflags, "/w14062")
         else
-          if options.conversion_warnings == "sign" then
-            insert(jln_cxflags, "/w14388")
-            insert(jln_cxflags, "/w14245")
-          else
-            insert(jln_cxflags, "/wd4244")
-            insert(jln_cxflags, "/wd4365")
-            insert(jln_cxflags, "/wd4388")
-            insert(jln_cxflags, "/wd4245")
-          end
+          insert(jln_cxflags, "/wd4061")
+          insert(jln_cxflags, "/wd4062")
         end
       end
     end
     if options.shadow_warnings ~= "" then
-      if options.shadow_warnings == "off" then
-        insert(jln_cxflags, "/wd4456")
-        insert(jln_cxflags, "/wd4459")
-      else
-        if ( options.shadow_warnings == "on" or options.shadow_warnings == "all" ) then
-          insert(jln_cxflags, "/w4456")
-          insert(jln_cxflags, "/w4459")
+      if version >= 1900000 then
+        if options.shadow_warnings == "off" then
+          insert(jln_cxflags, "/wd4456")
+          insert(jln_cxflags, "/wd4459")
         else
-          if options.shadow_warnings == "local" then
-            insert(jln_cxflags, "/w4456")
-            insert(jln_cxflags, "/wd4459")
+          if ( options.shadow_warnings == "on" or options.shadow_warnings == "all" ) then
+            insert(jln_cxflags, "/w14456")
+            insert(jln_cxflags, "/w14459")
+          else
+            if options.shadow_warnings == "local" then
+              insert(jln_cxflags, "/w4456")
+              insert(jln_cxflags, "/wd4459")
+            end
           end
         end
       end
@@ -2144,35 +2244,38 @@ function get_flags(options, extra_options)
           if options.warnings == "off" then
             insert(jln_cxflags, "-w")
           else
-            insert(jln_cxflags, "-Wall")
-            insert(jln_cxflags, "-Warray-bounds")
-            insert(jln_cxflags, "-Wcast-qual")
-            insert(jln_cxflags, "-Wchar-subscripts")
-            insert(jln_cxflags, "-Wdisabled-optimization")
-            insert(jln_cxflags, "-Wenum-compare")
-            insert(jln_cxflags, "-Wextra")
-            insert(jln_cxflags, "-Wfloat-equal")
-            insert(jln_cxflags, "-Wformat-security")
-            insert(jln_cxflags, "-Wformat=2")
-            insert(jln_cxflags, "-Winit-self")
-            insert(jln_cxflags, "-Winvalid-pch")
-            insert(jln_cxflags, "-Wmaybe-uninitialized")
-            insert(jln_cxflags, "-Wmissing-include-dirs")
-            insert(jln_cxflags, "-Wnarrowing")
-            insert(jln_cxflags, "-Wnonnull")
-            insert(jln_cxflags, "-Wparentheses")
-            insert(jln_cxflags, "-Wpointer-sign")
-            insert(jln_cxflags, "-Wreorder")
-            insert(jln_cxflags, "-Wsequence-point")
-            insert(jln_cxflags, "-Wtrigraphs")
-            insert(jln_cxflags, "-Wundef")
-            insert(jln_cxflags, "-Wunused-function")
-            insert(jln_cxflags, "-Wunused-but-set-variable")
-            insert(jln_cxflags, "-Wunused-variable")
-            insert(jln_cxflags, "-Wpointer-arith")
-            insert(jln_cxflags, "-Wold-style-definition")
-            insert(jln_cxflags, "-Wstrict-prototypes")
-            insert(jln_cxflags, "-Wwrite-strings")
+            if options.warnings == "essential" then
+              insert(jln_cxflags, "-Wall")
+            else
+              insert(jln_cxflags, "-Wall")
+              insert(jln_cxflags, "-Warray-bounds")
+              insert(jln_cxflags, "-Wcast-qual")
+              insert(jln_cxflags, "-Wchar-subscripts")
+              insert(jln_cxflags, "-Wdisabled-optimization")
+              insert(jln_cxflags, "-Wenum-compare")
+              insert(jln_cxflags, "-Wextra")
+              insert(jln_cxflags, "-Wfloat-equal")
+              insert(jln_cxflags, "-Wformat-security")
+              insert(jln_cxflags, "-Wformat=2")
+              insert(jln_cxflags, "-Winit-self")
+              insert(jln_cxflags, "-Winvalid-pch")
+              insert(jln_cxflags, "-Wmaybe-uninitialized")
+              insert(jln_cxflags, "-Wmissing-include-dirs")
+              insert(jln_cxflags, "-Wnarrowing")
+              insert(jln_cxflags, "-Wnonnull")
+              insert(jln_cxflags, "-Wpointer-sign")
+              insert(jln_cxflags, "-Wreorder")
+              insert(jln_cxflags, "-Wsequence-point")
+              insert(jln_cxflags, "-Wtrigraphs")
+              insert(jln_cxflags, "-Wundef")
+              insert(jln_cxflags, "-Wunused-function")
+              insert(jln_cxflags, "-Wunused-but-set-variable")
+              insert(jln_cxflags, "-Wunused-variable")
+              insert(jln_cxflags, "-Wpointer-arith")
+              insert(jln_cxflags, "-Wold-style-definition")
+              insert(jln_cxflags, "-Wstrict-prototypes")
+              insert(jln_cxflags, "-Wwrite-strings")
+            end
           end
         end
         if options.switch_warnings ~= "" then

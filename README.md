@@ -65,9 +65,9 @@ Options with a default value other than `default` are listed below.
 ```ini
 # Warning:
 
-warnings = on default off strict very_strict
+warnings = on default off essential extensive
 warnings_as_error = default off on basic
-conversion_warnings = on default off sign conversion
+conversion_warnings = on default off sign float conversion all
 covered_switch_default_warnings = on default off
 fix_compiler_error = on default off
 msvc_crt_secure_no_warnings = on default off
@@ -133,14 +133,12 @@ diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
 msvc_diagnostics_format = caret default classic column
-msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
+msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
 msvc_isystem_with_template_from_non_external = default off on
 pie = default off on static fpic fPIC fpie fPIE
 windows_bigobj = on default
 ```
 <!-- ./compiler-options.lua -->
-
-The value `default` does nothing.
 
 If not specified:
 
@@ -179,5 +177,5 @@ category | options
 debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
 release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
 security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
-really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
+really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
 
