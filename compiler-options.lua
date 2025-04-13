@@ -979,7 +979,12 @@ opt'conversion_warnings' {
         flag'-Wconversion',
       },
       lvl'float' {
-        Or(-gcc, vers'>=4.9') {
+        match {
+          gcc{
+            vers'>=4.9' {
+              flag'-Wfloat-conversion',
+            }
+          },
           flag'-Wfloat-conversion',
         }
       },
