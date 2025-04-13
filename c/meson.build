@@ -57,9 +57,9 @@
 #  ```ini
 #  # Warning:
 #
-#  warnings = on default off strict very_strict
+#  warnings = on default off essential extensive
 #  warnings_as_error = default off on basic
-#  conversion_warnings = on default off sign conversion
+#  conversion_warnings = on default off sign float conversion all
 #  covered_switch_default_warnings = on default off
 #  fix_compiler_error = on default off
 #  msvc_crt_secure_no_warnings = on default off
@@ -125,14 +125,12 @@
 #  diagnostics_show_template_tree = default off on
 #  elide_type = default off on
 #  msvc_diagnostics_format = caret default classic column
-#  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag
+#  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
 #  msvc_isystem_with_template_from_non_external = default off on
 #  pie = default off on static fpic fPIC fpie fPIE
 #  windows_bigobj = on default
 #  ```
 #  <!-- ./compiler-options.lua -->
-#
-#  The value `default` does nothing.
 #
 #  If not specified:
 #
@@ -171,7 +169,7 @@
 #  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
 #  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
 #  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
-#  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=very_strict`
+#  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
 #
 #  
 
@@ -306,23 +304,31 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       if (  ___jln_c_flags.get('warnings', 'default') == 'off' )
         jln_c_c_flags += ['-w', ]
       else
-        if (  ___jln_c_compiler_id == 'gcc' )
-          jln_c_c_flags += ['-Wall', '-Wextra', '-Wcast-align', '-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winvalid-pch', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
-          if (  ___jln_c_compiler_version.version_compare('>=4.7') )
-            jln_c_c_flags += ['-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', ]
-            if (  ___jln_c_compiler_version.version_compare('>=4.8') )
-              if (  ___jln_c_compiler_version.version_compare('>=4.9') )
-                jln_c_c_flags += ['-Wfloat-conversion', ]
-                if (  ___jln_c_compiler_version.version_compare('>=5.1') )
-                  jln_c_c_flags += ['-Wformat-signedness', '-Warray-bounds=2', ]
-                  if (  ___jln_c_compiler_version.version_compare('>=6.1') )
-                    jln_c_c_flags += ['-Wduplicated-cond', '-Wnull-dereference', ]
-                    if (  ___jln_c_compiler_version.version_compare('>=7.0') )
-                      if (  ___jln_c_compiler_version.version_compare('>=7.1') )
-                        jln_c_c_flags += ['-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', ]
-                        if (  ___jln_c_compiler_version.version_compare('>=8.0') )
-                          if (  ( ___jln_c_flags.get('warnings', 'default') == 'strict' or ___jln_c_flags.get('warnings', 'default') == 'very_strict' ) )
-                            jln_c_c_flags += ['-Wcast-align=strict', ]
+        if (  ___jln_c_flags.get('warnings', 'default') == 'essential' )
+          jln_c_c_flags += ['-Wall', '-Wextra', '-Wwrite-strings', ]
+        else
+          if (  ___jln_c_compiler_id == 'gcc' )
+            jln_c_c_flags += ['-Wall', '-Wextra', ]
+            if (  ___jln_c_compiler_version.version_compare('<8.0') )
+              jln_c_c_flags += ['-Wcast-align', ]
+            endif
+            jln_c_c_flags += ['-Wcast-qual', '-Wdisabled-optimization', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winvalid-pch', '-Wmissing-declarations', '-Wmissing-include-dirs', '-Wpacked', '-Wredundant-decls', '-Wundef', '-Wunused-macros', '-Wpointer-arith', '-Wbad-function-cast', '-Winit-self', '-Wjump-misses-init', '-Wnested-externs', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
+            if (  ___jln_c_compiler_version.version_compare('>=4.7') )
+              jln_c_c_flags += ['-Wsuggest-attribute=noreturn', '-Wlogical-op', '-Wvector-operation-performance', '-Wdouble-promotion', '-Wtrampolines', ]
+              if (  ___jln_c_compiler_version.version_compare('>=4.8') )
+                if (  ___jln_c_compiler_version.version_compare('>=4.9') )
+                  if (  ___jln_c_compiler_version.version_compare('>=5.1') )
+                    jln_c_c_flags += ['-Wformat-signedness', '-Warray-bounds=2', ]
+                    if (  ___jln_c_compiler_version.version_compare('>=6.1') )
+                      jln_c_c_flags += ['-Wduplicated-cond', '-Wnull-dereference', ]
+                      if (  ___jln_c_compiler_version.version_compare('>=7.0') )
+                        if (  ___jln_c_compiler_version.version_compare('>=7.1') )
+                          jln_c_c_flags += ['-Walloc-zero', '-Walloca', '-Wformat-overflow=2', '-Wduplicated-branches', ]
+                          if (  ___jln_c_compiler_version.version_compare('>=8.0') )
+                            jln_c_c_flags += ['-Wcast-align=strict', '-Wformat-truncation=2', '-Wshift-overflow=2', ]
+                            if (  ___jln_c_compiler_version.version_compare('>=14.0') )
+                              jln_c_c_flags += ['-Walloc-size', ]
+                            endif
                           endif
                         endif
                       endif
@@ -331,23 +337,40 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
                 endif
               endif
             endif
-          endif
-        else
-          jln_c_c_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', ]
-          if (   not ( ( ___jln_c_flags.get('switch_warnings', 'default') == 'off' or ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) ) )
-            jln_c_c_flags += ['-Wno-switch-enum', ]
-          endif
-          if (  ___jln_c_flags.get('covered_switch_default_warnings', 'default') == 'default' )
-            jln_c_c_flags += ['-Wno-covered-switch-default', ]
-          endif
-          if (  ___jln_c_compiler_version.version_compare('>=3.9') )
-            if (  ___jln_c_compiler_version.version_compare('>=5.0') )
-              if (  ___jln_c_compiler_version.version_compare('>=9.0') )
-                if (  ___jln_c_compiler_version.version_compare('>=10.0') )
-                  if (  ___jln_c_compiler_version.version_compare('>=11.0') )
-                    if (  ___jln_c_compiler_version.version_compare('>=16.0') )
-                      if (  ___jln_c_flags.get('unsafe_buffer_usage_warnings', 'default') == 'default' )
-                        jln_c_c_flags += ['-Wno-unsafe-buffer-usage', ]
+            if (  ___jln_c_flags.get('warnings', 'default') == 'extensive' )
+              if (  ___jln_c_compiler_version.version_compare('>=8.0') )
+                jln_c_c_flags += ['-Wstringop-overflow=4', ]
+                if (  ___jln_c_compiler_version.version_compare('>=12.0') )
+                  jln_c_c_flags += ['-Wuse-after-free=3', ]
+                endif
+              endif
+            endif
+          else
+            jln_c_c_flags += ['-Weverything', '-Wno-documentation', '-Wno-documentation-unknown-command', '-Wno-newline-eof', '-Wno-padded', '-Wno-global-constructors', ]
+            if (   not ( ( ___jln_c_flags.get('switch_warnings', 'default') == 'off' or ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) ) )
+              jln_c_c_flags += ['-Wno-switch-enum', ]
+            endif
+            if (  ___jln_c_flags.get('covered_switch_default_warnings', 'default') == 'default' )
+              jln_c_c_flags += ['-Wno-covered-switch-default', ]
+            endif
+            if (  ___jln_c_flags.get('conversion_warnings', 'default') != 'default' )
+              if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'conversion' )
+                jln_c_c_flags += ['-Wno-sign-compare', '-Wno-sign-conversion', ]
+              else
+                if (  ( ___jln_c_flags.get('conversion_warnings', 'default') == 'float' or ___jln_c_flags.get('conversion_warnings', 'default') == 'sign' ) )
+                  jln_c_c_flags += ['-Wno-conversion', ]
+                endif
+              endif
+            endif
+            if (  ___jln_c_compiler_version.version_compare('>=3.9') )
+              if (  ___jln_c_compiler_version.version_compare('>=5.0') )
+                if (  ___jln_c_compiler_version.version_compare('>=9.0') )
+                  if (  ___jln_c_compiler_version.version_compare('>=10.0') )
+                    if (  ___jln_c_compiler_version.version_compare('>=11.0') )
+                      if (  ___jln_c_compiler_version.version_compare('>=16.0') )
+                        if (  ___jln_c_flags.get('unsafe_buffer_usage_warnings', 'default') == 'default' )
+                          jln_c_c_flags += ['-Wno-unsafe-buffer-usage', ]
+                        endif
                       endif
                     endif
                   endif
@@ -426,13 +449,21 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
     if (  ___jln_c_flags.get('var_init', 'default') != 'default' )
       if (  ( ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) or ( ___jln_c_is_clang_like and ___jln_c_compiler_version.version_compare('>=8.0') ) ) )
         if (  ( ___jln_c_is_clang_like and ___jln_c_compiler_version.version_compare('<=15.0') ) )
-          jln_c_c_flags += ['-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', ]
+          if (  ___jln_c_flags.get('var_init', 'default') == 'zero' )
+            jln_c_c_flags += ['-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang', ]
+          endif
         endif
         if (  ___jln_c_flags.get('var_init', 'default') == 'pattern' )
           jln_c_c_flags += ['-ftrivial-auto-var-init=pattern', ]
+          if (  ___jln_c_compiler_id == 'gcc' )
+            jln_c_c_flags += ['-Wtrivial-auto-var-init', ]
+          endif
         else
           if (  ___jln_c_flags.get('var_init', 'default') == 'zero' )
             jln_c_c_flags += ['-ftrivial-auto-var-init=zero', ]
+            if (  ___jln_c_compiler_id == 'gcc' )
+              jln_c_c_flags += ['-Wtrivial-auto-var-init', ]
+            endif
           else
             jln_c_c_flags += ['-ftrivial-auto-var-init=uninitialized', ]
           endif
@@ -694,10 +725,27 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
         if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'conversion' )
           jln_c_c_flags += ['-Wconversion', ]
         else
-          if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'sign' )
-            jln_c_c_flags += ['-Wsign-compare', '-Wsign-conversion', ]
+          if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'float' )
+            if (  ___jln_c_compiler_id == 'gcc' )
+              if (  ___jln_c_compiler_version.version_compare('>=4.9') )
+                jln_c_c_flags += ['-Wfloat-conversion', ]
+              endif
+            else
+              jln_c_c_flags += ['-Wfloat-conversion', ]
+            endif
           else
-            jln_c_c_flags += ['-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', ]
+            if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'sign' )
+              jln_c_c_flags += ['-Wsign-compare', '-Wsign-conversion', ]
+            else
+              if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'all' )
+                jln_c_c_flags += ['-Wconversion', ]
+                if (  ___jln_c_compiler_id == 'gcc' )
+                  jln_c_c_flags += ['-Warith-conversion', ]
+                endif
+              else
+                jln_c_c_flags += ['-Wno-conversion', '-Wno-sign-compare', '-Wno-sign-conversion', ]
+              endif
+            endif
           endif
         endif
       endif
@@ -1298,6 +1346,23 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
       if (  ___jln_c_flags.get('pedantic', 'default') != 'default' )
         if (  ___jln_c_flags.get('pedantic', 'default') != 'off' )
           jln_c_c_flags += ['/permissive-', ]
+          if (  ___jln_c_compiler_id == 'msvc' )
+            if (  ___jln_c_flags.get('pedantic', 'default') == 'as_error' )
+              jln_c_c_flags += ['/we4608', ]
+              if (  ___jln_c_compiler_version.version_compare('>=19.31') )
+                if (  ___jln_c_compiler_version.version_compare('>=19.38') )
+                  jln_c_c_flags += ['/we5110', ]
+                endif
+              endif
+            else
+              jln_c_c_flags += ['/w14608', ]
+              if (  ___jln_c_compiler_version.version_compare('>=19.31') )
+                if (  ___jln_c_compiler_version.version_compare('>=19.38') )
+                  jln_c_c_flags += ['/w15110', ]
+                endif
+              endif
+            endif
+          endif
         endif
       endif
       if (  ___jln_c_flags.get('stack_protector', 'default') != 'default' )
@@ -1382,14 +1447,16 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           # unimplementable
         endif
       else
-        if (  ___jln_c_compiler_version.version_compare('<16.10') )
-          jln_c_c_flags += ['/experimental:external', ]
-        endif
-        jln_c_c_flags += ['/external:W0', ]
-        if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'anglebrackets' )
-          jln_c_c_flags += ['/external:anglebrackets', ]
-        else
-          jln_c_c_flags += ['/external:env:INCLUDE', '/external:env:CAExcludePath', ]
+        if (  ___jln_c_flags.get('msvc_isystem', 'default') != 'assumed' )
+          if (  ___jln_c_compiler_version.version_compare('<16.10') )
+            jln_c_c_flags += ['/experimental:external', ]
+          endif
+          jln_c_c_flags += ['/external:W0', ]
+          if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'anglebrackets' )
+            jln_c_c_flags += ['/external:anglebrackets', ]
+          else
+            jln_c_c_flags += ['/external:env:INCLUDE', '/external:env:CAExcludePath', ]
+          endif
         endif
       endif
       if (  ___jln_c_flags.get('msvc_isystem_with_template_from_non_external', 'default') != 'default' )
@@ -1399,79 +1466,113 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           jln_c_c_flags += ['/external:template-', ]
         endif
       endif
-      if (  ___jln_c_flags.get('warnings', 'default') != 'default' )
-        if (  ___jln_c_flags.get('warnings', 'default') == 'off' )
-          jln_c_c_flags += ['/W0', ]
-        else
-          jln_c_c_flags += ['/wd4710', '/wd4711', ]
-          if (  ___jln_c_compiler_version.version_compare('<19.21') )
-            jln_c_c_flags += ['/wd4774', ]
-          endif
-          if (  ___jln_c_flags.get('warnings', 'default') == 'on' )
-            jln_c_c_flags += ['/W4', '/wd4514', ]
-          else
-            jln_c_c_flags += ['/Wall', '/wd4514', '/wd4571', '/wd4355', '/wd4548', '/wd4577', '/wd4820', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
-            if (  ___jln_c_flags.get('warnings', 'default') == 'strict' )
-              jln_c_c_flags += ['/wd4583', '/wd4619', ]
-            endif
-          endif
-        endif
-      endif
-      if (  ___jln_c_flags.get('switch_warnings', 'default') != 'default' )
-        if (  ( ___jln_c_flags.get('switch_warnings', 'default') == 'on' or ___jln_c_flags.get('switch_warnings', 'default') == 'mandatory_default' ) )
-          jln_c_c_flags += ['/w14062', ]
-        else
-          if (  ( ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) )
-            jln_c_c_flags += ['/w14061', '/w14062', ]
-          else
-            jln_c_c_flags += ['/wd4061', '/wd4062', ]
-          endif
-        endif
-      endif
-    else
-      if (  ___jln_c_flags.get('warnings', 'default') != 'default' )
-        if (  ___jln_c_flags.get('warnings', 'default') == 'off' )
-          jln_c_c_flags += ['/W0', ]
+    endif
+    if (  ___jln_c_flags.get('warnings', 'default') != 'default' )
+      if (  ___jln_c_flags.get('warnings', 'default') == 'off' )
+        jln_c_c_flags += ['/W0', ]
+      else
+        if (  ___jln_c_flags.get('warnings', 'default') == 'essential' )
+          jln_c_c_flags += ['/W4', '/wd4711', ]
         else
           if (  ___jln_c_flags.get('warnings', 'default') == 'on' )
-            jln_c_c_flags += ['/W4', '/wd4514', '/wd4711', ]
-          else
-            jln_c_c_flags += ['/Wall', '/wd4355', '/wd4514', '/wd4548', '/wd4571', '/wd4577', '/wd4625', '/wd4626', '/wd4668', '/wd4710', '/wd4711', ]
-            if (  ___jln_c_compiler_version.version_compare('<19.21') )
-              jln_c_c_flags += ['/wd4774', ]
+            jln_c_c_flags += ['/W4', '/wd4711', '/w14296', '/w14444', '/w14545', '/w14546', '/w14547', '/w14548', '/w14549', '/w14555', '/w14557', '/w14905', '/w14906', '/w14917', ]
+            if (  ___jln_c_compiler_version.version_compare('>=15.3') )
+              if (  ___jln_c_compiler_version.version_compare('>=16.10') )
+                jln_c_c_flags += ['/w15240', ]
+                if (  ___jln_c_compiler_version.version_compare('>=17.4') )
+                  if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'default' )
+                    jln_c_c_flags += ['/w15262', ]
+                  endif
+                  if (  ___jln_c_compiler_version.version_compare('>=19.0') )
+                    jln_c_c_flags += ['/w14426', ]
+                    if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'default' )
+                      jln_c_c_flags += ['/w14654', ]
+                    endif
+                    jln_c_c_flags += ['/w15031', '/w15032', ]
+                    if (  ___jln_c_compiler_version.version_compare('>=19.15') )
+                      if (  ___jln_c_compiler_version.version_compare('>=19.22') )
+                        if (  ___jln_c_compiler_version.version_compare('>=19.25') )
+                          if (  ___jln_c_compiler_version.version_compare('>=19.29') )
+                            if (  ___jln_c_compiler_version.version_compare('>=19.30') )
+                              jln_c_c_flags += ['/w15249', ]
+                              if (  ___jln_c_compiler_version.version_compare('>=19.32') )
+                                jln_c_c_flags += ['/w15258', ]
+                              endif
+                            endif
+                          endif
+                        endif
+                      endif
+                    endif
+                  endif
+                endif
+              endif
             endif
-            jln_c_c_flags += ['/wd4820', '/wd5026', '/wd5027', '/wd5039', '/wd4464', '/wd4868', '/wd5045', ]
-            if (  ___jln_c_flags.get('warnings', 'default') == 'strict' )
-              jln_c_c_flags += ['/wd4061', '/wd4266', '/wd4583', '/wd4619', '/wd4623', '/wd5204', ]
+          else
+            jln_c_c_flags += ['/Wall', '/wd4370', '/wd4371', '/wd4514', '/wd4571', '/wd4577', '/wd4686', '/wd4710', '/wd4711', '/wd4820', '/wd4866', ]
+            if (  ___jln_c_flags.get('msvc_isystem', 'default') == 'default' )
+              jln_c_c_flags += ['/wd4464', '/wd4548', '/wd4668', ]
+              if (  ___jln_c_compiler_version.version_compare('>=15.0') )
+                if (  ___jln_c_compiler_version.version_compare('>=17.4') )
+                  jln_c_c_flags += ['/wd5262', ]
+                  if (  ___jln_c_compiler_version.version_compare('>=19.0') )
+                    jln_c_c_flags += ['/wd4774', ]
+                  endif
+                endif
+              endif
+            endif
+            if (  ___jln_c_compiler_version.version_compare('>=16.0') )
+              jln_c_c_flags += ['/wd4800', ]
+              if (  ___jln_c_compiler_version.version_compare('>=19.39') )
+                jln_c_c_flags += ['/wd4975', ]
+                if (  ___jln_c_compiler_version.version_compare('>=19.40') )
+                  jln_c_c_flags += ['/wd4860', '/wd4861', '/wd5273', '/wd5274', ]
+                  if (  ___jln_c_compiler_version.version_compare('>=19.41') )
+                    jln_c_c_flags += ['/wd5306', ]
+                    if (  ___jln_c_compiler_version.version_compare('>=19.43') )
+                      jln_c_c_flags += ['/wd5277', ]
+                    endif
+                  endif
+                endif
+              endif
             endif
           endif
         endif
       endif
     endif
     if (  ___jln_c_flags.get('conversion_warnings', 'default') != 'default' )
-      if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'on' )
-        jln_c_c_flags += ['/w14244', '/w14245', '/w14388', '/w14365', ]
+      if (  ( ___jln_c_flags.get('conversion_warnings', 'default') == 'off' or ___jln_c_flags.get('conversion_warnings', 'default') == 'sign' ) )
+        jln_c_c_flags += ['/wd4244', '/wd4245', '/wd4365', ]
       else
-        if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'conversion' )
-          jln_c_c_flags += ['/w14244', '/w14365', ]
+        jln_c_c_flags += ['/w14244', '/w14245', '/w14365', ]
+      endif
+      if (  ( ___jln_c_flags.get('conversion_warnings', 'default') == 'on' or ___jln_c_flags.get('conversion_warnings', 'default') == 'all' or ___jln_c_flags.get('conversion_warnings', 'default') == 'sign' ) )
+        jln_c_c_flags += ['/w14018', '/w14388', '/w14289', ]
+      else
+        jln_c_c_flags += ['/wd4018', '/wd4388', '/wd4289', ]
+      endif
+    endif
+    if (  ___jln_c_flags.get('switch_warnings', 'default') != 'default' )
+      if (  ( ___jln_c_flags.get('switch_warnings', 'default') == 'on' or ___jln_c_flags.get('switch_warnings', 'default') == 'mandatory_default' ) )
+        jln_c_c_flags += ['/wd4061', '/w14062', ]
+      else
+        if (  ( ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum' or ___jln_c_flags.get('switch_warnings', 'default') == 'exhaustive_enum_and_mandatory_default' ) )
+          jln_c_c_flags += ['/w14061', '/w14062', ]
         else
-          if (  ___jln_c_flags.get('conversion_warnings', 'default') == 'sign' )
-            jln_c_c_flags += ['/w14388', '/w14245', ]
-          else
-            jln_c_c_flags += ['/wd4244', '/wd4365', '/wd4388', '/wd4245', ]
-          endif
+          jln_c_c_flags += ['/wd4061', '/wd4062', ]
         endif
       endif
     endif
     if (  ___jln_c_flags.get('shadow_warnings', 'default') != 'default' )
-      if (  ___jln_c_flags.get('shadow_warnings', 'default') == 'off' )
-        jln_c_c_flags += ['/wd4456', '/wd4459', ]
-      else
-        if (  ( ___jln_c_flags.get('shadow_warnings', 'default') == 'on' or ___jln_c_flags.get('shadow_warnings', 'default') == 'all' ) )
-          jln_c_c_flags += ['/w4456', '/w4459', ]
+      if (  ___jln_c_compiler_version.version_compare('>=19.0') )
+        if (  ___jln_c_flags.get('shadow_warnings', 'default') == 'off' )
+          jln_c_c_flags += ['/wd4456', '/wd4459', ]
         else
-          if (  ___jln_c_flags.get('shadow_warnings', 'default') == 'local' )
-            jln_c_c_flags += ['/w4456', '/wd4459', ]
+          if (  ( ___jln_c_flags.get('shadow_warnings', 'default') == 'on' or ___jln_c_flags.get('shadow_warnings', 'default') == 'all' ) )
+            jln_c_c_flags += ['/w14456', '/w14459', ]
+          else
+            if (  ___jln_c_flags.get('shadow_warnings', 'default') == 'local' )
+              jln_c_c_flags += ['/w4456', '/wd4459', ]
+            endif
           endif
         endif
       endif
@@ -1652,7 +1753,11 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
           if (  ___jln_c_flags.get('warnings', 'default') == 'off' )
             jln_c_c_flags += ['-w', ]
           else
-            jln_c_c_flags += ['-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wparentheses', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
+            if (  ___jln_c_flags.get('warnings', 'default') == 'essential' )
+              jln_c_c_flags += ['-Wall', ]
+            else
+              jln_c_c_flags += ['-Wall', '-Warray-bounds', '-Wcast-qual', '-Wchar-subscripts', '-Wdisabled-optimization', '-Wenum-compare', '-Wextra', '-Wfloat-equal', '-Wformat-security', '-Wformat=2', '-Winit-self', '-Winvalid-pch', '-Wmaybe-uninitialized', '-Wmissing-include-dirs', '-Wnarrowing', '-Wnonnull', '-Wpointer-sign', '-Wreorder', '-Wsequence-point', '-Wtrigraphs', '-Wundef', '-Wunused-function', '-Wunused-but-set-variable', '-Wunused-variable', '-Wpointer-arith', '-Wold-style-definition', '-Wstrict-prototypes', '-Wwrite-strings', ]
+            endif
           endif
         endif
         if (  ___jln_c_flags.get('switch_warnings', 'default') != 'default' )
