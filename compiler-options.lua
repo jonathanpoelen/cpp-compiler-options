@@ -1403,7 +1403,7 @@ Or(gcc, clang, clang_emcc) {
       },
 
       opt'noexcept_warnings' {
-        gcc'>=4.9' {
+        gcc'>=4.6' {
           match {
             lvl'on' { cxx'-Wnoexcept' },
             { cxx'-Wno-noexcept' }
@@ -2764,7 +2764,7 @@ local Vbase = {
 
     noexcept_warnings={
       values={'off', 'on'},
-      description='Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception.',
+      description='Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception. Only with Gcc.',
       incidental=true,
       unavailable='c',
     },
