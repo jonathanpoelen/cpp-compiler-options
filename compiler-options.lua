@@ -354,7 +354,7 @@ Or(gcc, clang_like) {
       match {
         gcc {
           flag'-Wall',
-          -- flag'-Weffc++',
+          -- cxx'-Weffc++',
           flag'-Wextra',
           vers'<8' {
             flag'-Wcast-align',
