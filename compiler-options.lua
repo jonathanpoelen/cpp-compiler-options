@@ -525,6 +525,7 @@ Or(gcc, clang_like) {
     },
   },
 
+  -- Or(gcc, clang_like)
   match {
     gcc {
       opt'switch_warnings' {
@@ -583,6 +584,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'unsafe_buffer_usage_warnings' {
     clang_like'>=16' {
       match {
@@ -592,6 +594,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'suggest_attributes' {
     match {
       lvl'on' {
@@ -656,6 +659,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'diagnostics_show_template_tree' {
     Or(gcc'>=8', clang_like) {
       match {
@@ -665,6 +669,7 @@ Or(gcc, clang_like) {
     },
   },
 
+  -- Or(gcc, clang_like)
   opt'elide_type' {
     match {
       lvl'on' { gcc'>=8' { cxx'-felide-type' } },
@@ -672,6 +677,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'exceptions' {
     match {
       lvl'on' {
@@ -684,6 +690,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'rtti' {
     match {
       lvl'on' { cxx'-frtti' },
@@ -691,6 +698,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'var_init' {
     Or(gcc'>=12', clang_like'>=8') {
       clang_like'<=15' {
@@ -714,6 +722,7 @@ Or(gcc, clang_like) {
     },
   },
 
+  -- Or(gcc, clang_like)
   opt'windows_abi_compatibility_warnings' {
     Or(gcc'>=10', clang_like) {
       match {
@@ -723,6 +732,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'warnings_as_error' {
     match {
       lvl'on' { flag'-Werror', },
@@ -770,6 +780,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   -- ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
   opt'sanitizers' {
     match {
@@ -821,6 +832,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'control_flow' {
     match {
       clang_emcc {
@@ -870,6 +882,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'color' {
     Or(vers'>=4.9', -gcc --[[=clang_like]]) {
       match {
@@ -880,6 +893,7 @@ Or(gcc, clang_like) {
     },
   },
 
+  -- Or(gcc, clang_like)
   opt'reproducible_build_warnings' {
     gcc'>=4.9' {
       match {
@@ -889,6 +903,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'diagnostics_format' {
     match {
       lvl'fixits' {
@@ -905,6 +920,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'fix_compiler_error' {
     match {
       lvl'on' {
@@ -926,6 +942,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'lto' {
     match {
       lvl'off' { fl'-fno-lto' },
@@ -957,6 +974,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'shadow_warnings' {
     match {
       lvl'off' {
@@ -985,6 +1003,7 @@ Or(gcc, clang_like) {
     }
   },
 
+  -- Or(gcc, clang_like)
   opt'float_sanitizers' {
     Or(gcc'>=5', clang_like'>=5') {
       match {
@@ -1000,6 +1019,7 @@ Or(gcc, clang_like) {
     },
   },
 
+  -- Or(gcc, clang_like)
   opt'integer_sanitizers' {
     match {
       clang_like'>=5' {
@@ -1106,6 +1126,7 @@ Or(gcc, clang, clang_emcc) {
     },
   },
 
+  -- Or(gcc, clang, clang_emcc)
   opt'pedantic' {
     -lvl'off' {
       flag'-pedantic',
@@ -1115,6 +1136,7 @@ Or(gcc, clang, clang_emcc) {
     },
   },
 
+  -- Or(gcc, clang, clang_emcc)
   match {
     clang_emcc {
       opt'optimization' {
@@ -1141,6 +1163,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- clang_emcc
       opt'debug_level' {
         match {
           lvl'0' { flag'-g0' },
@@ -1150,6 +1173,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- clang_emcc
       opt'debug' {
         match {
           lvl'off' { flag'-g0' },
@@ -1160,13 +1184,15 @@ Or(gcc, clang, clang_emcc) {
       },
     },
 
-    --[[Or(gcc, clang)]] {
+    -- Or(gcc, clang)
+    {
       gcc'>=12' {
         -- This flag is enabled by default unless -fno-inline is active.
         -- But -fno-inline is the default when not optimizing.
         cxx'-ffold-simple-inlines',
       },
 
+      -- Or(gcc, clang)
       opt'coverage' {
         lvl'on' {
           flag'--coverage', -- -fprofile-arcs -ftest-coverage
@@ -1179,6 +1205,7 @@ Or(gcc, clang, clang_emcc) {
         },
       },
 
+      -- Or(gcc, clang)
       opt'debug_level' {
         match {
           lvl'0' { flag'-g0' },
@@ -1200,6 +1227,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'debug' {
         match {
           lvl'off' { flag'-g0' },
@@ -1228,6 +1256,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'optimization' {
         match {
           lvl'0' { flag'-O0' },
@@ -1257,6 +1286,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'cpu' {
         match {
           lvl'generic' { fl'-mtune=generic' },
@@ -1264,6 +1294,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'linker' {
         match {
           lvl'mold' {
@@ -1294,6 +1325,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'whole_program' {
         match {
           lvl'off' {
@@ -1336,6 +1368,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       -- https://airbus-seclab.github.io/c-compiler-security/
       -- g++ --help=hardened
       opt'stack_protector' {
@@ -1400,6 +1433,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       -- https://airbus-seclab.github.io/c-compiler-security/
       -- g++ --help=hardened
       opt'relro' {
@@ -1418,6 +1452,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'pie' {
         match {
           lvl'off' { link'-no-pic' },
@@ -1430,6 +1465,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'other_sanitizers' {
         match {
           lvl'thread' { flag'-fsanitize=thread', },
@@ -1454,6 +1490,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       opt'noexcept_warnings' {
         gcc'>=4.6' {
           match {
@@ -1463,6 +1500,7 @@ Or(gcc, clang, clang_emcc) {
         }
       },
 
+      -- Or(gcc, clang)
       -- https://gcc.gnu.org/onlinedocs/gcc/Static-Analyzer-Options.html
       opt'analyzer' {
         gcc'>=10' {
@@ -1535,6 +1573,7 @@ Or(msvc, clang_cl, icl) {
     }
   },
 
+  -- Or(msvc, clang_cl, icl)
   opt'rtti' {
     match {
       lvl'on' {
@@ -1569,6 +1608,7 @@ Or(msvc, clang_cl, icl) {
   -- _ITERATOR_DEBUG_LEVEL=0            ok                        error
   -- _ITERATOR_DEBUG_LEVEL=1            ok                        error
   -- _ITERATOR_DEBUG_LEVEL=2           error                       ok
+  -- Or(msvc, clang_cl, icl)
   opt'stl_hardening' {
     -- Or(msvc'>=17', clang_cl'>=12') -> hardening mode
     match {
@@ -1597,11 +1637,12 @@ Or(msvc, clang_cl, icl) {
     }
   },
 
+  -- Or(msvc, clang_cl, icl)
   opt'stl_fix' {
     lvl'on' { flag'/DNOMINMAX', },
   },
 
-  -- msvc and clang_cl
+  -- Or(msvc, clang_cl, icl)
   -icl {
     opt'debug_level' {
       lvl'line_tables_only' {
@@ -1613,6 +1654,7 @@ Or(msvc, clang_cl, icl) {
       },
     },
 
+    -- Or(msvc, clang_cl)
     opt'debug' {
       match {
         lvl'off' { link'/DEBUG:NONE' },
@@ -1647,6 +1689,7 @@ Or(msvc, clang_cl, icl) {
       }
     },
 
+    -- Or(msvc, clang_cl)
     opt'optimization' {
       match {
         lvl'0' {
@@ -1666,6 +1709,7 @@ Or(msvc, clang_cl, icl) {
       }
     },
 
+    -- Or(msvc, clang_cl)
     opt'linker' {
       clang_cl {
         match {
@@ -1679,10 +1723,12 @@ Or(msvc, clang_cl, icl) {
       }
     },
 
+    -- Or(msvc, clang_cl)
     opt'control_flow' {
       match { lvl'off' { flag'/guard:cf-' }, flag'/guard:cf' },
     },
 
+    -- Or(msvc, clang_cl)
     opt'whole_program' {
       match {
         lvl'off' {
@@ -1699,6 +1745,7 @@ Or(msvc, clang_cl, icl) {
       }
     },
 
+    -- Or(msvc, clang_cl)
     opt'pedantic' {
       -lvl'off' {
         flag'/permissive-', -- implies /Zc:rvalueCast, /Zc:strictStrings, /Zc:ternary, /Zc:twoPhase
@@ -1732,6 +1779,7 @@ Or(msvc, clang_cl, icl) {
       }
     },
 
+    -- Or(msvc, clang_cl)
     -- https://airbus-seclab.github.io/c-compiler-security/
     opt'stack_protector' {
       match {
@@ -1779,10 +1827,12 @@ match {
       }
     },
 
+    -- msvc
     opt'windows_bigobj' {
       flag'/bigobj',
     },
 
+    -- msvc
     opt'msvc_conformance' {
       Or(lvl'all', lvl'all_without_throwing_new') {
         flag'/Zc:inline',
@@ -1808,6 +1858,7 @@ match {
       }
     },
 
+    -- msvc
     opt'msvc_crt_secure_no_warnings' {
       match {
         lvl'on' { flag'/D_CRT_SECURE_NO_WARNINGS=1' },
@@ -1815,6 +1866,7 @@ match {
       }
     },
 
+    -- msvc
     opt'msvc_diagnostics_format' {
       vers'>=17' {
         match {
@@ -1825,6 +1877,7 @@ match {
       }
     },
 
+    -- msvc
     -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
     vers'<15.16' {
       reset_opt'msvc_isystem'
@@ -1871,6 +1924,7 @@ match {
       }
     },
 
+    -- msvc
     opt'warnings' {
       match {
         lvl'off' {
@@ -2052,6 +2106,7 @@ match {
       }
     },
 
+    -- msvc
     opt'conversion_warnings' {
       -- conversion
       msvc_select_warn(Or(lvl'off', lvl'sign'), 'd', '1', function(f) return {
@@ -2068,6 +2123,7 @@ match {
       } end) -- else: off, float, conversion
     },
 
+    -- msvc
     opt'switch_warnings' {
       match {
         Or(lvl'on', lvl'mandatory_default') {
@@ -2085,6 +2141,7 @@ match {
       }
     },
 
+    -- msvc
     opt'shadow_warnings' {
       vers'>=19' {
         match {
@@ -2104,6 +2161,7 @@ match {
       }
     },
 
+    -- msvc
     opt'warnings_as_error' {
       match {
         lvl'on' { flag'/WX' },
@@ -2117,6 +2175,7 @@ match {
       }
     },
 
+    -- msvc
     opt'lto' {
       match {
         lvl'off' {
@@ -2129,6 +2188,7 @@ match {
       }
     },
 
+    -- msvc
     opt'sanitizers' {
       match {
         vers'>=16.9' {
@@ -2161,6 +2221,7 @@ match {
       }
     },
 
+    -- icl
     opt'warnings_as_error' {
       match {
         lvl'on' {
@@ -2172,10 +2233,12 @@ match {
       }
     },
 
+    -- icl
     opt'windows_bigobj' {
       flag'/bigobj',
     },
 
+    -- icl
     opt'msvc_conformance' {
       Or(lvl'all', lvl'all_without_throwing_new') {
         flag'/Zc:inline',
@@ -2186,12 +2249,14 @@ match {
       }
     },
 
+    -- icl
     opt'debug_level' {
       Or(lvl'line_tables_only', lvl'line_directives_only') {
         flag'/debug:minimal',
       }
     },
 
+    -- icl
     opt'debug' {
       match {
         lvl'off' { link'/DEBUG:NONE' },
@@ -2215,6 +2280,7 @@ match {
       }
     },
 
+    -- icl
     opt'optimization' {
       match {
         lvl'0' {
@@ -2238,6 +2304,7 @@ match {
       }
     },
 
+    -- icl
     opt'stack_protector' {
       match {
         lvl'off' {
@@ -2258,10 +2325,12 @@ match {
       }
     },
 
+    -- icl
     opt'sanitizers' {
       lvl'on' { flag'/Qtrapuv' }
     },
 
+    -- icl
     opt'float_sanitizers' {
       lvl'on' {
         flag'/Qfp-stack-check',
@@ -2270,6 +2339,7 @@ match {
       }
     },
 
+    -- icl
     opt'control_flow' {
       match {
         lvl'off' {
@@ -2292,6 +2362,7 @@ match {
       }
     },
 
+    -- icl
     opt'cpu' {
       match { lvl'generic' { fl'/Qtune:generic' }, fl'/QxHost' },
     },
@@ -2344,6 +2415,7 @@ match {
       }
     },
 
+    -- icc
     opt'switch_warnings' {
       match {
         Or(lvl'on', lvl'exhaustive_enum') { flag'-Wswitch-enum' },
@@ -2357,6 +2429,7 @@ match {
       }
     },
 
+    -- icc
     opt'warnings_as_error' {
       match {
         lvl'on' {
@@ -2369,6 +2442,7 @@ match {
       }
     },
 
+    -- icc
     -- opt'pedantic' -- -pedantic does not work ???
     opt'pedantic' {
       match {
@@ -2381,6 +2455,7 @@ match {
       }
     },
 
+    -- icc
     opt'shadow_warnings' {
       match {
         lvl'off' {
@@ -2392,6 +2467,7 @@ match {
       }
     },
 
+    -- icc
     opt'stl_hardening' {
       match {
         lvl'debug_with_broken_abi' {
@@ -2406,6 +2482,7 @@ match {
       },
     },
 
+    -- icc
     opt'debug' {
       match {
         lvl'off' { flag '-g0' },
@@ -2413,6 +2490,7 @@ match {
       }
     },
 
+    -- icc
     opt'optimization' {
       match {
         lvl'0' { flag'-O0', },
@@ -2426,6 +2504,7 @@ match {
       }
     },
 
+    -- icc
     opt'stack_protector' {
       match {
         lvl'off' {
@@ -2443,6 +2522,7 @@ match {
       }
     },
 
+    -- icc
     opt'relro' {
       match {
         lvl'off' { link'-Xlinker-znorelro', },
@@ -2455,6 +2535,7 @@ match {
       }
     },
 
+    -- icc
     opt'pie' {
       match {
         lvl'off'{ link'-no-pic', },
@@ -2466,10 +2547,12 @@ match {
       }
     },
 
+    -- icc
     opt'sanitizers' {
       lvl'on' { flag'-ftrapuv' }
     },
 
+    -- icc
     opt'integer_sanitizers' {
       match {
         lvl'on' { flag'-funsigned-bitfields' },
@@ -2477,6 +2560,7 @@ match {
       }
     },
 
+    -- icc
     opt'float_sanitizers' {
       lvl'on' {
         flag'-fp-stack-check',
@@ -2485,6 +2569,7 @@ match {
       }
     },
 
+    -- icc
     opt'linker' {
       match {
         lvl'bfd' { link'-fuse-ld=bfd' },
@@ -2494,6 +2579,7 @@ match {
       }
     },
 
+    -- icc
     opt'lto' {
       match {
         lvl'off' { fl'-no-ipo', },
@@ -2508,6 +2594,7 @@ match {
       }
     },
 
+    -- icc
     opt'control_flow' {
       match {
         lvl'off' {
@@ -2525,14 +2612,17 @@ match {
       }
     },
 
+    -- icc
     opt'exceptions' {
       match { lvl'on' { flag'-fexceptions' }, flag'-fno-exceptions' },
     },
 
+    -- icc
     opt'rtti' {
       match { lvl'on' { cxx'-frtti' }, cxx'-fno-rtti' },
     },
 
+    -- icc
     opt'cpu' {
       match { lvl'generic' { fl'-mtune=generic' }, fl'-xHost' },
     },
