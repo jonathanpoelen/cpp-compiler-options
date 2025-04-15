@@ -1,5 +1,8 @@
 # ChangeLog
 
+- remove `suggestions` (replaced by `suggest_attributes`)
+- add `suggest_attributes` (`on`, `off`, `common`, `analysis`, `unity`, `all`)
+
 ## 2024-04-14
 
 - remove `warnings=strict` and `warnings=very_strict`

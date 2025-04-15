@@ -478,6 +478,11 @@ Or(gcc, clang_like) {
             flag'-Wno-covered-switch-default'
           },
 
+          -has_opt'suggest_attributes' {
+            flag'-Wno-missing-noreturn',
+            -- flag'-Wno-missing-format-attribute', -- ignored
+          },
+
           opt'conversion_warnings' {
             match {
               lvl'conversion' {
@@ -583,6 +588,70 @@ Or(gcc, clang_like) {
       match {
         lvl'off' { flag'-Wno-unsafe-buffer-usage' },
         cxx'-Wunsafe-buffer-usage',
+      }
+    }
+  },
+
+  opt'suggest_attributes' {
+    match {
+      lvl'on' {
+        flag'-Wmissing-noreturn',
+      },
+      lvl'common' {
+        flag'-Wmissing-noreturn',
+        flag'-Wmissing-format-attribute',
+      },
+      Or(lvl'analysis', lvl'all') {
+        flag'-Wmissing-noreturn',
+        flag'-Wmissing-format-attribute',
+        gcc {
+          vers'>=8' {
+            flag'-Wsuggest-attribute=malloc',
+            vers'>=14' {
+              flag'-Wsuggest-attribute=returns_nonnull',
+            }
+          },
+
+          Or(lvl'all', lvl'unity') {
+            vers'>=5' {
+              cxx'-Wsuggest-final-types',
+              cxx'-Wsuggest-final-methods',
+            },
+
+            lvl'all' {
+              flag'-Wsuggest-attribute=pure',
+              flag'-Wsuggest-attribute=const',
+              vers'>=5.1' {
+                cxx'-Wnoexcept',
+                vers'>=8' {
+                  flag'-Wsuggest-attribute=cold',
+                }
+              }
+            }
+          }
+        }
+      },
+      --[[lvl'off']]
+      {
+        flag'-Wno-missing-noreturn',
+        flag'-Wno-missing-format-attribute',
+        gcc {
+          flag'-Wno-suggest-attribute=pure',
+          flag'-Wno-suggest-attribute=const',
+          vers'>=5' {
+            cxx'-Wno-suggest-final-types',
+            cxx'-Wno-suggest-final-methods',
+            vers'>=5.1' {
+              cxx'-Wno-noexcept',
+              vers'>=8' {
+                flag'-Wno-suggest-attribute=malloc',
+                vers'>=14' {
+                  flag'-Wno-suggest-attribute=returns_nonnull',
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -699,23 +768,6 @@ Or(gcc, clang_like) {
       },
       flag'-Wno-error',
     }
-  },
-
-  opt'suggestions' {
-    -lvl'off' {
-      gcc {
-        flag'-Wsuggest-attribute=pure',
-        flag'-Wsuggest-attribute=const',
-        vers'>=5' {
-          cxx'-Wsuggest-final-types',
-          cxx'-Wsuggest-final-methods',
-       -- flag'-Wsuggest-attribute=format',
-          vers'>=5.1' {
-            cxx'-Wnoexcept',
-          },
-        }
-      }
-    },
   },
 
   -- ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
@@ -2052,12 +2104,6 @@ match {
       }
     },
 
-    opt'suggestions' {
-      msvc_select_warn(lvl'off', 'd', '1', function(f) return {
-        cxx(f(5239)), -- potentially-throwing function called from a function declared __declspec(nothrow).
-      } end)
-    },
-
     opt'warnings_as_error' {
       match {
         lvl'on' { flag'/WX' },
@@ -2850,9 +2896,17 @@ local Vbase = {
       description='Emit extra code to check for buffer overflows, such as stack smashing attacks.',
     },
 
-    suggestions={
-      values={'off', 'on'},
-      description='Warn for cases where adding an attribute may be beneficial.',
+    suggest_attributes={
+      values={
+        'off',
+        {'on', 'Suggests noreturn attribute with Clang and GCC.'},
+        {'common', 'Suggests noreturn and format attributes with GCC ; noreturn with Clang.'},
+        {'analysis', 'Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.'},
+        {'unity', 'Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.'},
+        {'all', 'Active all suggestions for attributes.'},
+      },
+      description='Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option -fipa-pure-const, which is enabled by default at -O1 and higher.',
+      default='on',
       incidental=true,
     },
 
@@ -2928,7 +2982,7 @@ local Vbase = {
       'noexcept_warnings',
       'reproducible_build_warnings',
       'shadow_warnings',
-      'suggestions',
+      'suggest_attributes',
       'switch_warnings',
       'unsafe_buffer_usage_warnings',
       'windows_abi_compatibility_warnings',

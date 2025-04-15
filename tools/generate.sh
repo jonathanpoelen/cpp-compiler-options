@@ -106,7 +106,7 @@ while read comp ; do
   gencompopt 2 release                    cpu=native lto optimization=2 linker=native ndebug
   gencompopt 2 warnings                   $warn_opts
   gencompopt 2 warnings_with_conversions  $warn_opts conversion_warnings
-  gencompopt 2 suggestions                suggestions
+  gencompopt 2 suggestions                suggest_attributes=common
   gencompopt 2 debug                      debug
   gencompopt 2 sanitizers                 sanitizers
   # C++ only

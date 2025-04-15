@@ -78,7 +78,7 @@ msvc_crt_secure_no_warnings = on default off
 noexcept_warnings = default off on
 reproducible_build_warnings = default off on
 shadow_warnings = off default on local compatible_local all
-suggestions = default off on
+suggest_attributes = on default off common analysis unity all
 switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 unsafe_buffer_usage_warnings = default on off
 windows_abi_compatibility_warnings = off default on
@@ -159,6 +159,7 @@ If not specified:
   - `msvc_crt_secure_no_warnings`
   - `pedantic`
   - `stl_fix`
+  - `suggest_attributes`
   - `switch_warnings`
   - `warnings`
   - `windows_bigobj`
