@@ -295,7 +295,7 @@ end
 -- icc, icpc and icl:
 -- icc / icpc (linux) -diag-enable warn -diag-dump
 -- icl (windows) /Qdiag-enable:warn -Qdiag-dump
--- https://www.intel.com/content/www/us/en/develop/documentation/cpp-compiler-developer-guide-and-reference/top/compiler-reference/compiler-options/alphabetical-list-of-compiler-options.html
+-- https://www.intel.com/content/www/us/en/docs/cpp-compiler/developer-guide-reference/2021-8/alphabetical-option-list.html
 -- https://www.intel.com/content/www/us/en/develop/documentation/cpp-compiler-developer-guide-and-reference/top/compiler-reference/compiler-options/deprecated-and-removed-compiler-options.html
 
 -- icx, icpx, dpcpp are clang compiler
@@ -1657,34 +1657,14 @@ Or(msvc, clang_cl, icl) {
     -- Or(msvc, clang_cl)
     opt'debug' {
       match {
-        lvl'off' { link'/DEBUG:NONE' },
-        {
-          flag'/RTC1',
-          flag'/Od',
-          match {
-            lvl'on' { flag'/DEBUG' }, -- /DEBUG:FULL
-          },
-
-          -- The /Zo option is available starting in Visual Studio 2013 Update 3.
-          -- It's enabled by default when you specify debugging information with /Zi or /Z7.
-          -- It's disabled by the /ZI compiler option.
-          match {
-            opt'optimization' {
-              match {
-                lvl'g' { flag'/Zi' },
-                -- /ZI cannot be used with /GL
-                opt'whole_program' {
-                  match { lvl'off' { flag'/ZI' }, flag'/Zi' }
-                },
-                flag'/ZI'
-              }
-            },
-            -- /ZI cannot be used with /GL
-            opt'whole_program' {
-              match { lvl'off' { flag'/ZI' }, flag'/Zi' }
-            },
-            flag'/ZI',
-          }
+        lvl'off' {
+          link'/DEBUG:NONE'
+        },
+        Or(lvl'on', lvl'codeview') {
+          flag'/Zi',
+          -- /DEBUG changes the defaults for the /OPT option
+          -- from REF to NOREF and from ICF to NOICF.
+          link'/DEBUG:FULL',
         }
       }
     },
@@ -1791,13 +1771,11 @@ Or(msvc, clang_cl, icl) {
           flag'/sdl',
           match {
             lvl'strong' {
-              flag'/RTC1', -- /RTCsu
               msvc'>=16.7' {
                 flag'/guard:ehcont',
                 link'/CETCOMPAT',
               },
             },
-            lvl'all' { flag'/RTC1', flag'/RTCc', },
           },
           has_opt'control_flow':without(lvl'off') {
             flag'/guard:cf',
@@ -2198,6 +2176,9 @@ match {
         match {
           lvl'on' {
             flag'/sdl',
+            has_opt'optimization':with(lvl'0') {
+              flag'/RTCsu', -- /RTC can't be used with compiler optimizations (/O Options)
+            },
           },
           opt'stack_protector' {
             -lvl'off' { flag'/sdl-' },
@@ -2259,24 +2240,12 @@ match {
     -- icl
     opt'debug' {
       match {
-        lvl'off' { link'/DEBUG:NONE' },
-        {
-          flag'/RTC1',
-          flag'/Od',
-          match {
-            lvl'on' { flag'/debug:full' },
-          },
-          match {
-            has_opt'optimization':with(lvl'g') {
-              flag'/Zi'
-            },
-            -- /ZI cannot be used with /GL
-            opt'whole_program' {
-              match { lvl'off' { flag'/ZI' }, flag'/Zi' }
-            },
-            flag'/ZI',
-          }
-        }
+        lvl'off' {
+          flag'/debug:none'
+        },
+        Or(lvl'on', lvl'codeview') {
+          flag'/debug:full'
+        },
       }
     },
 
@@ -2312,22 +2281,18 @@ match {
         },
         {
           flag'/GS',
-          match {
-            lvl'strong' {
-              flag'/RTC1', -- /RTCsu
-            },
-            lvl'all' {
-              flag'/RTC1',
-              flag'/RTCc',
-            },
-          }
         },
       }
     },
 
     -- icl
     opt'sanitizers' {
-      lvl'on' { flag'/Qtrapuv' }
+      lvl'on' {
+        flag'/Qtrapuv',
+        -- /RTC can't be used with compiler optimizations (/O Options)
+        -- but /Qtrapuv force to /Od (disable optimization)
+        flag'/RTCsu',
+      }
     },
 
     -- icl
