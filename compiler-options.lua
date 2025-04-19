@@ -1627,20 +1627,33 @@ Or(msvc, clang_cl, icl) {
     -- Or(msvc, clang_cl)
     opt'optimization' {
       match {
-        lvl'0' {
-          flag'/Ob0',
-          flag'/Od',
-          flag'/Oi-',
-          flag'/Oy-',
+        lvl'0' { flag'/Od' },
+        lvl'g' {
+          flag'/Ob1', -- expansion only of functions marked inline, __inline, or __forceinline
         },
-        lvl'g' { flag'/Ob1' },
-        -- /O1 = /Og      /Os  /Oy /Ob2 /GF /Gy
-        -- /O2 = /Og /Oi  /Ot  /Oy /Ob2 /GF /Gy
-        lvl'1' { flag'/O1', },
-        lvl'2' { flag'/O2', },
-        lvl'3' { flag'/O2', },
-        Or(lvl'size', lvl'z') { flag'/O1', flag'/GL', flag'/Gw' },
-        --[[lvl'fast']] { flag'/O2', flag'/fp:fast' }
+        -- /O1 = /Og         /Os /Oy /Ob2 /GF /Gy  -- size
+        -- /O2 = /Og /Oi /Ot     /Oy /Ob2 /GF /Gy  -- speed
+        -- /Ox =     /Oi /Ot     /Oy /Ob2
+        -- /Oxs =    /Oi     /Os /Oy /Ob2
+        lvl'2' { flag'/O2' },
+        Or(lvl'1', lvl'size') {
+          flag'/O1',
+        },
+        lvl'z' {
+          flag'/O1',
+          flag'/Gw', -- Optimize Global Data
+        },
+        -- Or(lvl'3', lvl'fast')
+        {
+          lvl'fast' {
+            flag'/fp:fast',
+          },
+          flag'/O2',
+          Or(msvc'>=16', clang_cl) {
+            flag'/Ob3',
+          },
+          flag'/Gw',
+        }
       }
     },
 
@@ -2112,11 +2125,15 @@ match {
     opt'lto' {
       match {
         lvl'off' {
-          flag'/LTCG:OFF'
+          flag'/GL-',
         },
         {
-          flag'/GL',
+          flag'/GL', -- Whole program optimization
+          flag'/Gw', -- Optimize Global Data
+          -- Link-time code generation. The option is detected via an error,
+          -- putting it explicitly makes the build faster.
           link'/LTCG'
+          -- /OPT:ICF and /OPT:REF default when no /DEBUG
         }
       }
     },
@@ -2203,12 +2220,7 @@ match {
     -- icl
     opt'optimization' {
       match {
-        lvl'0' {
-          flag'/Ob0',
-          flag'/Od',
-          flag'/Oi-',
-          flag'/Oy-',
-        },
+        lvl'0' { flag'/Ob0' },
         lvl'g' { flag'/Ob1' },
         {
           flag'/GF',
