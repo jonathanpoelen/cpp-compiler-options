@@ -107,7 +107,7 @@ while read comp ; do
   gencompopt 2 warnings                   $warn_opts
   gencompopt 2 warnings_with_conversions  $warn_opts conversion_warnings
   gencompopt 2 suggestions                suggest_attributes=common
-  gencompopt 2 debug                      debug
+  gencompopt 2 debug                      symbols=debug
   gencompopt 2 sanitizers                 sanitizers
   # C++ only
   gencompopt 1 stl_debug                     stl_hardening=debug

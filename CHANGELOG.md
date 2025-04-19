@@ -2,6 +2,7 @@
 
 - remove `suggestions` (replaced by `suggest_attributes`)
 - add `suggest_attributes` (`on`, `off`, `common`, `analysis`, `unity`, `all`)
+- replace `debug` and `debug_level` with `symbols` (`hidden`, `nodebug`, debug`, `minimal_debug`, `full_debug`, `btf`, `ctf`, `ctf1`, `ctf2`, `vms`, `vms1`, `vms2`, `vms3`, `codeview`, `dbx`, `lldb`, `sce`, `dwarf`)
 
 ## 2024-04-14
 

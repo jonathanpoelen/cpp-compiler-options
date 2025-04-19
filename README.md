@@ -91,8 +91,7 @@ stl_fix = on default off
 
 # Debug:
 
-debug = default off on gdb lldb vms codeview dbx sce
-debug_level = default 0 1 2 3 line_tables_only line_directives_only
+symbols = default hidden nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 stl_hardening = default off fast extensive debug debug_with_broken_abi
 control_flow = default off on branch return allow_bugs
 sanitizers = default off on
@@ -179,7 +178,7 @@ If not specified:
 
 category | options
 ---------|---------
-debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
+debug | `control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
 release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
 security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
 really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
@@ -595,8 +594,8 @@ opt'warnings' { -- if warnings is enabled (not `warnings=default`)
 
 ```lua
 opt'warnings' {
-  has_opt'debug' { -- if debug is enabled (not `debug=default`)
-    lvl'off' { cxx'-w' } -- for `warnings=off`, not debug=off
+  has_opt'symbols' { -- if symbols is enabled (not `symbols=default`)
+    lvl'off' { cxx'-w' } -- for `warnings=off`
   }
 }
 

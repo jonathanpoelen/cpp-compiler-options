@@ -1137,6 +1137,36 @@ Or(gcc, clang, clang_emcc) {
   },
 
   -- Or(gcc, clang, clang_emcc)
+  opt'symbols' {
+    match {
+      lvl'nodebug' { flag'-g0' },
+      lvl'hidden' { flag'-fvisibility=hidden' },
+      lvl'debug' { flag'-g' }, -- same as -g2
+      lvl'minimal_debug' { flag'-g1' },
+      lvl'full_debug' { flag'-g3' },
+      clang {
+        lvl'dwarf' { flag'-g' },
+        lvl'lldb' { flag'-glldb' },
+        lvl'sce' { flag'-gsce' },
+        lvl'dbx' { flag'-gdbx' },
+      },
+      gcc {
+        lvl'dwarf' { flag'-g' },
+        lvl'codeview' { flag'-gcodeview' },
+        lvl'btf' { flag'-gbtf' },
+        lvl'ctf' { flag'-gctf' },
+        lvl'ctf1' { flag'-gctf1' },
+        lvl'ctf2' { flag'-gctf2' },
+        lvl'vms' { flag'-gvms' },
+        lvl'vms1' { flag'-gvms1' },
+        lvl'vms2' { flag'-gvms2' },
+        lvl'vms3' { flag'-gvms3' },
+      },
+      --[[clang_emcc]]
+    }
+  },
+
+  -- Or(gcc, clang, clang_emcc)
   match {
     clang_emcc {
       opt'optimization' {
@@ -1162,26 +1192,6 @@ Or(gcc, clang, clang_emcc) {
           },
         }
       },
-
-      -- clang_emcc
-      opt'debug_level' {
-        match {
-          lvl'0' { flag'-g0' },
-          lvl'1' { flag'-g1' },
-          lvl'2' { flag'-g2' },
-          lvl'3' { flag'-g3' },
-        }
-      },
-
-      -- clang_emcc
-      opt'debug' {
-        match {
-          lvl'off' { flag'-g0' },
-          -has_opt'debug_level' {
-            flag'-g',
-          }
-        }
-      },
     },
 
     -- Or(gcc, clang)
@@ -1203,57 +1213,6 @@ Or(gcc, clang, clang_emcc) {
             -- fl'-fcoverage-mapping',
           },
         },
-      },
-
-      -- Or(gcc, clang)
-      opt'debug_level' {
-        match {
-          lvl'0' { flag'-g0' },
-          lvl'1' { match {has_opt'debug':with(lvl'gdb') { flag'-ggdb1' }, flag'-g1' } },
-          lvl'2' { match {has_opt'debug':with(lvl'gdb') { flag'-ggdb2' }, flag'-g2' } },
-          lvl'3' { match {has_opt'debug':with(lvl'gdb') { flag'-ggdb3' }, flag'-g3' } },
-          lvl'line_tables_only' {
-            match {
-              clang { flag'-gline-tables-only' },
-              { flag'-g' }
-            }
-          },
-          lvl'line_directives_only' {
-            match {
-              clang { flag'-gline-directives-only' },
-              { flag'-g' }
-            }
-          },
-        }
-      },
-
-      -- Or(gcc, clang)
-      opt'debug' {
-        match {
-          lvl'off' { flag'-g0' },
-          lvl'on' {
-            -has_opt'debug_level' {
-              flag'-g',
-            }
-          },
-          lvl'gdb' {
-            -has_opt'debug_level' {
-              flag'-ggdb'
-            },
-          },
-          clang {
-            match {
-              lvl'lldb' { flag'-glldb' },
-              lvl'sce' { flag'-gsce' },
-              lvl'dbx' { flag'-gdbx' },
-              flag'-g',
-            }
-          },
-          --[[gcc]] {
-            lvl'vms' { flag'-gvms' },
-          },
-          -- flag'-fasynchronous-unwind-tables', -- Increased reliability of backtraces
-        }
       },
 
       -- Or(gcc, clang)
@@ -1644,27 +1603,23 @@ Or(msvc, clang_cl, icl) {
 
   -- Or(msvc, clang_cl, icl)
   -icl {
-    opt'debug_level' {
-      lvl'line_tables_only' {
-        clang_cl { flag'-gline-tables-only' },
-        flag'/DEBUG:FASTLINK'
-      },
-      lvl'line_directives_only' {
-        clang_cl { flag'-gline-directives-only' }
-      },
-    },
-
     -- Or(msvc, clang_cl)
-    opt'debug' {
+    opt'symbols' {
       match {
-        lvl'off' {
-          link'/DEBUG:NONE'
-        },
-        Or(lvl'on', lvl'codeview') {
+        lvl'nodebug' { link'/DEBUG:NONE' },
+        Or(
+          lvl'debug',
+          lvl'minimal_debug',
+          lvl'full_debug',
+          lvl'codeview'
+        ) {
           flag'/Zi',
           -- /DEBUG changes the defaults for the /OPT option
           -- from REF to NOREF and from ICF to NOICF.
           link'/DEBUG:FULL',
+        },
+        clang_cl {
+          lvl'dwarf' { link'-gdwarf' },
         }
       }
     },
@@ -2231,19 +2186,15 @@ match {
     },
 
     -- icl
-    opt'debug_level' {
-      Or(lvl'line_tables_only', lvl'line_directives_only') {
-        flag'/debug:minimal',
-      }
-    },
-
-    -- icl
-    opt'debug' {
+    opt'symbols' {
       match {
-        lvl'off' {
-          flag'/debug:none'
-        },
-        Or(lvl'on', lvl'codeview') {
+        lvl'nodebug' { flag'/debug:none' },
+        lvl'minimal_debug' { flag'/debug:minimal' },
+        Or(
+          lvl'debug',
+          lvl'full_debug',
+          lvl'codeview'
+        ) {
           flag'/debug:full'
         },
       }
@@ -2448,10 +2399,13 @@ match {
     },
 
     -- icc
-    opt'debug' {
+    opt'symbols' {
       match {
-        lvl'off' { flag '-g0' },
-        flag'-g',
+        lvl'nodebug' { flag'-g0' },
+        lvl'hidden' { flag'-fvisibility=hidden' },
+        lvl'debug' { flag'-g' }, -- same as -g2
+        lvl'minimal_debug' { flag'-g1' },
+        lvl'full_debug' { flag'-g3' },
       }
     },
 
@@ -2741,29 +2695,6 @@ local Vbase = {
       values={'generic', 'native'},
     },
 
-    debug={
-      values={
-        'off',
-        'on',
-        'gdb',
-        'lldb',
-        {'vms',  'Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).'},
-        {'codeview', 'CodeView debug format (used by Microsoft Visual C++ on Windows).'},
-        'dbx',
-        'sce',
-      },
-      description='Produce debugging information in the operating system\'s.',
-    },
-
-    debug_level={
-      values={
-        '0', '1', '2', '3',
-        {'line_tables_only', 'Emit debug line number tables only.'},
-        {'line_directives_only', 'Emit debug line info directives only.'},
-      },
-      description='Specify debugging level',
-    },
-
     diagnostics_format={
       values={'fixits', 'patch', 'print_source_range_info'},
       description='Emit fix-it hints in a machine-parseable format.',
@@ -2865,7 +2796,7 @@ local Vbase = {
 
     noexcept_warnings={
       values={'off', 'on'},
-      description='Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception. Only with Gcc.',
+      description='Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception. Only with GCC.',
       incidental=true,
       unavailable='c',
     },
@@ -2965,6 +2896,34 @@ local Vbase = {
       incidental=true,
     },
 
+    symbols={
+      values={
+        {'hidden', 'Use -fvisibility=hidden with Clang, GCC and other compilers that support this flag.'},
+        -- debug
+        {'nodebug', 'Request no debugging information.'},
+        {'debug', 'Request debugging information. How much information can be controlled with options \'minimal_debug\', and \'full_debug\'. If the level is not supported by a compiler, this is equivalent to the \'debug\' option.'},
+        {'minimal_debug', 'If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables.'},
+        {'full_debug', 'If possible, includes extra information, such as all the macro definitions present in the program.'},
+        -- gcc
+        {'btf', 'GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.'},
+        {'codeview', 'GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).'},
+        {'ctf', 'GCC only. Produce a CTF debug information. The default level is 2.'},
+        {'ctf1', 'Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.'},
+        {'ctf2', 'Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.'},
+        {'vms', 'GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.'},
+        {'vms1', 'Same as 1, but for Alpha/VMS.'},
+        {'vms2', 'Same as 2, but for Alpha/VMS.'},
+        {'vms3', 'Same as 3, but for Alpha/VMS.'},
+        -- clang
+        {'dbx', 'Clang only.'},
+        {'lldb', 'Clang only.'},
+        {'sce', 'Clang only.'},
+        -- clang-cl
+        {'dwarf', 'Clang-cl only'},
+      },
+      description='Produce debugging information in the operating system\'s.',
+    },
+
     switch_warnings={
       values={'on', 'off', 'exhaustive_enum', 'mandatory_default', 'exhaustive_enum_and_mandatory_default'},
       default='on',
@@ -2980,8 +2939,8 @@ local Vbase = {
 
     var_init={
       values={
-        {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang).'},
-        {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).'},
+        {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Clang and GCC).'},
+        {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for GCC, 0xAA for Clang).'},
         {'zero', 'zero Initialize automatic variables with zeroes.'},
       },
       description='Initialize all stack variables implicitly, including padding.',
@@ -3050,8 +3009,7 @@ local Vbase = {
     }},
 
     {'Debug', {
-      'debug',
-      'debug_level',
+      'symbols',
       'stl_hardening',
       'control_flow',
       'sanitizers',
@@ -3095,7 +3053,7 @@ local Vbase = {
   _opts_build_type={
     debug={
       control_flow='on',
-      debug='on',
+      symbols='debug',
       sanitizers='on',
       stl_hardening='debug',
     },
@@ -3105,7 +3063,7 @@ local Vbase = {
       optimization='3',
     },
     debug_optimized={
-      debug='on',
+      symbols='debug',
       -- linker='native',
       lto='on',
       optimization='g',
