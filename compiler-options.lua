@@ -3039,7 +3039,7 @@ local Vbase = {
     debug_optimized={
       symbols='debug',
       -- linker='native',
-      lto='on',
+      -- lto='on',
       optimization='g',
     },
     minimum_size_release={
