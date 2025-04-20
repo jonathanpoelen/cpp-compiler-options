@@ -105,7 +105,6 @@ optimization = default 0 g 1 2 3 fast size z
 # Optimization:
 
 cpu = default generic native
-linker = default bfd gold lld mold native
 lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 optimization = default 0 g 1 2 3 fast size z
 
@@ -134,6 +133,7 @@ coverage = default off on
 diagnostics_format = default fixits patch print_source_range_info
 diagnostics_show_template_tree = default off on
 elide_type = default off on
+linker = default bfd gold lld mold native
 msvc_diagnostics_format = caret default classic column
 msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
 msvc_isystem_with_template_from_non_external = default off on

@@ -2999,7 +2999,6 @@ local Vbase = {
 
     {'Optimization', {
       'cpu',
-      'linker',
       'lto',
       'optimization',
     }},
