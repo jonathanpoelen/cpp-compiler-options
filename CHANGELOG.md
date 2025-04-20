@@ -1,8 +1,16 @@
 # ChangeLog
 
+- remove `debug` and `debug_level` (replaced by `symbols`)
+- remove `lto=normal` (replaced with `lto=full`)
+- remove `lto=fat`
 - remove `suggestions` (replaced by `suggest_attributes`)
+- remove `whole_program` options (replaced by `lto` and `symbols=strip_all` / `symbols=gc_sections`)
+- add `lto=full`
+- add `lto=thin_or_nothing`
+- add `lto=whole_program`
+- add `lto=whole_program_and_full_lto`
 - add `suggest_attributes` (`on`, `off`, `common`, `analysis`, `unity`, `all`)
-- replace `debug` and `debug_level` with `symbols` (`hidden`, `nodebug`, debug`, `minimal_debug`, `full_debug`, `btf`, `ctf`, `ctf1`, `ctf2`, `vms`, `vms1`, `vms2`, `vms3`, `codeview`, `dbx`, `lldb`, `sce`, `dwarf`)
+- add `symbols` (`hidden`, `strip_all`, `gc_sections`, `nodebug`, debug`, `minimal_debug`, `full_debug`, `btf`, `ctf`, `ctf1`, `ctf2`, `vms`, `vms1`, `vms2`, `vms3`, `codeview`, `dbx`, `lldb`, `sce`, `dwarf`)
 
 ## 2024-04-14
 

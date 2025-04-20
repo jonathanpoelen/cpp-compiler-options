@@ -182,7 +182,7 @@ local clang_like = CompilerLike('clang-like', {clang, clang_cl, clang_emcc})
 -- local switch_to_real_compiler = {switch_to_special=true}
 
 -- local msvc_linker = Linker('msvc')
-local lld_link = Linker('lld-link')
+-- local lld_link = Linker('lld-link')
 local ld64 = Linker('ld64') -- Apple ld64
 
 local function link(x) return { link=x } end
@@ -945,30 +945,67 @@ Or(gcc, clang_like) {
   -- Or(gcc, clang_like)
   opt'lto' {
     match {
-      lvl'off' { fl'-fno-lto' },
+      lvl'off' {
+        fl'-fno-lto',
+        gcc {
+          flag'-fno-whole-program',
+        }
+      },
       gcc {
-        fl'-flto',
-        vers'>=5' {
-          opt'warnings' {
-            -- increases size of LTO object files, but enables diagnostics about ODR violations
-            -lvl'off' { fl'-flto-odr-type-merging' },
+        -lvl'thin_or_nothing' {
+          Or(lvl'whole_program', lvl'whole_program_and_full_lto') {
+            flag'-fwhole-program',
           },
+
           match {
-            lvl'fat' { flag'-ffat-lto-objects', },
-            lvl'thin' { link'-fuse-linker-plugin' },
+            -- GCC 11.4 introduce a change in the -flto option and the warning:
+            -- lto-wrapper: warning: using serial compilation of N LTRANS jobs
+            -- It just tells you that GCC is only using a single CPU core to do
+            -- the link time optimization, which means that it will be slow.
+            vers'>=10' { -- `auto` available since 10.0
+              fl'-flto=auto',
+            },
+            fl'-flto',
           }
+
+          -- vers'>=5' {
+          --   opt'warnings' {
+          --     -- increases size of LTO object files, but enables diagnostics about ODR violations
+          --     -- documented with the 9.1.0 version, but not above.
+          --     -- https://gcc.gnu.org/onlinedocs/gcc-9.1.0/gcc/Optimize-Options.html
+          --     -lvl'off' { fl'-flto-odr-type-merging' },
+          --   }
+          -- }
         }
       },
       { --[[clang_like]]
-        clang_cl {
-          -- LTO require -fuse-ld=lld (link by default)
-          link'-fuse-ld=lld',
-        },
+        -- clang_cl {
+        --   -- LTO require -fuse-ld=lld (link by default)
+        --   link'-fuse-ld=lld',
+        -- },
+
         match {
-          And(Or(lvl'thin', lvl'on'), vers'>=6') {
-            fl'-flto=thin'
+          And(Or(lvl'on', lvl'thin_or_nothing', lvl'whole_program'), vers'>=4') {
+            fl'-flto=thin',
           },
-          fl'-flto',
+          {
+            fl'-flto',
+            -- Or(lvl'full', lvl'whole_program_and_full_lto')
+            {
+              vers'>=10' {
+                fl'-fvirtual-function-elimination'
+              }
+            }
+          }
+        },
+
+        vers'>=3.9' {
+          Or(lvl'whole_program', lvl'whole_program_and_full_lto') {
+            fl'-fwhole-program-vtables'
+          },
+          vers'>=7' {
+            fl'-fforce-emit-vtables',
+          }
         }
       }
     }
@@ -1139,8 +1176,19 @@ Or(gcc, clang, clang_emcc) {
   -- Or(gcc, clang, clang_emcc)
   opt'symbols' {
     match {
-      lvl'nodebug' { flag'-g0' },
       lvl'hidden' { flag'-fvisibility=hidden' },
+      lvl'strip_all' { link'-s' }, -- -Wl,--strip-all
+      lvl'gc_sections' {
+        ld64 {
+          link'-Wl,-S', -- Remove debug information
+          link'-Wl,-dead_strip', -- Remove unreachable functions and data
+        },
+        {
+          link'-s', -- involved by --gc-sections (always?)
+          link'-Wl,--gc-sections', -- Remove unused sections
+        }
+      },
+      lvl'nodebug' { flag'-g0' },
       lvl'debug' { flag'-g' }, -- same as -g2
       lvl'minimal_debug' { flag'-g1' },
       lvl'full_debug' { flag'-g3' },
@@ -1271,59 +1319,16 @@ Or(gcc, clang, clang_emcc) {
           Or(lvl'gold', gcc'<9') {
             link'-fuse-ld=gold'
           },
-          opt'lto' {
-            match {
-              -- -flto is incompatible with -fuse-ld=lld
-              And(-lvl'off', gcc) {
-                link'-fuse-ld=gold'
-              },
-              link'-fuse-ld=lld',
-            }
-          },
+          -- opt'lto' {
+          --   match {
+          --     -- -flto is incompatible with -fuse-ld=lld
+          --     And(-Or(lvl'off', lvl'thin_or_nothing'), gcc) {
+          --       link'-fuse-ld=gold'
+          --     },
+          --     link'-fuse-ld=lld',
+          --   }
+          -- },
           link'-fuse-ld=lld',
-        }
-      },
-
-      -- Or(gcc, clang)
-      opt'whole_program' {
-        match {
-          lvl'off' {
-            flag'-fno-whole-program',
-            clang'>=3.9' { fl'-fno-whole-program-vtables' }
-          },
-          {
-            match {
-              ld64 {
-                link'-Wl,-dead_strip',
-                link'-Wl,-S', -- Remove debug information
-              },
-              {
-                link'-s',
-                lvl'strip_all'{
-                  link'-Wl,--gc-sections', -- Remove unused sections
-                  link'-Wl,--strip-all',
-                }
-              }
-            },
-
-            match {
-              gcc {
-                fl'-fwhole-program'
-              },
-              clang {
-                vers'>=3.9' {
-                  opt'lto' {
-                    -lvl'off' {
-                      fl'-fwhole-program-vtables'
-                    }
-                  },
-                  vers'>=7' {
-                    fl'-fforce-emit-vtables',
-                  }
-                }
-              }
-            }
-          }
         }
       },
 
@@ -1497,27 +1502,6 @@ Or(gcc, clang, clang_emcc) {
   },
 },
 
-lld_link {
-  opt'lto' {
-    match {
-      lvl'off' { flag'-fno-lto' },
-      Or(lvl'thin', lvl'on') { flag'-flto=thin' },
-      fl'-flto',
-    }
-  },
-
-  opt'whole_program' {
-    match {
-      lvl'off' { flag'-fno-whole-program' },
-      opt'lto' {
-        -lvl'off' {
-          fl'-fwhole-program-vtables'
-        }
-      }
-    }
-  },
-},
-
 Or(msvc, clang_cl, icl) {
   opt'exceptions' {
     match {
@@ -1674,23 +1658,6 @@ Or(msvc, clang_cl, icl) {
     -- Or(msvc, clang_cl)
     opt'control_flow' {
       match { lvl'off' { flag'/guard:cf-' }, flag'/guard:cf' },
-    },
-
-    -- Or(msvc, clang_cl)
-    opt'whole_program' {
-      match {
-        lvl'off' {
-          flag'/GL-'
-        },
-        {
-          flag'/GL',
-          flag'/Gw',
-          link'/LTCG',
-          lvl'strip_all'{
-            link'/OPT:REF',
-          },
-        }
-      }
     },
 
     -- Or(msvc, clang_cl)
@@ -2127,7 +2094,7 @@ match {
         lvl'off' {
           flag'/GL-',
         },
-        {
+        -lvl'thin_or_nothing' {
           flag'/GL', -- Whole program optimization
           flag'/Gw', -- Optimize Global Data
           -- Link-time code generation. The option is detected via an error,
@@ -2514,14 +2481,7 @@ match {
     opt'lto' {
       match {
         lvl'off' { fl'-no-ipo', },
-        {
-          fl'-ipo',
-          lvl'fat' {
-            linux {
-              fl'-ffat-lto-objects',
-            }
-          }
-        }
+        -lvl'thin_or_nothing' { fl'-ipo', }
       }
     },
 
@@ -2754,8 +2714,15 @@ local Vbase = {
     },
 
     lto={
-      values={'off', 'on', 'normal', 'fat', 'thin'},
-      description='Enable Link Time Optimization.',
+      values={
+        'off',
+        {'on', 'Activates ThinLTO when available (Clang), otherwise FullLTO.'},
+        {'full', 'Activates FullLTO.'},
+        {'thin_or_nothing', 'Activates ThinLTO. Disable lto when not supported.'},
+        {'whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.'},
+        {'whole_program_and_full_lto', 'Same as whole_program, but use FullLTO when not supported.'},
+      },
+      description='Enable Link Time Optimization. Also known as interprocedural optimization (IPO).',
     },
 
     msvc_conformance={
@@ -2911,6 +2878,8 @@ local Vbase = {
     symbols={
       values={
         {'hidden', 'Use -fvisibility=hidden with Clang, GCC and other compilers that support this flag.'},
+        {'strip_all', 'Strip all symbols.'},
+        {'gc_sections', 'Enable garbage collection of unused sections.'},
         -- debug
         {'nodebug', 'Request no debugging information.'},
         {'debug', 'Request debugging information. How much information can be controlled with options \'minimal_debug\', and \'full_debug\'. If the level is not supported by a compiler, this is equivalent to the \'debug\' option.'},
@@ -2976,11 +2945,6 @@ local Vbase = {
       -- incidental=true,
     },
 
-    whole_program={
-      values={'off', 'on', 'strip_all'},
-      description='Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.',
-    },
-
     windows_abi_compatibility_warnings={
       values={'off', 'on'},
       default='off',
@@ -3038,7 +3002,6 @@ local Vbase = {
       'linker',
       'lto',
       'optimization',
-      'whole_program',
     }},
 
     {'C++', {
@@ -3785,7 +3748,7 @@ local tools_filter = {
     }},
     {'linker', {
       'ld64',
-      'lld-link',
+      -- 'lld-link',
     }},
   }
 }

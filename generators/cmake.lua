@@ -251,10 +251,10 @@ endif()
 
 if(CMAKE_HOST_APPLE)
   set(JLN_LD64_]].. compiler_type .. [[_LINKER 1)
-elseif(CMAKE_LINKER MATCHES "lld-link")
-  set(JLN_LLD_LINK_]].. compiler_type .. [[_LINKER 1)
 endif()
     ]])
+-- elseif(CMAKE_LINKER MATCHES "lld-link")
+--  set(JLN_LLD_LINK_]].. compiler_type .. [[_LINKER 1)
 
     local tool_ids = {
       -- compiler
@@ -268,7 +268,7 @@ endif()
       icc='JLN_ICC_'.. compiler_type .. '_COMPILER',
       -- linker
       ld64='JLN_LD64_'.. compiler_type .. '_LINKER',
-      ['lld-link']='JLN_LLD_LINK_'.. compiler_type .. '_LINKER',
+      --['lld-link']='JLN_LLD_LINK_'.. compiler_type .. '_LINKER',
       -- platform
       mingw='MINGW',
       windows='CMAKE_HOST_WIN32',

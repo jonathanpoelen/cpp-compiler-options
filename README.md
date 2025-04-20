@@ -91,7 +91,7 @@ stl_fix = on default off
 
 # Debug:
 
-symbols = default hidden nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
+symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 stl_hardening = default off fast extensive debug debug_with_broken_abi
 control_flow = default off on branch return allow_bugs
 sanitizers = default off on
@@ -106,9 +106,8 @@ optimization = default 0 g 1 2 3 fast size z
 
 cpu = default generic native
 linker = default bfd gold lld mold native
-lto = default off on normal fat thin
+lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 optimization = default 0 g 1 2 3 fast size z
-whole_program = default off on strip_all
 
 # C++:
 
@@ -179,7 +178,7 @@ If not specified:
 category | options
 ---------|---------
 debug | `control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
-release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
 really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
 
