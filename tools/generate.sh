@@ -110,10 +110,10 @@ while read comp ; do
   gencompopt 2 debug                      symbols=debug
   gencompopt 2 sanitizers                 sanitizers
   # C++ only
-  gencompopt 1 stl_debug                     stl_hardening=debug
-  gencompopt 1 stl_debug_broken_abi          stl_hardening=debug_with_broken_abi
-  gencompopt 1 sanitizers-pointer            other_sanitizers=pointer
-  gencompopt 1 template_tree                 elide_type=off diagnostics_show_template_tree=on
+  gencompopt 1 stl_debug                  stl_hardening=debug
+  gencompopt 1 stl_debug_broken_abi       stl_hardening=debug_with_broken_abi
+  gencompopt 1 sanitizers-pointer         other_sanitizers=pointer
+  gencompopt 1 template_tree              elide_type=off diagnostics_show_template_tree=on
 done < <($LUA ./compiler-options.lua generators/compiler.lua)
 
 $LUA ./compiler-options.lua "${params[@]}"
