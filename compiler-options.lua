@@ -1830,12 +1830,12 @@ match {
           }
         },
 
-        opt'msvc_isystem_with_template_from_non_external' {
+        opt'msvc_isystem_with_template_instantiations_treated_as_non_external' {
           match {
             lvl'off' {
-              flag'/external:template',
+              flag'/external:templates',
             }, {
-              flag'/external:template-',
+              flag'/external:templates-',
             }
           }
         },
@@ -2769,9 +2769,9 @@ local Vbase = {
       incidental=true,
     },
 
-    msvc_isystem_with_template_from_non_external={
+    msvc_isystem_with_template_instantiations_treated_as_non_external={
       values={'off', 'on'},
-      description='Warnings concerning template in an external header (requires msvc_isystem).',
+      description='Allows warnings from external headers when they occur in a template that\'s instantiated in your code. (requires msvc_isystem).',
       incidental=true,
       unavailable='c',
     },

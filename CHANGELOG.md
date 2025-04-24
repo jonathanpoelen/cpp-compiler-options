@@ -5,6 +5,7 @@
 - remove `lto=fat`
 - remove `suggestions` (replaced by `suggest_attributes`)
 - remove `whole_program` options (replaced by `lto` and `symbols=strip_all` / `symbols=gc_sections`)
+- rename `msvc_isystem_with_template_from_non_external` to `msvc_isystem_with_template_instantiations_treated_as_non_external`
 - add `analyzer=with_external_headers`
 - add `lto=full`
 - add `lto=thin_or_nothing`

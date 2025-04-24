@@ -136,7 +136,7 @@ elide_type = default off on
 linker = default bfd gold lld mold native
 msvc_diagnostics_format = caret default classic column
 msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
-msvc_isystem_with_template_from_non_external = default off on
+msvc_isystem_with_template_instantiations_treated_as_non_external = default off on
 pie = default off on static fpic fPIC fpie fPIE
 windows_bigobj = on default
 ```
