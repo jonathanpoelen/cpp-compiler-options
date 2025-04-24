@@ -5,6 +5,7 @@
 - remove `lto=fat`
 - remove `suggestions` (replaced by `suggest_attributes`)
 - remove `whole_program` options (replaced by `lto` and `symbols=strip_all` / `symbols=gc_sections`)
+- add `analyzer=with_external_headers`
 - add `lto=full`
 - add `lto=thin_or_nothing`
 - add `lto=whole_program`

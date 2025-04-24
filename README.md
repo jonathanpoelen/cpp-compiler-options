@@ -122,7 +122,7 @@ stl_hardening = default off fast extensive debug debug_with_broken_abi
 
 # Analyzer:
 
-analyzer = default off on
+analyzer = default off on with_external_headers
 analyzer_too_complex_warning = default off on
 analyzer_verbosity = default 0 1 2 3
 

@@ -1472,7 +1472,7 @@ Or(gcc, clang, clang_emcc) {
             lvl'off' {
               flag'-fno-analyzer'
             },
-            { -- lvl'on'
+            { -- lvl'on', lvl'with_external_headers'
               flag'-fanalyzer',
 
               opt'analyzer_too_complex_warning' {
@@ -1733,8 +1733,13 @@ match {
           lvl'off' {
             flag'/analyze-'
           },
-          { -- lvl'on'
-            flag'/analyze'
+          { -- lvl'on', lvl'with_external_headers'
+            flag'/analyze',
+            -lvl'with_external_headers' {
+              vers'>=16.10' {
+                flag'/analyze:external-'
+              }
+            }
           }
         }
       }
@@ -2606,7 +2611,11 @@ local Vbase = {
   ]]
   _koptions={
     analyzer={
-      values={'off', 'on'},
+      values={
+        'off',
+        {'on', 'Enables an static analysis and ignore external headers with MSVC.'},
+        {'with_external_headers', 'Enables an static analysis.'},
+      },
       description='Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.',
       incidental=true,
     },
