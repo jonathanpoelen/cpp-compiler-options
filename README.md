@@ -73,7 +73,6 @@ warnings = on default off essential extensive
 warnings_as_error = default off on basic
 conversion_warnings = on default off sign float conversion all
 covered_switch_default_warnings = on default off
-fix_compiler_error = on default off
 msvc_crt_secure_no_warnings = on default off
 noexcept_warnings = default off on
 reproducible_build_warnings = default off on
@@ -153,7 +152,6 @@ If not specified:
 - The following values are `on`:
   - `conversion_warnings`
   - `covered_switch_default_warnings`
-  - `fix_compiler_error`
   - `msvc_crt_secure_no_warnings`
   - `pedantic`
   - `stl_fix`

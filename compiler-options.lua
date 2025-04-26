@@ -289,8 +289,9 @@ end
 --  /wennnn (/we4583) <- as error
 --  /wdnnnn (/wd4583) <- disable
 -- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE (use _MSC_VER)
--- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
--- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
+-- https://learn.microsoft.com/en-us/cpp/build/reference/linker-options
+-- https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
+-- https://learn.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-by-category
 
 -- icc, icpc and icl:
 -- icc / icpc (linux) -diag-enable warn -diag-dump
@@ -921,28 +922,6 @@ Or(gcc, clang_like) {
   },
 
   -- Or(gcc, clang_like)
-  opt'fix_compiler_error' {
-    match {
-      lvl'on' {
-        gcc {
-          vers'>=4.7' {
-            cxx'-Werror=narrowing',
-
-            vers'>=7.1' {
-              cxx'-Werror=literal-suffix', -- no warning name before 7.1
-            }
-          }
-        },
-        flag'-Werror=write-strings'
-      },
-      -gcc --[[=clang_like]] {
-        flag'-Wno-error=c++11-narrowing',
-        flag'-Wno-reserved-user-defined-literal',
-      }
-    }
-  },
-
-  -- Or(gcc, clang_like)
   opt'lto' {
     match {
       lvl'off' {
@@ -1167,10 +1146,24 @@ Or(gcc, clang, clang_emcc) {
   opt'pedantic' {
     -lvl'off' {
       flag'-pedantic',
+
       lvl'as_error' {
         flag'-pedantic-errors',
+        flag'-Werror=write-strings',
+        gcc {
+          vers'>=4.7' {
+            cxx'-Werror=narrowing',
+
+            vers'>=7.1' {
+              cxx'-Werror=literal-suffix', -- no warning name before 7.1
+            }
+          }
+        },
       },
     },
+    -- off
+    -- flag'-Wno-error=c++11-narrowing',
+    -- flag'-Wno-reserved-user-defined-literal',
   },
 
   -- Or(gcc, clang, clang_emcc)
@@ -2721,13 +2714,6 @@ local Vbase = {
       description='Enable C++ exceptions.',
     },
 
-    fix_compiler_error={
-      values={'off', 'on'},
-      default='on',
-      description='Transforms some warnings into errors to comply with the standard.',
-      incidental=true,
-    },
-
     float_sanitizers={
       values={'off', 'on'},
     },
@@ -2996,7 +2982,6 @@ local Vbase = {
       'warnings_as_error',
       'conversion_warnings',
       'covered_switch_default_warnings',
-      'fix_compiler_error',
       'msvc_crt_secure_no_warnings',
       'noexcept_warnings',
       'reproducible_build_warnings',

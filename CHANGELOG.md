@@ -4,7 +4,8 @@
 - remove `lto=normal` (replaced with `lto=full`)
 - remove `lto=fat`
 - remove `suggestions` (replaced by `suggest_attributes`)
-- remove `whole_program` options (replaced by `lto` and `symbols=strip_all` / `symbols=gc_sections`)
+- remove `whole_program` (replaced by `lto` and `symbols=strip_all` / `symbols=gc_sections`)
+- remove `fix_compiler_error` (merged with `pedantic`)
 - rename `msvc_isystem_with_template_from_non_external` to `msvc_isystem_with_template_instantiations_treated_as_non_external`
 - add `analyzer=with_external_headers`
 - add `lto=full`
