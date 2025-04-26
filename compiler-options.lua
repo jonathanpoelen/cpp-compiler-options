@@ -288,7 +288,7 @@ end
 --  /w1nnnn (/w14583) <- enable for report level 1
 --  /wennnn (/we4583) <- as error
 --  /wdnnnn (/wd4583) <- disable
--- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE
+-- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE (use _MSC_VER)
 -- https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
 -- https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
 
@@ -1553,7 +1553,7 @@ Or(msvc, clang_cl, icl) {
   -- _ITERATOR_DEBUG_LEVEL=2           error                       ok
   -- Or(msvc, clang_cl, icl)
   opt'stl_hardening' {
-    -- Or(msvc'>=17', clang_cl'>=12') -> hardening mode
+    -- Or(msvc'>=19.30', clang_cl'>=12') -> hardening mode
     match {
       lvl'off' {
         -- cxx'/U_DEBUG',
@@ -1633,7 +1633,7 @@ Or(msvc, clang_cl, icl) {
             flag'/fp:fast',
           },
           flag'/O2',
-          Or(msvc'>=16', clang_cl) {
+          Or(msvc'>=19.20', clang_cl) {
             flag'/Ob3',
           },
           flag'/Gw',
@@ -1663,12 +1663,17 @@ Or(msvc, clang_cl, icl) {
     -- Or(msvc, clang_cl)
     opt'pedantic' {
       -lvl'off' {
-        flag'/permissive-', -- implies /Zc:rvalueCast, /Zc:strictStrings, /Zc:ternary, /Zc:twoPhase
-        cxx'/Zc:__cplusplus',
-        -- cxx'/Zc:throwingNew',
-
         msvc {
+          -- default with clang-cl
+          flag'/permissive-', -- implies /Zc:rvalueCast, /Zc:strictStrings, /Zc:ternary, /Zc:twoPhase
+
+          vers'>=19.14' {
+            cxx'/Zc:__cplusplus',
+            -- cxx'/Zc:throwingNew',
+          },
+
           msvc_select_warn(lvl'as_error', 'e', '1', function(f) return {
+            -- msvc 13
             flag(f(4608)), -- 'union_member' has already been initialized by another union member in the initializer list, 'union_member'
             cxx(f(4928)), -- illegal copy-initialization; more than one user-defined conversion has been implicitly applied
 
@@ -1683,10 +1688,14 @@ Or(msvc, clang_cl, icl) {
 
           match {
             has_opt'msvc_isystem' {
-              cxx'/we4471', -- Forward declaration of an unscoped enumeration must have an underlying type
-              cxx'/we5052', -- Keyword 'keyword-name' was introduced in C++ version and requires use of the 'option' command-line option
+              vers'>=17' {
+                cxx'/we4471', -- Forward declaration of an unscoped enumeration must have an underlying type
+                vers'>=19.21' {
+                  cxx'/we5052', -- Keyword 'keyword-name' was introduced in C++ version and requires use of the 'option' command-line option
+                }
+              }
             },
-            {
+            vers'>=17' {
               cxx'/w14471',
             }
           }
@@ -1706,7 +1715,7 @@ Or(msvc, clang_cl, icl) {
           flag'/sdl',
           match {
             lvl'strong' {
-              msvc'>=16.7' {
+              msvc'>=19.27' {
                 flag'/guard:ehcont',
                 link'/CETCOMPAT',
               },
@@ -1728,7 +1737,7 @@ match {
   msvc {
     -- https://learn.microsoft.com/en-us/cpp/build/reference/analyze-code-analysis
     opt'analyzer' {
-      vers'>=15' {
+      vers'>=19' {
         match {
           lvl'off' {
             flag'/analyze-'
@@ -1758,15 +1767,15 @@ match {
         lvl'all' {
           flag'/Zc:throwingNew',
         },
-        vers'>=15.6' {
+        vers'>=19.13' {
           cxx'/Zc:externConstexpr',
-          vers'>=16.5' {
+          vers'>=19.25' {
             flag'/Zc:preprocessor',
-            vers'>=16.8' {
+            vers'>=19.28' {
               cxx'/Zc:lambda',
-              vers'>=17.4' { -- MSVC 19.34
+              vers'>=19.34' {
                 cxx'/Zc:enumTypes',
-                vers'>=17.5' { -- MSVC 19.35
+                vers'>=19.35' {
                   cxx'/Zc:templateScope',
                 }
               }
@@ -1786,7 +1795,7 @@ match {
 
     -- msvc
     opt'msvc_diagnostics_format' {
-      vers'>=17' {
+      vers'>=19.10' {
         match {
           lvl'classic' { flag'/diagnostics:classic' },
           lvl'column' { flag'/diagnostics:column' },
@@ -1797,14 +1806,14 @@ match {
 
     -- msvc
     -- https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
-    vers'<15.16' {
+    vers'<19.13' {
       reset_opt'msvc_isystem'
     },
     match {
       opt'msvc_isystem' {
         match {
           lvl'external_as_include_system_flag' {
-            if_else(vers'<16.10', function(b)
+            if_else(vers'<19.29', function(b)
               return act({
                 cxx='/external:env:INCLUDE /external:W0' .. (b and ' /experimental:external' or ''),
                 system_flag='/external:I',
@@ -1812,7 +1821,7 @@ match {
             end)
           },
           -lvl'assumed' {
-            vers'<16.10' {
+            vers'<19.29' {
               flag'/experimental:external'
             },
             flag'/external:W0',
@@ -1851,6 +1860,7 @@ match {
         lvl'essential' {
           flag'/W4',
           -- /external:... ignores warnings starting with C47XX
+          -- msvc 13.0
           flag'/wd4711', -- function selected for inline expansion (enabled by /OB2)
         },
         lvl'on' {
@@ -1858,85 +1868,92 @@ match {
           flag'/W4',
 
           -- /external:... ignores warnings starting with C47XX
+          -- msvc 13.0
           flag'/wd4711', -- function selected for inline expansion (enabled by /OB2)
 
           -- off by default
 
+          -- msvc 13.0
+
+          -has_opt'msvc_isystem' {
+            cxx'/w14263', -- member function does not override any base class virtual member function
+            cxx'/w14264', -- no override available for virtual member function from base 'class'; function is hidden (-Woverloaded-virtual)
+          },
           cxx'/w14265', -- Class has virtual functions, but its non-trivial destructor (-Wnon-virtual-dtor)
           flag'/w14296', -- expression is always false (-Wtautological-unsigned-zero-compare / -Wtype-limits)
           flag'/w14444', -- top level '__unaligned' is not implemented in this context
-          flag'/w14545', -- expression before comma evaluates to a function which is missing an argument list
-          flag'/w14546', -- function call before comma missing argument list
-          flag'/w14547', -- 'operator' : operator before comma has no effect; expected operator with side-effect
-          flag'/w14548', -- expression before comma has no effect; expected expression with side-effect
-          flag'/w14549', -- 'operator' : operator before comma has no effect; did you intend 'operator'?
           flag'/w14555', -- expression has no effect; expected expression with side-effect
           flag'/w14557', -- '__assume' contains effect 'effect'
           cxx'/w14608', -- 'union_member' has already been initialized by another union member in the initializer list, 'union_member'
-          cxx'/w14692', -- 'function': signature of non-private member contains assembly private native type 'native_type'
-          cxx'/w14822', -- 'member' : local class member function does not have a body
+
           flag'/w14905', -- wide string literal cast to 'LPSTR'
           flag'/w14906', -- string literal cast to 'LPWSTR'
           flag'/w14917', -- 'declarator' : a GUID can only be associated with a class, interface or namespace
           cxx'/w14928', -- illegal copy-initialization; more than one user-defined conversion has been implicitly applied
-          cxx'/w14596', -- illegal qualified name in member declaration
 
-          vers'>=15.3' {
+          -- msvc 13.10
+
+          flag'/w14545', -- expression before comma evaluates to a function which is missing an argument list
+          flag'/w14546', -- function call before comma missing argument list
+          flag'/w14547', -- 'operator' : operator before comma has no effect; expected operator with side-effect
+          flag'/w14548', -- expression before comma has no effect; expected expression with side-effect
+
+          flag'/w14549', -- 'operator' : operator before comma has no effect; did you intend 'operator'?
+          cxx'/w14822', -- 'member' : local class member function does not have a body
+
+          -- msvc 14.0
+
+          cxx'/w14692', -- 'function': signature of non-private member contains assembly private native type 'native_type'
+
+          vers'>=19.00' {
+            flag'/w14426', -- Optimization flags changed after including header
+            cxx'/w14596', -- illegal qualified name in member declaration
             -has_opt'msvc_isystem' {
-              cxx'/w14263', -- member function does not override any base class virtual member function
-              cxx'/w14264', -- no override available for virtual member function from base 'class'; function is hidden (-Woverloaded-virtual)
+              flag'/w14654', -- Code placed before include of precompiled header line will be ignored.
             },
-            cxx'/w15038', -- member 'member1' will be initialized after data member 'member2' (-Wreorder-ctor / -Wreorder)
+            flag'/w15031', -- #pragma warning(pop): likely mismatch
+            flag'/w15032', -- detected #pragma warning(push) with no corresponding #pragma warning(pop)
 
-            vers'>=16.10' {
-              cxx'/w15233', -- explicit lambda capture 'identifier' is not used
-              flag'/w15240', -- attribute is ignored in this syntactic position
+            vers'>=19.11' {
+              cxx'/w15038', -- member 'member1' will be initialized after data member 'member2' (-Wreorder-ctor / -Wreorder)
 
-              vers'>=17.4' {
-                cxx'/w15263', -- calling 'std::move' on a temporary object prevents copy elision (-Wpessimizing-move)
-                -has_opt'msvc_isystem' {
-                  flag'/w15262', -- -Wimplicit-fallthrough, active only with /std:c++17 or newer
-                },
+              vers'>=19.15' {
+                cxx'/w14643', -- Forward declaring 'identifier' in namespace std is not permitted by the C++ Standard.
 
-                vers'>=19.00' {
-                  flag'/w14426', -- Optimization flags changed after including header
-                  -has_opt'msvc_isystem' {
-                    flag'/w14654', -- Code placed before include of precompiled header line will be ignored.
-                  },
-                  flag'/w15031', -- #pragma warning(pop): likely mismatch
-                  flag'/w15032', -- detected #pragma warning(push) with no corresponding #pragma warning(pop)
+                vers'>=19.22' {
+                  cxx'/w14855', -- implicit capture of 'this' via '[=]' is deprecated in 'version'
 
-                  vers'>=19.15' {
-                    cxx'/w14643', -- Forward declaring 'identifier' in namespace std is not permitted by the C++ Standard.
+                  vers'>=19.25' {
+                    -has_opt'msvc_isystem' {
+                      cxx'/w15204', -- Class with virtual functions but trivial destructor destructor (-Wnon-virtual-dtor)
+                    },
 
-                    vers'>=19.22' {
-                      cxx'/w14855', -- implicit capture of 'this' via '[=]' is deprecated in 'version'
+                    vers'>=19.29' {
+                      cxx'/w15233', -- explicit lambda capture 'identifier' is not used
+                      flag'/w15240', -- attribute is ignored in this syntactic position
 
-                      vers'>=19.25' {
+                      vers'>=19.30' {
                         -has_opt'msvc_isystem' {
-                          cxx'/w15204', -- Class with virtual functions but trivial destructor destructor (-Wnon-virtual-dtor)
+                          cxx'/w15246', -- the initialization of a subobject should be wrapped in braces
                         },
+                        flag'/w15249', -- 'bitfield' of type 'enumeration_name' has named enumerators with values that cannot be represented in the given bit field width of 'bitfield_width'.
 
-                        vers'>=19.29' {
-                          cxx'/w15233', -- explicit lambda capture 'identifier' is not used
+                        vers'>=19.32' {
+                          flag'/w15258', -- explicit capture of 'symbol' is not required for this use
 
-                          vers'>=19.30' {
+                          vers'>=19.34' {
+                            cxx'/w15263', -- calling 'std::move' on a temporary object prevents copy elision (-Wpessimizing-move)
                             -has_opt'msvc_isystem' {
-                              cxx'/w15246', -- the initialization of a subobject should be wrapped in braces
+                              flag'/w15262', -- -Wimplicit-fallthrough, active only with /std:c++17 or newer
                             },
-                            flag'/w15249', -- 'bitfield' of type 'enumeration_name' has named enumerators with values that cannot be represented in the given bit field width of 'bitfield_width'.
 
-                            vers'>=19.32' {
-                              flag'/w15258', -- explicit capture of 'symbol' is not required for this use
+                            vers'>=19.37' {
+                              cxx'/w15267', -- definition of implicit copy constructor/assignment operator for 'type' is deprecated because it has a user-provided assignment operator/copy constructor
 
-                              vers'>=19.37' {
-                                cxx'/w15267', -- definition of implicit copy constructor/assignment operator for 'type' is deprecated because it has a user-provided assignment operator/copy constructor
-
-                                -- last compiler version: 19.43
-                                -- https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-by-compiler-version
-                                -- https://learn.microsoft.com/en-us/cpp/preprocessor/compiler-warnings-that-are-off-by-default
-                                -- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE
-                              }
+                              -- last compiler version: 19.43
+                              -- https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warnings-by-compiler-version
+                              -- https://learn.microsoft.com/en-us/cpp/preprocessor/compiler-warnings-that-are-off-by-default
+                              -- https://github.com/microsoft/STL/wiki/Macro-_MSVC_STL_UPDATE
                             }
                           }
                         }
@@ -1986,10 +2003,10 @@ match {
             cxx'/wd4626', -- Copy assignment operator implicitly deleted
             flag'/wd4668', -- 'symbol' is not defined as a preprocessor macro
             cxx'/wd5204', -- Class with virtual functions but trivial destructor (-Wnon-virtual-dtor)
-            vers'>=15' {
+            vers'>=19' {
               cxx'/wd4582', -- 'type': constructor is not implicitly called
               cxx'/wd4583', -- 'type': destructor is not implicitly called
-              vers'>=17.4' {
+              vers'>=19.34' {
                 flag'/wd5262', -- -Wimplicit-fallthrough, active only with /std:c++17 or newer
                 vers'>=19' {
                   flag'/wd4774', -- format not a string literal
@@ -2113,8 +2130,11 @@ match {
     -- msvc
     opt'sanitizers' {
       match {
-        vers'>=16.9' {
+        vers'>=19.28' {
           flag'/fsanitize=address',
+          -- required env variable ASAN_OPTIONS=detect_stack_use_after_return=1
+          -- (checked with 19.43)
+          -- https://learn.microsoft.com/en-us/cpp/sanitizers/error-stack-use-after-return?view=msvc-170
           flag'/fsanitize-address-use-after-return'
         },
         match {
