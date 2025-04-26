@@ -92,7 +92,6 @@ warn_opts='
   shadow_warnings=off
   windows_abi_compatibility_warnings=off
   switch_warnings=exhaustive_enum
-  msvc_conformance=all
   pedantic
   warnings
 '

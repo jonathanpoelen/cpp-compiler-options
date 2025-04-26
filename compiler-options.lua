@@ -1654,49 +1654,6 @@ Or(msvc, clang_cl, icl) {
     },
 
     -- Or(msvc, clang_cl)
-    opt'pedantic' {
-      -lvl'off' {
-        msvc {
-          -- default with clang-cl
-          flag'/permissive-', -- implies /Zc:rvalueCast, /Zc:strictStrings, /Zc:ternary, /Zc:twoPhase
-
-          vers'>=19.14' {
-            cxx'/Zc:__cplusplus',
-            -- cxx'/Zc:throwingNew',
-          },
-
-          msvc_select_warn(lvl'as_error', 'e', '1', function(f) return {
-            -- msvc 13
-            flag(f(4608)), -- 'union_member' has already been initialized by another union member in the initializer list, 'union_member'
-            cxx(f(4928)), -- illegal copy-initialization; more than one user-defined conversion has been implicitly applied
-
-            vers'>=19.31' {
-              cxx(f(5254)), -- language feature 'terse static assert' requires compiler flag '/std:c++17'
-
-              vers'>=19.38' {
-                flag(f(5110)), -- __VA_OPT__ is an extension prior to C++20 or C23
-              }
-            }
-          } end),
-
-          match {
-            has_opt'msvc_isystem' {
-              vers'>=17' {
-                cxx'/we4471', -- Forward declaration of an unscoped enumeration must have an underlying type
-                vers'>=19.21' {
-                  cxx'/we5052', -- Keyword 'keyword-name' was introduced in C++ version and requires use of the 'option' command-line option
-                }
-              }
-            },
-            vers'>=17' {
-              cxx'/w14471',
-            }
-          }
-        }
-      }
-    },
-
-    -- Or(msvc, clang_cl)
     -- https://airbus-seclab.github.io/c-compiler-security/
     opt'stack_protector' {
       match {
@@ -1750,32 +1707,6 @@ match {
     -- msvc
     opt'windows_bigobj' {
       flag'/bigobj',
-    },
-
-    -- msvc
-    opt'msvc_conformance' {
-      Or(lvl'all', lvl'all_without_throwing_new') {
-        flag'/Zc:inline',
-        flag'/Zc:referenceBinding',
-        lvl'all' {
-          flag'/Zc:throwingNew',
-        },
-        vers'>=19.13' {
-          cxx'/Zc:externConstexpr',
-          vers'>=19.25' {
-            flag'/Zc:preprocessor',
-            vers'>=19.28' {
-              cxx'/Zc:lambda',
-              vers'>=19.34' {
-                cxx'/Zc:enumTypes',
-                vers'>=19.35' {
-                  cxx'/Zc:templateScope',
-                }
-              }
-            }
-          },
-        }
-      }
     },
 
     -- msvc
@@ -2104,6 +2035,80 @@ match {
     },
 
     -- msvc
+    opt'pedantic' {
+      -lvl'off' {
+        flag'/permissive-', -- aussi activated with /std:c++20 and later
+        -- implies
+        -- /Zc:externC
+        -- /Zc:gotoScope
+        -- /Zc:hiddenFriend
+        -- /Zc:nrvo
+        -- /Zc:rvalueCast
+        -- /Zc:strictStrings
+        -- /Zc:ternary
+        -- /Zc:twoPhase
+        -- /Zc:externConstexpr since 19.36
+        -- /Zc:lambda since 19.36
+
+        flag'/Zc:inline',
+        cxx'/Zc:referenceBinding',
+        cxx'/Zc:throwingNew',
+
+        vers'>=19.13' {
+          cxx'/Zc:externConstexpr',
+
+          vers'>=19.14' {
+            cxx'/Zc:__cplusplus',
+
+            vers'>=19.25' {
+              flag'/Zc:preprocessor',
+
+              vers'>=19.28' {
+                cxx'/Zc:lambda',
+
+                vers'>=19.34' {
+                  cxx'/Zc:enumTypes',
+
+                  vers'>=19.35' {
+                    cxx'/Zc:templateScope',
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        msvc_select_warn(lvl'as_error', 'e', '1', function(f) return {
+          -- msvc 13
+          flag(f(4608)), -- 'union_member' has already been initialized by another union member in the initializer list, 'union_member'
+          cxx(f(4928)), -- illegal copy-initialization; more than one user-defined conversion has been implicitly applied
+
+          vers'>=19.31' {
+            cxx(f(5254)), -- language feature 'terse static assert' requires compiler flag '/std:c++17'
+
+            vers'>=19.38' {
+              flag(f(5110)), -- __VA_OPT__ is an extension prior to C++20 or C23
+            }
+          }
+        } end),
+
+        match {
+          has_opt'msvc_isystem' {
+            vers'>=17' {
+              cxx'/we4471', -- Forward declaration of an unscoped enumeration must have an underlying type
+              vers'>=19.21' {
+                cxx'/we5052', -- Keyword 'keyword-name' was introduced in C++ version and requires use of the 'option' command-line option
+              }
+            }
+          },
+          vers'>=17' {
+            cxx'/w14471',
+          }
+        }
+      }
+    },
+
+    -- msvc
     opt'lto' {
       match {
         lvl'off' {
@@ -2145,6 +2150,14 @@ match {
     },
   },
 
+  clang_cl {
+    opt'pedantic' {
+      -lvl'off' {
+        cxx'/Zc:twoPhase',
+      }
+    }
+  },
+
   icl {
     opt'warnings' {
       match {
@@ -2174,17 +2187,6 @@ match {
     -- icl
     opt'windows_bigobj' {
       flag'/bigobj',
-    },
-
-    -- icl
-    opt'msvc_conformance' {
-      Or(lvl'all', lvl'all_without_throwing_new') {
-        flag'/Zc:inline',
-        flag'/Zc:strictStrings',
-        lvl'all' {
-          flag'/Zc:throwingNew',
-        },
-      }
     },
 
     -- icl
@@ -2364,6 +2366,9 @@ match {
         },
         {
           flag'-fno-gnu-keywords',
+          flag'/Zc:inline',
+          flag'/Zc:strictStrings',
+          flag'/Zc:throwingNew',
         }
       }
     },
@@ -2740,12 +2745,6 @@ local Vbase = {
       description='Enable Link Time Optimization. Also known as interprocedural optimization (IPO).',
     },
 
-    msvc_conformance={
-      values={'all', 'all_without_throwing_new'},
-      default='all',
-      description='Standard conformance options.',
-    },
-
     msvc_crt_secure_no_warnings={
       values={'off', 'on'},
       default='on',
@@ -2993,7 +2992,6 @@ local Vbase = {
     }},
 
     {'Pedantic', {
-      'msvc_conformance',
       'pedantic',
       'stl_fix',
     }},

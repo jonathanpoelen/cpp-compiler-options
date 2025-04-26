@@ -84,7 +84,6 @@ windows_abi_compatibility_warnings = off default on
 
 # Pedantic:
 
-msvc_conformance = all default all_without_throwing_new
 pedantic = on default off as_error
 stl_fix = on default off
 
@@ -143,7 +142,6 @@ windows_bigobj = on default
 
 If not specified:
 
-- `msvc_conformance` is `all`
 - `msvc_diagnostics_format` is `caret`
 - `ndebug` is `with_optimization_1_or_above`
 - The following values are `off`:
