@@ -384,7 +384,7 @@ local _compiler_by_toolname = {
 
 local _is_clang_like_by_compiler = {
   clang=true,
-  ['clang-cl']=true,
+  -- ['clang-cl']=false,
   emcc=true,
   icx=true,
   ['icx-cl']=true,

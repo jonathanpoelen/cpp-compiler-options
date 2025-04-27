@@ -112,10 +112,10 @@ ___]] .. prefixfunc .. [[_compiler = meson.get_compiler(']] .. lang .. [[')
 ___]] .. prefixfunc .. [[_compiler_id = ___]] .. prefixfunc .. [[_compiler.get_id()
 if ___]] .. prefixfunc .. [[_compiler_id == 'emscripten'
   ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.get_define('__clang_major__.__clang_minor__').replace(' ', '')
-  ___]] .. prefixfunc .. [[is_clang_like = true
+  ___]] .. prefixfunc .. [[_is_clang_like = true
 else
   ___]] .. prefixfunc .. [[_compiler_version = ___]] .. prefixfunc .. [[_compiler.version()
-  ___]] .. prefixfunc .. [[is_clang_like = ['clang', 'clang-cl', 'emscripten', 'icx', 'icx-cl'].contains(___]] .. prefixfunc .. [[_compiler_id)
+  ___]] .. prefixfunc .. [[_is_clang_like = ['clang', 'emscripten', 'icx', 'icx-cl'].contains(___]] .. prefixfunc .. [[_compiler_id)
 endif
 ___]] .. prefixfunc .. [[_linker_id = ___]] .. prefixfunc .. [[_compiler.get_linker_id()
 

@@ -136,7 +136,7 @@ def get_flags(options, env=None):
     is_clang_like = true
     compiler = 'clang-emcc'
   else:
-    is_clang_like = compiler.startswith('clang')
+    is_clang_like = compiler.startswith('clang') and not compiler.startswith('clang-cl')
     compiler = _compiler
 
   version = version or (0,0)

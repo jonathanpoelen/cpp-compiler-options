@@ -209,6 +209,7 @@ rule ]] .. prefixfunc .. [[-update-normalized-compiler ( toolset : version )
       case icx* : is_intel = 1 ;
       case icpx* : is_intel = 1 ;
       case dpcpp* : is_intel = 1 ;
+      case clang-cl : is_clang = 0 ;
       case clang* : is_clang = 1 ;
     }
 

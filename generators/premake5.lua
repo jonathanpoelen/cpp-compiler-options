@@ -274,7 +274,7 @@ function ]] .. prefixfunc .. [[_getoptions(values, disable_others, print_compile
     printf("]] .. prefixfunc .. [[_getoptions: compiler: %s, version: %s", compiler, version)
   end
 
-  local is_clang_like = compiler:find('^clang')
+  local is_clang_like = compiler:find('^clang') and not compiler:find('^clang-cl')
 
   local jln_buildoptions, jln_linkoptions = {}, {}
 ]])

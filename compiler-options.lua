@@ -176,7 +176,7 @@ local icc = Compiler('icc')
 local icl = Compiler('icl')
 -- local emcc = Compiler('emcc')
 local clang_emcc = Compiler('clang-emcc') -- virtual compiler, refer to clang version
-local clang_like = CompilerLike('clang-like', {clang, clang_cl, clang_emcc})
+local clang_like = CompilerLike('clang-like', {clang, clang_emcc})
 
 -- for clang-emcc to emcc
 -- local switch_to_real_compiler = {switch_to_special=true}
@@ -342,7 +342,7 @@ opt'ndebug' {
   }
 },
 
-Or(gcc, clang_like) {
+Or(gcc, clang_like, clang_cl) {
   opt'warnings' {
     match {
       lvl'off' { flag'-w' },
@@ -526,7 +526,7 @@ Or(gcc, clang_like) {
     },
   },
 
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   match {
     gcc {
       opt'switch_warnings' {
@@ -546,7 +546,7 @@ Or(gcc, clang_like) {
         }
       }
     },
-    { --[[clang_like]]
+    { --[[clang_like or clang_cl]]
       opt'switch_warnings' {
         -- -Wswitch-default is a noop with < 18.0
         match {
@@ -585,9 +585,9 @@ Or(gcc, clang_like) {
     }
   },
 
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   opt'unsafe_buffer_usage_warnings' {
-    clang_like'>=16' {
+    Or(clang_like'>=16', clang_cl'>=16') {
       match {
         lvl'off' { flag'-Wno-unsafe-buffer-usage' },
         cxx'-Wunsafe-buffer-usage',
@@ -595,7 +595,36 @@ Or(gcc, clang_like) {
     }
   },
 
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
+  opt'shadow_warnings' {
+    match {
+      lvl'off' {
+        flag'-Wno-shadow',
+        Or(clang_like'>=8', clang_cl'>=8') {
+          flag'-Wno-shadow-field'
+        }
+      },
+      lvl'on' { flag'-Wshadow' },
+      lvl'all' {
+        match {
+          gcc { flag'-Wshadow' },
+          flag'-Wshadow-all',
+        }
+      },
+      gcc'>=7.1' {
+        match {
+          lvl'local' {
+            flag'-Wshadow=local'
+          },
+          { --[[lvl'compatible_local']]
+            flag'-Wshadow=compatible-local'
+          }
+        }
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like, clang_cl)
   opt'suggest_attributes' {
     match {
       lvl'on' {
@@ -660,49 +689,10 @@ Or(gcc, clang_like) {
     }
   },
 
-  -- Or(gcc, clang_like)
-  opt'diagnostics_show_template_tree' {
-    Or(gcc'>=8', clang_like) {
-      match {
-        lvl'on' { cxx'-fdiagnostics-show-template-tree' },
-        cxx'-fno-diagnostics-show-template-tree',
-      }
-    },
-  },
-
-  -- Or(gcc, clang_like)
-  opt'elide_type' {
-    match {
-      lvl'on' { gcc'>=8' { cxx'-felide-type' } },
-      Or(gcc'>=8', clang_like'>=3.4') { cxx'-fno-elide-type', },
-    }
-  },
-
-  -- Or(gcc, clang_like)
-  opt'exceptions' {
-    match {
-      lvl'on' {
-        flag'-fexceptions',
-        clang_emcc {
-          flag'-sDISABLE_EXCEPTION_CATCHING=0',
-        }
-      },
-      flag'-fno-exceptions',
-    }
-  },
-
-  -- Or(gcc, clang_like)
-  opt'rtti' {
-    match {
-      lvl'on' { cxx'-frtti' },
-      cxx'-fno-rtti',
-    }
-  },
-
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   opt'var_init' {
-    Or(gcc'>=12', clang_like'>=8') {
-      clang_like'<=15' {
+    Or(gcc'>=12', clang_like'>=8', clang_cl'>=8') {
+      Or(clang_like'<=15', clang_cl'<=15') {
         lvl'zero' {
           flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
         }
@@ -723,9 +713,9 @@ Or(gcc, clang_like) {
     },
   },
 
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   opt'windows_abi_compatibility_warnings' {
-    Or(gcc'>=10', clang_like) {
+    Or(gcc'>=10', -gcc) {
       match {
         lvl'on' { cxx'-Wmismatched-tags' },
         cxx'-Wno-mismatched-tags'
@@ -733,7 +723,17 @@ Or(gcc, clang_like) {
     }
   },
 
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
+  opt'reproducible_build_warnings' {
+    gcc'>=4.9' {
+      match {
+        lvl'on' { flag'-Wdate-time' },
+        flag'-Wno-date-time',
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like, clang_cl)
   opt'warnings_as_error' {
     match {
       lvl'on' { flag'-Werror', },
@@ -755,7 +755,7 @@ Or(gcc, clang_like) {
               }
             }
           },
-          { --[[clang_like]]
+          { --[[clang_like or clang_cl]]
             flag'-Werror=array-bounds',
             flag'-Werror=division-by-zero',
 
@@ -781,59 +781,7 @@ Or(gcc, clang_like) {
     }
   },
 
-  -- Or(gcc, clang_like)
-  -- ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
-  opt'sanitizers' {
-    match {
-      lvl'off' {
-        fl'-fno-sanitize=all'
-      },
-      clang_cl {
-        flag'-fsanitize=undefined',
-        flag'-fsanitize=address', -- memory, thread are mutually exclusive
-        flag'-fsanitize-address-use-after-scope',
-      },
-      Or(clang, clang_emcc) {
-        vers'>=3.1' {
-          fl'-fsanitize=undefined',
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fsanitize-address-use-after-scope',
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
-          clang {
-            vers'>=3.4' {
-              fl'-fsanitize=leak', -- requires the address sanitizer
-            },
-            vers'>=6' {
-              opt'stack_protector' {
-                -lvl'off' {
-                  flag'-fsanitize-minimal-runtime',
-                }
-              }
-            },
-          },
-        }
-      },
-      { --[[gcc]]
-        vers'>=4.8' {
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
-
-          vers'>=4.9' {
-            fl'-fsanitize=undefined',
-            fl'-fsanitize=leak', -- requires the address sanitizer
-
-            vers'>=12' {
-              fl'-fsanitize=bounds-strict',
-            }
-          }
-        }
-      }
-    }
-  },
-
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   opt'control_flow' {
     match {
       clang_emcc {
@@ -876,7 +824,9 @@ Or(gcc, clang_like) {
 
         And(lvl'allow_bugs', clang) {
           fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
-          flag'-fvisibility=hidden',
+          -clang_cl {
+            flag'-fvisibility=hidden',
+          },
           fl'-flto',
         }
       }
@@ -894,34 +844,7 @@ Or(gcc, clang_like) {
     },
   },
 
-  -- Or(gcc, clang_like)
-  opt'reproducible_build_warnings' {
-    gcc'>=4.9' {
-      match {
-        lvl'on' { flag'-Wdate-time' },
-        flag'-Wno-date-time',
-      }
-    }
-  },
-
-  -- Or(gcc, clang_like)
-  opt'diagnostics_format' {
-    match {
-      lvl'fixits' {
-        Or(gcc'>=7', And(-gcc, vers'>=5') --[[=clang_like'>=5']]) {
-          flag'-fdiagnostics-parseable-fixits'
-        }
-      },
-      lvl'patch' {
-        gcc'>=7' { flag'-fdiagnostics-generate-patch' }
-      },
-      { --[[lvl'print_source_range_info']]
-        clang_like { flag'-fdiagnostics-print-source-range-info' }
-      }
-    }
-  },
-
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   opt'lto' {
     match {
       lvl'off' {
@@ -957,12 +880,7 @@ Or(gcc, clang_like) {
           -- }
         }
       },
-      { --[[clang_like]]
-        -- clang_cl {
-        --   -- LTO require -fuse-ld=lld (link by default)
-        --   link'-fuse-ld=lld',
-        -- },
-
+      { --[[clang_like or clang_cl]]
         match {
           And(Or(lvl'on', lvl'thin_or_nothing', lvl'whole_program'), vers'>=4') {
             fl'-flto=thin',
@@ -990,38 +908,66 @@ Or(gcc, clang_like) {
     }
   },
 
-  -- Or(gcc, clang_like)
-  opt'shadow_warnings' {
-    match {
-      lvl'off' {
-        flag'-Wno-shadow',
-        clang_like'>=8' {
-          flag'-Wno-shadow-field'
-        }
-      },
-      lvl'on' { flag'-Wshadow' },
-      lvl'all' {
-        match {
-          gcc { flag'-Wshadow' },
-          flag'-Wshadow-all',
-        }
-      },
-      gcc'>=7.1' {
-        match {
-          lvl'local' {
-            flag'-Wshadow=local'
+  -- Or(gcc, clang_like, clang_cl)
+  opt'stl_hardening' {
+    -- https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_macros.html
+    -- https://libcxx.llvm.org/Hardening.html (libc++-18)
+    -- _LIBCPP_DEBUG is a pre-hardening mode
+    -- Note: gcc-11 supports `-stdlib=libc++` (if configured to support this).
+    --       clang supports `-stdlib=libstdc++`.
+    -lvl'off' {
+      match {
+        lvl'fast' {
+          -clang_cl {
+            cxx'-D_GLIBCXX_ASSERTIONS',
           },
-          { --[[lvl'compatible_local']]
-            flag'-Wshadow=compatible-local'
-          }
+          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST',
+        },
+        lvl'extensive' {
+          -clang_cl {
+            cxx'-D_GLIBCXX_ASSERTIONS',
+          },
+          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE',
+        },
+        lvl'debug' {
+          -clang_cl {
+            cxx'-D_GLIBCXX_ASSERTIONS',
+          },
+          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
+        },
+        --[[lvl'debug_with_broken_abi']] {
+          -clang_cl {
+            cxx'-D_GLIBCXX_DEBUG',
+            has_opt'pedantic':without(lvl'off') {
+              cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
+            },
+          },
+          match {
+            clang_like'<18' {
+              -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
+              vers'>=8' {
+                cxx'-D_LIBCPP_DEBUG=1',
+              },
+            },
+            -- gcc or recent clang
+            {
+              cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
+              -- https://libcxx.llvm.org/Hardening.html#abi-options
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS',
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING',
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR',
+              cxx'-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR',
+              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY',
+            }
+          },
         }
-      }
-    }
+      },
+    },
   },
 
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   opt'float_sanitizers' {
-    Or(gcc'>=5', clang_like'>=5') {
+    vers'>=5' {
       match {
         lvl'on' {
           flag'-fsanitize=float-divide-by-zero',
@@ -1035,10 +981,10 @@ Or(gcc, clang_like) {
     },
   },
 
-  -- Or(gcc, clang_like)
+  -- Or(gcc, clang_like, clang_cl)
   opt'integer_sanitizers' {
     match {
-      clang_like'>=5' {
+      Or(clang_like'>=5', clang_cl'>=5') {
         match {
           lvl'on' { flag'-fsanitize=integer', },
           flag'-fno-sanitize=integer',
@@ -1052,11 +998,10 @@ Or(gcc, clang_like) {
       }
     }
   },
-
 },
 
 opt'conversion_warnings' {
-  Or(gcc, clang_like, icc) {
+  Or(gcc, clang_like, clang_cl, icc) {
     match {
       lvl'on' {
         flag'-Wconversion',
@@ -1093,56 +1038,112 @@ opt'conversion_warnings' {
   },
 },
 
-Or(gcc, clang, clang_emcc) {
-  opt'stl_hardening' {
-    -- https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_macros.html
-    -- https://libcxx.llvm.org/Hardening.html (libc++-18)
-    -- _LIBCPP_DEBUG is a pre-hardening mode
-    -- Note: gcc-11 supports `-stdlib=libc++` (if configured to support this).
-    --       clang supports `-stdlib=libstdc++`.
-    -lvl'off' {
+Or(gcc, clang_like) {
+  -- Or(gcc, clang_like)
+  opt'diagnostics_show_template_tree' {
+    Or(gcc'>=8', clang_like) {
       match {
-        lvl'fast' {
-          cxx'-D_GLIBCXX_ASSERTIONS',
-          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST',
-        },
-        lvl'extensive' {
-          cxx'-D_GLIBCXX_ASSERTIONS',
-          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE',
-        },
-        lvl'debug' {
-          cxx'-D_GLIBCXX_ASSERTIONS',
-          cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
-        },
-        --[[lvl'debug_with_broken_abi']] {
-          cxx'-D_GLIBCXX_DEBUG',
-          has_opt'pedantic':without(lvl'off') {
-            cxx'-D_GLIBCXX_DEBUG_PEDANTIC'
-          },
-          match {
-            clang_like'<18' {
-              -- debug allocator has a bug: https://bugs.llvm.org/show_bug.cgi?id=39203
-              vers'>=8' {
-                cxx'-D_LIBCPP_DEBUG=1',
-              },
-            },
-            -- gcc or recent clang
-            {
-              cxx'-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG',
-              -- https://libcxx.llvm.org/Hardening.html#abi-options
-              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS',
-              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING',
-              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR',
-              cxx'-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR',
-              cxx'-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY',
-            }
-          },
-        }
-      },
+        lvl'on' { cxx'-fdiagnostics-show-template-tree' },
+        cxx'-fno-diagnostics-show-template-tree',
+      }
     },
   },
 
-  -- Or(gcc, clang, clang_emcc)
+  -- Or(gcc, clang_like)
+  opt'elide_type' {
+    match {
+      lvl'on' { gcc'>=8' { cxx'-felide-type' } },
+      Or(gcc'>=8', clang_like'>=3.4') { cxx'-fno-elide-type', },
+    }
+  },
+
+  -- Or(gcc, clang_like)
+  opt'exceptions' {
+    match {
+      lvl'on' {
+        flag'-fexceptions',
+        clang_emcc {
+          flag'-sDISABLE_EXCEPTION_CATCHING=0',
+        }
+      },
+      flag'-fno-exceptions',
+    }
+  },
+
+  -- Or(gcc, clang_like)
+  opt'rtti' {
+    match {
+      lvl'on' { cxx'-frtti' },
+      cxx'-fno-rtti',
+    }
+  },
+
+  -- Or(gcc, clang_like)
+  -- ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
+  opt'sanitizers' {
+    match {
+      lvl'off' {
+        fl'-fno-sanitize=all'
+      },
+      gcc {
+        vers'>=4.8' {
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
+
+          vers'>=4.9' {
+            fl'-fsanitize=undefined',
+            fl'-fsanitize=leak', -- requires the address sanitizer
+
+            vers'>=12' {
+              fl'-fsanitize=bounds-strict',
+            }
+          }
+        }
+      },
+      --[[clang_like]]
+      {
+        vers'>=3.1' {
+          fl'-fsanitize=undefined',
+          fl'-fsanitize=address', -- memory, thread are mutually exclusive
+          flag'-fsanitize-address-use-after-scope',
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
+          clang {
+            vers'>=3.4' {
+              fl'-fsanitize=leak', -- requires the address sanitizer
+            },
+            vers'>=6' {
+              opt'stack_protector' {
+                -lvl'off' {
+                  flag'-fsanitize-minimal-runtime',
+                }
+              }
+            },
+          },
+        }
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like)
+  opt'diagnostics_format' {
+    match {
+      lvl'fixits' {
+        Or(gcc'>=7', And(-gcc, vers'>=5') --[[=clang_like'>=5']]) {
+          flag'-fdiagnostics-parseable-fixits'
+        }
+      },
+      lvl'patch' {
+        gcc'>=7' { flag'-fdiagnostics-generate-patch' }
+      },
+      { --[[lvl'print_source_range_info']]
+        clang_like { flag'-fdiagnostics-print-source-range-info' }
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like)
   opt'pedantic' {
     -lvl'off' {
       flag'-pedantic',
@@ -1166,7 +1167,7 @@ Or(gcc, clang, clang_emcc) {
     -- flag'-Wno-reserved-user-defined-literal',
   },
 
-  -- Or(gcc, clang, clang_emcc)
+  -- Or(gcc, clang_like)
   opt'symbols' {
     match {
       lvl'hidden' { flag'-fvisibility=hidden' },
@@ -1207,7 +1208,7 @@ Or(gcc, clang, clang_emcc) {
     }
   },
 
-  -- Or(gcc, clang, clang_emcc)
+  -- Or(gcc, clang_like)
   match {
     clang_emcc {
       opt'optimization' {
@@ -1628,20 +1629,6 @@ Or(msvc, clang_cl, icl) {
             flag'/Ob3',
           },
           flag'/Gw',
-        }
-      }
-    },
-
-    -- Or(msvc, clang_cl)
-    opt'linker' {
-      clang_cl {
-        match {
-          Or(lvl'lld', lvl'native') {
-            link'-fuse-ld=lld'
-          },
-          lvl'mold' {
-            link'-fuse-ld=mold'
-          },
         }
       }
     },
@@ -2152,8 +2139,62 @@ match {
     opt'pedantic' {
       -lvl'off' {
         cxx'/Zc:twoPhase',
+
+        lvl'as_error' {
+          flag'-Werror=write-strings',
+        }
       }
-    }
+    },
+
+    -- clang_cl
+    opt'sanitizers' {
+      match {
+        lvl'off' {
+          fl'-fno-sanitize=all'
+        },
+        {
+          flag'-fsanitize=undefined',
+          flag'-fsanitize=address', -- memory, thread are mutually exclusive
+          flag'-fsanitize-address-use-after-scope',
+        }
+      }
+    },
+
+    -- clang_cl
+    opt'color' {
+      match {
+        lvl'never' { flag'-fno-color-diagnostics' },
+        lvl'always' { flag'-fcolor-diagnostics' },
+      },
+    },
+
+    -- clang_cl
+    opt'diagnostics_format' {
+      lvl'fixits' {
+        -- clang>='5'
+        flag'-fdiagnostics-parseable-fixits'
+      }
+    },
+
+    -- clang_cl
+    opt'cpu' {
+      match {
+        lvl'generic' { fl'-mtune=generic' },
+        { fl'-march=native', fl'-mtune=native', }
+      }
+    },
+
+    -- clang_cl
+    opt'linker' {
+      match {
+        Or(lvl'lld', lvl'native') {
+          link'-fuse-ld=lld'
+        },
+        lvl'mold' {
+          link'-fuse-ld=mold'
+        },
+      }
+    },
   },
 
   icl {
