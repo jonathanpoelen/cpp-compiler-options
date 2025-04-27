@@ -1500,11 +1500,9 @@ Or(msvc, clang_cl, icl) {
     match {
       lvl'on' {
         flag'/EHsc',
-        flag'/D_HAS_EXCEPTIONS=1',
       },
       {
-        flag'/EHs-',
-        flag'/D_HAS_EXCEPTIONS=0',
+        flag'/EHs-c-',
       }
     }
   },
