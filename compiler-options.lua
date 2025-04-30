@@ -1040,21 +1040,18 @@ opt'conversion_warnings' {
 
 Or(gcc, clang_like) {
   -- Or(gcc, clang_like)
-  opt'diagnostics_show_template_tree' {
-    Or(gcc'>=8', clang_like) {
-      match {
-        lvl'on' { cxx'-fdiagnostics-show-template-tree' },
-        cxx'-fno-diagnostics-show-template-tree',
-      }
+  opt'diagnostics_show_template' {
+    Or(lvl'tree_without_elided_types', lvl'tree') {
+      Or(gcc'>=8', clang_like) {
+        cxx'-fdiagnostics-show-template-tree'
+      },
     },
-  },
 
-  -- Or(gcc, clang_like)
-  opt'elide_type' {
-    match {
-      lvl'on' { gcc'>=8' { cxx'-felide-type' } },
-      Or(gcc'>=8', clang_like'>=3.4') { cxx'-fno-elide-type', },
-    }
+    Or(lvl'tree_without_elided_types', lvl'without_elided_types') {
+      Or(gcc'>=8', clang_like'>=3.4') {
+        cxx'-fno-elide-type'
+      },
+    },
   },
 
   -- Or(gcc, clang_like)
@@ -2739,16 +2736,13 @@ local Vbase = {
       incidental=true,
     },
 
-    diagnostics_show_template_tree={
-      values={'off', 'on'},
-      description='Enables printing a tree-like structure showing the common and differing parts of the types.',
-      incidental=true,
-      unavailable='c',
-    },
-
-    elide_type={
-      values={'off', 'on'},
-      description='Prints diagnostics showing common parts of template types as "[...]".',
+    diagnostics_show_template={
+      values={
+        {'tree', 'Enables printing a tree-like structure showing the common and differing parts of the types'},
+        {'without_elided_types', 'Disables printing diagnostics showing common parts of template types as "[...]".'},
+        {'tree_without_elided_types', 'Prints a tree-like without replacing common types. Mergeing tree and without_elided_types.'},
+      },
+      description='Configures how templates with incompatible types are displayed (Clang and GCC only).',
       incidental=true,
       unavailable='c',
     },
