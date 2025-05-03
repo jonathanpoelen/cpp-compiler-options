@@ -91,16 +91,14 @@ local function remove_file(path)
 end
 
 local function create_debug_file(prefix, files_contents)
-  local lines = tokeys(
-    split_lines(files_contents['debug'],
-      split_lines(files_contents['sanitizers'])))
+  local sanitizers = tokeys(split_lines(files_contents['sanitizers']))
 
   -- debug_full file
-  local debug_full = tokeys(split_lines(files_contents['stl_debug']), tokeys(lines))
+  local debug_full = tokeys(split_lines(files_contents['stl_debug']), tokeys(sanitizers))
   write_ktable(debug_full, prefix .. 'debug_full')
 
   -- debug_full_broken_abi file
-  local debug_full_broken_abi = tokeys(split_lines(files_contents['stl_debug_broken_abi']), lines)
+  local debug_full_broken_abi = tokeys(split_lines(files_contents['stl_debug_broken_abi']), sanitizers)
   write_ktable(debug_full_broken_abi, prefix .. 'debug_full_broken_abi')
 end
 
