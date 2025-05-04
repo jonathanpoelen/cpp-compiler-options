@@ -527,6 +527,45 @@ Or(gcc, clang_like, clang_cl) {
   },
 
   -- Or(gcc, clang_like, clang_cl)
+  opt'optimization_warnings' {
+    match {
+      gcc {
+        vers'>=9' {
+          cxx'-Wpessimizing-move',
+          cxx'-Wredundant-move',
+
+          vers'>=11' {
+            cxx'-Wrange-loop-construct',
+
+            vers'>=13' {
+              cxx'-Wself-move',
+
+              vers'>=14' {
+                cxx'-Wnrvo',
+              }
+            }
+          }
+        }
+      },
+      -- Or(clang_like, clang_cl)
+      {
+        vers'>=3.6' {
+          cxx'-Wself-move',
+
+          vers'>=3.7' {
+            cxx'-Wpessimizing-move',
+            cxx'-Wredundant-move',
+
+            vers'>=10' {
+              cxx'-Wrange-loop-construct',
+            }
+          }
+        }
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like, clang_cl)
   match {
     gcc {
       opt'switch_warnings' {
@@ -1965,6 +2004,11 @@ match {
     },
 
     -- msvc
+    opt'optimization_warnings' {
+      cxx'/w15263', -- calling 'std::move' on a temporary object prevents copy elision
+    },
+
+    -- msvc
     opt'switch_warnings' {
       match {
         Or(lvl'on', lvl'mandatory_default') {
@@ -2841,6 +2885,13 @@ local Vbase = {
       description='Optimization level.',
     },
 
+    optimization_warnings={
+      values={'off', 'on'},
+      description='Activate warnings about optimization.',
+      incidental=true,
+      unavailable='c',
+    },
+
     other_sanitizers={
       values={'off', 'thread', 'pointer', 'memory'},
       description='Enable other sanitizers.',
@@ -3046,6 +3097,7 @@ local Vbase = {
       'cpu',
       'lto',
       'optimization',
+      'optimization_warnings',
     }},
 
     {'C++', {

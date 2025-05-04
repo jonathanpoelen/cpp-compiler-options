@@ -105,6 +105,7 @@ optimization = default 0 g 1 2 3 fast size z
 cpu = default generic native
 lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 optimization = default 0 g 1 2 3 fast size z
+optimization_warnings = default off on
 
 # C++:
 
