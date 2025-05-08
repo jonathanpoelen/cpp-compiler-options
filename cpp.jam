@@ -35,32 +35,26 @@
 #  warnings_as_error = default off on basic
 #  conversion_warnings = on default off sign float conversion all
 #  covered_switch_default_warnings = on default off
-#  fix_compiler_error = on default off
 #  msvc_crt_secure_no_warnings = on default off
 #  noexcept_warnings = default off on
 #  reproducible_build_warnings = default off on
 #  shadow_warnings = off default on local compatible_local all
-#  suggestions = default off on
+#  suggest_attributes = on default off common analysis unity all
 #  switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 #  unsafe_buffer_usage_warnings = default on off
 #  windows_abi_compatibility_warnings = off default on
 #
 #  # Pedantic:
 #
-#  msvc_conformance = all default all_without_throwing_new
 #  pedantic = on default off as_error
 #  stl_fix = on default off
 #
 #  # Debug:
 #
-#  debug = default off on gdb lldb vms codeview dbx sce
-#  debug_level = default 0 1 2 3 line_tables_only line_directives_only
+#  symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 #  stl_hardening = default off fast extensive debug debug_with_broken_abi
 #  control_flow = default off on branch return allow_bugs
-#  sanitizers = default off on
-#  float_sanitizers = default off on
-#  integer_sanitizers = default off on
-#  other_sanitizers = default off thread pointer memory
+#  sanitizers = default off on extra address kernel kernel_extra kernel_extra kernel_address thread undefined undefined_minimal_runtime scudo_hardened_allocator
 #  var_init = default uninitialized pattern zero
 #  ndebug = with_optimization_1_or_above default off on
 #  optimization = default 0 g 1 2 3 fast size z
@@ -68,10 +62,9 @@
 #  # Optimization:
 #
 #  cpu = default generic native
-#  linker = default bfd gold lld mold native
-#  lto = default off on normal fat thin
+#  lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 #  optimization = default 0 g 1 2 3 fast size z
-#  whole_program = default off on strip_all
+#  optimization_warnings = default off on
 #
 #  # C++:
 #
@@ -87,7 +80,7 @@
 #
 #  # Analyzer:
 #
-#  analyzer = default off on
+#  analyzer = default off on with_external_headers
 #  analyzer_too_complex_warning = default off on
 #  analyzer_verbosity = default 0 1 2 3
 #
@@ -96,11 +89,11 @@
 #  color = default auto never always
 #  coverage = default off on
 #  diagnostics_format = default fixits patch print_source_range_info
-#  diagnostics_show_template_tree = default off on
-#  elide_type = default off on
+#  diagnostics_show_template = default tree without_elided_types tree_without_elided_types
+#  linker = default bfd gold lld mold native
 #  msvc_diagnostics_format = caret default classic column
 #  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
-#  msvc_isystem_with_template_from_non_external = default off on
+#  msvc_isystem_with_template_instantiations_treated_as_non_external = default off on
 #  pie = default off on static fpic fPIC fpie fPIE
 #  windows_bigobj = on default
 #  ```
@@ -108,7 +101,6 @@
 #
 #  If not specified:
 #
-#  - `msvc_conformance` is `all`
 #  - `msvc_diagnostics_format` is `caret`
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
@@ -117,10 +109,10 @@
 #  - The following values are `on`:
 #    - `conversion_warnings`
 #    - `covered_switch_default_warnings`
-#    - `fix_compiler_error`
 #    - `msvc_crt_secure_no_warnings`
 #    - `pedantic`
 #    - `stl_fix`
+#    - `suggest_attributes`
 #    - `switch_warnings`
 #    - `warnings`
 #    - `windows_bigobj`
@@ -136,14 +128,42 @@
 #    - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 #
 #
+#  ### Sanitizers
+#
+#  Some sanitizers activated at compile time are only realistically active in the presence of a configuration in an environment variable.
+#  `sanitizers=on` does not include these sanitizers, unlike `sanitizers=extra`.
+#  The environment variables to use are as follows:
+#
+#  ```sh
+#  # cl (Windows)
+#  ASAN_OPTIONS=detect_stack_use_after_return=1
+#
+#  # gcc
+#  ASAN_OPTIONS=detect_invalid_pointer_pairs=2  # see -fsanitize=pointer-subtract and -fsanitize=pointer-compare
+#
+#  # macOS
+#  ASAN_OPTIONS=detect_leaks=1
+#  ```
+#
+#  See
+#  [AddressSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer),
+#  [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html),
+#  [-fsanitize=pointer-compare](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html#index-fsanitize_003dpointer-compare) with GCC and
+#  [-fsanitize-address-use-after-return](https://learn.microsoft.com/en-us/cpp/sanitizers/asan-building#fsanitize-address-use-after-return-compiler-option-experimental) with cl compiler
+#  for more details.
+#
+#  See [AddressSanitizer Flags](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags)
+#  for a list of supported options.
+#
+#
 #  ## Recommended options
 #
 #  category | options
 #  ---------|---------
-#  debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
-#  release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+#  debug | `var_init=pattern`<br>`control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
+#  release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 #  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
-#  really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
+#  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`switch_warnings=exhaustive_enum`<br>`shadow_warnings=local`<br>`windows_abi_compatibility_warnings=on`
 #
 #  
 
@@ -161,7 +181,7 @@ import string ;
 JLN_BJAM_YEAR_VERSION = [ modules.peek : JAMVERSION ] ;
 
 # Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.
-feature <jln-analyzer> : _ default off on : propagated ;
+feature <jln-analyzer> : _ default off on with-external-headers : propagated ;
 # By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs. Available only with GCC.
 feature <jln-analyzer-too-complex-warning> : _ default off on : propagated ;
 # Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.
@@ -184,28 +204,24 @@ feature <jln-coverage> : _ default off on : incidental ;
 # Warning for default label in switch which covers all enumeration values.
 feature <jln-covered-switch-default-warnings> : _ on default off : propagated ;
 feature <jln-cpu> : _ default generic native : incidental ;
-# Produce debugging information in the operating system's.
-feature <jln-debug> : _ default off on gdb lldb vms codeview dbx sce : incidental ;
-# Specify debugging level
-feature <jln-debug-level> : _ default 0 1 2 3 line-tables-only line-directives-only : incidental ;
 # Emit fix-it hints in a machine-parseable format.
 feature <jln-diagnostics-format> : _ default fixits patch print-source-range-info : propagated ;
-# Enables printing a tree-like structure showing the common and differing parts of the types.
-feature <jln-diagnostics-show-template-tree> : _ default off on : propagated ;
-# Prints diagnostics showing common parts of template types as "[...]".
-feature <jln-elide-type> : _ default off on : propagated ;
+# Configures how templates with incompatible types are displayed (Clang and GCC only).
+#  - tree: Enables printing a tree-like structure showing the common and differing parts of the types
+#  - without_elided_types: Disables printing diagnostics showing common parts of template types as "[...]".
+#  - tree_without_elided_types: Prints a tree-like without replacing common types. Mergeing tree and without_elided_types.
+feature <jln-diagnostics-show-template> : _ default tree without-elided-types tree-without-elided-types : propagated ;
 # Enable C++ exceptions.
 feature <jln-exceptions> : _ default off on : incidental ;
-# Transforms some warnings into errors to comply with the standard.
-feature <jln-fix-compiler-error> : _ on default off : propagated ;
-feature <jln-float-sanitizers> : _ default off on : incidental ;
-feature <jln-integer-sanitizers> : _ default off on : incidental ;
 # Configure linker.
 feature <jln-linker> : _ default bfd gold lld mold native : propagated ;
-# Enable Link Time Optimization.
-feature <jln-lto> : _ default off on normal fat thin : incidental ;
-# Standard conformance options.
-feature <jln-msvc-conformance> : _ all default all-without-throwing-new : incidental ;
+# Enable Link Time Optimization. Also known as interprocedural optimization (IPO).
+#  - on: Activates ThinLTO when available (Clang), otherwise FullLTO.
+#  - full: Activates FullLTO.
+#  - thin_or_nothing: Activates ThinLTO. Disable lto when not supported.
+#  - whole_program: Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.
+#  - whole_program_and_full_lto: Same as whole_program, but use FullLTO when not supported.
+feature <jln-lto> : _ default off on full thin-or-nothing whole-program whole-program-and-full-lto : incidental ;
 # Disable CRT warnings with MSVC.
 feature <jln-msvc-crt-secure-no-warnings> : _ on default off : propagated ;
 # Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).
@@ -215,11 +231,11 @@ feature <jln-msvc-crt-secure-no-warnings> : _ on default off : propagated ;
 feature <jln-msvc-diagnostics-format> : _ caret default classic column : propagated ;
 # Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).
 feature <jln-msvc-isystem> : _ default anglebrackets include-and-caexcludepath assumed : propagated ;
-# Warnings concerning template in an external header (requires msvc_isystem).
-feature <jln-msvc-isystem-with-template-from-non-external> : _ default off on : propagated ;
+# Allows warnings from external headers when they occur in a template that's instantiated in your code. (requires msvc_isystem).
+feature <jln-msvc-isystem-with-template-instantiations-treated-as-non-external> : _ default off on : propagated ;
 # Enable NDEBUG macro (disable assert macro).
 feature <jln-ndebug> : _ with-optimization-1-or-above default off on : incidental ;
-# Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception.
+# Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception. Only with GCC.
 feature <jln-noexcept-warnings> : _ default off on : propagated ;
 # Optimization level.
 #  - 0: Not optimize.
@@ -231,8 +247,8 @@ feature <jln-noexcept-warnings> : _ default off on : propagated ;
 #  - size: Optimize for size.
 #  - z: Optimize for size aggressively (/!\ possible slow compilation with emcc).
 feature <jln-optimization> : _ default 0 g 1 2 3 fast size z : incidental ;
-# Enable other sanitizers.
-feature <jln-other-sanitizers> : _ default off thread pointer memory : incidental ;
+# Activate warnings about optimization.
+feature <jln-optimization-warnings> : _ default off on : propagated ;
 # Issue all the warnings demanded by strict ISO C and ISO C++.
 feature <jln-pedantic> : _ on default off as-error : incidental ;
 # Controls position-independent code generation.
@@ -243,8 +259,18 @@ feature <jln-relro> : _ default off on full : incidental ;
 feature <jln-reproducible-build-warnings> : _ default off on : propagated ;
 # Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid").
 feature <jln-rtti> : _ default off on : incidental ;
-# Enable sanitizers (asan, ubsan, etc).
-feature <jln-sanitizers> : _ default off on : incidental ;
+# Enable sanitizers (asan, ubsan, etc) when available.
+#  - on: Enable address sanitizer and other compatible sanitizers
+#  - extra: Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.
+#  - address: Enable address sanitizer only.
+#  - kernel: Enable kernel-address sanitizers and other compatible sanitizers
+#  - kernel_extra: Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.
+#  - kernel_address: Enable kernel address sanitizer only.
+#  - thread: Enable thread sanitizer.
+#  - undefined: Enable undefined sanitizer.
+#  - undefined_minimal_runtime: Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).
+#  - scudo_hardened_allocator: Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html
+feature <jln-sanitizers> : _ default off on extra address kernel kernel-extra kernel-extra kernel-address thread undefined undefined-minimal-runtime scudo-hardened-allocator : incidental ;
 feature <jln-shadow-warnings> : _ off default on local compatible-local all : propagated ;
 # Emit extra code to check for buffer overflows, such as stack smashing attacks.
 feature <jln-stack-protector> : _ default off on strong all : incidental ;
@@ -256,15 +282,42 @@ feature <jln-stl-fix> : _ on default off : incidental ;
 #  - debug: Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. No impact on the ABI.
 #  - debug_with_broken_abi: Debug mode with ABI incompatibility for more check.
 feature <jln-stl-hardening> : _ default off fast extensive debug debug-with-broken-abi : incidental ;
-# Warn for cases where adding an attribute may be beneficial.
-feature <jln-suggestions> : _ default off on : propagated ;
+# Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option -fipa-pure-const, which is enabled by default at -O1 and higher.
+#  - on: Suggests noreturn attribute with Clang and GCC.
+#  - common: Suggests noreturn and format attributes with GCC ; noreturn with Clang.
+#  - analysis: Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.
+#  - unity: Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.
+#  - all: Active all suggestions for attributes.
+feature <jln-suggest-attributes> : _ on default off common analysis unity all : propagated ;
 # Warnings concerning the switch keyword.
 feature <jln-switch-warnings> : _ on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : propagated ;
+# Produce debugging information in the operating system's.
+#  - hidden: Use -fvisibility=hidden with Clang, GCC and other compilers that support this flag.
+#  - strip_all: Strip all symbols.
+#  - gc_sections: Enable garbage collection of unused sections.
+#  - nodebug: Request no debugging information.
+#  - debug: Request debugging information. How much information can be controlled with options 'minimal_debug', and 'full_debug'. If the level is not supported by a compiler, this is equivalent to the 'debug' option.
+#  - minimal_debug: If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables.
+#  - full_debug: If possible, includes extra information, such as all the macro definitions present in the program.
+#  - btf: GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.
+#  - codeview: GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).
+#  - ctf: GCC only. Produce a CTF debug information. The default level is 2.
+#  - ctf1: Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.
+#  - ctf2: Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.
+#  - vms: GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.
+#  - vms1: Same as 1, but for Alpha/VMS.
+#  - vms2: Same as 2, but for Alpha/VMS.
+#  - vms3: Same as 3, but for Alpha/VMS.
+#  - dbx: Clang only.
+#  - lldb: Clang only.
+#  - sce: Clang only.
+#  - dwarf: Clang-cl only
+feature <jln-symbols> : _ default hidden strip-all gc-sections nodebug debug minimal-debug full-debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf : incidental ;
 # Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html).
 feature <jln-unsafe-buffer-usage-warnings> : _ default on off : propagated ;
 # Initialize all stack variables implicitly, including padding.
-#  - uninitialized: Doesn't initialize any automatic variables (default behavior of Gcc and Clang).
-#  - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).
+#  - uninitialized: Doesn't initialize any automatic variables (default behavior of Clang and GCC).
+#  - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for GCC, 0xAA for Clang).
 #  - zero: zero Initialize automatic variables with zeroes.
 feature <jln-var-init> : _ default uninitialized pattern zero : incidental ;
 # Warning level.
@@ -274,8 +327,6 @@ feature <jln-var-init> : _ default uninitialized pattern zero : incidental ;
 feature <jln-warnings> : _ on default off essential extensive : propagated ;
 # Make all or some warnings into errors.
 feature <jln-warnings-as-error> : _ default off on basic : incidental ;
-# Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.
-feature <jln-whole-program> : _ default off on strip-all : incidental ;
 # In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys.
 feature <jln-windows-abi-compatibility-warnings> : _ off default on : propagated ;
 # Increases that addressable sections capacity.
@@ -284,30 +335,24 @@ feature <jln-windows-bigobj> : _ on default : incidental ;
 feature <jln-control-flow-incidental> : _ default off on branch return allow-bugs : incidental ;
 feature <jln-coverage-incidental> : _ default off on : incidental ;
 feature <jln-cpu-incidental> : _ default generic native : incidental ;
-feature <jln-debug-incidental> : _ default off on gdb lldb vms codeview dbx sce : incidental ;
-feature <jln-debug-level-incidental> : _ default 0 1 2 3 line-tables-only line-directives-only : incidental ;
 feature <jln-exceptions-incidental> : _ default off on : incidental ;
-feature <jln-float-sanitizers-incidental> : _ default off on : incidental ;
-feature <jln-integer-sanitizers-incidental> : _ default off on : incidental ;
-feature <jln-lto-incidental> : _ default off on normal fat thin : incidental ;
-feature <jln-msvc-conformance-incidental> : _ all default all-without-throwing-new : incidental ;
+feature <jln-lto-incidental> : _ default off on full thin-or-nothing whole-program whole-program-and-full-lto : incidental ;
 feature <jln-ndebug-incidental> : _ with-optimization-1-or-above default off on : incidental ;
 feature <jln-optimization-incidental> : _ default 0 g 1 2 3 fast size z : incidental ;
-feature <jln-other-sanitizers-incidental> : _ default off thread pointer memory : incidental ;
 feature <jln-pedantic-incidental> : _ on default off as-error : incidental ;
 feature <jln-pie-incidental> : _ default off on static fpic fPIC fpie fPIE : incidental ;
 feature <jln-relro-incidental> : _ default off on full : incidental ;
 feature <jln-rtti-incidental> : _ default off on : incidental ;
-feature <jln-sanitizers-incidental> : _ default off on : incidental ;
+feature <jln-sanitizers-incidental> : _ default off on extra address kernel kernel-extra kernel-extra kernel-address thread undefined undefined-minimal-runtime scudo-hardened-allocator : incidental ;
 feature <jln-stack-protector-incidental> : _ default off on strong all : incidental ;
 feature <jln-stl-fix-incidental> : _ on default off : incidental ;
 feature <jln-stl-hardening-incidental> : _ default off fast extensive debug debug-with-broken-abi : incidental ;
+feature <jln-symbols-incidental> : _ default hidden strip-all gc-sections nodebug debug minimal-debug full-debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf : incidental ;
 feature <jln-var-init-incidental> : _ default uninitialized pattern zero : incidental ;
 feature <jln-warnings-as-error-incidental> : _ default off on basic : incidental ;
-feature <jln-whole-program-incidental> : _ default off on strip-all : incidental ;
 feature <jln-windows-bigobj-incidental> : _ on default : incidental ;
 
-feature <jln-analyzer-default> : default off on : incidental ;
+feature <jln-analyzer-default> : default off on with-external-headers : incidental ;
 feature <jln-analyzer-too-complex-warning-default> : default off on : incidental ;
 feature <jln-analyzer-verbosity-default> : default 0 1 2 3 : incidental ;
 feature <jln-color-default> : default auto never always : incidental ;
@@ -316,43 +361,36 @@ feature <jln-conversion-warnings-default> : on default off sign float conversion
 feature <jln-coverage-default> : default off on : incidental ;
 feature <jln-covered-switch-default-warnings-default> : on default off : incidental ;
 feature <jln-cpu-default> : default generic native : incidental ;
-feature <jln-debug-default> : default off on gdb lldb vms codeview dbx sce : incidental ;
-feature <jln-debug-level-default> : default 0 1 2 3 line-tables-only line-directives-only : incidental ;
 feature <jln-diagnostics-format-default> : default fixits patch print-source-range-info : incidental ;
-feature <jln-diagnostics-show-template-tree-default> : default off on : incidental ;
-feature <jln-elide-type-default> : default off on : incidental ;
+feature <jln-diagnostics-show-template-default> : default tree without-elided-types tree-without-elided-types : incidental ;
 feature <jln-exceptions-default> : default off on : incidental ;
-feature <jln-fix-compiler-error-default> : on default off : incidental ;
-feature <jln-float-sanitizers-default> : default off on : incidental ;
-feature <jln-integer-sanitizers-default> : default off on : incidental ;
 feature <jln-linker-default> : default bfd gold lld mold native : incidental ;
-feature <jln-lto-default> : default off on normal fat thin : incidental ;
-feature <jln-msvc-conformance-default> : all default all-without-throwing-new : incidental ;
+feature <jln-lto-default> : default off on full thin-or-nothing whole-program whole-program-and-full-lto : incidental ;
 feature <jln-msvc-crt-secure-no-warnings-default> : on default off : incidental ;
 feature <jln-msvc-diagnostics-format-default> : caret default classic column : incidental ;
 feature <jln-msvc-isystem-default> : default anglebrackets include-and-caexcludepath assumed : incidental ;
-feature <jln-msvc-isystem-with-template-from-non-external-default> : default off on : incidental ;
+feature <jln-msvc-isystem-with-template-instantiations-treated-as-non-external-default> : default off on : incidental ;
 feature <jln-ndebug-default> : with-optimization-1-or-above default off on : incidental ;
 feature <jln-noexcept-warnings-default> : default off on : incidental ;
 feature <jln-optimization-default> : default 0 g 1 2 3 fast size z : incidental ;
-feature <jln-other-sanitizers-default> : default off thread pointer memory : incidental ;
+feature <jln-optimization-warnings-default> : default off on : incidental ;
 feature <jln-pedantic-default> : on default off as-error : incidental ;
 feature <jln-pie-default> : default off on static fpic fPIC fpie fPIE : incidental ;
 feature <jln-relro-default> : default off on full : incidental ;
 feature <jln-reproducible-build-warnings-default> : default off on : incidental ;
 feature <jln-rtti-default> : default off on : incidental ;
-feature <jln-sanitizers-default> : default off on : incidental ;
+feature <jln-sanitizers-default> : default off on extra address kernel kernel-extra kernel-extra kernel-address thread undefined undefined-minimal-runtime scudo-hardened-allocator : incidental ;
 feature <jln-shadow-warnings-default> : off default on local compatible-local all : incidental ;
 feature <jln-stack-protector-default> : default off on strong all : incidental ;
 feature <jln-stl-fix-default> : on default off : incidental ;
 feature <jln-stl-hardening-default> : default off fast extensive debug debug-with-broken-abi : incidental ;
-feature <jln-suggestions-default> : default off on : incidental ;
+feature <jln-suggest-attributes-default> : on default off common analysis unity all : incidental ;
 feature <jln-switch-warnings-default> : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default : incidental ;
+feature <jln-symbols-default> : default hidden strip-all gc-sections nodebug debug minimal-debug full-debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf : incidental ;
 feature <jln-unsafe-buffer-usage-warnings-default> : default on off : incidental ;
 feature <jln-var-init-default> : default uninitialized pattern zero : incidental ;
 feature <jln-warnings-default> : on default off essential extensive : incidental ;
 feature <jln-warnings-as-error-default> : default off on basic : incidental ;
-feature <jln-whole-program-default> : default off on strip-all : incidental ;
 feature <jln-windows-abi-compatibility-warnings-default> : off default on : incidental ;
 feature <jln-windows-bigobj-default> : on default : incidental ;
 
@@ -377,7 +415,7 @@ rule jln-get-env ( env : values * )
   }
 }
 
-constant jln_env_analyzer : [ jln-get-env jln_analyzer : default off on ] ;
+constant jln_env_analyzer : [ jln-get-env jln_analyzer : default off on with-external-headers ] ;
 constant jln_env_analyzer_too_complex_warning : [ jln-get-env jln_analyzer_too_complex_warning : default off on ] ;
 constant jln_env_analyzer_verbosity : [ jln-get-env jln_analyzer_verbosity : default 0 1 2 3 ] ;
 constant jln_env_color : [ jln-get-env jln_color : default auto never always ] ;
@@ -386,43 +424,36 @@ constant jln_env_conversion_warnings : [ jln-get-env jln_conversion_warnings : o
 constant jln_env_coverage : [ jln-get-env jln_coverage : default off on ] ;
 constant jln_env_covered_switch_default_warnings : [ jln-get-env jln_covered_switch_default_warnings : on default off ] ;
 constant jln_env_cpu : [ jln-get-env jln_cpu : default generic native ] ;
-constant jln_env_debug : [ jln-get-env jln_debug : default off on gdb lldb vms codeview dbx sce ] ;
-constant jln_env_debug_level : [ jln-get-env jln_debug_level : default 0 1 2 3 line-tables-only line-directives-only ] ;
 constant jln_env_diagnostics_format : [ jln-get-env jln_diagnostics_format : default fixits patch print-source-range-info ] ;
-constant jln_env_diagnostics_show_template_tree : [ jln-get-env jln_diagnostics_show_template_tree : default off on ] ;
-constant jln_env_elide_type : [ jln-get-env jln_elide_type : default off on ] ;
+constant jln_env_diagnostics_show_template : [ jln-get-env jln_diagnostics_show_template : default tree without-elided-types tree-without-elided-types ] ;
 constant jln_env_exceptions : [ jln-get-env jln_exceptions : default off on ] ;
-constant jln_env_fix_compiler_error : [ jln-get-env jln_fix_compiler_error : on default off ] ;
-constant jln_env_float_sanitizers : [ jln-get-env jln_float_sanitizers : default off on ] ;
-constant jln_env_integer_sanitizers : [ jln-get-env jln_integer_sanitizers : default off on ] ;
 constant jln_env_linker : [ jln-get-env jln_linker : default bfd gold lld mold native ] ;
-constant jln_env_lto : [ jln-get-env jln_lto : default off on normal fat thin ] ;
-constant jln_env_msvc_conformance : [ jln-get-env jln_msvc_conformance : all default all-without-throwing-new ] ;
+constant jln_env_lto : [ jln-get-env jln_lto : default off on full thin-or-nothing whole-program whole-program-and-full-lto ] ;
 constant jln_env_msvc_crt_secure_no_warnings : [ jln-get-env jln_msvc_crt_secure_no_warnings : on default off ] ;
 constant jln_env_msvc_diagnostics_format : [ jln-get-env jln_msvc_diagnostics_format : caret default classic column ] ;
 constant jln_env_msvc_isystem : [ jln-get-env jln_msvc_isystem : default anglebrackets include-and-caexcludepath assumed ] ;
-constant jln_env_msvc_isystem_with_template_from_non_external : [ jln-get-env jln_msvc_isystem_with_template_from_non_external : default off on ] ;
+constant jln_env_msvc_isystem_with_template_instantiations_treated_as_non_external : [ jln-get-env jln_msvc_isystem_with_template_instantiations_treated_as_non_external : default off on ] ;
 constant jln_env_ndebug : [ jln-get-env jln_ndebug : with-optimization-1-or-above default off on ] ;
 constant jln_env_noexcept_warnings : [ jln-get-env jln_noexcept_warnings : default off on ] ;
 constant jln_env_optimization : [ jln-get-env jln_optimization : default 0 g 1 2 3 fast size z ] ;
-constant jln_env_other_sanitizers : [ jln-get-env jln_other_sanitizers : default off thread pointer memory ] ;
+constant jln_env_optimization_warnings : [ jln-get-env jln_optimization_warnings : default off on ] ;
 constant jln_env_pedantic : [ jln-get-env jln_pedantic : on default off as-error ] ;
 constant jln_env_pie : [ jln-get-env jln_pie : default off on static fpic fPIC fpie fPIE ] ;
 constant jln_env_relro : [ jln-get-env jln_relro : default off on full ] ;
 constant jln_env_reproducible_build_warnings : [ jln-get-env jln_reproducible_build_warnings : default off on ] ;
 constant jln_env_rtti : [ jln-get-env jln_rtti : default off on ] ;
-constant jln_env_sanitizers : [ jln-get-env jln_sanitizers : default off on ] ;
+constant jln_env_sanitizers : [ jln-get-env jln_sanitizers : default off on extra address kernel kernel-extra kernel-extra kernel-address thread undefined undefined-minimal-runtime scudo-hardened-allocator ] ;
 constant jln_env_shadow_warnings : [ jln-get-env jln_shadow_warnings : off default on local compatible-local all ] ;
 constant jln_env_stack_protector : [ jln-get-env jln_stack_protector : default off on strong all ] ;
 constant jln_env_stl_fix : [ jln-get-env jln_stl_fix : on default off ] ;
 constant jln_env_stl_hardening : [ jln-get-env jln_stl_hardening : default off fast extensive debug debug-with-broken-abi ] ;
-constant jln_env_suggestions : [ jln-get-env jln_suggestions : default off on ] ;
+constant jln_env_suggest_attributes : [ jln-get-env jln_suggest_attributes : on default off common analysis unity all ] ;
 constant jln_env_switch_warnings : [ jln-get-env jln_switch_warnings : on default off exhaustive-enum mandatory-default exhaustive-enum-and-mandatory-default ] ;
+constant jln_env_symbols : [ jln-get-env jln_symbols : default hidden strip-all gc-sections nodebug debug minimal-debug full-debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf ] ;
 constant jln_env_unsafe_buffer_usage_warnings : [ jln-get-env jln_unsafe_buffer_usage_warnings : default on off ] ;
 constant jln_env_var_init : [ jln-get-env jln_var_init : default uninitialized pattern zero ] ;
 constant jln_env_warnings : [ jln-get-env jln_warnings : on default off essential extensive ] ;
 constant jln_env_warnings_as_error : [ jln-get-env jln_warnings_as_error : default off on basic ] ;
-constant jln_env_whole_program : [ jln-get-env jln_whole_program : default off on strip-all ] ;
 constant jln_env_windows_abi_compatibility_warnings : [ jln-get-env jln_windows_abi_compatibility_warnings : off default on ] ;
 constant jln_env_windows_bigobj : [ jln-get-env jln_windows_bigobj : on default ] ;
 
@@ -435,26 +466,14 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-coverage-incidental JLN_COVERAGE_INCIDENTAL : <jln-coverage-incidental> ;
   toolset.flags jln-cpu JLN_CPU : <jln-cpu> ;
   toolset.flags jln-cpu-incidental JLN_CPU_INCIDENTAL : <jln-cpu-incidental> ;
-  toolset.flags jln-debug JLN_DEBUG : <jln-debug> ;
-  toolset.flags jln-debug-incidental JLN_DEBUG_INCIDENTAL : <jln-debug-incidental> ;
-  toolset.flags jln-debug-level JLN_DEBUG_LEVEL : <jln-debug-level> ;
-  toolset.flags jln-debug-level-incidental JLN_DEBUG_LEVEL_INCIDENTAL : <jln-debug-level-incidental> ;
   toolset.flags jln-exceptions JLN_EXCEPTIONS : <jln-exceptions> ;
   toolset.flags jln-exceptions-incidental JLN_EXCEPTIONS_INCIDENTAL : <jln-exceptions-incidental> ;
-  toolset.flags jln-float-sanitizers JLN_FLOAT_SANITIZERS : <jln-float-sanitizers> ;
-  toolset.flags jln-float-sanitizers-incidental JLN_FLOAT_SANITIZERS_INCIDENTAL : <jln-float-sanitizers-incidental> ;
-  toolset.flags jln-integer-sanitizers JLN_INTEGER_SANITIZERS : <jln-integer-sanitizers> ;
-  toolset.flags jln-integer-sanitizers-incidental JLN_INTEGER_SANITIZERS_INCIDENTAL : <jln-integer-sanitizers-incidental> ;
   toolset.flags jln-lto JLN_LTO : <jln-lto> ;
   toolset.flags jln-lto-incidental JLN_LTO_INCIDENTAL : <jln-lto-incidental> ;
-  toolset.flags jln-msvc-conformance JLN_MSVC_CONFORMANCE : <jln-msvc-conformance> ;
-  toolset.flags jln-msvc-conformance-incidental JLN_MSVC_CONFORMANCE_INCIDENTAL : <jln-msvc-conformance-incidental> ;
   toolset.flags jln-ndebug JLN_NDEBUG : <jln-ndebug> ;
   toolset.flags jln-ndebug-incidental JLN_NDEBUG_INCIDENTAL : <jln-ndebug-incidental> ;
   toolset.flags jln-optimization JLN_OPTIMIZATION : <jln-optimization> ;
   toolset.flags jln-optimization-incidental JLN_OPTIMIZATION_INCIDENTAL : <jln-optimization-incidental> ;
-  toolset.flags jln-other-sanitizers JLN_OTHER_SANITIZERS : <jln-other-sanitizers> ;
-  toolset.flags jln-other-sanitizers-incidental JLN_OTHER_SANITIZERS_INCIDENTAL : <jln-other-sanitizers-incidental> ;
   toolset.flags jln-pedantic JLN_PEDANTIC : <jln-pedantic> ;
   toolset.flags jln-pedantic-incidental JLN_PEDANTIC_INCIDENTAL : <jln-pedantic-incidental> ;
   toolset.flags jln-pie JLN_PIE : <jln-pie> ;
@@ -471,12 +490,12 @@ if $(JLN_BJAM_YEAR_VERSION) < 2016.00
   toolset.flags jln-stl-fix-incidental JLN_STL_FIX_INCIDENTAL : <jln-stl-fix-incidental> ;
   toolset.flags jln-stl-hardening JLN_STL_HARDENING : <jln-stl-hardening> ;
   toolset.flags jln-stl-hardening-incidental JLN_STL_HARDENING_INCIDENTAL : <jln-stl-hardening-incidental> ;
+  toolset.flags jln-symbols JLN_SYMBOLS : <jln-symbols> ;
+  toolset.flags jln-symbols-incidental JLN_SYMBOLS_INCIDENTAL : <jln-symbols-incidental> ;
   toolset.flags jln-var-init JLN_VAR_INIT : <jln-var-init> ;
   toolset.flags jln-var-init-incidental JLN_VAR_INIT_INCIDENTAL : <jln-var-init-incidental> ;
   toolset.flags jln-warnings-as-error JLN_WARNINGS_AS_ERROR : <jln-warnings-as-error> ;
   toolset.flags jln-warnings-as-error-incidental JLN_WARNINGS_AS_ERROR_INCIDENTAL : <jln-warnings-as-error-incidental> ;
-  toolset.flags jln-whole-program JLN_WHOLE_PROGRAM : <jln-whole-program> ;
-  toolset.flags jln-whole-program-incidental JLN_WHOLE_PROGRAM_INCIDENTAL : <jln-whole-program-incidental> ;
   toolset.flags jln-windows-bigobj JLN_WINDOWS_BIGOBJ : <jln-windows-bigobj> ;
   toolset.flags jln-windows-bigobj-incidental JLN_WINDOWS_BIGOBJ_INCIDENTAL : <jln-windows-bigobj-incidental> ;
 
@@ -503,6 +522,7 @@ rule jln-update-normalized-compiler ( toolset : version )
       case icx* : is_intel = 1 ;
       case icpx* : is_intel = 1 ;
       case dpcpp* : is_intel = 1 ;
+      case clang-cl : is_clang = 0 ;
       case clang* : is_clang = 1 ;
     }
 
@@ -596,16 +616,10 @@ rule jln_flags ( properties * )
       <relevant>jln-control-flow
       <relevant>jln-coverage
       <relevant>jln-cpu
-      <relevant>jln-debug
-      <relevant>jln-debug-level
       <relevant>jln-exceptions
-      <relevant>jln-float-sanitizers
-      <relevant>jln-integer-sanitizers
       <relevant>jln-lto
-      <relevant>jln-msvc-conformance
       <relevant>jln-ndebug
       <relevant>jln-optimization
-      <relevant>jln-other-sanitizers
       <relevant>jln-pedantic
       <relevant>jln-pie
       <relevant>jln-relro
@@ -614,9 +628,9 @@ rule jln_flags ( properties * )
       <relevant>jln-stack-protector
       <relevant>jln-stl-fix
       <relevant>jln-stl-hardening
+      <relevant>jln-symbols
       <relevant>jln-var-init
       <relevant>jln-warnings-as-error
-      <relevant>jln-whole-program
       <relevant>jln-windows-bigobj
     ;
   }
@@ -630,26 +644,19 @@ rule jln_flags ( properties * )
   local x_coverage = [ jln-get-value2 $(ps) : jln-coverage : jln-coverage-incidental : $(jln_env_coverage) ] ;
   local x_covered_switch_default_warnings = [ jln-get-value $(ps) : jln-covered-switch-default-warnings : $(jln_env_covered_switch_default_warnings) ] ;
   local x_cpu = [ jln-get-value2 $(ps) : jln-cpu : jln-cpu-incidental : $(jln_env_cpu) ] ;
-  local x_debug = [ jln-get-value2 $(ps) : jln-debug : jln-debug-incidental : $(jln_env_debug) ] ;
-  local x_debug_level = [ jln-get-value2 $(ps) : jln-debug-level : jln-debug-level-incidental : $(jln_env_debug_level) ] ;
   local x_diagnostics_format = [ jln-get-value $(ps) : jln-diagnostics-format : $(jln_env_diagnostics_format) ] ;
-  local x_diagnostics_show_template_tree = [ jln-get-value $(ps) : jln-diagnostics-show-template-tree : $(jln_env_diagnostics_show_template_tree) ] ;
-  local x_elide_type = [ jln-get-value $(ps) : jln-elide-type : $(jln_env_elide_type) ] ;
+  local x_diagnostics_show_template = [ jln-get-value $(ps) : jln-diagnostics-show-template : $(jln_env_diagnostics_show_template) ] ;
   local x_exceptions = [ jln-get-value2 $(ps) : jln-exceptions : jln-exceptions-incidental : $(jln_env_exceptions) ] ;
-  local x_fix_compiler_error = [ jln-get-value $(ps) : jln-fix-compiler-error : $(jln_env_fix_compiler_error) ] ;
-  local x_float_sanitizers = [ jln-get-value2 $(ps) : jln-float-sanitizers : jln-float-sanitizers-incidental : $(jln_env_float_sanitizers) ] ;
-  local x_integer_sanitizers = [ jln-get-value2 $(ps) : jln-integer-sanitizers : jln-integer-sanitizers-incidental : $(jln_env_integer_sanitizers) ] ;
   local x_linker = [ jln-get-value $(ps) : jln-linker : $(jln_env_linker) ] ;
   local x_lto = [ jln-get-value2 $(ps) : jln-lto : jln-lto-incidental : $(jln_env_lto) ] ;
-  local x_msvc_conformance = [ jln-get-value2 $(ps) : jln-msvc-conformance : jln-msvc-conformance-incidental : $(jln_env_msvc_conformance) ] ;
   local x_msvc_crt_secure_no_warnings = [ jln-get-value $(ps) : jln-msvc-crt-secure-no-warnings : $(jln_env_msvc_crt_secure_no_warnings) ] ;
   local x_msvc_diagnostics_format = [ jln-get-value $(ps) : jln-msvc-diagnostics-format : $(jln_env_msvc_diagnostics_format) ] ;
   local x_msvc_isystem = [ jln-get-value $(ps) : jln-msvc-isystem : $(jln_env_msvc_isystem) ] ;
-  local x_msvc_isystem_with_template_from_non_external = [ jln-get-value $(ps) : jln-msvc-isystem-with-template-from-non-external : $(jln_env_msvc_isystem_with_template_from_non_external) ] ;
+  local x_msvc_isystem_with_template_instantiations_treated_as_non_external = [ jln-get-value $(ps) : jln-msvc-isystem-with-template-instantiations-treated-as-non-external : $(jln_env_msvc_isystem_with_template_instantiations_treated_as_non_external) ] ;
   local x_ndebug = [ jln-get-value2 $(ps) : jln-ndebug : jln-ndebug-incidental : $(jln_env_ndebug) ] ;
   local x_noexcept_warnings = [ jln-get-value $(ps) : jln-noexcept-warnings : $(jln_env_noexcept_warnings) ] ;
   local x_optimization = [ jln-get-value2 $(ps) : jln-optimization : jln-optimization-incidental : $(jln_env_optimization) ] ;
-  local x_other_sanitizers = [ jln-get-value2 $(ps) : jln-other-sanitizers : jln-other-sanitizers-incidental : $(jln_env_other_sanitizers) ] ;
+  local x_optimization_warnings = [ jln-get-value $(ps) : jln-optimization-warnings : $(jln_env_optimization_warnings) ] ;
   local x_pedantic = [ jln-get-value2 $(ps) : jln-pedantic : jln-pedantic-incidental : $(jln_env_pedantic) ] ;
   local x_pie = [ jln-get-value2 $(ps) : jln-pie : jln-pie-incidental : $(jln_env_pie) ] ;
   local x_relro = [ jln-get-value2 $(ps) : jln-relro : jln-relro-incidental : $(jln_env_relro) ] ;
@@ -660,13 +667,13 @@ rule jln_flags ( properties * )
   local x_stack_protector = [ jln-get-value2 $(ps) : jln-stack-protector : jln-stack-protector-incidental : $(jln_env_stack_protector) ] ;
   local x_stl_fix = [ jln-get-value2 $(ps) : jln-stl-fix : jln-stl-fix-incidental : $(jln_env_stl_fix) ] ;
   local x_stl_hardening = [ jln-get-value2 $(ps) : jln-stl-hardening : jln-stl-hardening-incidental : $(jln_env_stl_hardening) ] ;
-  local x_suggestions = [ jln-get-value $(ps) : jln-suggestions : $(jln_env_suggestions) ] ;
+  local x_suggest_attributes = [ jln-get-value $(ps) : jln-suggest-attributes : $(jln_env_suggest_attributes) ] ;
   local x_switch_warnings = [ jln-get-value $(ps) : jln-switch-warnings : $(jln_env_switch_warnings) ] ;
+  local x_symbols = [ jln-get-value2 $(ps) : jln-symbols : jln-symbols-incidental : $(jln_env_symbols) ] ;
   local x_unsafe_buffer_usage_warnings = [ jln-get-value $(ps) : jln-unsafe-buffer-usage-warnings : $(jln_env_unsafe_buffer_usage_warnings) ] ;
   local x_var_init = [ jln-get-value2 $(ps) : jln-var-init : jln-var-init-incidental : $(jln_env_var_init) ] ;
   local x_warnings = [ jln-get-value $(ps) : jln-warnings : $(jln_env_warnings) ] ;
   local x_warnings_as_error = [ jln-get-value2 $(ps) : jln-warnings-as-error : jln-warnings-as-error-incidental : $(jln_env_warnings_as_error) ] ;
-  local x_whole_program = [ jln-get-value2 $(ps) : jln-whole-program : jln-whole-program-incidental : $(jln_env_whole_program) ] ;
   local x_windows_abi_compatibility_warnings = [ jln-get-value $(ps) : jln-windows-abi-compatibility-warnings : $(jln_env_windows_abi_compatibility_warnings) ] ;
   local x_windows_bigobj = [ jln-get-value2 $(ps) : jln-windows-bigobj : jln-windows-bigobj-incidental : $(jln_env_windows_bigobj) ] ;
 
@@ -727,7 +734,7 @@ rule jln_flags ( properties * )
       }
     }
   }
-  if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
+  if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" )
   {
     if $(x_warnings) != "default"
     {
@@ -889,6 +896,12 @@ rule jln_flags ( properties * )
                 <cxxflags>"-Wno-covered-switch-default"
               ;
             }
+            if $(x_suggest_attributes) = "default"
+            {
+              flags +=
+                <cxxflags>"-Wno-missing-noreturn"
+              ;
+            }
             if $(x_conversion_warnings) != "default"
             {
               if $(x_conversion_warnings) = "conversion"
@@ -946,6 +959,59 @@ rule jln_flags ( properties * )
                   }
                 }
               }
+            }
+          }
+        }
+      }
+    }
+    if $(x_optimization_warnings) != "default"
+    {
+      if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+      {
+        if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 900000 ]
+        {
+          flags +=
+            <cxxflags>"-Wpessimizing-move"
+            <cxxflags>"-Wredundant-move"
+          ;
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1100000 ]
+          {
+            flags +=
+              <cxxflags>"-Wrange-loop-construct"
+            ;
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1300000 ]
+            {
+              flags +=
+                <cxxflags>"-Wself-move"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1400000 ]
+              {
+                flags +=
+                  <cxxflags>"-Wnrvo"
+                ;
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300006 ]
+        {
+          flags +=
+            <cxxflags>"-Wself-move"
+          ;
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300007 ]
+          {
+            flags +=
+              <cxxflags>"-Wpessimizing-move"
+              <cxxflags>"-Wredundant-move"
+            ;
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1000000 ]
+            {
+              flags +=
+                <cxxflags>"-Wrange-loop-construct"
+              ;
             }
           }
         }
@@ -1069,7 +1135,7 @@ rule jln_flags ( properties * )
     }
     if $(x_unsafe_buffer_usage_warnings) != "default"
     {
-      if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600000 ] )
+      if ( ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600000 ] ) )
       {
         if $(x_unsafe_buffer_usage_warnings) = "off"
         {
@@ -1085,86 +1151,183 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if $(x_diagnostics_show_template_tree) != "default"
+    if $(x_shadow_warnings) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
+      if $(x_shadow_warnings) = "off"
       {
-        if $(x_diagnostics_show_template_tree) = "on"
+        flags +=
+          <cxxflags>"-Wno-shadow"
+        ;
+        if ( ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) )
         {
           flags +=
-            <cxxflags>"-fdiagnostics-show-template-tree"
+            <cxxflags>"-Wno-shadow-field"
+          ;
+        }
+      }
+      else
+      {
+        if $(x_shadow_warnings) = "on"
+        {
+          flags +=
+            <cxxflags>"-Wshadow"
           ;
         }
         else
         {
-          flags +=
-            <cxxflags>"-fno-diagnostics-show-template-tree"
-          ;
+          if $(x_shadow_warnings) = "all"
+          {
+            if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+            {
+              flags +=
+                <cxxflags>"-Wshadow"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-Wshadow-all"
+              ;
+            }
+          }
+          else
+          {
+            if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700001 ] )
+            {
+              if $(x_shadow_warnings) = "local"
+              {
+                flags +=
+                  <cxxflags>"-Wshadow=local"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cxxflags>"-Wshadow=compatible-local"
+                ;
+              }
+            }
+          }
         }
       }
     }
-    if $(x_elide_type) != "default"
+    if $(x_suggest_attributes) != "default"
     {
-      if $(x_elide_type) = "on"
-      {
-        if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] )
-        {
-          flags +=
-            <cxxflags>"-felide-type"
-          ;
-        }
-      }
-      else
-      {
-        if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300004 ] ) )
-        {
-          flags +=
-            <cxxflags>"-fno-elide-type"
-          ;
-        }
-      }
-    }
-    if $(x_exceptions) != "default"
-    {
-      if $(x_exceptions) = "on"
+      if $(x_suggest_attributes) = "on"
       {
         flags +=
-          <cxxflags>"-fexceptions"
-        ;
-        if $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc"
-        {
-          flags +=
-            <cxxflags>"-sDISABLE_EXCEPTION_CATCHING=0"
-          ;
-        }
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"-fno-exceptions"
-        ;
-      }
-    }
-    if $(x_rtti) != "default"
-    {
-      if $(x_rtti) = "on"
-      {
-        flags +=
-          <cxxflags>"-frtti"
+          <cxxflags>"-Wmissing-noreturn"
         ;
       }
       else
       {
-        flags +=
-          <cxxflags>"-fno-rtti"
-        ;
+        if $(x_suggest_attributes) = "common"
+        {
+          flags +=
+            <cxxflags>"-Wmissing-noreturn"
+            <cxxflags>"-Wmissing-format-attribute"
+          ;
+        }
+        else
+        {
+          if ( $(x_suggest_attributes) = "analysis" || $(x_suggest_attributes) = "all" )
+          {
+            flags +=
+              <cxxflags>"-Wmissing-noreturn"
+              <cxxflags>"-Wmissing-format-attribute"
+            ;
+            if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+            {
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ]
+              {
+                flags +=
+                  <cxxflags>"-Wsuggest-attribute=malloc"
+                ;
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1400000 ]
+                {
+                  flags +=
+                    <cxxflags>"-Wsuggest-attribute=returns_nonnull"
+                  ;
+                }
+              }
+              if ( $(x_suggest_attributes) = "all" || $(x_suggest_attributes) = "unity" )
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ]
+                {
+                  flags +=
+                    <cxxflags>"-Wsuggest-final-types"
+                    <cxxflags>"-Wsuggest-final-methods"
+                  ;
+                }
+                if $(x_suggest_attributes) = "all"
+                {
+                  flags +=
+                    <cxxflags>"-Wsuggest-attribute=pure"
+                    <cxxflags>"-Wsuggest-attribute=const"
+                  ;
+                  if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500001 ]
+                  {
+                    flags +=
+                      <cxxflags>"-Wnoexcept"
+                    ;
+                    if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ]
+                    {
+                      flags +=
+                        <cxxflags>"-Wsuggest-attribute=cold"
+                      ;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          else
+          {
+            flags +=
+              <cxxflags>"-Wno-missing-noreturn"
+              <cxxflags>"-Wno-missing-format-attribute"
+            ;
+            if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+            {
+              flags +=
+                <cxxflags>"-Wno-suggest-attribute=pure"
+                <cxxflags>"-Wno-suggest-attribute=const"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ]
+              {
+                flags +=
+                  <cxxflags>"-Wno-suggest-final-types"
+                  <cxxflags>"-Wno-suggest-final-methods"
+                ;
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500001 ]
+                {
+                  flags +=
+                    <cxxflags>"-Wno-noexcept"
+                  ;
+                  if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ]
+                  {
+                    flags +=
+                      <cxxflags>"-Wno-suggest-attribute=malloc"
+                    ;
+                    if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1400000 ]
+                    {
+                      flags +=
+                        <cxxflags>"-Wno-suggest-attribute=returns_nonnull"
+                      ;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
     if $(x_var_init) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) )
+      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1200000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) )
       {
-        if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less 1500000 $(JLN_NORMALIZED_CXX_COMP_VERSION) ] )
+        if ( ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less 1500000 $(JLN_NORMALIZED_CXX_COMP_VERSION) ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" && ! [ numbers.less 1500000 $(JLN_NORMALIZED_CXX_COMP_VERSION) ] ) )
         {
           if $(x_var_init) = "zero"
           {
@@ -1210,7 +1373,7 @@ rule jln_flags ( properties * )
     }
     if $(x_windows_abi_compatibility_warnings) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1000000 ] ) || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
+      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1000000 ] ) || $(JLN_NORMALIZED_CXX_COMP) != "gcc" )
       {
         if $(x_windows_abi_compatibility_warnings) = "on"
         {
@@ -1222,6 +1385,24 @@ rule jln_flags ( properties * )
         {
           flags +=
             <cxxflags>"-Wno-mismatched-tags"
+          ;
+        }
+      }
+    }
+    if $(x_reproducible_build_warnings) != "default"
+    {
+      if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400009 ] )
+      {
+        if $(x_reproducible_build_warnings) = "on"
+        {
+          flags +=
+            <cxxflags>"-Wdate-time"
+          ;
+        }
+        else
+        {
+          flags +=
+            <cxxflags>"-Wno-date-time"
           ;
         }
       }
@@ -1302,121 +1483,6 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if $(x_suggestions) != "default"
-    {
-      if $(x_suggestions) != "off"
-      {
-        if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
-        {
-          flags +=
-            <cxxflags>"-Wsuggest-attribute=pure"
-            <cxxflags>"-Wsuggest-attribute=const"
-          ;
-          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ]
-          {
-            flags +=
-              <cxxflags>"-Wsuggest-final-types"
-              <cxxflags>"-Wsuggest-final-methods"
-            ;
-            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500001 ]
-            {
-              flags +=
-                <cxxflags>"-Wnoexcept"
-              ;
-            }
-          }
-        }
-      }
-    }
-    if $(x_sanitizers) != "default"
-    {
-      if $(x_sanitizers) = "off"
-      {
-        flags +=
-          <cxxflags>"-fno-sanitize=all"
-          <linkflags>"-fno-sanitize=all"
-        ;
-      }
-      else
-      {
-        if $(JLN_NORMALIZED_CXX_COMP) = "clang-cl"
-        {
-          flags +=
-            <cxxflags>"-fsanitize=undefined"
-            <cxxflags>"-fsanitize=address"
-            <cxxflags>"-fsanitize-address-use-after-scope"
-          ;
-        }
-        else
-        {
-          if ( $(JLN_NORMALIZED_CXX_COMP) = "clang" || $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc" )
-          {
-            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300001 ]
-            {
-              flags +=
-                <cxxflags>"-fsanitize=undefined"
-                <cxxflags>"-fsanitize=address"
-                <cxxflags>"-fsanitize-address-use-after-scope"
-                <cxxflags>"-fno-omit-frame-pointer"
-                <cxxflags>"-fno-optimize-sibling-calls"
-                <linkflags>"-fsanitize=undefined"
-                <linkflags>"-fsanitize=address"
-              ;
-              if $(JLN_NORMALIZED_CXX_COMP) = "clang"
-              {
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300004 ]
-                {
-                  flags +=
-                    <cxxflags>"-fsanitize=leak"
-                    <linkflags>"-fsanitize=leak"
-                  ;
-                }
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 600000 ]
-                {
-                  if $(x_stack_protector) != "default"
-                  {
-                    if $(x_stack_protector) != "off"
-                    {
-                      flags +=
-                        <cxxflags>"-fsanitize-minimal-runtime"
-                      ;
-                    }
-                  }
-                }
-              }
-            }
-          }
-          else
-          {
-            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400008 ]
-            {
-              flags +=
-                <cxxflags>"-fsanitize=address"
-                <cxxflags>"-fno-omit-frame-pointer"
-                <cxxflags>"-fno-optimize-sibling-calls"
-                <linkflags>"-fsanitize=address"
-              ;
-              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400009 ]
-              {
-                flags +=
-                  <cxxflags>"-fsanitize=undefined"
-                  <cxxflags>"-fsanitize=leak"
-                  <linkflags>"-fsanitize=undefined"
-                  <linkflags>"-fsanitize=leak"
-                ;
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1200000 ]
-                {
-                  flags +=
-                    <cxxflags>"-fsanitize=bounds-strict"
-                    <linkflags>"-fsanitize=bounds-strict"
-                  ;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
     if $(x_control_flow) != "default"
     {
       if $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc"
@@ -1434,7 +1500,7 @@ rule jln_flags ( properties * )
             <linkflags>"-sASSERTIONS=1"
             <linkflags>"-sDEMANGLE_SUPPORT=1"
           ;
-          if  ! ( ( $(x_sanitizers) = "on" ) )
+          if $(x_sanitizers) != "default" && ! ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "address" )
           {
             flags +=
               <linkflags>"-sSAFE_HEAP=1"
@@ -1491,9 +1557,16 @@ rule jln_flags ( properties * )
             {
               flags +=
                 <cxxflags>"-fsanitize=cfi"
-                <cxxflags>"-fvisibility=hidden"
-                <cxxflags>"-flto"
                 <linkflags>"-fsanitize=cfi"
+              ;
+              if $(JLN_NORMALIZED_CXX_COMP) != "clang-cl"
+              {
+                flags +=
+                  <cxxflags>"-fvisibility=hidden"
+                ;
+              }
+              flags +=
+                <cxxflags>"-flto"
                 <linkflags>"-flto"
               ;
             }
@@ -1528,91 +1601,6 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if $(x_reproducible_build_warnings) != "default"
-    {
-      if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400009 ] )
-      {
-        if $(x_reproducible_build_warnings) = "on"
-        {
-          flags +=
-            <cxxflags>"-Wdate-time"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"-Wno-date-time"
-          ;
-        }
-      }
-    }
-    if $(x_diagnostics_format) != "default"
-    {
-      if $(x_diagnostics_format) = "fixits"
-      {
-        if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) != "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) )
-        {
-          flags +=
-            <cxxflags>"-fdiagnostics-parseable-fixits"
-          ;
-        }
-      }
-      else
-      {
-        if $(x_diagnostics_format) = "patch"
-        {
-          if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700000 ] )
-          {
-            flags +=
-              <cxxflags>"-fdiagnostics-generate-patch"
-            ;
-          }
-        }
-        else
-        {
-          if $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE)
-          {
-            flags +=
-              <cxxflags>"-fdiagnostics-print-source-range-info"
-            ;
-          }
-        }
-      }
-    }
-    if $(x_fix_compiler_error) != "default"
-    {
-      if $(x_fix_compiler_error) = "on"
-      {
-        if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
-        {
-          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400007 ]
-          {
-            flags +=
-              <cxxflags>"-Werror=narrowing"
-            ;
-            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700001 ]
-            {
-              flags +=
-                <cxxflags>"-Werror=literal-suffix"
-              ;
-            }
-          }
-        }
-        flags +=
-          <cxxflags>"-Werror=write-strings"
-        ;
-      }
-      else
-      {
-        if $(JLN_NORMALIZED_CXX_COMP) != "gcc"
-        {
-          flags +=
-            <cxxflags>"-Wno-error=c++11-narrowing"
-            <cxxflags>"-Wno-reserved-user-defined-literal"
-          ;
-        }
-      }
-    }
     if $(x_lto) != "default"
     {
       if $(x_lto) = "off"
@@ -1621,53 +1609,44 @@ rule jln_flags ( properties * )
           <cxxflags>"-fno-lto"
           <linkflags>"-fno-lto"
         ;
+        if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+        {
+          flags +=
+            <cxxflags>"-fno-whole-program"
+          ;
+        }
       }
       else
       {
         if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
         {
-          flags +=
-            <cxxflags>"-flto"
-            <linkflags>"-flto"
-          ;
-          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ]
+          if $(x_lto) != "thin-or-nothing"
           {
-            if $(x_warnings) != "default"
-            {
-              if $(x_warnings) != "off"
-              {
-                flags +=
-                  <cxxflags>"-flto-odr-type-merging"
-                  <linkflags>"-flto-odr-type-merging"
-                ;
-              }
-            }
-            if $(x_lto) = "fat"
+            if ( $(x_lto) = "whole-program" || $(x_lto) = "whole-program-and-full-lto" )
             {
               flags +=
-                <cxxflags>"-ffat-lto-objects"
+                <cxxflags>"-fwhole-program"
+              ;
+            }
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1000000 ]
+            {
+              flags +=
+                <cxxflags>"-flto=auto"
+                <linkflags>"-flto=auto"
               ;
             }
             else
             {
-              if $(x_lto) = "thin"
-              {
-                flags +=
-                  <linkflags>"-fuse-linker-plugin"
-                ;
-              }
+              flags +=
+                <cxxflags>"-flto"
+                <linkflags>"-flto"
+              ;
             }
           }
         }
         else
         {
-          if $(JLN_NORMALIZED_CXX_COMP) = "clang-cl"
-          {
-            flags +=
-              <linkflags>"-fuse-ld=lld"
-            ;
-          }
-          if ( ( $(x_lto) = "thin" || $(x_lto) = "on" ) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 600000 ] )
+          if ( ( $(x_lto) = "on" || $(x_lto) = "thin-or-nothing" || $(x_lto) = "whole-program" ) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400000 ] )
           {
             flags +=
               <cxxflags>"-flto=thin"
@@ -1680,63 +1659,110 @@ rule jln_flags ( properties * )
               <cxxflags>"-flto"
               <linkflags>"-flto"
             ;
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1000000 ]
+            {
+              flags +=
+                <cxxflags>"-fvirtual-function-elimination"
+                <linkflags>"-fvirtual-function-elimination"
+              ;
+            }
+          }
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300009 ]
+          {
+            if ( $(x_lto) = "whole-program" || $(x_lto) = "whole-program-and-full-lto" )
+            {
+              flags +=
+                <cxxflags>"-fwhole-program-vtables"
+                <linkflags>"-fwhole-program-vtables"
+              ;
+            }
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700000 ]
+            {
+              flags +=
+                <cxxflags>"-fforce-emit-vtables"
+                <linkflags>"-fforce-emit-vtables"
+              ;
+            }
           }
         }
       }
     }
-    if $(x_shadow_warnings) != "default"
+    if $(x_stl_hardening) != "default"
     {
-      if $(x_shadow_warnings) = "off"
+      if $(x_stl_hardening) != "off"
       {
-        flags +=
-          <cxxflags>"-Wno-shadow"
-        ;
-        if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] )
+        if $(x_stl_hardening) = "fast"
         {
+          if $(JLN_NORMALIZED_CXX_COMP) != "clang-cl"
+          {
+            flags +=
+              <cxxflags>"-D_GLIBCXX_ASSERTIONS"
+            ;
+          }
           flags +=
-            <cxxflags>"-Wno-shadow-field"
-          ;
-        }
-      }
-      else
-      {
-        if $(x_shadow_warnings) = "on"
-        {
-          flags +=
-            <cxxflags>"-Wshadow"
+            <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST"
           ;
         }
         else
         {
-          if $(x_shadow_warnings) = "all"
+          if $(x_stl_hardening) = "extensive"
           {
-            if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+            if $(JLN_NORMALIZED_CXX_COMP) != "clang-cl"
             {
               flags +=
-                <cxxflags>"-Wshadow"
+                <cxxflags>"-D_GLIBCXX_ASSERTIONS"
+              ;
+            }
+            flags +=
+              <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE"
+            ;
+          }
+          else
+          {
+            if $(x_stl_hardening) = "debug"
+            {
+              if $(JLN_NORMALIZED_CXX_COMP) != "clang-cl"
+              {
+                flags +=
+                  <cxxflags>"-D_GLIBCXX_ASSERTIONS"
+                ;
+              }
+              flags +=
+                <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
               ;
             }
             else
             {
-              flags +=
-                <cxxflags>"-Wshadow-all"
-              ;
-            }
-          }
-          else
-          {
-            if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700001 ] )
-            {
-              if $(x_shadow_warnings) = "local"
+              if $(JLN_NORMALIZED_CXX_COMP) != "clang-cl"
               {
                 flags +=
-                  <cxxflags>"-Wshadow=local"
+                  <cxxflags>"-D_GLIBCXX_DEBUG"
                 ;
+                if $(x_pedantic) != "default" && ! ( $(x_pedantic) = "off" )
+                {
+                  flags +=
+                    <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
+                  ;
+                }
+              }
+              if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1800000 ] )
+              {
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ]
+                {
+                  flags +=
+                    <cxxflags>"-D_LIBCPP_DEBUG=1"
+                  ;
+                }
               }
               else
               {
                 flags +=
-                  <cxxflags>"-Wshadow=compatible-local"
+                  <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
+                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS"
+                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING"
+                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR"
+                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR"
+                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY"
                 ;
               }
             }
@@ -1744,53 +1770,106 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if $(x_float_sanitizers) != "default"
+    if $(x_sanitizers) != "default"
     {
-      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) )
+      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400008 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300002 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400000 ] ) )
       {
-        if $(x_float_sanitizers) = "on"
+        if $(x_sanitizers) = "off"
         {
           flags +=
-            <cxxflags>"-fsanitize=float-divide-by-zero"
-            <cxxflags>"-fsanitize=float-cast-overflow"
+            <cxxflags>"-fno-sanitize=all"
+            <linkflags>"-fno-sanitize=all"
           ;
         }
         else
         {
-          flags +=
-            <cxxflags>"-fno-sanitize=float-divide-by-zero"
-            <cxxflags>"-fno-sanitize=float-cast-overflow"
-          ;
-        }
-      }
-    }
-    if $(x_integer_sanitizers) != "default"
-    {
-      if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] )
-      {
-        if $(x_integer_sanitizers) = "on"
-        {
-          flags +=
-            <cxxflags>"-fsanitize=integer"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"-fno-sanitize=integer"
-          ;
-        }
-      }
-      else
-      {
-        if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400009 ] )
-        {
-          if $(x_integer_sanitizers) = "on"
+          if $(x_sanitizers) = "thread"
           {
             flags +=
-              <cxxflags>"-ftrapv"
-              <cxxflags>"-fsanitize=undefined"
+              <cxxflags>"-fsanitize=thread"
+              <linkflags>"-fsanitize=thread"
             ;
+          }
+          else
+          {
+            if $(x_sanitizers) = "undefined"
+            {
+              flags +=
+                <cxxflags>"-fsanitize=undefined"
+                <linkflags>"-fsanitize=undefined"
+              ;
+            }
+            else
+            {
+              if $(x_sanitizers) = "undefined-minimal-runtime"
+              {
+                flags +=
+                  <cxxflags>"-fsanitize=undefined"
+                  <linkflags>"-fsanitize=undefined"
+                ;
+                if ( ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" ) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 600000 ] )
+                {
+                  flags +=
+                    <cxxflags>"-fsanitize-minimal-runtime"
+                    <linkflags>"-fsanitize-minimal-runtime"
+                  ;
+                }
+              }
+              else
+              {
+                if $(x_sanitizers) = "scudo-hardened-allocator"
+                {
+                  if ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1300000 ] )
+                  {
+                    flags +=
+                      <cxxflags>"-fsanitize=scudo"
+                      <linkflags>"-fsanitize=scudo"
+                    ;
+                  }
+                }
+                else
+                {
+                  flags +=
+                    <cxxflags>"-fno-omit-frame-pointer"
+                    <cxxflags>"-fno-optimize-sibling-calls"
+                  ;
+                  if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "address" )
+                  {
+                    flags +=
+                      <cxxflags>"-fsanitize=address"
+                      <linkflags>"-fsanitize=address"
+                    ;
+                  }
+                  else
+                  {
+                    flags +=
+                      <cxxflags>"-fsanitize=kernel-address"
+                      <linkflags>"-fsanitize=kernel-address"
+                    ;
+                  }
+                  if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "kernel" || $(x_sanitizers) = "kernel-extra" )
+                  {
+                    if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400009 ] ) || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" )
+                    {
+                      flags +=
+                        <cxxflags>"-fsanitize=undefined"
+                        <linkflags>"-fsanitize=undefined"
+                      ;
+                    }
+                    if ( $(x_sanitizers) = "extra" || $(x_sanitizers) = "kernel-extra" )
+                    {
+                      if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 900000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 900000 ] ) )
+                      {
+                        flags +=
+                          <cxxflags>"-fsanitize=pointer-compare"
+                          <cxxflags>"-fsanitize=pointer-subtract"
+                        ;
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1798,7 +1877,7 @@ rule jln_flags ( properties * )
   }
   if $(x_conversion_warnings) != "default"
   {
-    if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) || $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'linux" )
+    if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" || $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'linux" )
     {
       if $(x_conversion_warnings) = "on"
       {
@@ -1873,69 +1952,94 @@ rule jln_flags ( properties * )
       }
     }
   }
-  if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_COMP) = "clang" || $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc" )
+  if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
   {
-    if $(x_stl_hardening) != "default"
+    if $(x_diagnostics_show_template) != "default"
     {
-      if $(x_stl_hardening) != "off"
+      if ( $(x_diagnostics_show_template) = "tree-without-elided-types" || $(x_diagnostics_show_template) = "tree" )
       {
-        if $(x_stl_hardening) = "fast"
+        if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) )
         {
           flags +=
-            <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-            <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST"
+            <cxxflags>"-fdiagnostics-show-template-tree"
           ;
+        }
+      }
+      if ( $(x_diagnostics_show_template) = "tree-without-elided-types" || $(x_diagnostics_show_template) = "without-elided-types" )
+      {
+        if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] ) || ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300004 ] ) )
+        {
+          flags +=
+            <cxxflags>"-fno-elide-type"
+          ;
+        }
+      }
+    }
+    if $(x_exceptions) != "default"
+    {
+      if $(x_exceptions) = "on"
+      {
+        flags +=
+          <cxxflags>"-fexceptions"
+        ;
+        if $(JLN_NORMALIZED_CXX_COMP) = "clang-emcc"
+        {
+          flags +=
+            <cxxflags>"-sDISABLE_EXCEPTION_CATCHING=0"
+          ;
+        }
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"-fno-exceptions"
+        ;
+      }
+    }
+    if $(x_rtti) != "default"
+    {
+      if $(x_rtti) = "on"
+      {
+        flags +=
+          <cxxflags>"-frtti"
+        ;
+      }
+      else
+      {
+        flags +=
+          <cxxflags>"-fno-rtti"
+        ;
+      }
+    }
+    if $(x_diagnostics_format) != "default"
+    {
+      if $(x_diagnostics_format) = "fixits"
+      {
+        if ( ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700000 ] ) || ( $(JLN_NORMALIZED_CXX_COMP) != "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] ) )
+        {
+          flags +=
+            <cxxflags>"-fdiagnostics-parseable-fixits"
+          ;
+        }
+      }
+      else
+      {
+        if $(x_diagnostics_format) = "patch"
+        {
+          if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700000 ] )
+          {
+            flags +=
+              <cxxflags>"-fdiagnostics-generate-patch"
+            ;
+          }
         }
         else
         {
-          if $(x_stl_hardening) = "extensive"
+          if $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE)
           {
             flags +=
-              <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-              <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE"
+              <cxxflags>"-fdiagnostics-print-source-range-info"
             ;
-          }
-          else
-          {
-            if $(x_stl_hardening) = "debug"
-            {
-              flags +=
-                <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-                <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
-              ;
-            }
-            else
-            {
-              flags +=
-                <cxxflags>"-D_GLIBCXX_DEBUG"
-              ;
-              if $(x_pedantic) != "default" && ! ( $(x_pedantic) = "off" )
-              {
-                flags +=
-                  <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
-                ;
-              }
-              if ( $(JLN_NORMALIZED_CXX_IS_CLANG_LIKE) && [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1800000 ] )
-              {
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ]
-                {
-                  flags +=
-                    <cxxflags>"-D_LIBCPP_DEBUG=1"
-                  ;
-                }
-              }
-              else
-              {
-                flags +=
-                  <cxxflags>"-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
-                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS"
-                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STRING"
-                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_VECTOR"
-                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_UNIQUE_PTR"
-                  <cxxflags>"-D_LIBCPP_ABI_BOUNDED_ITERATORS_IN_STD_ARRAY"
-                ;
-              }
-            }
           }
         }
       }
@@ -1951,7 +2055,190 @@ rule jln_flags ( properties * )
         {
           flags +=
             <cxxflags>"-pedantic-errors"
+            <cxxflags>"-Werror=write-strings"
           ;
+          if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+          {
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400007 ]
+            {
+              flags +=
+                <cxxflags>"-Werror=narrowing"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700001 ]
+              {
+                flags +=
+                  <cxxflags>"-Werror=literal-suffix"
+                ;
+              }
+            }
+          }
+        }
+      }
+    }
+    if $(x_symbols) != "default"
+    {
+      if $(x_symbols) = "hidden"
+      {
+        flags +=
+          <cxxflags>"-fvisibility=hidden"
+        ;
+      }
+      else
+      {
+        if $(x_symbols) = "strip-all"
+        {
+          flags +=
+            <linkflags>"-s"
+          ;
+        }
+        else
+        {
+          if $(x_symbols) = "gc-sections"
+          {
+            if $(linker) = 'ld64'
+            {
+              flags +=
+                <linkflags>"-Wl,-S"
+                <linkflags>"-Wl,-dead_strip"
+              ;
+            }
+            flags +=
+              <linkflags>"-s"
+              <linkflags>"-Wl,--gc-sections"
+            ;
+          }
+          else
+          {
+            if $(x_symbols) = "nodebug"
+            {
+              flags +=
+                <cxxflags>"-g0"
+              ;
+            }
+            else
+            {
+              if $(x_symbols) = "debug"
+              {
+                flags +=
+                  <cxxflags>"-g"
+                ;
+              }
+              else
+              {
+                if $(x_symbols) = "minimal-debug"
+                {
+                  flags +=
+                    <cxxflags>"-g1"
+                  ;
+                }
+                else
+                {
+                  if $(x_symbols) = "full-debug"
+                  {
+                    flags +=
+                      <cxxflags>"-g3"
+                    ;
+                  }
+                  else
+                  {
+                    if $(JLN_NORMALIZED_CXX_COMP) = "clang"
+                    {
+                      if $(x_symbols) = "dwarf"
+                      {
+                        flags +=
+                          <cxxflags>"-g"
+                        ;
+                      }
+                      if $(x_symbols) = "lldb"
+                      {
+                        flags +=
+                          <cxxflags>"-glldb"
+                        ;
+                      }
+                      if $(x_symbols) = "sce"
+                      {
+                        flags +=
+                          <cxxflags>"-gsce"
+                        ;
+                      }
+                      if $(x_symbols) = "dbx"
+                      {
+                        flags +=
+                          <cxxflags>"-gdbx"
+                        ;
+                      }
+                    }
+                    else
+                    {
+                      if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
+                      {
+                        if $(x_symbols) = "dwarf"
+                        {
+                          flags +=
+                            <cxxflags>"-g"
+                          ;
+                        }
+                        if $(x_symbols) = "codeview"
+                        {
+                          flags +=
+                            <cxxflags>"-gcodeview"
+                          ;
+                        }
+                        if $(x_symbols) = "btf"
+                        {
+                          flags +=
+                            <cxxflags>"-gbtf"
+                          ;
+                        }
+                        if $(x_symbols) = "ctf"
+                        {
+                          flags +=
+                            <cxxflags>"-gctf"
+                          ;
+                        }
+                        if $(x_symbols) = "ctf1"
+                        {
+                          flags +=
+                            <cxxflags>"-gctf1"
+                          ;
+                        }
+                        if $(x_symbols) = "ctf2"
+                        {
+                          flags +=
+                            <cxxflags>"-gctf2"
+                          ;
+                        }
+                        if $(x_symbols) = "vms"
+                        {
+                          flags +=
+                            <cxxflags>"-gvms"
+                          ;
+                        }
+                        if $(x_symbols) = "vms1"
+                        {
+                          flags +=
+                            <cxxflags>"-gvms1"
+                          ;
+                        }
+                        if $(x_symbols) = "vms2"
+                        {
+                          flags +=
+                            <cxxflags>"-gvms2"
+                          ;
+                        }
+                        if $(x_symbols) = "vms3"
+                        {
+                          flags +=
+                            <cxxflags>"-gvms3"
+                          ;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -2036,60 +2323,6 @@ rule jln_flags ( properties * )
           }
         }
       }
-      if $(x_debug_level) != "default"
-      {
-        if $(x_debug_level) = "0"
-        {
-          flags +=
-            <cxxflags>"-g0"
-          ;
-        }
-        else
-        {
-          if $(x_debug_level) = "1"
-          {
-            flags +=
-              <cxxflags>"-g1"
-            ;
-          }
-          else
-          {
-            if $(x_debug_level) = "2"
-            {
-              flags +=
-                <cxxflags>"-g2"
-              ;
-            }
-            else
-            {
-              if $(x_debug_level) = "3"
-              {
-                flags +=
-                  <cxxflags>"-g3"
-                ;
-              }
-            }
-          }
-        }
-      }
-      if $(x_debug) != "default"
-      {
-        if $(x_debug) = "off"
-        {
-          flags +=
-            <cxxflags>"-g0"
-          ;
-        }
-        else
-        {
-          if $(x_debug_level) = "default"
-          {
-            flags +=
-              <cxxflags>"-g"
-            ;
-          }
-        }
-      }
     }
     else
     {
@@ -2112,183 +2345,6 @@ rule jln_flags ( properties * )
             flags +=
               <linkflags>"-lprofile_rt"
             ;
-          }
-        }
-      }
-      if $(x_debug_level) != "default"
-      {
-        if $(x_debug_level) = "0"
-        {
-          flags +=
-            <cxxflags>"-g0"
-          ;
-        }
-        else
-        {
-          if $(x_debug_level) = "1"
-          {
-            if ( $(x_debug) = "gdb" )
-            {
-              flags +=
-                <cxxflags>"-ggdb1"
-              ;
-            }
-            else
-            {
-              flags +=
-                <cxxflags>"-g1"
-              ;
-            }
-          }
-          else
-          {
-            if $(x_debug_level) = "2"
-            {
-              if ( $(x_debug) = "gdb" )
-              {
-                flags +=
-                  <cxxflags>"-ggdb2"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <cxxflags>"-g2"
-                ;
-              }
-            }
-            else
-            {
-              if $(x_debug_level) = "3"
-              {
-                if ( $(x_debug) = "gdb" )
-                {
-                  flags +=
-                    <cxxflags>"-ggdb3"
-                  ;
-                }
-                else
-                {
-                  flags +=
-                    <cxxflags>"-g3"
-                  ;
-                }
-              }
-              else
-              {
-                if $(x_debug_level) = "line-tables-only"
-                {
-                  if $(JLN_NORMALIZED_CXX_COMP) = "clang"
-                  {
-                    flags +=
-                      <cxxflags>"-gline-tables-only"
-                    ;
-                  }
-                  else
-                  {
-                    flags +=
-                      <cxxflags>"-g"
-                    ;
-                  }
-                }
-                else
-                {
-                  if $(x_debug_level) = "line-directives-only"
-                  {
-                    if $(JLN_NORMALIZED_CXX_COMP) = "clang"
-                    {
-                      flags +=
-                        <cxxflags>"-gline-directives-only"
-                      ;
-                    }
-                    else
-                    {
-                      flags +=
-                        <cxxflags>"-g"
-                      ;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      if $(x_debug) != "default"
-      {
-        if $(x_debug) = "off"
-        {
-          flags +=
-            <cxxflags>"-g0"
-          ;
-        }
-        else
-        {
-          if $(x_debug) = "on"
-          {
-            if $(x_debug_level) = "default"
-            {
-              flags +=
-                <cxxflags>"-g"
-              ;
-            }
-          }
-          else
-          {
-            if $(x_debug) = "gdb"
-            {
-              if $(x_debug_level) = "default"
-              {
-                flags +=
-                  <cxxflags>"-ggdb"
-                ;
-              }
-            }
-            else
-            {
-              if $(JLN_NORMALIZED_CXX_COMP) = "clang"
-              {
-                if $(x_debug) = "lldb"
-                {
-                  flags +=
-                    <cxxflags>"-glldb"
-                  ;
-                }
-                else
-                {
-                  if $(x_debug) = "sce"
-                  {
-                    flags +=
-                      <cxxflags>"-gsce"
-                    ;
-                  }
-                  else
-                  {
-                    if $(x_debug) = "dbx"
-                    {
-                      flags +=
-                        <cxxflags>"-gdbx"
-                      ;
-                    }
-                    else
-                    {
-                      flags +=
-                        <cxxflags>"-g"
-                      ;
-                    }
-                  }
-                }
-              }
-              else
-              {
-                if $(x_debug) = "vms"
-                {
-                  flags +=
-                    <cxxflags>"-gvms"
-                  ;
-                }
-              }
-            }
           }
         }
       }
@@ -2445,99 +2501,9 @@ rule jln_flags ( properties * )
               }
               else
               {
-                if $(x_lto) != "default"
-                {
-                  if ( $(x_lto) != "off" && $(JLN_NORMALIZED_CXX_COMP) = "gcc" )
-                  {
-                    flags +=
-                      <linkflags>"-fuse-ld=gold"
-                    ;
-                  }
-                  else
-                  {
-                    flags +=
-                      <linkflags>"-fuse-ld=lld"
-                    ;
-                  }
-                }
-                else
-                {
-                  flags +=
-                    <linkflags>"-fuse-ld=lld"
-                  ;
-                }
-              }
-            }
-          }
-        }
-      }
-      if $(x_whole_program) != "default"
-      {
-        if $(x_whole_program) = "off"
-        {
-          flags +=
-            <cxxflags>"-fno-whole-program"
-          ;
-          if ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300009 ] )
-          {
-            flags +=
-              <cxxflags>"-fno-whole-program-vtables"
-              <linkflags>"-fno-whole-program-vtables"
-            ;
-          }
-        }
-        else
-        {
-          if $(linker) = 'ld64'
-          {
-            flags +=
-              <linkflags>"-Wl,-dead_strip"
-              <linkflags>"-Wl,-S"
-            ;
-          }
-          else
-          {
-            flags +=
-              <linkflags>"-s"
-            ;
-            if $(x_whole_program) = "strip-all"
-            {
-              flags +=
-                <linkflags>"-Wl,--gc-sections"
-                <linkflags>"-Wl,--strip-all"
-              ;
-            }
-          }
-          if $(JLN_NORMALIZED_CXX_COMP) = "gcc"
-          {
-            flags +=
-              <cxxflags>"-fwhole-program"
-              <linkflags>"-fwhole-program"
-            ;
-          }
-          else
-          {
-            if $(JLN_NORMALIZED_CXX_COMP) = "clang"
-            {
-              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 300009 ]
-              {
-                if $(x_lto) != "default"
-                {
-                  if $(x_lto) != "off"
-                  {
-                    flags +=
-                      <cxxflags>"-fwhole-program-vtables"
-                      <linkflags>"-fwhole-program-vtables"
-                    ;
-                  }
-                }
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 700000 ]
-                {
-                  flags +=
-                    <cxxflags>"-fforce-emit-vtables"
-                    <linkflags>"-fforce-emit-vtables"
-                  ;
-                }
+                flags +=
+                  <linkflags>"-fuse-ld=lld"
+                ;
               }
             }
           }
@@ -2746,44 +2712,9 @@ rule jln_flags ( properties * )
           }
         }
       }
-      if $(x_other_sanitizers) != "default"
-      {
-        if $(x_other_sanitizers) = "thread"
-        {
-          flags +=
-            <cxxflags>"-fsanitize=thread"
-          ;
-        }
-        else
-        {
-          if $(x_other_sanitizers) = "memory"
-          {
-            if ( $(JLN_NORMALIZED_CXX_COMP) = "clang" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 500000 ] )
-            {
-              flags +=
-                <cxxflags>"-fsanitize=memory"
-                <cxxflags>"-fno-omit-frame-pointer"
-              ;
-            }
-          }
-          else
-          {
-            if $(x_other_sanitizers) = "pointer"
-            {
-              if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 800000 ] )
-              {
-                flags +=
-                  <cxxflags>"-fsanitize=pointer-compare"
-                  <cxxflags>"-fsanitize=pointer-subtract"
-                ;
-              }
-            }
-          }
-        }
-      }
       if $(x_noexcept_warnings) != "default"
       {
-        if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400009 ] )
+        if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 400006 ] )
         {
           if $(x_noexcept_warnings) = "on"
           {
@@ -2867,56 +2798,6 @@ rule jln_flags ( properties * )
       }
     }
   }
-  if $(linker) = 'lld-link'
-  {
-    if $(x_lto) != "default"
-    {
-      if $(x_lto) = "off"
-      {
-        flags +=
-          <cxxflags>"-fno-lto"
-        ;
-      }
-      else
-      {
-        if ( $(x_lto) = "thin" || $(x_lto) = "on" )
-        {
-          flags +=
-            <cxxflags>"-flto=thin"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"-flto"
-            <linkflags>"-flto"
-          ;
-        }
-      }
-    }
-    if $(x_whole_program) != "default"
-    {
-      if $(x_whole_program) = "off"
-      {
-        flags +=
-          <cxxflags>"-fno-whole-program"
-        ;
-      }
-      else
-      {
-        if $(x_lto) != "default"
-        {
-          if $(x_lto) != "off"
-          {
-            flags +=
-              <cxxflags>"-fwhole-program-vtables"
-              <linkflags>"-fwhole-program-vtables"
-            ;
-          }
-        }
-      }
-    }
-  }
   if ( $(JLN_NORMALIZED_CXX_COMP) = "msvc" || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" || $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'windows" )
   {
     if $(x_exceptions) != "default"
@@ -2925,14 +2806,12 @@ rule jln_flags ( properties * )
       {
         flags +=
           <cxxflags>"/EHsc"
-          <cxxflags>"/D_HAS_EXCEPTIONS=1"
         ;
       }
       else
       {
         flags +=
-          <cxxflags>"/EHs-"
-          <cxxflags>"/D_HAS_EXCEPTIONS=0"
+          <cxxflags>"/EHs-c-"
         ;
       }
     }
@@ -3002,33 +2881,9 @@ rule jln_flags ( properties * )
     }
     if $(JLN_NORMALIZED_CXX_COMP) != "intel' && $(original_version) = 'windows"
     {
-      if $(x_debug_level) != "default"
+      if $(x_symbols) != "default"
       {
-        if $(x_debug_level) = "line-tables-only"
-        {
-          if $(JLN_NORMALIZED_CXX_COMP) = "clang-cl"
-          {
-            flags +=
-              <cxxflags>"-gline-tables-only"
-            ;
-          }
-          flags +=
-            <cxxflags>"/DEBUG:FASTLINK"
-          ;
-        }
-        if $(x_debug_level) = "line-directives-only"
-        {
-          if $(JLN_NORMALIZED_CXX_COMP) = "clang-cl"
-          {
-            flags +=
-              <cxxflags>"-gline-directives-only"
-            ;
-          }
-        }
-      }
-      if $(x_debug) != "default"
-      {
-        if $(x_debug) = "off"
+        if $(x_symbols) = "nodebug"
         {
           flags +=
             <linkflags>"/DEBUG:NONE"
@@ -3036,71 +2891,23 @@ rule jln_flags ( properties * )
         }
         else
         {
-          flags +=
-            <cxxflags>"/RTC1"
-            <cxxflags>"/Od"
-          ;
-          if $(x_debug) = "on"
+          if ( $(x_symbols) = "debug" || $(x_symbols) = "minimal-debug" || $(x_symbols) = "full-debug" || $(x_symbols) = "codeview" )
           {
             flags +=
-              <cxxflags>"/DEBUG"
+              <cxxflags>"/Zi"
+              <linkflags>"/DEBUG:FULL"
             ;
-          }
-          if $(x_optimization) != "default"
-          {
-            if $(x_optimization) = "g"
-            {
-              flags +=
-                <cxxflags>"/Zi"
-              ;
-            }
-            else
-            {
-              if $(x_whole_program) != "default"
-              {
-                if $(x_whole_program) = "off"
-                {
-                  flags +=
-                    <cxxflags>"/ZI"
-                  ;
-                }
-                else
-                {
-                  flags +=
-                    <cxxflags>"/Zi"
-                  ;
-                }
-              }
-              else
-              {
-                flags +=
-                  <cxxflags>"/ZI"
-                ;
-              }
-            }
           }
           else
           {
-            if $(x_whole_program) != "default"
+            if $(JLN_NORMALIZED_CXX_COMP) = "clang-cl"
             {
-              if $(x_whole_program) = "off"
+              if $(x_symbols) = "dwarf"
               {
                 flags +=
-                  <cxxflags>"/ZI"
+                  <linkflags>"-gdwarf"
                 ;
               }
-              else
-              {
-                flags +=
-                  <cxxflags>"/Zi"
-                ;
-              }
-            }
-            else
-            {
-              flags +=
-                <cxxflags>"/ZI"
-              ;
             }
           }
         }
@@ -3110,10 +2917,7 @@ rule jln_flags ( properties * )
         if $(x_optimization) = "0"
         {
           flags +=
-            <cxxflags>"/Ob0"
             <cxxflags>"/Od"
-            <cxxflags>"/Oi-"
-            <cxxflags>"/Oy-"
           ;
         }
         else
@@ -3126,68 +2930,51 @@ rule jln_flags ( properties * )
           }
           else
           {
-            if $(x_optimization) = "1"
+            if $(x_optimization) = "2"
             {
               flags +=
-                <cxxflags>"/O1"
+                <cxxflags>"/O2"
               ;
             }
             else
             {
-              if $(x_optimization) = "2"
+              if ( $(x_optimization) = "1" || $(x_optimization) = "size" )
               {
                 flags +=
-                  <cxxflags>"/O2"
+                  <cxxflags>"/O1"
                 ;
               }
               else
               {
-                if $(x_optimization) = "3"
+                if $(x_optimization) = "z"
                 {
                   flags +=
-                    <cxxflags>"/O2"
+                    <cxxflags>"/O1"
+                    <cxxflags>"/Gw"
                   ;
                 }
                 else
                 {
-                  if ( $(x_optimization) = "size" || $(x_optimization) = "z" )
+                  if $(x_optimization) = "fast"
                   {
                     flags +=
-                      <cxxflags>"/O1"
-                      <cxxflags>"/GL"
-                      <cxxflags>"/Gw"
-                    ;
-                  }
-                  else
-                  {
-                    flags +=
-                      <cxxflags>"/O2"
                       <cxxflags>"/fp:fast"
                     ;
                   }
+                  flags +=
+                    <cxxflags>"/O2"
+                  ;
+                  if ( ( $(JLN_NORMALIZED_CXX_COMP) = "msvc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900020 ] ) || $(JLN_NORMALIZED_CXX_COMP) = "clang-cl" )
+                  {
+                    flags +=
+                      <cxxflags>"/Ob3"
+                    ;
+                  }
+                  flags +=
+                    <cxxflags>"/Gw"
+                  ;
                 }
               }
-            }
-          }
-        }
-      }
-      if $(x_linker) != "default"
-      {
-        if $(JLN_NORMALIZED_CXX_COMP) = "clang-cl"
-        {
-          if ( $(x_linker) = "lld" || $(x_linker) = "native" )
-          {
-            flags +=
-              <linkflags>"-fuse-ld=lld"
-            ;
-          }
-          else
-          {
-            if $(x_linker) = "mold"
-            {
-              flags +=
-                <linkflags>"-fuse-ld=mold"
-              ;
             }
           }
         }
@@ -3207,93 +2994,6 @@ rule jln_flags ( properties * )
           ;
         }
       }
-      if $(x_whole_program) != "default"
-      {
-        if $(x_whole_program) = "off"
-        {
-          flags +=
-            <cxxflags>"/GL-"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"/GL"
-            <cxxflags>"/Gw"
-            <linkflags>"/LTCG"
-          ;
-          if $(x_whole_program) = "strip-all"
-          {
-            flags +=
-              <linkflags>"/OPT:REF"
-            ;
-          }
-        }
-      }
-      if $(x_pedantic) != "default"
-      {
-        if $(x_pedantic) != "off"
-        {
-          flags +=
-            <cxxflags>"/permissive-"
-            <cxxflags>"/Zc:__cplusplus"
-          ;
-          if $(JLN_NORMALIZED_CXX_COMP) = "msvc"
-          {
-            if $(x_pedantic) = "as-error"
-            {
-              flags +=
-                <cxxflags>"/we4608"
-                <cxxflags>"/we4928"
-              ;
-              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900031 ]
-              {
-                flags +=
-                  <cxxflags>"/we5254"
-                ;
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900038 ]
-                {
-                  flags +=
-                    <cxxflags>"/we5110"
-                  ;
-                }
-              }
-            }
-            else
-            {
-              flags +=
-                <cxxflags>"/w14608"
-                <cxxflags>"/w14928"
-              ;
-              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900031 ]
-              {
-                flags +=
-                  <cxxflags>"/w15254"
-                ;
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900038 ]
-                {
-                  flags +=
-                    <cxxflags>"/w15110"
-                  ;
-                }
-              }
-            }
-            if $(x_msvc_isystem) != "default"
-            {
-              flags +=
-                <cxxflags>"/we4471"
-                <cxxflags>"/we5052"
-              ;
-            }
-            else
-            {
-              flags +=
-                <cxxflags>"/w14471"
-              ;
-            }
-          }
-        }
-      }
       if $(x_stack_protector) != "default"
       {
         if $(x_stack_protector) = "off"
@@ -3310,24 +3010,11 @@ rule jln_flags ( properties * )
           ;
           if $(x_stack_protector) = "strong"
           {
-            flags +=
-              <cxxflags>"/RTC1"
-            ;
-            if ( $(JLN_NORMALIZED_CXX_COMP) = "msvc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600007 ] )
+            if ( $(JLN_NORMALIZED_CXX_COMP) = "msvc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900027 ] )
             {
               flags +=
                 <cxxflags>"/guard:ehcont"
                 <linkflags>"/CETCOMPAT"
-              ;
-            }
-          }
-          else
-          {
-            if $(x_stack_protector) = "all"
-            {
-              flags +=
-                <cxxflags>"/RTC1"
-                <cxxflags>"/RTCc"
               ;
             }
           }
@@ -3345,7 +3032,7 @@ rule jln_flags ( properties * )
   {
     if $(x_analyzer) != "default"
     {
-      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1500000 ]
+      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900000 ]
       {
         if $(x_analyzer) = "off"
         {
@@ -3358,6 +3045,15 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>"/analyze"
           ;
+          if $(x_analyzer) != "with-external-headers"
+          {
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600010 ]
+            {
+              flags +=
+                <cxxflags>"/analyze:external-"
+              ;
+            }
+          }
         }
       }
     }
@@ -3366,52 +3062,6 @@ rule jln_flags ( properties * )
       flags +=
         <cxxflags>"/bigobj"
       ;
-    }
-    if $(x_msvc_conformance) != "default"
-    {
-      if ( $(x_msvc_conformance) = "all" || $(x_msvc_conformance) = "all-without-throwing-new" )
-      {
-        flags +=
-          <cxxflags>"/Zc:inline"
-          <cxxflags>"/Zc:referenceBinding"
-        ;
-        if $(x_msvc_conformance) = "all"
-        {
-          flags +=
-            <cxxflags>"/Zc:throwingNew"
-          ;
-        }
-        if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1500006 ]
-        {
-          flags +=
-            <cxxflags>"/Zc:externConstexpr"
-          ;
-          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600005 ]
-          {
-            flags +=
-              <cxxflags>"/Zc:preprocessor"
-            ;
-            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600008 ]
-            {
-              flags +=
-                <cxxflags>"/Zc:lambda"
-              ;
-              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1700004 ]
-              {
-                flags +=
-                  <cxxflags>"/Zc:enumTypes"
-                ;
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1700005 ]
-                {
-                  flags +=
-                    <cxxflags>"/Zc:templateScope"
-                  ;
-                }
-              }
-            }
-          }
-        }
-      }
     }
     if $(x_msvc_crt_secure_no_warnings) != "default"
     {
@@ -3433,7 +3083,7 @@ rule jln_flags ( properties * )
     }
     if $(x_msvc_diagnostics_format) != "default"
     {
-      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1700000 ]
+      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900010 ]
       {
         if $(x_msvc_diagnostics_format) = "classic"
         {
@@ -3458,7 +3108,7 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1500016 ]
+    if [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900013 ]
     {
       x_msvc_isystem = "default" ;
     }
@@ -3466,7 +3116,7 @@ rule jln_flags ( properties * )
     {
       if $(x_msvc_isystem) = "external-as-include-system-flag"
       {
-        if [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600010 ]
+        if [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900029 ]
         {
           # unimplementable
         }
@@ -3479,7 +3129,7 @@ rule jln_flags ( properties * )
       {
         if $(x_msvc_isystem) != "assumed"
         {
-          if [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600010 ]
+          if [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900029 ]
           {
             flags +=
               <cxxflags>"/experimental:external"
@@ -3503,18 +3153,18 @@ rule jln_flags ( properties * )
           }
         }
       }
-      if $(x_msvc_isystem_with_template_from_non_external) != "default"
+      if $(x_msvc_isystem_with_template_instantiations_treated_as_non_external) != "default"
       {
-        if $(x_msvc_isystem_with_template_from_non_external) = "off"
+        if $(x_msvc_isystem_with_template_instantiations_treated_as_non_external) = "off"
         {
           flags +=
-            <cxxflags>"/external:template"
+            <cxxflags>"/external:templates"
           ;
         }
         else
         {
           flags +=
-            <cxxflags>"/external:template-"
+            <cxxflags>"/external:templates-"
           ;
         }
       }
@@ -3543,114 +3193,110 @@ rule jln_flags ( properties * )
             flags +=
               <cxxflags>"/W4"
               <cxxflags>"/wd4711"
+            ;
+            if $(x_msvc_isystem) = "default"
+            {
+              flags +=
+                <cxxflags>"/w14263"
+                <cxxflags>"/w14264"
+              ;
+            }
+            flags +=
               <cxxflags>"/w14265"
               <cxxflags>"/w14296"
               <cxxflags>"/w14444"
+              <cxxflags>"/w14555"
+              <cxxflags>"/w14557"
+              <cxxflags>"/w14608"
+              <cxxflags>"/w14905"
+              <cxxflags>"/w14906"
+              <cxxflags>"/w14917"
+              <cxxflags>"/w14928"
               <cxxflags>"/w14545"
               <cxxflags>"/w14546"
               <cxxflags>"/w14547"
               <cxxflags>"/w14548"
               <cxxflags>"/w14549"
-              <cxxflags>"/w14555"
-              <cxxflags>"/w14557"
-              <cxxflags>"/w14608"
-              <cxxflags>"/w14692"
               <cxxflags>"/w14822"
-              <cxxflags>"/w14905"
-              <cxxflags>"/w14906"
-              <cxxflags>"/w14917"
-              <cxxflags>"/w14928"
-              <cxxflags>"/w14596"
+              <cxxflags>"/w14692"
             ;
-            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1500003 ]
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900000 ]
             {
+              flags +=
+                <cxxflags>"/w14426"
+                <cxxflags>"/w14596"
+              ;
               if $(x_msvc_isystem) = "default"
               {
                 flags +=
-                  <cxxflags>"/w14263"
-                  <cxxflags>"/w14264"
+                  <cxxflags>"/w14654"
                 ;
               }
               flags +=
-                <cxxflags>"/w15038"
+                <cxxflags>"/w15031"
+                <cxxflags>"/w15032"
               ;
-              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600010 ]
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900011 ]
               {
                 flags +=
-                  <cxxflags>"/w15233"
-                  <cxxflags>"/w15240"
+                  <cxxflags>"/w15038"
                 ;
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1700004 ]
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900015 ]
                 {
                   flags +=
-                    <cxxflags>"/w15263"
+                    <cxxflags>"/w14643"
                   ;
-                  if $(x_msvc_isystem) = "default"
+                  if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900022 ]
                   {
                     flags +=
-                      <cxxflags>"/w15262"
+                      <cxxflags>"/w14855"
                     ;
-                  }
-                  if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900000 ]
-                  {
-                    flags +=
-                      <cxxflags>"/w14426"
-                    ;
-                    if $(x_msvc_isystem) = "default"
+                    if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900025 ]
                     {
-                      flags +=
-                        <cxxflags>"/w14654"
-                      ;
-                    }
-                    flags +=
-                      <cxxflags>"/w15031"
-                      <cxxflags>"/w15032"
-                    ;
-                    if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900015 ]
-                    {
-                      flags +=
-                        <cxxflags>"/w14643"
-                      ;
-                      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900022 ]
+                      if $(x_msvc_isystem) = "default"
                       {
                         flags +=
-                          <cxxflags>"/w14855"
+                          <cxxflags>"/w15204"
                         ;
-                        if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900025 ]
+                      }
+                      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900029 ]
+                      {
+                        flags +=
+                          <cxxflags>"/w15233"
+                          <cxxflags>"/w15240"
+                        ;
+                        if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900030 ]
                         {
                           if $(x_msvc_isystem) = "default"
                           {
                             flags +=
-                              <cxxflags>"/w15204"
+                              <cxxflags>"/w15246"
                             ;
                           }
-                          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900029 ]
+                          flags +=
+                            <cxxflags>"/w15249"
+                          ;
+                          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900032 ]
                           {
                             flags +=
-                              <cxxflags>"/w15233"
+                              <cxxflags>"/w15258"
                             ;
-                            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900030 ]
+                            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900034 ]
                             {
+                              flags +=
+                                <cxxflags>"/w15263"
+                              ;
                               if $(x_msvc_isystem) = "default"
                               {
                                 flags +=
-                                  <cxxflags>"/w15246"
+                                  <cxxflags>"/w15262"
                                 ;
                               }
-                              flags +=
-                                <cxxflags>"/w15249"
-                              ;
-                              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900032 ]
+                              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900037 ]
                               {
                                 flags +=
-                                  <cxxflags>"/w15258"
+                                  <cxxflags>"/w15267"
                                 ;
-                                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900037 ]
-                                {
-                                  flags +=
-                                    <cxxflags>"/w15267"
-                                  ;
-                                }
                               }
                             }
                           }
@@ -3701,13 +3347,13 @@ rule jln_flags ( properties * )
                 <cxxflags>"/wd4668"
                 <cxxflags>"/wd5204"
               ;
-              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1500000 ]
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900000 ]
               {
                 flags +=
                   <cxxflags>"/wd4582"
                   <cxxflags>"/wd4583"
                 ;
-                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1700004 ]
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900034 ]
                 {
                   flags +=
                     <cxxflags>"/wd5262"
@@ -3793,6 +3439,12 @@ rule jln_flags ( properties * )
         ;
       }
     }
+    if $(x_optimization_warnings) != "default"
+    {
+      flags +=
+        <cxxflags>"/w15263"
+      ;
+    }
     if $(x_switch_warnings) != "default"
     {
       if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "mandatory-default" )
@@ -3853,21 +3505,6 @@ rule jln_flags ( properties * )
         }
       }
     }
-    if $(x_suggestions) != "default"
-    {
-      if $(x_suggestions) = "off"
-      {
-        flags +=
-          <cxxflags>"/wd5239"
-        ;
-      }
-      else
-      {
-        flags +=
-          <cxxflags>"/w15239"
-        ;
-      }
-    }
     if $(x_warnings_as_error) != "default"
     {
       if $(x_warnings_as_error) = "on"
@@ -3895,30 +3532,163 @@ rule jln_flags ( properties * )
         }
       }
     }
+    if $(x_pedantic) != "default"
+    {
+      if $(x_pedantic) != "off"
+      {
+        flags +=
+          <cxxflags>"/permissive-"
+          <cxxflags>"/Zc:inline"
+          <cxxflags>"/Zc:referenceBinding"
+          <cxxflags>"/Zc:throwingNew"
+        ;
+        if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900013 ]
+        {
+          flags +=
+            <cxxflags>"/Zc:externConstexpr"
+          ;
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900014 ]
+          {
+            flags +=
+              <cxxflags>"/Zc:__cplusplus"
+            ;
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900025 ]
+            {
+              flags +=
+                <cxxflags>"/Zc:preprocessor"
+              ;
+              if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900028 ]
+              {
+                flags +=
+                  <cxxflags>"/Zc:lambda"
+                ;
+                if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900034 ]
+                {
+                  flags +=
+                    <cxxflags>"/Zc:enumTypes"
+                  ;
+                  if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900035 ]
+                  {
+                    flags +=
+                      <cxxflags>"/Zc:templateScope"
+                    ;
+                  }
+                }
+              }
+            }
+          }
+        }
+        if $(x_pedantic) = "as-error"
+        {
+          flags +=
+            <cxxflags>"/we4608"
+            <cxxflags>"/we4928"
+          ;
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900031 ]
+          {
+            flags +=
+              <cxxflags>"/we5254"
+            ;
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900038 ]
+            {
+              flags +=
+                <cxxflags>"/we5110"
+              ;
+            }
+          }
+        }
+        else
+        {
+          flags +=
+            <cxxflags>"/w14608"
+            <cxxflags>"/w14928"
+          ;
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900031 ]
+          {
+            flags +=
+              <cxxflags>"/w15254"
+            ;
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900038 ]
+            {
+              flags +=
+                <cxxflags>"/w15110"
+              ;
+            }
+          }
+        }
+        if $(x_msvc_isystem) != "default"
+        {
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1700000 ]
+          {
+            flags +=
+              <cxxflags>"/we4471"
+            ;
+            if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900021 ]
+            {
+              flags +=
+                <cxxflags>"/we5052"
+              ;
+            }
+          }
+        }
+        else
+        {
+          if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1700000 ]
+          {
+            flags +=
+              <cxxflags>"/w14471"
+            ;
+          }
+        }
+      }
+    }
     if $(x_lto) != "default"
     {
       if $(x_lto) = "off"
       {
         flags +=
-          <cxxflags>"/LTCG:OFF"
+          <cxxflags>"/GL-"
         ;
       }
       else
       {
-        flags +=
-          <cxxflags>"/GL"
-          <linkflags>"/LTCG"
-        ;
+        if $(x_lto) != "thin-or-nothing"
+        {
+          flags +=
+            <cxxflags>"/GL"
+            <cxxflags>"/Gw"
+            <linkflags>"/LTCG"
+          ;
+        }
       }
     }
     if $(x_sanitizers) != "default"
     {
-      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1600009 ]
+      if ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1900028 ]
       {
-        flags +=
-          <cxxflags>"/fsanitize=address"
-          <cxxflags>"/fsanitize-address-use-after-return"
-        ;
+        if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "address" || $(x_sanitizers) = "kernel" || $(x_sanitizers) = "kernel-extra" || $(x_sanitizers) = "kernel-address" )
+        {
+          if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "address" )
+          {
+            flags +=
+              <cxxflags>"/fsanitize=address"
+              <linkflags>"/fsanitize=address"
+            ;
+          }
+          else
+          {
+            flags +=
+              <cxxflags>"/fsanitize=kernel-address"
+              <linkflags>"/fsanitize=kernel-address"
+            ;
+          }
+          if ( $(x_sanitizers) = "extra" || $(x_sanitizers) = "kernel-extra" )
+          {
+            flags +=
+              <cxxflags>"/fsanitize-address-use-after-return"
+            ;
+          }
+        }
       }
       else
       {
@@ -3927,6 +3697,12 @@ rule jln_flags ( properties * )
           flags +=
             <cxxflags>"/sdl"
           ;
+          if ( $(x_optimization) = "0" )
+          {
+            flags +=
+              <cxxflags>"/RTCsu"
+            ;
+          }
         }
         else
         {
@@ -3945,281 +3721,48 @@ rule jln_flags ( properties * )
   }
   else
   {
-    if $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'windows"
+    if $(JLN_NORMALIZED_CXX_COMP) = "clang-cl"
     {
-      if $(x_warnings) != "default"
+      if $(x_pedantic) != "default"
       {
-        if $(x_warnings) = "off"
+        if $(x_pedantic) != "off"
         {
           flags +=
-            <cxxflags>"/w"
+            <cxxflags>"/Zc:twoPhase"
+          ;
+          if $(x_pedantic) = "as-error"
+          {
+            flags +=
+              <cxxflags>"-Werror=write-strings"
+            ;
+          }
+        }
+      }
+      if $(x_color) != "default"
+      {
+        if $(x_color) = "never"
+        {
+          flags +=
+            <cxxflags>"-fno-color-diagnostics"
           ;
         }
         else
         {
-          flags +=
-            <cxxflags>"/W2"
-            <cxxflags>"/Qdiag-disable:1418,2259"
-          ;
-        }
-      }
-      if $(x_warnings_as_error) != "default"
-      {
-        if $(x_warnings_as_error) = "on"
-        {
-          flags +=
-            <cxxflags>"/WX"
-          ;
-        }
-        else
-        {
-          if $(x_warnings_as_error) = "basic"
+          if $(x_color) = "always"
           {
             flags +=
-              <cxxflags>"/Qdiag-error:1079,39,109"
+              <cxxflags>"-fcolor-diagnostics"
             ;
           }
         }
       }
-      if $(x_windows_bigobj) != "default"
+      if $(x_diagnostics_format) != "default"
       {
-        flags +=
-          <cxxflags>"/bigobj"
-        ;
-      }
-      if $(x_msvc_conformance) != "default"
-      {
-        if ( $(x_msvc_conformance) = "all" || $(x_msvc_conformance) = "all-without-throwing-new" )
+        if $(x_diagnostics_format) = "fixits"
         {
           flags +=
-            <cxxflags>"/Zc:inline"
-            <cxxflags>"/Zc:strictStrings"
+            <cxxflags>"-fdiagnostics-parseable-fixits"
           ;
-          if $(x_msvc_conformance) = "all"
-          {
-            flags +=
-              <cxxflags>"/Zc:throwingNew"
-            ;
-          }
-        }
-      }
-      if $(x_debug_level) != "default"
-      {
-        if ( $(x_debug_level) = "line-tables-only" || $(x_debug_level) = "line-directives-only" )
-        {
-          flags +=
-            <cxxflags>"/debug:minimal"
-          ;
-        }
-      }
-      if $(x_debug) != "default"
-      {
-        if $(x_debug) = "off"
-        {
-          flags +=
-            <linkflags>"/DEBUG:NONE"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"/RTC1"
-            <cxxflags>"/Od"
-          ;
-          if $(x_debug) = "on"
-          {
-            flags +=
-              <cxxflags>"/debug:full"
-            ;
-          }
-          if ( $(x_optimization) = "g" )
-          {
-            flags +=
-              <cxxflags>"/Zi"
-            ;
-          }
-          else
-          {
-            if $(x_whole_program) != "default"
-            {
-              if $(x_whole_program) = "off"
-              {
-                flags +=
-                  <cxxflags>"/ZI"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <cxxflags>"/Zi"
-                ;
-              }
-            }
-            else
-            {
-              flags +=
-                <cxxflags>"/ZI"
-              ;
-            }
-          }
-        }
-      }
-      if $(x_optimization) != "default"
-      {
-        if $(x_optimization) = "0"
-        {
-          flags +=
-            <cxxflags>"/Ob0"
-            <cxxflags>"/Od"
-            <cxxflags>"/Oi-"
-            <cxxflags>"/Oy-"
-          ;
-        }
-        else
-        {
-          if $(x_optimization) = "g"
-          {
-            flags +=
-              <cxxflags>"/Ob1"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"/GF"
-            ;
-            if $(x_optimization) = "1"
-            {
-              flags +=
-                <cxxflags>"/O1"
-              ;
-            }
-            else
-            {
-              if $(x_optimization) = "2"
-              {
-                flags +=
-                  <cxxflags>"/O2"
-                ;
-              }
-              else
-              {
-                if $(x_optimization) = "3"
-                {
-                  flags +=
-                    <cxxflags>"/O2"
-                  ;
-                }
-                else
-                {
-                  if $(x_optimization) = "z"
-                  {
-                    flags +=
-                      <cxxflags>"/O3"
-                    ;
-                  }
-                  else
-                  {
-                    if $(x_optimization) = "size"
-                    {
-                      flags +=
-                        <cxxflags>"/Os"
-                      ;
-                    }
-                    else
-                    {
-                      flags +=
-                        <cxxflags>"/fast"
-                      ;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      if $(x_stack_protector) != "default"
-      {
-        if $(x_stack_protector) = "off"
-        {
-          flags +=
-            <cxxflags>"/GS-"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"/GS"
-          ;
-          if $(x_stack_protector) = "strong"
-          {
-            flags +=
-              <cxxflags>"/RTC1"
-            ;
-          }
-          else
-          {
-            if $(x_stack_protector) = "all"
-            {
-              flags +=
-                <cxxflags>"/RTC1"
-                <cxxflags>"/RTCc"
-              ;
-            }
-          }
-        }
-      }
-      if $(x_sanitizers) != "default"
-      {
-        if $(x_sanitizers) = "on"
-        {
-          flags +=
-            <cxxflags>"/Qtrapuv"
-          ;
-        }
-      }
-      if $(x_float_sanitizers) != "default"
-      {
-        if $(x_float_sanitizers) = "on"
-        {
-          flags +=
-            <cxxflags>"/Qfp-stack-check"
-            <cxxflags>"/Qfp-trap:common"
-          ;
-        }
-      }
-      if $(x_control_flow) != "default"
-      {
-        if $(x_control_flow) = "off"
-        {
-          flags +=
-            <cxxflags>"/guard:cf-"
-            <cxxflags>"/mconditional-branch=keep"
-          ;
-        }
-        else
-        {
-          flags +=
-            <cxxflags>"/guard:cf"
-          ;
-          if $(x_control_flow) = "branch"
-          {
-            flags +=
-              <cxxflags>"/mconditional-branch:all-fix"
-              <cxxflags>"/Qcf-protection:branch"
-            ;
-          }
-          else
-          {
-            if $(x_control_flow) = "on"
-            {
-              flags +=
-                <cxxflags>"/mconditional-branch:all-fix"
-                <cxxflags>"/Qcf-protection:full"
-              ;
-            }
-          }
         }
       }
       if $(x_cpu) != "default"
@@ -4227,105 +3770,57 @@ rule jln_flags ( properties * )
         if $(x_cpu) = "generic"
         {
           flags +=
-            <cxxflags>"/Qtune:generic"
-            <linkflags>"/Qtune:generic"
+            <cxxflags>"-mtune=generic"
+            <linkflags>"-mtune=generic"
           ;
         }
         else
         {
           flags +=
-            <cxxflags>"/QxHost"
-            <linkflags>"/QxHost"
+            <cxxflags>"-march=native"
+            <cxxflags>"-mtune=native"
+            <linkflags>"-march=native"
+            <linkflags>"-mtune=native"
           ;
+        }
+      }
+      if $(x_linker) != "default"
+      {
+        if ( $(x_linker) = "lld" || $(x_linker) = "native" )
+        {
+          flags +=
+            <linkflags>"-fuse-ld=lld"
+          ;
+        }
+        else
+        {
+          if $(x_linker) = "mold"
+          {
+            flags +=
+              <linkflags>"-fuse-ld=mold"
+            ;
+          }
         }
       }
     }
     else
     {
-      if $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'linux"
+      if $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'windows"
       {
         if $(x_warnings) != "default"
         {
           if $(x_warnings) = "off"
           {
             flags +=
-              <cxxflags>"-w"
+              <cxxflags>"/w"
             ;
           }
           else
-          {
-            if $(x_warnings) = "essential"
-            {
-              flags +=
-                <cxxflags>"-Wall"
-              ;
-            }
-            else
-            {
-              flags +=
-                <cxxflags>"-Wall"
-                <cxxflags>"-Warray-bounds"
-                <cxxflags>"-Wcast-qual"
-                <cxxflags>"-Wchar-subscripts"
-                <cxxflags>"-Wdisabled-optimization"
-                <cxxflags>"-Wenum-compare"
-                <cxxflags>"-Wextra"
-                <cxxflags>"-Wfloat-equal"
-                <cxxflags>"-Wformat-security"
-                <cxxflags>"-Wformat=2"
-                <cxxflags>"-Winit-self"
-                <cxxflags>"-Winvalid-pch"
-                <cxxflags>"-Wmaybe-uninitialized"
-                <cxxflags>"-Wmissing-include-dirs"
-                <cxxflags>"-Wnarrowing"
-                <cxxflags>"-Wnonnull"
-                <cxxflags>"-Wpointer-sign"
-                <cxxflags>"-Wreorder"
-                <cxxflags>"-Wsequence-point"
-                <cxxflags>"-Wtrigraphs"
-                <cxxflags>"-Wundef"
-                <cxxflags>"-Wunused-function"
-                <cxxflags>"-Wunused-but-set-variable"
-                <cxxflags>"-Wunused-variable"
-                <cxxflags>"-Wpointer-arith"
-                <cxxflags>"-Wdeprecated"
-                <cxxflags>"-Wnon-virtual-dtor"
-                <cxxflags>"-Woverloaded-virtual"
-              ;
-            }
-          }
-        }
-        if $(x_switch_warnings) != "default"
-        {
-          if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "exhaustive-enum" )
           {
             flags +=
-              <cxxflags>"-Wswitch-enum"
+              <cxxflags>"/W2"
+              <cxxflags>"/Qdiag-disable:1418,2259"
             ;
-          }
-          else
-          {
-            if $(x_switch_warnings) = "mandatory-default"
-            {
-              flags +=
-                <cxxflags>"-Wswitch-default"
-              ;
-            }
-            else
-            {
-              if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
-              {
-                flags +=
-                  <cxxflags>"-Wswitch"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <cxxflags>"-Wno-switch"
-                ;
-              }
-            }
           }
         }
         if $(x_warnings_as_error) != "default"
@@ -4333,7 +3828,7 @@ rule jln_flags ( properties * )
           if $(x_warnings_as_error) = "on"
           {
             flags +=
-              <cxxflags>"-Werror"
+              <cxxflags>"/WX"
             ;
           }
           else
@@ -4341,81 +3836,42 @@ rule jln_flags ( properties * )
             if $(x_warnings_as_error) = "basic"
             {
               flags +=
-                <cxxflags>"-diag-error=1079,39,109"
+                <cxxflags>"/Qdiag-error:1079,39,109"
               ;
             }
           }
         }
-        if $(x_pedantic) != "default"
+        if $(x_windows_bigobj) != "default"
         {
-          if $(x_pedantic) = "off"
-          {
-            flags +=
-              <cxxflags>"-fgnu-keywords"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"-fno-gnu-keywords"
-            ;
-          }
+          flags +=
+            <cxxflags>"/bigobj"
+          ;
         }
-        if $(x_shadow_warnings) != "default"
+        if $(x_symbols) != "default"
         {
-          if $(x_shadow_warnings) = "off"
+          if $(x_symbols) = "nodebug"
           {
             flags +=
-              <cxxflags>"-Wno-shadow"
+              <cxxflags>"/debug:none"
             ;
           }
           else
           {
-            if ( $(x_shadow_warnings) = "on" || $(x_shadow_warnings) = "all" )
+            if $(x_symbols) = "minimal-debug"
             {
               flags +=
-                <cxxflags>"-Wshadow"
+                <cxxflags>"/debug:minimal"
               ;
             }
-          }
-        }
-        if $(x_stl_hardening) != "default"
-        {
-          if $(x_stl_hardening) = "debug-with-broken-abi"
-          {
-            flags +=
-              <cxxflags>"-D_GLIBCXX_DEBUG"
-            ;
-            if $(x_pedantic) != "default" && ! ( $(x_pedantic) = "off" )
+            else
             {
-              flags +=
-                <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
-              ;
+              if ( $(x_symbols) = "debug" || $(x_symbols) = "full-debug" || $(x_symbols) = "codeview" )
+              {
+                flags +=
+                  <cxxflags>"/debug:full"
+                ;
+              }
             }
-          }
-          else
-          {
-            if $(x_stl_hardening) != "off"
-            {
-              flags +=
-                <cxxflags>"-D_GLIBCXX_ASSERTIONS"
-              ;
-            }
-          }
-        }
-        if $(x_debug) != "default"
-        {
-          if $(x_debug) = "off"
-          {
-            flags +=
-              <cxxflags>"-g0"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"-g"
-            ;
           }
         }
         if $(x_optimization) != "default"
@@ -4423,7 +3879,7 @@ rule jln_flags ( properties * )
           if $(x_optimization) = "0"
           {
             flags +=
-              <cxxflags>"-O0"
+              <cxxflags>"/Ob0"
             ;
           }
           else
@@ -4431,15 +3887,18 @@ rule jln_flags ( properties * )
             if $(x_optimization) = "g"
             {
               flags +=
-                <cxxflags>"-O1"
+                <cxxflags>"/Ob1"
               ;
             }
             else
             {
+              flags +=
+                <cxxflags>"/GF"
+              ;
               if $(x_optimization) = "1"
               {
                 flags +=
-                  <cxxflags>"-O1"
+                  <cxxflags>"/O1"
                 ;
               }
               else
@@ -4447,7 +3906,7 @@ rule jln_flags ( properties * )
                 if $(x_optimization) = "2"
                 {
                   flags +=
-                    <cxxflags>"-O2"
+                    <cxxflags>"/O2"
                   ;
                 }
                 else
@@ -4455,7 +3914,7 @@ rule jln_flags ( properties * )
                   if $(x_optimization) = "3"
                   {
                     flags +=
-                      <cxxflags>"-O3"
+                      <cxxflags>"/O2"
                     ;
                   }
                   else
@@ -4463,7 +3922,7 @@ rule jln_flags ( properties * )
                     if $(x_optimization) = "z"
                     {
                       flags +=
-                        <cxxflags>"-fast"
+                        <cxxflags>"/O3"
                       ;
                     }
                     else
@@ -4471,13 +3930,13 @@ rule jln_flags ( properties * )
                       if $(x_optimization) = "size"
                       {
                         flags +=
-                          <cxxflags>"-Os"
+                          <cxxflags>"/Os"
                         ;
                       }
                       else
                       {
                         flags +=
-                          <cxxflags>"-Ofast"
+                          <cxxflags>"/fast"
                         ;
                       }
                     }
@@ -4492,213 +3951,30 @@ rule jln_flags ( properties * )
           if $(x_stack_protector) = "off"
           {
             flags +=
-              <cxxflags>"-fno-protector-strong"
-              <cxxflags>"-U_FORTIFY_SOURCE"
-              <linkflags>"-fno-protector-strong"
+              <cxxflags>"/GS-"
             ;
           }
           else
           {
             flags +=
-              <cxxflags>"-D_FORTIFY_SOURCE=2"
+              <cxxflags>"/GS"
             ;
-            if $(x_stack_protector) = "strong"
-            {
-              flags +=
-                <cxxflags>"-fstack-protector-strong"
-                <linkflags>"-fstack-protector-strong"
-              ;
-            }
-            else
-            {
-              if $(x_stack_protector) = "all"
-              {
-                flags +=
-                  <cxxflags>"-fstack-protector-all"
-                  <linkflags>"-fstack-protector-all"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <cxxflags>"-fstack-protector"
-                  <linkflags>"-fstack-protector"
-                ;
-              }
-            }
-          }
-        }
-        if $(x_relro) != "default"
-        {
-          if $(x_relro) = "off"
-          {
-            flags +=
-              <linkflags>"-Xlinker-znorelro"
-            ;
-          }
-          else
-          {
-            if $(x_relro) = "on"
-            {
-              flags +=
-                <linkflags>"-Xlinker-zrelro"
-              ;
-            }
-            else
-            {
-              flags +=
-                <linkflags>"-Xlinker-zrelro"
-                <linkflags>"-Xlinker-znow"
-                <linkflags>"-Xlinker-znoexecstack"
-              ;
-            }
-          }
-        }
-        if $(x_pie) != "default"
-        {
-          if $(x_pie) = "off"
-          {
-            flags +=
-              <linkflags>"-no-pic"
-            ;
-          }
-          else
-          {
-            if $(x_pie) = "on"
-            {
-              flags +=
-                <linkflags>"-pie"
-              ;
-            }
-            else
-            {
-              if $(x_pie) = "fpie"
-              {
-                flags +=
-                  <cxxflags>"-fpie"
-                ;
-              }
-              else
-              {
-                if $(x_pie) = "fpic"
-                {
-                  flags +=
-                    <cxxflags>"-fpic"
-                  ;
-                }
-                else
-                {
-                  if $(x_pie) = "fPIE"
-                  {
-                    flags +=
-                      <cxxflags>"-fPIE"
-                    ;
-                  }
-                  else
-                  {
-                    if $(x_pie) = "fPIC"
-                    {
-                      flags +=
-                        <cxxflags>"-fPIC"
-                      ;
-                    }
-                  }
-                }
-              }
-            }
           }
         }
         if $(x_sanitizers) != "default"
         {
-          if $(x_sanitizers) = "on"
+          if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "address" || $(x_sanitizers) = "kernel" || $(x_sanitizers) = "kernel-extra" || $(x_sanitizers) = "kernel-address" )
           {
             flags +=
-              <cxxflags>"-ftrapuv"
+              <cxxflags>"/Qtrapuv"
+              <cxxflags>"/RTCsu"
             ;
-          }
-        }
-        if $(x_integer_sanitizers) != "default"
-        {
-          if $(x_integer_sanitizers) = "on"
-          {
-            flags +=
-              <cxxflags>"-funsigned-bitfields"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"-fno-unsigned-bitfields"
-            ;
-          }
-        }
-        if $(x_float_sanitizers) != "default"
-        {
-          if $(x_float_sanitizers) = "on"
-          {
-            flags +=
-              <cxxflags>"-fp-stack-check"
-              <cxxflags>"-fp-trap=common"
-            ;
-          }
-        }
-        if $(x_linker) != "default"
-        {
-          if $(x_linker) = "bfd"
-          {
-            flags +=
-              <linkflags>"-fuse-ld=bfd"
-            ;
-          }
-          else
-          {
-            if $(x_linker) = "gold"
+            if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "kernel" || $(x_sanitizers) = "kernel-extra" )
             {
               flags +=
-                <linkflags>"-fuse-ld=gold"
+                <cxxflags>"/Qfp-stack-check"
+                <cxxflags>"/Qfp-trap:common"
               ;
-            }
-            else
-            {
-              if $(x_linker) = "mold"
-              {
-                flags +=
-                  <linkflags>"-fuse-ld=mold"
-                ;
-              }
-              else
-              {
-                flags +=
-                  <linkflags>"-fuse-ld=lld"
-                ;
-              }
-            }
-          }
-        }
-        if $(x_lto) != "default"
-        {
-          if $(x_lto) = "off"
-          {
-            flags +=
-              <cxxflags>"-no-ipo"
-              <linkflags>"-no-ipo"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"-ipo"
-              <linkflags>"-ipo"
-            ;
-            if $(x_lto) = "fat"
-            {
-              if [ os.name ] = LINUX
-              {
-                flags +=
-                  <cxxflags>"-ffat-lto-objects"
-                  <linkflags>"-ffat-lto-objects"
-                ;
-              }
             }
           }
         }
@@ -4707,17 +3983,20 @@ rule jln_flags ( properties * )
           if $(x_control_flow) = "off"
           {
             flags +=
-              <cxxflags>"-mconditional-branch=keep"
-              <cxxflags>"-fcf-protection=none"
+              <cxxflags>"/guard:cf-"
+              <cxxflags>"/mconditional-branch=keep"
             ;
           }
           else
           {
+            flags +=
+              <cxxflags>"/guard:cf"
+            ;
             if $(x_control_flow) = "branch"
             {
               flags +=
-                <cxxflags>"-mconditional-branch=all-fix"
-                <cxxflags>"-fcf-protection=branch"
+                <cxxflags>"/mconditional-branch:all-fix"
+                <cxxflags>"/Qcf-protection:branch"
               ;
             }
             else
@@ -4725,41 +4004,11 @@ rule jln_flags ( properties * )
               if $(x_control_flow) = "on"
               {
                 flags +=
-                  <cxxflags>"-mconditional-branch=all-fix"
-                  <cxxflags>"-fcf-protection=full"
+                  <cxxflags>"/mconditional-branch:all-fix"
+                  <cxxflags>"/Qcf-protection:full"
                 ;
               }
             }
-          }
-        }
-        if $(x_exceptions) != "default"
-        {
-          if $(x_exceptions) = "on"
-          {
-            flags +=
-              <cxxflags>"-fexceptions"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"-fno-exceptions"
-            ;
-          }
-        }
-        if $(x_rtti) != "default"
-        {
-          if $(x_rtti) = "on"
-          {
-            flags +=
-              <cxxflags>"-frtti"
-            ;
-          }
-          else
-          {
-            flags +=
-              <cxxflags>"-fno-rtti"
-            ;
           }
         }
         if $(x_cpu) != "default"
@@ -4767,28 +4016,577 @@ rule jln_flags ( properties * )
           if $(x_cpu) = "generic"
           {
             flags +=
-              <cxxflags>"-mtune=generic"
-              <linkflags>"-mtune=generic"
+              <cxxflags>"/Qtune:generic"
+              <linkflags>"/Qtune:generic"
             ;
           }
           else
           {
             flags +=
-              <cxxflags>"-xHost"
-              <linkflags>"-xHost"
+              <cxxflags>"/QxHost"
+              <linkflags>"/QxHost"
             ;
           }
         }
       }
       else
       {
-        if [ os.name ] = MINGW
+        if $(JLN_NORMALIZED_CXX_COMP) = "intel' && $(original_version) = 'linux"
         {
-          if $(x_windows_bigobj) != "default"
+          if $(x_warnings) != "default"
           {
-            flags +=
-              <cxxflags>"-Wa,-mbig-obj"
-            ;
+            if $(x_warnings) = "off"
+            {
+              flags +=
+                <cxxflags>"-w"
+              ;
+            }
+            else
+            {
+              if $(x_warnings) = "essential"
+              {
+                flags +=
+                  <cxxflags>"-Wall"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <cxxflags>"-Wall"
+                  <cxxflags>"-Warray-bounds"
+                  <cxxflags>"-Wcast-qual"
+                  <cxxflags>"-Wchar-subscripts"
+                  <cxxflags>"-Wdisabled-optimization"
+                  <cxxflags>"-Wenum-compare"
+                  <cxxflags>"-Wextra"
+                  <cxxflags>"-Wfloat-equal"
+                  <cxxflags>"-Wformat-security"
+                  <cxxflags>"-Wformat=2"
+                  <cxxflags>"-Winit-self"
+                  <cxxflags>"-Winvalid-pch"
+                  <cxxflags>"-Wmaybe-uninitialized"
+                  <cxxflags>"-Wmissing-include-dirs"
+                  <cxxflags>"-Wnarrowing"
+                  <cxxflags>"-Wnonnull"
+                  <cxxflags>"-Wpointer-sign"
+                  <cxxflags>"-Wreorder"
+                  <cxxflags>"-Wsequence-point"
+                  <cxxflags>"-Wtrigraphs"
+                  <cxxflags>"-Wundef"
+                  <cxxflags>"-Wunused-function"
+                  <cxxflags>"-Wunused-but-set-variable"
+                  <cxxflags>"-Wunused-variable"
+                  <cxxflags>"-Wpointer-arith"
+                  <cxxflags>"-Wdeprecated"
+                  <cxxflags>"-Wnon-virtual-dtor"
+                  <cxxflags>"-Woverloaded-virtual"
+                ;
+              }
+            }
+          }
+          if $(x_switch_warnings) != "default"
+          {
+            if ( $(x_switch_warnings) = "on" || $(x_switch_warnings) = "exhaustive-enum" )
+            {
+              flags +=
+                <cxxflags>"-Wswitch-enum"
+              ;
+            }
+            else
+            {
+              if $(x_switch_warnings) = "mandatory-default"
+              {
+                flags +=
+                  <cxxflags>"-Wswitch-default"
+                ;
+              }
+              else
+              {
+                if $(x_switch_warnings) = "exhaustive-enum-and-mandatory-default"
+                {
+                  flags +=
+                    <cxxflags>"-Wswitch"
+                  ;
+                }
+                else
+                {
+                  flags +=
+                    <cxxflags>"-Wno-switch"
+                  ;
+                }
+              }
+            }
+          }
+          if $(x_warnings_as_error) != "default"
+          {
+            if $(x_warnings_as_error) = "on"
+            {
+              flags +=
+                <cxxflags>"-Werror"
+              ;
+            }
+            else
+            {
+              if $(x_warnings_as_error) = "basic"
+              {
+                flags +=
+                  <cxxflags>"-diag-error=1079,39,109"
+                ;
+              }
+            }
+          }
+          if $(x_pedantic) != "default"
+          {
+            if $(x_pedantic) = "off"
+            {
+              flags +=
+                <cxxflags>"-fgnu-keywords"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-fno-gnu-keywords"
+                <cxxflags>"/Zc:inline"
+                <cxxflags>"/Zc:strictStrings"
+                <cxxflags>"/Zc:throwingNew"
+              ;
+            }
+          }
+          if $(x_shadow_warnings) != "default"
+          {
+            if $(x_shadow_warnings) = "off"
+            {
+              flags +=
+                <cxxflags>"-Wno-shadow"
+              ;
+            }
+            else
+            {
+              if ( $(x_shadow_warnings) = "on" || $(x_shadow_warnings) = "all" )
+              {
+                flags +=
+                  <cxxflags>"-Wshadow"
+                ;
+              }
+            }
+          }
+          if $(x_stl_hardening) != "default"
+          {
+            if $(x_stl_hardening) = "debug-with-broken-abi"
+            {
+              flags +=
+                <cxxflags>"-D_GLIBCXX_DEBUG"
+              ;
+              if $(x_pedantic) != "default" && ! ( $(x_pedantic) = "off" )
+              {
+                flags +=
+                  <cxxflags>"-D_GLIBCXX_DEBUG_PEDANTIC"
+                ;
+              }
+            }
+            else
+            {
+              if $(x_stl_hardening) != "off"
+              {
+                flags +=
+                  <cxxflags>"-D_GLIBCXX_ASSERTIONS"
+                ;
+              }
+            }
+          }
+          if $(x_symbols) != "default"
+          {
+            if $(x_symbols) = "nodebug"
+            {
+              flags +=
+                <cxxflags>"-g0"
+              ;
+            }
+            else
+            {
+              if $(x_symbols) = "hidden"
+              {
+                flags +=
+                  <cxxflags>"-fvisibility=hidden"
+                ;
+              }
+              else
+              {
+                if $(x_symbols) = "debug"
+                {
+                  flags +=
+                    <cxxflags>"-g"
+                  ;
+                }
+                else
+                {
+                  if $(x_symbols) = "minimal-debug"
+                  {
+                    flags +=
+                      <cxxflags>"-g1"
+                    ;
+                  }
+                  else
+                  {
+                    if $(x_symbols) = "full-debug"
+                    {
+                      flags +=
+                        <cxxflags>"-g3"
+                      ;
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if $(x_optimization) != "default"
+          {
+            if $(x_optimization) = "0"
+            {
+              flags +=
+                <cxxflags>"-O0"
+              ;
+            }
+            else
+            {
+              if $(x_optimization) = "g"
+              {
+                flags +=
+                  <cxxflags>"-O1"
+                ;
+              }
+              else
+              {
+                if $(x_optimization) = "1"
+                {
+                  flags +=
+                    <cxxflags>"-O1"
+                  ;
+                }
+                else
+                {
+                  if $(x_optimization) = "2"
+                  {
+                    flags +=
+                      <cxxflags>"-O2"
+                    ;
+                  }
+                  else
+                  {
+                    if $(x_optimization) = "3"
+                    {
+                      flags +=
+                        <cxxflags>"-O3"
+                      ;
+                    }
+                    else
+                    {
+                      if $(x_optimization) = "z"
+                      {
+                        flags +=
+                          <cxxflags>"-fast"
+                        ;
+                      }
+                      else
+                      {
+                        if $(x_optimization) = "size"
+                        {
+                          flags +=
+                            <cxxflags>"-Os"
+                          ;
+                        }
+                        else
+                        {
+                          flags +=
+                            <cxxflags>"-Ofast"
+                          ;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if $(x_stack_protector) != "default"
+          {
+            if $(x_stack_protector) = "off"
+            {
+              flags +=
+                <cxxflags>"-fno-protector-strong"
+                <cxxflags>"-U_FORTIFY_SOURCE"
+                <linkflags>"-fno-protector-strong"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-D_FORTIFY_SOURCE=2"
+              ;
+              if $(x_stack_protector) = "strong"
+              {
+                flags +=
+                  <cxxflags>"-fstack-protector-strong"
+                  <linkflags>"-fstack-protector-strong"
+                ;
+              }
+              else
+              {
+                if $(x_stack_protector) = "all"
+                {
+                  flags +=
+                    <cxxflags>"-fstack-protector-all"
+                    <linkflags>"-fstack-protector-all"
+                  ;
+                }
+                else
+                {
+                  flags +=
+                    <cxxflags>"-fstack-protector"
+                    <linkflags>"-fstack-protector"
+                  ;
+                }
+              }
+            }
+          }
+          if $(x_relro) != "default"
+          {
+            if $(x_relro) = "off"
+            {
+              flags +=
+                <linkflags>"-Xlinker-znorelro"
+              ;
+            }
+            else
+            {
+              if $(x_relro) = "on"
+              {
+                flags +=
+                  <linkflags>"-Xlinker-zrelro"
+                ;
+              }
+              else
+              {
+                flags +=
+                  <linkflags>"-Xlinker-zrelro"
+                  <linkflags>"-Xlinker-znow"
+                  <linkflags>"-Xlinker-znoexecstack"
+                ;
+              }
+            }
+          }
+          if $(x_pie) != "default"
+          {
+            if $(x_pie) = "off"
+            {
+              flags +=
+                <linkflags>"-no-pic"
+              ;
+            }
+            else
+            {
+              if $(x_pie) = "on"
+              {
+                flags +=
+                  <linkflags>"-pie"
+                ;
+              }
+              else
+              {
+                if $(x_pie) = "fpie"
+                {
+                  flags +=
+                    <cxxflags>"-fpie"
+                  ;
+                }
+                else
+                {
+                  if $(x_pie) = "fpic"
+                  {
+                    flags +=
+                      <cxxflags>"-fpic"
+                    ;
+                  }
+                  else
+                  {
+                    if $(x_pie) = "fPIE"
+                    {
+                      flags +=
+                        <cxxflags>"-fPIE"
+                      ;
+                    }
+                    else
+                    {
+                      if $(x_pie) = "fPIC"
+                      {
+                        flags +=
+                          <cxxflags>"-fPIC"
+                        ;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if $(x_sanitizers) != "default"
+          {
+            if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "address" || $(x_sanitizers) = "kernel" || $(x_sanitizers) = "kernel-extra" || $(x_sanitizers) = "kernel-address" )
+            {
+              flags +=
+                <cxxflags>"-ftrapuv"
+              ;
+              if ( $(x_sanitizers) = "on" || $(x_sanitizers) = "extra" || $(x_sanitizers) = "kernel" || $(x_sanitizers) = "kernel-extra" )
+              {
+                flags +=
+                  <cxxflags>"-fp-stack-check"
+                  <cxxflags>"-fp-trap=common"
+                ;
+              }
+            }
+          }
+          if $(x_linker) != "default"
+          {
+            if $(x_linker) = "bfd"
+            {
+              flags +=
+                <linkflags>"-fuse-ld=bfd"
+              ;
+            }
+            else
+            {
+              if $(x_linker) = "gold"
+              {
+                flags +=
+                  <linkflags>"-fuse-ld=gold"
+                ;
+              }
+              else
+              {
+                if $(x_linker) = "mold"
+                {
+                  flags +=
+                    <linkflags>"-fuse-ld=mold"
+                  ;
+                }
+                else
+                {
+                  flags +=
+                    <linkflags>"-fuse-ld=lld"
+                  ;
+                }
+              }
+            }
+          }
+          if $(x_lto) != "default"
+          {
+            if $(x_lto) = "off"
+            {
+              flags +=
+                <cxxflags>"-no-ipo"
+                <linkflags>"-no-ipo"
+              ;
+            }
+            else
+            {
+              if $(x_lto) != "thin-or-nothing"
+              {
+                flags +=
+                  <cxxflags>"-ipo"
+                  <linkflags>"-ipo"
+                ;
+              }
+            }
+          }
+          if $(x_control_flow) != "default"
+          {
+            if $(x_control_flow) = "off"
+            {
+              flags +=
+                <cxxflags>"-mconditional-branch=keep"
+                <cxxflags>"-fcf-protection=none"
+              ;
+            }
+            else
+            {
+              if $(x_control_flow) = "branch"
+              {
+                flags +=
+                  <cxxflags>"-mconditional-branch=all-fix"
+                  <cxxflags>"-fcf-protection=branch"
+                ;
+              }
+              else
+              {
+                if $(x_control_flow) = "on"
+                {
+                  flags +=
+                    <cxxflags>"-mconditional-branch=all-fix"
+                    <cxxflags>"-fcf-protection=full"
+                  ;
+                }
+              }
+            }
+          }
+          if $(x_exceptions) != "default"
+          {
+            if $(x_exceptions) = "on"
+            {
+              flags +=
+                <cxxflags>"-fexceptions"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-fno-exceptions"
+              ;
+            }
+          }
+          if $(x_rtti) != "default"
+          {
+            if $(x_rtti) = "on"
+            {
+              flags +=
+                <cxxflags>"-frtti"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-fno-rtti"
+              ;
+            }
+          }
+          if $(x_cpu) != "default"
+          {
+            if $(x_cpu) = "generic"
+            {
+              flags +=
+                <cxxflags>"-mtune=generic"
+                <linkflags>"-mtune=generic"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-xHost"
+                <linkflags>"-xHost"
+              ;
+            }
+          }
+        }
+        else
+        {
+          if [ os.name ] = MINGW
+          {
+            if $(x_windows_bigobj) != "default"
+            {
+              flags +=
+                <cxxflags>"-Wa,-mbig-obj"
+              ;
+            }
           }
         }
       }
