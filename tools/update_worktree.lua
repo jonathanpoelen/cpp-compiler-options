@@ -24,6 +24,7 @@ end
 
 
 local readme = readfile('README.md')
+local changelog = readfile('CHANGELOG.md')
 local start_options = readme:find('# Options', 0, true)
 local end_options = readme:find('# Use generated files', start_options, true)
 
@@ -55,6 +56,7 @@ for _,t in ipairs({
 
   filebase = 'w/'..t[1]..'/'
   writefile(filebase..'README.md', md)
+  writefile(filebase..'CHANGELOG.md', changelog)
   writefile(filebase..t[4], header, '\n\n', readfile('output/c/'..t[1]))
   writefile(filebase..t[5], header, '\n\n', readfile('output/cpp/'..t[1]))
 

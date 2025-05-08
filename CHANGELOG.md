@@ -1,5 +1,7 @@
 # ChangeLog
 
+## 2024-05-09
+
 - remove `debug` and `debug_level` (replaced by `symbols`)
 - remove `fix_compiler_error` (merged with `pedantic`)
 - remove `float_sanitizers`, `integer_sanitizers` and `other_sanitizers`
