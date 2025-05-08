@@ -7,6 +7,7 @@
 -Wno-exit-time-destructors
 -Wno-global-constructors
 -Wno-mismatched-tags
+-Wno-missing-noreturn
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow

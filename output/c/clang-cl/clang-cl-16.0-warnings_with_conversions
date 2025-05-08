@@ -4,6 +4,7 @@
 -Wno-documentation
 -Wno-documentation-unknown-command
 -Wno-global-constructors
+-Wno-missing-noreturn
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
@@ -14,4 +15,3 @@
 -Wsign-conversion
 -Wswitch
 -Wswitch-enum
-/permissive-

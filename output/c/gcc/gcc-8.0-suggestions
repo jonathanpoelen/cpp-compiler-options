@@ -1,2 +1,2 @@
--Wsuggest-attribute=const
--Wsuggest-attribute=pure
+-Wmissing-format-attribute
+-Wmissing-noreturn

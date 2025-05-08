@@ -1,3 +1,6 @@
--fsanitize-address-use-after-scope
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls
 -fsanitize=address
 -fsanitize=undefined
+/DEBUG:FULL
+/Zi

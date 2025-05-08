@@ -1,8 +1,7 @@
 -DNDEBUG
--O2
+-O3
 -Wl,-O1
 -ffold-simple-inlines
--flto
--fuse-ld=gold
+-flto=auto
 -march=native
 -mtune=native

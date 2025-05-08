@@ -1,8 +1,6 @@
 /W4
 /Zc:inline
 /Zc:preprocessor
-/Zc:referenceBinding
-/Zc:throwingNew
 /permissive-
 /w14061
 /w14062
@@ -25,7 +23,6 @@
 /w15032
 /w15240
 /w15249
-/w15262
 /wd4456
 /wd4459
 /wd4711

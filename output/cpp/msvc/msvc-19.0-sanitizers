@@ -1,2 +1,3 @@
-/fsanitize-address-use-after-return
-/fsanitize=address
+/DEBUG:FULL
+/Zi
+/sdl

@@ -1,6 +1,3 @@
-/DEBUG
-/Od
-/RTC1
-/ZI
-/fsanitize-address-use-after-return
-/fsanitize=address
+/DEBUG:FULL
+/Zi
+/sdl

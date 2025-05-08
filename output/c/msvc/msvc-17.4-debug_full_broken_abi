@@ -1,6 +1,0 @@
-/DEBUG
-/Od
-/RTC1
-/ZI
-/fsanitize-address-use-after-return
-/fsanitize=address

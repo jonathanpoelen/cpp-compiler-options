@@ -1,2 +1,4 @@
+-fp-stack-check
+-fp-trap=common
 -ftrapuv
 -g

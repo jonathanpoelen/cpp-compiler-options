@@ -1,9 +1,9 @@
--fsanitize-address-use-after-scope
+-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
+-fno-omit-frame-pointer
+-fno-optimize-sibling-calls
 -fsanitize=address
 -fsanitize=undefined
-/DEBUG
+/DEBUG:FULL
 /D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1
 /D_MSVC_STL_HARDENING=1
-/Od
-/RTC1
-/ZI
+/Zi

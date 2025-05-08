@@ -1,9 +1,5 @@
 /W4
-/Zc:__cplusplus
-/Zc:externConstexpr
 /Zc:inline
-/Zc:lambda
-/Zc:preprocessor
 /Zc:referenceBinding
 /Zc:throwingNew
 /permissive-
@@ -22,7 +18,6 @@
 /w14549
 /w14555
 /w14557
-/w14596
 /w14608
 /w14692
 /w14822
@@ -30,7 +25,4 @@
 /w14906
 /w14917
 /w14928
-/w15038
-/w15233
-/w15240
 /wd4711

@@ -1,5 +1,5 @@
-/Od
+/Qfp-stack-check
+/Qfp-trap:common
 /Qtrapuv
-/RTC1
-/ZI
+/RTCsu
 /debug:full

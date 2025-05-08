@@ -8,6 +8,7 @@
 -Wno-global-constructors
 -Wno-inconsistent-missing-destructor-override
 -Wno-mismatched-tags
+-Wno-missing-noreturn
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
@@ -17,5 +18,4 @@
 -Wno-weak-vtables
 -Wswitch
 -Wswitch-enum
-/Zc:__cplusplus
-/permissive-
+/Zc:twoPhase

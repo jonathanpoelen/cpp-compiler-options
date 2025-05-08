@@ -1,8 +1,5 @@
-/DEBUG
+/DEBUG:FULL
 /D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1
 /D_MSVC_STL_HARDENING=1
-/Od
-/RTC1
-/ZI
-/fsanitize-address-use-after-return
-/fsanitize=address
+/Zi
+/sdl

@@ -32,3 +32,6 @@
 -Wunused-function
 -Wunused-variable
 -fno-gnu-keywords
+/Zc:inline
+/Zc:strictStrings
+/Zc:throwingNew

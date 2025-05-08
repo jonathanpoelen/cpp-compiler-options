@@ -11,6 +11,7 @@
 -Wno-global-constructors
 -Wno-inconsistent-missing-destructor-override
 -Wno-mismatched-tags
+-Wno-missing-noreturn
 -Wno-newline-eof
 -Wno-padded
 -Wno-shadow
@@ -23,5 +24,4 @@
 -Wsign-conversion
 -Wswitch
 -Wswitch-enum
-/Zc:__cplusplus
-/permissive-
+/Zc:twoPhase

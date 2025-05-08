@@ -1,5 +1,1 @@
--fno-omit-frame-pointer
--fno-optimize-sibling-calls
--fsanitize-address-use-after-scope
--fsanitize=address
--fsanitize=undefined
+-g

@@ -1,3 +1,5 @@
 -D_GLIBCXX_ASSERTIONS
+-fp-stack-check
+-fp-trap=common
 -ftrapuv
 -g

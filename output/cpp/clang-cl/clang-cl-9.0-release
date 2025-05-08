@@ -1,4 +1,8 @@
 -DNDEBUG
+-fforce-emit-vtables
 -flto=thin
--fuse-ld=lld
+-march=native
+-mtune=native
+/Gw
 /O2
+/Ob3

@@ -1,7 +1,7 @@
 /D_MSVC_STL_DESTRUCTOR_TOMBSTONES=1
 /D_MSVC_STL_HARDENING=1
-/Od
+/Qfp-stack-check
+/Qfp-trap:common
 /Qtrapuv
-/RTC1
-/ZI
+/RTCsu
 /debug:full

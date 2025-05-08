@@ -1,4 +1,6 @@
 /DNDEBUG
 /GL
+/Gw
 /LTCG
 /O2
+/Ob3

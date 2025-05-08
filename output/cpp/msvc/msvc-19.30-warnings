@@ -1,12 +1,10 @@
 /W4
 /Zc:__cplusplus
-/Zc:enumTypes
 /Zc:externConstexpr
 /Zc:inline
 /Zc:lambda
 /Zc:preprocessor
 /Zc:referenceBinding
-/Zc:templateScope
 /Zc:throwingNew
 /permissive-
 /w14061
@@ -44,8 +42,6 @@
 /w15240
 /w15246
 /w15249
-/w15262
-/w15263
 /wd4456
 /wd4459
 /wd4711

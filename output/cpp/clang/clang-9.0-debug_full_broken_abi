@@ -2,8 +2,6 @@
 -D_LIBCPP_DEBUG=1
 -fno-omit-frame-pointer
 -fno-optimize-sibling-calls
--fsanitize-address-use-after-scope
 -fsanitize=address
--fsanitize=leak
 -fsanitize=undefined
 -g

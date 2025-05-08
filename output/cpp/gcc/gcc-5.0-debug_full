@@ -1,8 +1,0 @@
--D_GLIBCXX_ASSERTIONS
--D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG
--fno-omit-frame-pointer
--fno-optimize-sibling-calls
--fsanitize=address
--fsanitize=leak
--fsanitize=undefined
--g

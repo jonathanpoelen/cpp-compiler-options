@@ -1,2 +1,0 @@
--fsanitize=pointer-compare
--fsanitize=pointer-subtract
