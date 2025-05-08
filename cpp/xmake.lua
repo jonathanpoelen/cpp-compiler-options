@@ -19,8 +19,8 @@ local _extraopt_flag_names = {
 }
 
 local _flag_names = {
-  ["jln-analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_external_headers"]="with_external_headers", [""]=""},
+  ["analyzer"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_external_headers"]="with_external_headers", [""]=""},
   ["jln-analyzer-too-complex-warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["analyzer_too_complex_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-analyzer-verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
@@ -37,46 +37,32 @@ local _flag_names = {
   ["covered_switch_default_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["jln-cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
-  ["jln-debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["gdb"]="gdb", ["lldb"]="lldb", ["vms"]="vms", ["codeview"]="codeview", ["dbx"]="dbx", ["sce"]="sce", [""]=""},
-  ["debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["gdb"]="gdb", ["lldb"]="lldb", ["vms"]="vms", ["codeview"]="codeview", ["dbx"]="dbx", ["sce"]="sce", [""]=""},
-  ["jln-debug-level"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", ["line_tables_only"]="line_tables_only", ["line_directives_only"]="line_directives_only", [""]=""},
-  ["debug_level"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", ["line_tables_only"]="line_tables_only", ["line_directives_only"]="line_directives_only", [""]=""},
   ["jln-diagnostics-format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
   ["diagnostics_format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
-  ["jln-diagnostics-show-template-tree"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["diagnostics_show_template_tree"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-elide-type"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["elide_type"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-diagnostics-show-template"] = {["default"]="", ["tree"]="tree", ["without_elided_types"]="without_elided_types", ["tree_without_elided_types"]="tree_without_elided_types", [""]=""},
+  ["diagnostics_show_template"] = {["default"]="", ["tree"]="tree", ["without_elided_types"]="without_elided_types", ["tree_without_elided_types"]="tree_without_elided_types", [""]=""},
   ["jln-exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-fix-compiler-error"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["fix_compiler_error"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-float-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["float_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-integer-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["integer_sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
   ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
-  ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["normal"]="normal", ["fat"]="fat", ["thin"]="thin", [""]=""},
-  ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["normal"]="normal", ["fat"]="fat", ["thin"]="thin", [""]=""},
-  ["jln-msvc-conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
-  ["msvc_conformance"] = {["default"]="", ["all"]="all", ["all_without_throwing_new"]="all_without_throwing_new", [""]=""},
+  ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", ["thin_or_nothing"]="thin_or_nothing", ["whole_program"]="whole_program", ["whole_program_and_full_lto"]="whole_program_and_full_lto", [""]=""},
+  ["lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", ["thin_or_nothing"]="thin_or_nothing", ["whole_program"]="whole_program", ["whole_program_and_full_lto"]="whole_program_and_full_lto", [""]=""},
   ["jln-msvc-crt-secure-no-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["msvc_crt_secure_no_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-msvc-diagnostics-format"] = {["default"]="", ["classic"]="classic", ["column"]="column", ["caret"]="caret", [""]=""},
   ["msvc_diagnostics_format"] = {["default"]="", ["classic"]="classic", ["column"]="column", ["caret"]="caret", [""]=""},
   ["jln-msvc-isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["assumed"]="assumed", [""]=""},
   ["msvc_isystem"] = {["default"]="", ["anglebrackets"]="anglebrackets", ["include_and_caexcludepath"]="include_and_caexcludepath", ["assumed"]="assumed", [""]=""},
-  ["jln-msvc-isystem-with-template-from-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["msvc_isystem_with_template_from_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-msvc-isystem-with-template-instantiations-treated-as-non-external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["msvc_isystem_with_template_instantiations_treated_as_non_external"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-ndebug"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_optimization_1_or_above"]="with_optimization_1_or_above", [""]=""},
   ["ndebug"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_optimization_1_or_above"]="with_optimization_1_or_above", [""]=""},
   ["jln-noexcept-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["noexcept_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
-  ["jln-other-sanitizers"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", ["memory"]="memory", [""]=""},
-  ["other_sanitizers"] = {["default"]="", ["off"]="off", ["thread"]="thread", ["pointer"]="pointer", ["memory"]="memory", [""]=""},
+  ["jln-optimization-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["optimization_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
@@ -87,8 +73,8 @@ local _flag_names = {
   ["reproducible_build_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-rtti"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["rtti"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["extra"]="extra", ["address"]="address", ["kernel"]="kernel", ["kernel_extra"]="kernel_extra", ["kernel_extra"]="kernel_extra", ["kernel_address"]="kernel_address", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
+  ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["extra"]="extra", ["address"]="address", ["kernel"]="kernel", ["kernel_extra"]="kernel_extra", ["kernel_extra"]="kernel_extra", ["kernel_address"]="kernel_address", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
   ["jln-shadow-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["shadow_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["jln-stack-protector"] = {["default"]="", ["off"]="off", ["on"]="on", ["strong"]="strong", ["all"]="all", [""]=""},
@@ -97,10 +83,12 @@ local _flag_names = {
   ["stl_fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-stl-hardening"] = {["default"]="", ["off"]="off", ["fast"]="fast", ["extensive"]="extensive", ["debug"]="debug", ["debug_with_broken_abi"]="debug_with_broken_abi", [""]=""},
   ["stl_hardening"] = {["default"]="", ["off"]="off", ["fast"]="fast", ["extensive"]="extensive", ["debug"]="debug", ["debug_with_broken_abi"]="debug_with_broken_abi", [""]=""},
-  ["jln-suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["suggestions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-suggest-attributes"] = {["default"]="", ["off"]="off", ["on"]="on", ["common"]="common", ["analysis"]="analysis", ["unity"]="unity", ["all"]="all", [""]=""},
+  ["suggest_attributes"] = {["default"]="", ["off"]="off", ["on"]="on", ["common"]="common", ["analysis"]="analysis", ["unity"]="unity", ["all"]="all", [""]=""},
   ["jln-switch-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
   ["switch_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", ["exhaustive_enum"]="exhaustive_enum", ["mandatory_default"]="mandatory_default", ["exhaustive_enum_and_mandatory_default"]="exhaustive_enum_and_mandatory_default", [""]=""},
+  ["jln-symbols"] = {["default"]="", ["hidden"]="hidden", ["strip_all"]="strip_all", ["gc_sections"]="gc_sections", ["nodebug"]="nodebug", ["debug"]="debug", ["minimal_debug"]="minimal_debug", ["full_debug"]="full_debug", ["btf"]="btf", ["codeview"]="codeview", ["ctf"]="ctf", ["ctf1"]="ctf1", ["ctf2"]="ctf2", ["vms"]="vms", ["vms1"]="vms1", ["vms2"]="vms2", ["vms3"]="vms3", ["dbx"]="dbx", ["lldb"]="lldb", ["sce"]="sce", ["dwarf"]="dwarf", [""]=""},
+  ["symbols"] = {["default"]="", ["hidden"]="hidden", ["strip_all"]="strip_all", ["gc_sections"]="gc_sections", ["nodebug"]="nodebug", ["debug"]="debug", ["minimal_debug"]="minimal_debug", ["full_debug"]="full_debug", ["btf"]="btf", ["codeview"]="codeview", ["ctf"]="ctf", ["ctf1"]="ctf1", ["ctf2"]="ctf2", ["vms"]="vms", ["vms1"]="vms1", ["vms2"]="vms2", ["vms3"]="vms3", ["dbx"]="dbx", ["lldb"]="lldb", ["sce"]="sce", ["dwarf"]="dwarf", [""]=""},
   ["jln-unsafe-buffer-usage-warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["unsafe_buffer_usage_warnings"] = {["default"]="", ["on"]="on", ["off"]="off", [""]=""},
   ["jln-var-init"] = {["default"]="", ["uninitialized"]="uninitialized", ["pattern"]="pattern", ["zero"]="zero", [""]=""},
@@ -109,8 +97,6 @@ local _flag_names = {
   ["warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["essential"]="essential", ["extensive"]="extensive", [""]=""},
   ["jln-warnings-as-error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
   ["warnings_as_error"] = {["default"]="", ["off"]="off", ["on"]="on", ["basic"]="basic", [""]=""},
-  ["jln-whole-program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
-  ["whole_program"] = {["default"]="", ["off"]="off", ["on"]="on", ["strip_all"]="strip_all", [""]=""},
   ["jln-windows-abi-compatibility-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["windows_abi_compatibility_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-windows-bigobj"] = {["default"]="", ["on"]="on", [""]=""},
@@ -156,7 +142,7 @@ local _flag_names = {
            showmenu=true,
            category=category,
            description="Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.",
-           values={"default", "off", "on"},
+           values={"default", "off", "on", "with_external_headers"},
            default=default_options["analyzer"] or default_options["jln-analyzer"] or "default",
            after_check=function(option) check_option("jln-analyzer", "analyzer") end,
          })
@@ -224,22 +210,6 @@ local _flag_names = {
            default=default_options["cpu"] or default_options["jln-cpu"] or "default",
            after_check=function(option) check_option("jln-cpu", "cpu") end,
          })
-  option("jln-debug", {
-           showmenu=true,
-           category=category,
-           description="Produce debugging information in the operating system\'s.",
-           values={"default", "off", "on", "gdb", "lldb", "vms", "codeview", "dbx", "sce"},
-           default=default_options["debug"] or default_options["jln-debug"] or "default",
-           after_check=function(option) check_option("jln-debug", "debug") end,
-         })
-  option("jln-debug-level", {
-           showmenu=true,
-           category=category,
-           description="Specify debugging level",
-           values={"default", "0", "1", "2", "3", "line_tables_only", "line_directives_only"},
-           default=default_options["debug_level"] or default_options["jln-debug-level"] or "default",
-           after_check=function(option) check_option("jln-debug-level", "debug_level") end,
-         })
   option("jln-diagnostics-format", {
            showmenu=true,
            category=category,
@@ -248,21 +218,13 @@ local _flag_names = {
            default=default_options["diagnostics_format"] or default_options["jln-diagnostics-format"] or "default",
            after_check=function(option) check_option("jln-diagnostics-format", "diagnostics_format") end,
          })
-  option("jln-diagnostics-show-template-tree", {
+  option("jln-diagnostics-show-template", {
            showmenu=true,
            category=category,
-           description="Enables printing a tree-like structure showing the common and differing parts of the types.",
-           values={"default", "off", "on"},
-           default=default_options["diagnostics_show_template_tree"] or default_options["jln-diagnostics-show-template-tree"] or "default",
-           after_check=function(option) check_option("jln-diagnostics-show-template-tree", "diagnostics_show_template_tree") end,
-         })
-  option("jln-elide-type", {
-           showmenu=true,
-           category=category,
-           description="Prints diagnostics showing common parts of template types as \"[...]\".",
-           values={"default", "off", "on"},
-           default=default_options["elide_type"] or default_options["jln-elide-type"] or "default",
-           after_check=function(option) check_option("jln-elide-type", "elide_type") end,
+           description="Configures how templates with incompatible types are displayed (Clang and GCC only).\\n - tree: Enables printing a tree-like structure showing the common and differing parts of the types\\n - without_elided_types: Disables printing diagnostics showing common parts of template types as \"[...]\".\\n - tree_without_elided_types: Prints a tree-like without replacing common types. Mergeing tree and without_elided_types.",
+           values={"default", "tree", "without_elided_types", "tree_without_elided_types"},
+           default=default_options["diagnostics_show_template"] or default_options["jln-diagnostics-show-template"] or "default",
+           after_check=function(option) check_option("jln-diagnostics-show-template", "diagnostics_show_template") end,
          })
   option("jln-exceptions", {
            showmenu=true,
@@ -271,30 +233,6 @@ local _flag_names = {
            values={"default", "off", "on"},
            default=default_options["exceptions"] or default_options["jln-exceptions"] or "default",
            after_check=function(option) check_option("jln-exceptions", "exceptions") end,
-         })
-  option("jln-fix-compiler-error", {
-           showmenu=true,
-           category=category,
-           description="Transforms some warnings into errors to comply with the standard.",
-           values={"default", "off", "on"},
-           default=default_options["fix_compiler_error"] or default_options["jln-fix-compiler-error"] or "on",
-           after_check=function(option) check_option("jln-fix-compiler-error", "fix_compiler_error") end,
-         })
-  option("jln-float-sanitizers", {
-           showmenu=true,
-           category=category,
-           description="",
-           values={"default", "off", "on"},
-           default=default_options["float_sanitizers"] or default_options["jln-float-sanitizers"] or "default",
-           after_check=function(option) check_option("jln-float-sanitizers", "float_sanitizers") end,
-         })
-  option("jln-integer-sanitizers", {
-           showmenu=true,
-           category=category,
-           description="",
-           values={"default", "off", "on"},
-           default=default_options["integer_sanitizers"] or default_options["jln-integer-sanitizers"] or "default",
-           after_check=function(option) check_option("jln-integer-sanitizers", "integer_sanitizers") end,
          })
   option("jln-linker", {
            showmenu=true,
@@ -307,18 +245,10 @@ local _flag_names = {
   option("jln-lto", {
            showmenu=true,
            category=category,
-           description="Enable Link Time Optimization.",
-           values={"default", "off", "on", "normal", "fat", "thin"},
+           description="Enable Link Time Optimization. Also known as interprocedural optimization (IPO).\\n - on: Activates ThinLTO when available (Clang), otherwise FullLTO.\\n - full: Activates FullLTO.\\n - thin_or_nothing: Activates ThinLTO. Disable lto when not supported.\\n - whole_program: Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.\\n - whole_program_and_full_lto: Same as whole_program, but use FullLTO when not supported.",
+           values={"default", "off", "on", "full", "thin_or_nothing", "whole_program", "whole_program_and_full_lto"},
            default=default_options["lto"] or default_options["jln-lto"] or "default",
            after_check=function(option) check_option("jln-lto", "lto") end,
-         })
-  option("jln-msvc-conformance", {
-           showmenu=true,
-           category=category,
-           description="Standard conformance options.",
-           values={"default", "all", "all_without_throwing_new"},
-           default=default_options["msvc_conformance"] or default_options["jln-msvc-conformance"] or "all",
-           after_check=function(option) check_option("jln-msvc-conformance", "msvc_conformance") end,
          })
   option("jln-msvc-crt-secure-no-warnings", {
            showmenu=true,
@@ -344,13 +274,13 @@ local _flag_names = {
            default=default_options["msvc_isystem"] or default_options["jln-msvc-isystem"] or "default",
            after_check=function(option) check_option("jln-msvc-isystem", "msvc_isystem") end,
          })
-  option("jln-msvc-isystem-with-template-from-non-external", {
+  option("jln-msvc-isystem-with-template-instantiations-treated-as-non-external", {
            showmenu=true,
            category=category,
-           description="Warnings concerning template in an external header (requires msvc_isystem).",
+           description="Allows warnings from external headers when they occur in a template that\'s instantiated in your code. (requires msvc_isystem).",
            values={"default", "off", "on"},
-           default=default_options["msvc_isystem_with_template_from_non_external"] or default_options["jln-msvc-isystem-with-template-from-non-external"] or "default",
-           after_check=function(option) check_option("jln-msvc-isystem-with-template-from-non-external", "msvc_isystem_with_template_from_non_external") end,
+           default=default_options["msvc_isystem_with_template_instantiations_treated_as_non_external"] or default_options["jln-msvc-isystem-with-template-instantiations-treated-as-non-external"] or "default",
+           after_check=function(option) check_option("jln-msvc-isystem-with-template-instantiations-treated-as-non-external", "msvc_isystem_with_template_instantiations_treated_as_non_external") end,
          })
   option("jln-ndebug", {
            showmenu=true,
@@ -363,7 +293,7 @@ local _flag_names = {
   option("jln-noexcept-warnings", {
            showmenu=true,
            category=category,
-           description="Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception.",
+           description="Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. \"throw()\" or \"noexcept\") but is known by the compiler to never throw an exception. Only with GCC.",
            values={"default", "off", "on"},
            default=default_options["noexcept_warnings"] or default_options["jln-noexcept-warnings"] or "default",
            after_check=function(option) check_option("jln-noexcept-warnings", "noexcept_warnings") end,
@@ -376,13 +306,13 @@ local _flag_names = {
            default=default_options["optimization"] or default_options["jln-optimization"] or "default",
            after_check=function(option) check_option("jln-optimization", "optimization") end,
          })
-  option("jln-other-sanitizers", {
+  option("jln-optimization-warnings", {
            showmenu=true,
            category=category,
-           description="Enable other sanitizers.",
-           values={"default", "off", "thread", "pointer", "memory"},
-           default=default_options["other_sanitizers"] or default_options["jln-other-sanitizers"] or "default",
-           after_check=function(option) check_option("jln-other-sanitizers", "other_sanitizers") end,
+           description="Activate warnings about optimization.",
+           values={"default", "off", "on"},
+           default=default_options["optimization_warnings"] or default_options["jln-optimization-warnings"] or "default",
+           after_check=function(option) check_option("jln-optimization-warnings", "optimization_warnings") end,
          })
   option("jln-pedantic", {
            showmenu=true,
@@ -427,8 +357,8 @@ local _flag_names = {
   option("jln-sanitizers", {
            showmenu=true,
            category=category,
-           description="Enable sanitizers (asan, ubsan, etc).",
-           values={"default", "off", "on"},
+           description="Enable sanitizers (asan, ubsan, etc) when available.\\n - on: Enable address sanitizer and other compatible sanitizers\\n - extra: Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.\\n - address: Enable address sanitizer only.\\n - kernel: Enable kernel-address sanitizers and other compatible sanitizers\\n - kernel_extra: Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.\\n - kernel_address: Enable kernel address sanitizer only.\\n - thread: Enable thread sanitizer.\\n - undefined: Enable undefined sanitizer.\\n - undefined_minimal_runtime: Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).\\n - scudo_hardened_allocator: Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html",
+           values={"default", "off", "on", "extra", "address", "kernel", "kernel_extra", "kernel_extra", "kernel_address", "thread", "undefined", "undefined_minimal_runtime", "scudo_hardened_allocator"},
            default=default_options["sanitizers"] or default_options["jln-sanitizers"] or "default",
            after_check=function(option) check_option("jln-sanitizers", "sanitizers") end,
          })
@@ -464,13 +394,13 @@ local _flag_names = {
            default=default_options["stl_hardening"] or default_options["jln-stl-hardening"] or "default",
            after_check=function(option) check_option("jln-stl-hardening", "stl_hardening") end,
          })
-  option("jln-suggestions", {
+  option("jln-suggest-attributes", {
            showmenu=true,
            category=category,
-           description="Warn for cases where adding an attribute may be beneficial.",
-           values={"default", "off", "on"},
-           default=default_options["suggestions"] or default_options["jln-suggestions"] or "default",
-           after_check=function(option) check_option("jln-suggestions", "suggestions") end,
+           description="Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option -fipa-pure-const, which is enabled by default at -O1 and higher.\\n - on: Suggests noreturn attribute with Clang and GCC.\\n - common: Suggests noreturn and format attributes with GCC ; noreturn with Clang.\\n - analysis: Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.\\n - unity: Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.\\n - all: Active all suggestions for attributes.",
+           values={"default", "off", "on", "common", "analysis", "unity", "all"},
+           default=default_options["suggest_attributes"] or default_options["jln-suggest-attributes"] or "on",
+           after_check=function(option) check_option("jln-suggest-attributes", "suggest_attributes") end,
          })
   option("jln-switch-warnings", {
            showmenu=true,
@@ -479,6 +409,14 @@ local _flag_names = {
            values={"default", "on", "off", "exhaustive_enum", "mandatory_default", "exhaustive_enum_and_mandatory_default"},
            default=default_options["switch_warnings"] or default_options["jln-switch-warnings"] or "on",
            after_check=function(option) check_option("jln-switch-warnings", "switch_warnings") end,
+         })
+  option("jln-symbols", {
+           showmenu=true,
+           category=category,
+           description="Produce debugging information in the operating system\'s.\\n - hidden: Use -fvisibility=hidden with Clang, GCC and other compilers that support this flag.\\n - strip_all: Strip all symbols.\\n - gc_sections: Enable garbage collection of unused sections.\\n - nodebug: Request no debugging information.\\n - debug: Request debugging information. How much information can be controlled with options \'minimal_debug\', and \'full_debug\'. If the level is not supported by a compiler, this is equivalent to the \'debug\' option.\\n - minimal_debug: If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables.\\n - full_debug: If possible, includes extra information, such as all the macro definitions present in the program.\\n - btf: GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.\\n - codeview: GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).\\n - ctf: GCC only. Produce a CTF debug information. The default level is 2.\\n - ctf1: Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.\\n - ctf2: Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.\\n - vms: GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.\\n - vms1: Same as 1, but for Alpha/VMS.\\n - vms2: Same as 2, but for Alpha/VMS.\\n - vms3: Same as 3, but for Alpha/VMS.\\n - dbx: Clang only.\\n - lldb: Clang only.\\n - sce: Clang only.\\n - dwarf: Clang-cl only",
+           values={"default", "hidden", "strip_all", "gc_sections", "nodebug", "debug", "minimal_debug", "full_debug", "btf", "codeview", "ctf", "ctf1", "ctf2", "vms", "vms1", "vms2", "vms3", "dbx", "lldb", "sce", "dwarf"},
+           default=default_options["symbols"] or default_options["jln-symbols"] or "default",
+           after_check=function(option) check_option("jln-symbols", "symbols") end,
          })
   option("jln-unsafe-buffer-usage-warnings", {
            showmenu=true,
@@ -491,7 +429,7 @@ local _flag_names = {
   option("jln-var-init", {
            showmenu=true,
            category=category,
-           description="Initialize all stack variables implicitly, including padding.\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Gcc and Clang).\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for Gcc, 0xAA for Clang).\\n - zero: zero Initialize automatic variables with zeroes.",
+           description="Initialize all stack variables implicitly, including padding.\\n - uninitialized: Doesn\'t initialize any automatic variables (default behavior of Clang and GCC).\\n - pattern: Initialize automatic variables with byte-repeatable pattern (0xFE for GCC, 0xAA for Clang).\\n - zero: zero Initialize automatic variables with zeroes.",
            values={"default", "uninitialized", "pattern", "zero"},
            default=default_options["var_init"] or default_options["jln-var-init"] or "default",
            after_check=function(option) check_option("jln-var-init", "var_init") end,
@@ -511,14 +449,6 @@ local _flag_names = {
            values={"default", "off", "on", "basic"},
            default=default_options["warnings_as_error"] or default_options["jln-warnings-as-error"] or "default",
            after_check=function(option) check_option("jln-warnings-as-error", "warnings_as_error") end,
-         })
-  option("jln-whole-program", {
-           showmenu=true,
-           category=category,
-           description="Assume that the current compilation unit represents the whole program being compiled. This option should not be used in combination with lto.",
-           values={"default", "off", "on", "strip_all"},
-           default=default_options["whole_program"] or default_options["jln-whole-program"] or "default",
-           after_check=function(option) check_option("jln-whole-program", "whole_program") end,
          })
   option("jln-windows-abi-compatibility-warnings", {
            showmenu=true,
@@ -544,14 +474,13 @@ end
 jln_cxx_default_options_by_modes = {
   debug={
     control_flow='on',
-    debug='on',
     sanitizers='on',
     stl_hardening='debug',
+    symbols='debug',
   },
   releasedbg={
-    debug='on',
-    lto='on',
     optimization='g',
+    symbols='debug',
   },
   minsizerel={
     lto='on',

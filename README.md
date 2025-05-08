@@ -69,32 +69,26 @@ warnings = on default off essential extensive
 warnings_as_error = default off on basic
 conversion_warnings = on default off sign float conversion all
 covered_switch_default_warnings = on default off
-fix_compiler_error = on default off
 msvc_crt_secure_no_warnings = on default off
 noexcept_warnings = default off on
 reproducible_build_warnings = default off on
 shadow_warnings = off default on local compatible_local all
-suggestions = default off on
+suggest_attributes = on default off common analysis unity all
 switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_enum_and_mandatory_default
 unsafe_buffer_usage_warnings = default on off
 windows_abi_compatibility_warnings = off default on
 
 # Pedantic:
 
-msvc_conformance = all default all_without_throwing_new
 pedantic = on default off as_error
 stl_fix = on default off
 
 # Debug:
 
-debug = default off on gdb lldb vms codeview dbx sce
-debug_level = default 0 1 2 3 line_tables_only line_directives_only
+symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 stl_hardening = default off fast extensive debug debug_with_broken_abi
 control_flow = default off on branch return allow_bugs
-sanitizers = default off on
-float_sanitizers = default off on
-integer_sanitizers = default off on
-other_sanitizers = default off thread pointer memory
+sanitizers = default off on extra address kernel kernel_extra kernel_extra kernel_address thread undefined undefined_minimal_runtime scudo_hardened_allocator
 var_init = default uninitialized pattern zero
 ndebug = with_optimization_1_or_above default off on
 optimization = default 0 g 1 2 3 fast size z
@@ -102,10 +96,9 @@ optimization = default 0 g 1 2 3 fast size z
 # Optimization:
 
 cpu = default generic native
-linker = default bfd gold lld mold native
-lto = default off on normal fat thin
+lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 optimization = default 0 g 1 2 3 fast size z
-whole_program = default off on strip_all
+optimization_warnings = default off on
 
 # C++:
 
@@ -121,7 +114,7 @@ stl_hardening = default off fast extensive debug debug_with_broken_abi
 
 # Analyzer:
 
-analyzer = default off on
+analyzer = default off on with_external_headers
 analyzer_too_complex_warning = default off on
 analyzer_verbosity = default 0 1 2 3
 
@@ -130,11 +123,11 @@ analyzer_verbosity = default 0 1 2 3
 color = default auto never always
 coverage = default off on
 diagnostics_format = default fixits patch print_source_range_info
-diagnostics_show_template_tree = default off on
-elide_type = default off on
+diagnostics_show_template = default tree without_elided_types tree_without_elided_types
+linker = default bfd gold lld mold native
 msvc_diagnostics_format = caret default classic column
 msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
-msvc_isystem_with_template_from_non_external = default off on
+msvc_isystem_with_template_instantiations_treated_as_non_external = default off on
 pie = default off on static fpic fPIC fpie fPIE
 windows_bigobj = on default
 ```
@@ -142,7 +135,6 @@ windows_bigobj = on default
 
 If not specified:
 
-- `msvc_conformance` is `all`
 - `msvc_diagnostics_format` is `caret`
 - `ndebug` is `with_optimization_1_or_above`
 - The following values are `off`:
@@ -151,10 +143,10 @@ If not specified:
 - The following values are `on`:
   - `conversion_warnings`
   - `covered_switch_default_warnings`
-  - `fix_compiler_error`
   - `msvc_crt_secure_no_warnings`
   - `pedantic`
   - `stl_fix`
+  - `suggest_attributes`
   - `switch_warnings`
   - `warnings`
   - `windows_bigobj`
@@ -170,12 +162,40 @@ If not specified:
   - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 
 
+### Sanitizers
+
+Some sanitizers activated at compile time are only realistically active in the presence of a configuration in an environment variable.
+`sanitizers=on` does not include these sanitizers, unlike `sanitizers=extra`.
+The environment variables to use are as follows:
+
+```sh
+# cl (Windows)
+ASAN_OPTIONS=detect_stack_use_after_return=1
+
+# gcc
+ASAN_OPTIONS=detect_invalid_pointer_pairs=2  # see -fsanitize=pointer-subtract and -fsanitize=pointer-compare
+
+# macOS
+ASAN_OPTIONS=detect_leaks=1
+```
+
+See
+[AddressSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer),
+[UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html),
+[-fsanitize=pointer-compare](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html#index-fsanitize_003dpointer-compare) with GCC and
+[-fsanitize-address-use-after-return](https://learn.microsoft.com/en-us/cpp/sanitizers/asan-building#fsanitize-address-use-after-return-compiler-option-experimental) with cl compiler
+for more details.
+
+See [AddressSanitizer Flags](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags)
+for a list of supported options.
+
+
 ## Recommended options
 
 category | options
 ---------|---------
-debug | `control_flow=on`<br>`debug=on`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `optimization=0` + `debug_level=3`
-release | `cpu=native`<br>`lto=on` or `thin`<br>`optimization=3`<br>`rtti=off`<br>`whole_program=strip_all`
+debug | `var_init=pattern`<br>`control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
+release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
-really strict warnings | `pedantic=as_error`<br>`shadow_warnings=local`<br>`suggestions=on`<br>`warnings=extensive`
+really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`switch_warnings=exhaustive_enum`<br>`shadow_warnings=local`<br>`windows_abi_compatibility_warnings=on`
 
