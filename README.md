@@ -33,7 +33,9 @@ main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninit
 
 <!-- toc -->
 1. [Options](#options)
-    1. [Recommended options](#recommended-options)
+    1. [To know](#to-know)
+    2. [Sanitizers](#sanitizers)
+    3. [Recommended options](#recommended-options)
 2. [Use generated files](#use-generated-files)
     1. [CMake](#cmake)
     2. [xmake](#xmake)
@@ -53,6 +55,7 @@ main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninit
     4. [Options and levels](#options-and-levels)
     5. [Conditions](#conditions)
     6. [if_mt](#if_mt)
+    7. [Others](#others)
 <!-- /toc -->
 
 # Options
@@ -157,7 +160,7 @@ If not specified:
 
 <!-- enddefault -->
 
-### To know
+## To know
 
 - `control_flow=allow_bugs`
   - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
@@ -166,7 +169,7 @@ If not specified:
   - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 
 
-### Sanitizers
+## Sanitizers
 
 Some sanitizers activated at compile time are only realistically active in the presence of a configuration in an environment variable.
 `sanitizers=on` does not include these sanitizers, unlike `sanitizers=extra`.
