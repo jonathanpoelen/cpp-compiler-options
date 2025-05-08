@@ -92,10 +92,7 @@ stl_fix = on default off
 symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 stl_hardening = default off fast extensive debug debug_with_broken_abi
 control_flow = default off on branch return allow_bugs
-sanitizers = default off on
-float_sanitizers = default off on
-integer_sanitizers = default off on
-other_sanitizers = default off thread pointer memory
+sanitizers = default off on extra address kernel kernel_extra kernel_extra kernel_address thread undefined undefined_minimal_runtime scudo_hardened_allocator
 var_init = default uninitialized pattern zero
 ndebug = with_optimization_1_or_above default off on
 optimization = default 0 g 1 2 3 fast size z
@@ -167,6 +164,34 @@ If not specified:
 - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
 - `stl_hardening=debug`
   - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
+
+
+### Sanitizers
+
+Some sanitizers activated at compile time are only realistically active in the presence of a configuration in an environment variable.
+`sanitizers=on` does not include these sanitizers, unlike `sanitizers=extra`.
+The environment variables to use are as follows:
+
+```sh
+# cl (Windows)
+ASAN_OPTIONS=detect_stack_use_after_return=1
+
+# gcc
+ASAN_OPTIONS=detect_invalid_pointer_pairs=2  # see -fsanitize=pointer-subtract and -fsanitize=pointer-compare
+
+# macOS
+ASAN_OPTIONS=detect_leaks=1
+```
+
+See
+[AddressSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer),
+[UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html),
+[-fsanitize=pointer-compare](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html#index-fsanitize_003dpointer-compare) with GCC and
+[-fsanitize-address-use-after-return](https://learn.microsoft.com/en-us/cpp/sanitizers/asan-building#fsanitize-address-use-after-return-compiler-option-experimental) with cl compiler
+for more details.
+
+See [AddressSanitizer Flags](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags)
+for a list of supported options.
 
 
 ## Recommended options

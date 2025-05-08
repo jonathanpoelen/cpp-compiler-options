@@ -110,7 +110,6 @@ while read comp ; do
   # C++ only
   gencompopt 1 stl_debug                  symbols=debug stl_hardening=debug
   gencompopt 1 stl_debug_broken_abi       symbols=debug stl_hardening=debug_with_broken_abi
-  gencompopt 1 sanitizers-pointer         other_sanitizers=pointer
   gencompopt 1 template_tree              diagnostics_show_template=tree_without_elided_types
 done < <($LUA ./compiler-options.lua generators/compiler.lua)
 

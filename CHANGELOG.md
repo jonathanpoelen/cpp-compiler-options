@@ -1,17 +1,27 @@
 # ChangeLog
 
 - remove `debug` and `debug_level` (replaced by `symbols`)
+- remove `fix_compiler_error` (merged with `pedantic`)
+- remove `float_sanitizers`, `integer_sanitizers` and `other_sanitizers`
 - remove `lto=normal` (replaced with `lto=full`)
 - remove `lto=fat`
 - remove `suggestions` (replaced by `suggest_attributes`)
 - remove `whole_program` (replaced by `lto` and `symbols=strip_all` / `symbols=gc_sections`)
-- remove `fix_compiler_error` (merged with `pedantic`)
 - rename `msvc_isystem_with_template_from_non_external` to `msvc_isystem_with_template_instantiations_treated_as_non_external`
 - add `analyzer=with_external_headers`
 - add `lto=full`
 - add `lto=thin_or_nothing`
 - add `lto=whole_program`
 - add `lto=whole_program_and_full_lto`
+- add `sanitizers=extra`
+- add `sanitizers=address`
+- add `sanitizers=kernel`
+- add `sanitizers=kernel_extra`
+- add `sanitizers=kernel_address`
+- add `sanitizers=thread`
+- add `sanitizers=undefined`
+- add `sanitizers=undefined_minimal_runtime`
+- add `sanitizers=scudo_hardened_allocator`
 - add `suggest_attributes` (`on`, `off`, `common`, `analysis`, `unity`, `all`)
 - add `symbols` (`hidden`, `strip_all`, `gc_sections`, `nodebug`, debug`, `minimal_debug`, `full_debug`, `btf`, `ctf`, `ctf1`, `ctf2`, `vms`, `vms1`, `vms2`, `vms3`, `codeview`, `dbx`, `lldb`, `sce`, `dwarf`)
 

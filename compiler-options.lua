@@ -176,7 +176,7 @@ local icc = Compiler('icc')
 local icl = Compiler('icl')
 -- local emcc = Compiler('emcc')
 local clang_emcc = Compiler('clang-emcc') -- virtual compiler, refer to clang version
-local clang_like = CompilerLike('clang-like', {clang, clang_emcc})
+local clang_like = CompilerLike('clang-like', {clang, clang_emcc}) -- clang-cl is a cl-like
 
 -- for clang-emcc to emcc
 -- local switch_to_real_compiler = {switch_to_special=true}
@@ -834,7 +834,7 @@ Or(gcc, clang_like, clang_cl) {
             link'-sASSERTIONS=1',
             link'-sDEMANGLE_SUPPORT=1',
             -- ASan does not work with SAFE_HEAP
-            -has_opt'sanitizers':with(lvl'on') {
+            has_opt'sanitizers':without(lvl'on', lvl'extra', lvl'address') {
               link'-sSAFE_HEAP=1',
             },
           }
@@ -1005,35 +1005,61 @@ Or(gcc, clang_like, clang_cl) {
   },
 
   -- Or(gcc, clang_like, clang_cl)
-  opt'float_sanitizers' {
-    vers'>=5' {
+  -- lsan, ubsan, tsan, msam and scudo are mutually exclusive
+  -- ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
+  opt'sanitizers' {
+    Or(gcc'>=4.8', clang_like'>=3.2', clang_cl'>=4') {
       match {
-        lvl'on' {
-          flag'-fsanitize=float-divide-by-zero',
-          flag'-fsanitize=float-cast-overflow',
+        lvl'off' {
+          fl'-fno-sanitize=all'
         },
+        lvl'thread' {
+          fl'-fsanitize=thread',
+        },
+        lvl'undefined' {
+          fl'-fsanitize=undefined',
+        },
+        lvl'undefined_minimal_runtime' {
+          fl'-fsanitize=undefined',
+          And(Or(clang_like, clang_cl), vers'>=6') {
+            fl'-fsanitize-minimal-runtime'
+          }
+        },
+        lvl'scudo_hardened_allocator' {
+          -- https://llvm.org/docs/ScudoHardenedAllocator.html
+          clang'>=13' {
+            fl'-fsanitize=scudo',
+          }
+        },
+        -- on, extra, address, kernel, kernel_extra, kernel_address
         {
-          flag'-fno-sanitize=float-divide-by-zero',
-          flag'-fno-sanitize=float-cast-overflow',
-        },
-      }
-    },
-  },
-
-  -- Or(gcc, clang_like, clang_cl)
-  opt'integer_sanitizers' {
-    match {
-      Or(clang_like'>=5', clang_cl'>=5') {
-        match {
-          lvl'on' { flag'-fsanitize=integer', },
-          flag'-fno-sanitize=integer',
+          flag'-fno-omit-frame-pointer',
+          flag'-fno-optimize-sibling-calls',
+          match {
+            Or(lvl'on', lvl'extra', lvl'address') {
+              fl'-fsanitize=address',
+            }, {
+              fl'-fsanitize=kernel-address',
+            }
+          },
+          Or(lvl'on', lvl'extra', lvl'kernel', lvl'kernel_extra') {
+            Or(gcc'>=4.9', clang_like, clang_cl) {
+              fl'-fsanitize=undefined',
+              -- fl'-fsanitize=leak', -- in -fsanitize=address
+            },
+            Or(lvl'extra', lvl'kernel_extra') {
+              Or(gcc'>=8', clang'>=9', clang_cl'>=9') {
+                -- By default these checks is disabled at run time.
+                -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
+                -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
+                -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
+                -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
+                flag'-fsanitize=pointer-compare',
+                flag'-fsanitize=pointer-subtract',
+              }
+            }
+          }
         }
-      },
-      gcc'>=4.9' {
-        lvl'on' {
-          flag'-ftrapv',
-          flag'-fsanitize=undefined',
-        },
       }
     }
   },
@@ -1111,54 +1137,6 @@ Or(gcc, clang_like) {
     match {
       lvl'on' { cxx'-frtti' },
       cxx'-fno-rtti',
-    }
-  },
-
-  -- Or(gcc, clang_like)
-  -- ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
-  opt'sanitizers' {
-    match {
-      lvl'off' {
-        fl'-fno-sanitize=all'
-      },
-      gcc {
-        vers'>=4.8' {
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
-
-          vers'>=4.9' {
-            fl'-fsanitize=undefined',
-            fl'-fsanitize=leak', -- requires the address sanitizer
-
-            vers'>=12' {
-              fl'-fsanitize=bounds-strict',
-            }
-          }
-        }
-      },
-      --[[clang_like]]
-      {
-        vers'>=3.1' {
-          fl'-fsanitize=undefined',
-          fl'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fsanitize-address-use-after-scope',
-          flag'-fno-omit-frame-pointer',
-          flag'-fno-optimize-sibling-calls',
-          clang {
-            vers'>=3.4' {
-              fl'-fsanitize=leak', -- requires the address sanitizer
-            },
-            vers'>=6' {
-              opt'stack_protector' {
-                -lvl'off' {
-                  flag'-fsanitize-minimal-runtime',
-                }
-              }
-            },
-          },
-        }
-      }
     }
   },
 
@@ -1456,31 +1434,6 @@ Or(gcc, clang_like) {
           lvl'fPIE'{ flag'-fPIE' },
           lvl'fPIC'{ flag'-fPIC' },
           --[[lvl'static']] { link'-static-pie' }
-        }
-      },
-
-      -- Or(gcc, clang)
-      opt'other_sanitizers' {
-        match {
-          lvl'thread' { flag'-fsanitize=thread', },
-          lvl'memory' {
-            clang'>=5' {
-              flag'-fsanitize=memory',
-              flag'-fno-omit-frame-pointer',
-            }
-          },
-          lvl'pointer' {
-            gcc'>=8' {
-              -- By default the check is disabled at run time.
-              -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
-              -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
-              -- These options cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds
-              -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
-              -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
-              flag'-fsanitize=pointer-compare',
-              flag'-fsanitize=pointer-subtract',
-            }
-          }
         }
       },
 
@@ -2155,11 +2108,29 @@ match {
     opt'sanitizers' {
       match {
         vers'>=19.28' {
-          flag'/fsanitize=address',
-          -- required env variable ASAN_OPTIONS=detect_stack_use_after_return=1
-          -- (checked with 19.43)
-          -- https://learn.microsoft.com/en-us/cpp/sanitizers/error-stack-use-after-return?view=msvc-170
-          flag'/fsanitize-address-use-after-return'
+          Or(
+            lvl'on',
+            lvl'extra',
+            lvl'address',
+            lvl'kernel',
+            lvl'kernel_extra',
+            lvl'kernel_address'
+          ) {
+            match {
+              Or(lvl'on', lvl'extra', lvl'address') {
+                fl'/fsanitize=address',
+              }, {
+                fl'/fsanitize=kernel-address',
+              }
+            },
+
+            Or(lvl'extra', lvl'kernel_extra') {
+              -- required env variable ASAN_OPTIONS=detect_stack_use_after_return=1
+              -- (checked with 19.43)
+              -- https://learn.microsoft.com/en-us/cpp/sanitizers/error-stack-use-after-return?view=msvc-170
+              flag'/fsanitize-address-use-after-return'
+            },
+          }
         },
         match {
           lvl'on' {
@@ -2183,20 +2154,6 @@ match {
 
         lvl'as_error' {
           flag'-Werror=write-strings',
-        }
-      }
-    },
-
-    -- clang_cl
-    opt'sanitizers' {
-      match {
-        lvl'off' {
-          fl'-fno-sanitize=all'
-        },
-        {
-          flag'-fsanitize=undefined',
-          flag'-fsanitize=address', -- memory, thread are mutually exclusive
-          flag'-fsanitize-address-use-after-scope',
         }
       }
     },
@@ -2317,20 +2274,28 @@ match {
 
     -- icl
     opt'sanitizers' {
-      lvl'on' {
+      Or(
+        lvl'on',
+        lvl'extra',
+        lvl'address',
+        lvl'kernel',
+        lvl'kernel_extra',
+        lvl'kernel_address'
+      ) {
         flag'/Qtrapuv',
         -- /RTC can't be used with compiler optimizations (/O Options)
         -- but /Qtrapuv force to /Od (disable optimization)
         flag'/RTCsu',
-      }
-    },
-
-    -- icl
-    opt'float_sanitizers' {
-      lvl'on' {
-        flag'/Qfp-stack-check',
-        flag'/Qfp-trap:common',
-      -- flag'/Qfp-trap=all',
+        Or(
+          lvl'on',
+          lvl'extra',
+          lvl'kernel',
+          lvl'kernel_extra'
+        ) {
+          flag'/Qfp-stack-check',
+          flag'/Qfp-trap:common',
+          -- flag'/Qfp-trap=all',
+        }
       }
     },
 
@@ -2550,23 +2515,25 @@ match {
 
     -- icc
     opt'sanitizers' {
-      lvl'on' { flag'-ftrapuv' }
-    },
-
-    -- icc
-    opt'integer_sanitizers' {
-      match {
-        lvl'on' { flag'-funsigned-bitfields' },
-        flag'-fno-unsigned-bitfields'
-      }
-    },
-
-    -- icc
-    opt'float_sanitizers' {
-      lvl'on' {
-        flag'-fp-stack-check',
-        flag'-fp-trap=common',
-        -- flag'-fp-trap=all',
+      Or(
+        lvl'on',
+        lvl'extra',
+        lvl'address',
+        lvl'kernel',
+        lvl'kernel_extra',
+        lvl'kernel_address'
+      ) {
+        flag'-ftrapuv',
+        Or(
+          lvl'on',
+          lvl'extra',
+          lvl'kernel',
+          lvl'kernel_extra'
+        ) {
+          flag'-fp-stack-check',
+          flag'-fp-trap=common',
+          -- flag'-fp-trap=all',
+        }
       }
     },
 
@@ -2796,14 +2763,6 @@ local Vbase = {
       description='Enable C++ exceptions.',
     },
 
-    float_sanitizers={
-      values={'off', 'on'},
-    },
-
-    integer_sanitizers={
-      values={'off', 'on'},
-    },
-
     linker={
       values={'bfd', 'gold', 'lld', 'mold', 'native'},
       description='Configure linker.',
@@ -2892,11 +2851,6 @@ local Vbase = {
       unavailable='c',
     },
 
-    other_sanitizers={
-      values={'off', 'thread', 'pointer', 'memory'},
-      description='Enable other sanitizers.',
-    },
-
     pedantic={
       values={'off', 'on', 'as_error'},
       default='on',
@@ -2926,8 +2880,35 @@ local Vbase = {
     },
 
     sanitizers={
-      values={'off', 'on'},
-      description='Enable sanitizers (asan, ubsan, etc).',
+      values={
+        'off',
+        -- fsanitize=address
+        {'on', 'Enable address sanitizer and other compatible sanitizers'},
+        {'extra', 'Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.'},
+        {'address', 'Enable address sanitizer only.'},
+        -- fsanitize=kernel-address
+        {'kernel', 'Enable kernel-address sanitizers and other compatible sanitizers'},
+        {'kernel_extra', 'Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.'},
+        'kernel_extra',
+        {'kernel_address', 'Enable kernel address sanitizer only.'},
+        -- fsanitize=thread
+        {'thread', 'Enable thread sanitizer.'},
+        -- fsanitize=undefined
+        {'undefined', 'Enable undefined sanitizer.'},
+        {'undefined_minimal_runtime', 'Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).'},
+        -- fsanitize=scudo (clang)
+        {'scudo_hardened_allocator', 'Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html'},
+        -- ignored:
+        -- - leak (in address)
+        -- - memory (clang)
+        -- - memory + -fsanitize-memory-track-origins=1
+        -- - memory + -fsanitize-memory-track-origins=2
+        -- - hwaddress
+        -- - kernel-hwaddress
+        -- - shadow-call-stack
+        -- - fuzzer (cl)
+      },
+      description='Enable sanitizers (asan, ubsan, etc) when available.',
     },
 
     stl_hardening={
@@ -3085,9 +3066,6 @@ local Vbase = {
       'stl_hardening',
       'control_flow',
       'sanitizers',
-      'float_sanitizers',
-      'integer_sanitizers',
-      'other_sanitizers',
       'var_init',
       'ndebug',
       'optimization',
