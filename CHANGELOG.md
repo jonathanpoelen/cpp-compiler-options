@@ -1,5 +1,9 @@
 # ChangeLog
 
+- add `sanitizers=with_minimal_code_size`
+- add `sanitizers=extra_with_minimal_code_size`
+- add `sanitizers=address_with_minimal_code_size`
+
 ## 2024-05-09
 
 - remove `debug` and `debug_level` (replaced by `symbols`)

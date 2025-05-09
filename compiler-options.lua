@@ -1031,31 +1031,50 @@ Or(gcc, clang_like, clang_cl) {
             fl'-fsanitize=scudo',
           }
         },
-        -- on, extra, address, kernel, kernel_extra, kernel_address
+        -- on, with_minimal_code_size, extra, extra_with_minimal_code_size
+        -- address, address_with_minimal_code_size kernel, kernel_extra,
+        -- kernel_address
         {
           flag'-fno-omit-frame-pointer',
           flag'-fno-optimize-sibling-calls',
+
           match {
-            Or(lvl'on', lvl'extra', lvl'address') {
+            Or(
+              lvl'on', lvl'with_minimal_code_size',
+              lvl'extra', lvl'extra_with_minimal_code_size',
+              lvl'address', lvl'address_with_minimal_code_size'
+            ) {
               fl'-fsanitize=address',
             }, {
               fl'-fsanitize=kernel-address',
             }
           },
-          Or(lvl'on', lvl'extra', lvl'kernel', lvl'kernel_extra') {
+
+          Or(
+            lvl'on', lvl'with_minimal_code_size',
+            lvl'extra', lvl'extra_with_minimal_code_size',
+            lvl'kernel', lvl'kernel_extra'
+          ) {
             Or(gcc'>=4.9', clang_like, clang_cl) {
               fl'-fsanitize=undefined',
               -- fl'-fsanitize=leak', -- in -fsanitize=address
             },
-            Or(lvl'extra', lvl'kernel_extra') {
+
+            Or(lvl'with_minimal_code_size', lvl'extra_with_minimal_code_size') {
+              Or(clang_like'>=13', clang_cl'>=13') {
+                fl'-fsanitize-address-use-after-return=always',
+              },
+            },
+
+            Or(lvl'extra', lvl'extra_with_minimal_code_size', lvl'kernel_extra') {
               Or(gcc'>=8', clang'>=9', clang_cl'>=9') {
                 -- By default these checks is disabled at run time.
                 -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
                 -- Using "detect_invalid_pointer_pairs=1" detects invalid operation only when both pointers are non-null.
                 -- ASAN_OPTIONS=detect_invalid_pointer_pairs=2
                 -- ASAN_OPTIONS=detect_invalid_pointer_pairs=1
-                flag'-fsanitize=pointer-compare',
-                flag'-fsanitize=pointer-subtract',
+                flag'-fsanitize=pointer-compare', -- slow
+                flag'-fsanitize=pointer-subtract', -- slow
               }
             }
           }
@@ -2117,6 +2136,7 @@ match {
             lvl'kernel_address'
           ) {
             match {
+              -- https://github.com/MicrosoftDocs/cpp-docs/blob/main/docs/sanitizers/asan.md
               Or(lvl'on', lvl'extra', lvl'address') {
                 fl'/fsanitize=address',
               }, {
@@ -2884,8 +2904,11 @@ local Vbase = {
         'off',
         -- fsanitize=address
         {'on', 'Enable address sanitizer and other compatible sanitizers'},
+        {'with_minimal_code_size', 'Enable address sanitizer and other compatible sanitizers, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use -fsanitize-address-use-after-return=runtime with Clang family).'},
         {'extra', 'Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.'},
+        {'extra_with_minimal_code_size', 'Combines extra and with_minimal_code_size values.'},
         {'address', 'Enable address sanitizer only.'},
+        {'address_with_minimal_code_size', 'Enable address sanitizer only, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use -fsanitize-address-use-after-return=runtime with Clang family).'},
         -- fsanitize=kernel-address
         {'kernel', 'Enable kernel-address sanitizers and other compatible sanitizers'},
         {'kernel_extra', 'Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.'},
@@ -2900,7 +2923,8 @@ local Vbase = {
         {'scudo_hardened_allocator', 'Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html'},
         -- ignored:
         -- - leak (in address)
-        -- - memory (clang)
+        -- - cfi (clang: https://clang.llvm.org/docs/ControlFlowIntegrity.html)
+        -- - memory (clang: https://clang.llvm.org/docs/MemorySanitizer.html)
         -- - memory + -fsanitize-memory-track-origins=1
         -- - memory + -fsanitize-memory-track-origins=2
         -- - hwaddress
