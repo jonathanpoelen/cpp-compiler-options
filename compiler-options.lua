@@ -2715,7 +2715,7 @@ local Vbase = {
       values={
         {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'},
         {'1', 'As per the previous level, but also show events for the entry to each function.'},
-        {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'},
+        {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. "true path taken" at a conditional). This level is the default.'},
         {'3', 'As per the previous level, but show all control flow events, not just significant ones.'},
       },
       description='Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.',
@@ -2736,7 +2736,7 @@ local Vbase = {
       values={
         'off',
         {'on', 'Combine conversion and sign value'},
-        {'sign', 'Warn for implicit conversions that may change the sign (lke `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.'},
+        {'sign', 'Warn for implicit conversions that may change the sign (the `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.'},
         {'float', 'Warn for implicit conversions that reduce the precision of a real value.'},
         {'conversion', 'Warn for implicit conversions that may alter a value.'},
         {'all', 'Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.'},
@@ -2771,7 +2771,7 @@ local Vbase = {
       values={
         {'tree', 'Enables printing a tree-like structure showing the common and differing parts of the types'},
         {'without_elided_types', 'Disables printing diagnostics showing common parts of template types as "[...]".'},
-        {'tree_without_elided_types', 'Prints a tree-like without replacing common types. Mergeing tree and without_elided_types.'},
+        {'tree_without_elided_types', 'Prints a tree-like without replacing common types. Mergeing `tree` and `without_elided_types`.'},
       },
       description='Configures how templates with incompatible types are displayed (Clang and GCC only).',
       incidental=true,
@@ -2796,7 +2796,7 @@ local Vbase = {
         {'full', 'Activates FullLTO.'},
         {'thin_or_nothing', 'Activates ThinLTO. Disable lto when not supported.'},
         {'whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.'},
-        {'whole_program_and_full_lto', 'Same as whole_program, but use FullLTO when not supported.'},
+        {'whole_program_and_full_lto', 'Same as `whole_program`, but use FullLTO when not supported.'},
       },
       description='Enable Link Time Optimization. Also known as interprocedural optimization (IPO).',
     },
@@ -2815,7 +2815,7 @@ local Vbase = {
         {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.'},
       },
       default='caret',
-      description='Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).',
+      description='Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options).',
       incidental=true,
     },
 
@@ -2824,7 +2824,7 @@ local Vbase = {
         'anglebrackets',
         'include_and_caexcludepath',
         'external_as_include_system_flag',
-        {'assumed', 'Do not activate /external:W0, but considers the option as activated so that warning=on or more activates more warnings.'},
+        {'assumed', 'Do not activate `/external:W0`, but considers the option as activated so that `warnings=on` or more activates more warnings.'},
       },
       description='Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory).',
       incidental=true,
@@ -2832,7 +2832,7 @@ local Vbase = {
 
     msvc_isystem_with_template_instantiations_treated_as_non_external={
       values={'off', 'on'},
-      description='Allows warnings from external headers when they occur in a template that\'s instantiated in your code. (requires msvc_isystem).',
+      description='Allows warnings from external headers when they occur in a template that\'s instantiated in your code. (requires `msvc_isystem` option).',
       incidental=true,
       unavailable='c',
     },
@@ -2840,7 +2840,7 @@ local Vbase = {
     ndebug={
       values={'off', 'on', 'with_optimization_1_or_above'},
       default='with_optimization_1_or_above',
-      description='Enable NDEBUG macro (disable assert macro).',
+      description='Enable `NDEBUG` macro (disable assert macro).',
     },
 
     noexcept_warnings={
@@ -2857,7 +2857,7 @@ local Vbase = {
         {'1', 'Optimize.'},
         {'2', 'Optimize even more.'},
         {'3', 'Optimize yet more.'},
-        {'fast', 'Enables all optimization=3 and disregard strict standards compliance.'},
+        {'fast', 'Enables all `optimization=3` and disregard strict standards compliance.'},
         {'size', 'Optimize for size.'},
         {'z', 'Optimize for size aggressively (/!\\ possible slow compilation with emcc).'},
       },
@@ -2904,11 +2904,11 @@ local Vbase = {
         'off',
         -- fsanitize=address
         {'on', 'Enable address sanitizer and other compatible sanitizers'},
-        {'with_minimal_code_size', 'Enable address sanitizer and other compatible sanitizers, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use -fsanitize-address-use-after-return=runtime with Clang family).'},
+        {'with_minimal_code_size', 'Enable address sanitizer and other compatible sanitizers, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `-fsanitize-address-use-after-return=runtime` with Clang family).'},
         {'extra', 'Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.'},
-        {'extra_with_minimal_code_size', 'Combines extra and with_minimal_code_size values.'},
+        {'extra_with_minimal_code_size', 'Combines `extra` and `with_minimal_code_size` values.'},
         {'address', 'Enable address sanitizer only.'},
-        {'address_with_minimal_code_size', 'Enable address sanitizer only, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use -fsanitize-address-use-after-return=runtime with Clang family).'},
+        {'address_with_minimal_code_size', 'Enable address sanitizer only, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `-fsanitize-address-use-after-return=runtime` with Clang family).'},
         -- fsanitize=kernel-address
         {'kernel', 'Enable kernel-address sanitizers and other compatible sanitizers'},
         {'kernel_extra', 'Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.'},
@@ -2920,7 +2920,7 @@ local Vbase = {
         {'undefined', 'Enable undefined sanitizer.'},
         {'undefined_minimal_runtime', 'Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).'},
         -- fsanitize=scudo (clang)
-        {'scudo_hardened_allocator', 'Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html'},
+        {'scudo_hardened_allocator', 'Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html.'},
         -- ignored:
         -- - leak (in address)
         -- - cfi (clang: https://clang.llvm.org/docs/ControlFlowIntegrity.html)
@@ -2939,7 +2939,7 @@ local Vbase = {
       values={
         {'off'},
         {'fast', 'A set of security-critical checks that can be done with relatively little overhead in constant time and are intended to be used in production. No impact on the ABI.'},
-        {'extensive', 'All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren’t security-critical. No impact on the ABI.'},
+        {'extensive', 'All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren\'t security-critical. No impact on the ABI.'},
         {'debug', 'Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. No impact on the ABI.'},
         {'debug_with_broken_abi', 'Debug mode with ABI incompatibility for more check.'},
       },
@@ -2950,7 +2950,7 @@ local Vbase = {
     stl_fix={
       values={'off', 'on'},
       default='on',
-      description='Enable /DNOMINMAX with msvc.',
+      description='Enable `/DNOMINMAX` with MSVC.',
     },
 
     shadow_warnings={
@@ -2973,20 +2973,20 @@ local Vbase = {
         {'unity', 'Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.'},
         {'all', 'Active all suggestions for attributes.'},
       },
-      description='Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option -fipa-pure-const, which is enabled by default at -O1 and higher.',
+      description='Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option `-fipa-pure-const`, which is enabled by default at `-O1` and higher.',
       default='on',
       incidental=true,
     },
 
     symbols={
       values={
-        {'hidden', 'Use -fvisibility=hidden with Clang, GCC and other compilers that support this flag.'},
+        {'hidden', 'Use `-fvisibility=hidden` with Clang, GCC and other compilers that support this flag.'},
         {'strip_all', 'Strip all symbols.'},
         {'gc_sections', 'Enable garbage collection of unused sections.'},
         -- debug
         {'nodebug', 'Request no debugging information.'},
-        {'debug', 'Request debugging information. How much information can be controlled with options \'minimal_debug\', and \'full_debug\'. If the level is not supported by a compiler, this is equivalent to the \'debug\' option.'},
-        {'minimal_debug', 'If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables.'},
+        {'debug', 'Request debugging information. How much information can be controlled with options `minimal_debug` and `full_debug`.'},
+        {'minimal_debug', 'If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables. If the level is not supported by a compiler, this is equivalent to the `debug` option.'},
         {'full_debug', 'If possible, includes extra information, such as all the macro definitions present in the program.'},
         -- gcc
         {'btf', 'GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.'},
@@ -2995,9 +2995,9 @@ local Vbase = {
         {'ctf1', 'Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.'},
         {'ctf2', 'Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.'},
         {'vms', 'GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.'},
-        {'vms1', 'Same as 1, but for Alpha/VMS.'},
-        {'vms2', 'Same as 2, but for Alpha/VMS.'},
-        {'vms3', 'Same as 3, but for Alpha/VMS.'},
+        {'vms1', 'Same as `minimal_debug`, but for Alpha/VMS.'},
+        {'vms2', 'Same as `debug`, but for Alpha/VMS.'},
+        {'vms3', 'Same as `full_debug`, but for Alpha/VMS.'},
         -- clang
         {'dbx', 'Clang only.'},
         {'lldb', 'Clang only.'},
@@ -3017,7 +3017,7 @@ local Vbase = {
 
     unsafe_buffer_usage_warnings={
       values={'on', 'off'},
-      description='Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html).',
+      description='Enable `-Wunsafe-buffer-usage` with Clang (https://clang.llvm.org/docs/SafeBuffers.html).',
       incidental=true,
     },
 
@@ -3034,7 +3034,7 @@ local Vbase = {
       values={
         'off',
         {'on', 'Activates essential warnings and extras.'},
-        {'essential', 'Activates essential warnings, typically -Wall -Wextra or /W4).'},
+        {'essential', 'Activates essential warnings, typically `-Wall -Wextra` or `/W4`).'},
         {'extensive', 'Activates essential warnings, extras and some that may raise false positives'},
       },
       default='on',
@@ -3065,7 +3065,7 @@ local Vbase = {
 
   -- sorted by "importance"
   _opts_by_category={
-    {'Warning', {
+    {'Warning options', {
       'warnings',
       'warnings_as_error',
       'conversion_warnings',
@@ -3080,12 +3080,12 @@ local Vbase = {
       'windows_abi_compatibility_warnings',
     }},
 
-    {'Pedantic', {
+    {'Pedantic options', {
       'pedantic',
       'stl_fix',
     }},
 
-    {'Debug', {
+    {'Debug options', {
       'symbols',
       'stl_hardening',
       'control_flow',
@@ -3095,26 +3095,26 @@ local Vbase = {
       'optimization',
     }},
 
-    {'Optimization', {
+    {'Optimization options', {
       'cpu',
       'lto',
       'optimization',
       'optimization_warnings',
     }},
 
-    {'C++', {
+    {'C++ options', {
       'exceptions',
       'rtti',
     }},
 
-    {'Hardening', {
+    {'Hardening options', {
       'control_flow',
       'relro',
       'stack_protector',
       'stl_hardening',
     }},
 
-    {'Analyzer', {
+    {'Static Analyzer options', {
       'analyzer',
       'analyzer_too_complex_warning',
       'analyzer_verbosity',
