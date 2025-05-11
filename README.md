@@ -63,6 +63,10 @@ main.cpp:4:10: warning: ‘x’ is used uninitialized in this function [-Wuninit
 Supported options are listed below by category.
 The same option can be found in several categories.
 
+For a full description of options and values,
+see [C++ Compiler Options reference](https://jonathanpoelen.github.io/cpp-compiler-options/)
+or use the `list_options.lua` generator.
+
 The first value corresponds to the one used by default,
 and the value `default` has no associated behavior.
 
@@ -70,7 +74,7 @@ Options with a default value other than `default` are listed below.
 
 <!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 ```ini
-# Warning:
+# Warning options:
 
 warnings = on default off essential extensive
 warnings_as_error = default off on basic
@@ -85,12 +89,14 @@ switch_warnings = on default off exhaustive_enum mandatory_default exhaustive_en
 unsafe_buffer_usage_warnings = default on off
 windows_abi_compatibility_warnings = off default on
 
-# Pedantic:
+
+# Pedantic options:
 
 pedantic = on default off as_error
 stl_fix = on default off
 
-# Debug:
+
+# Debug options:
 
 symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 stl_hardening = default off fast extensive debug debug_with_broken_abi
@@ -100,32 +106,37 @@ var_init = default uninitialized pattern zero
 ndebug = with_optimization_1_or_above default off on
 optimization = default 0 g 1 2 3 fast size z
 
-# Optimization:
+
+# Optimization options:
 
 cpu = default generic native
 lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 optimization = default 0 g 1 2 3 fast size z
 optimization_warnings = default off on
 
-# C++:
+
+# C++ options:
 
 exceptions = default off on
 rtti = default off on
 
-# Hardening:
+
+# Hardening options:
 
 control_flow = default off on branch return allow_bugs
 relro = default off on full
 stack_protector = default off on strong all
 stl_hardening = default off fast extensive debug debug_with_broken_abi
 
-# Analyzer:
+
+# Static Analyzer options:
 
 analyzer = default off on with_external_headers
 analyzer_too_complex_warning = default off on
 analyzer_verbosity = default 0 1 2 3
 
-# Other:
+
+# Other options:
 
 color = default auto never always
 coverage = default off on
