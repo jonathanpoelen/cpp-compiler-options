@@ -1,5 +1,8 @@
 # ChangeLog
 
+- remove `sanitizers=kernel`
+- remove `sanitizers=kernel_extra`
+- remove `sanitizers=kernel_address`
 - add `sanitizers=with_minimal_code_size`
 - add `sanitizers=extra_with_minimal_code_size`
 - add `sanitizers=address_with_minimal_code_size`

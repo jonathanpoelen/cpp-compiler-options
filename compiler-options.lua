@@ -1031,29 +1031,17 @@ Or(gcc, clang_like, clang_cl) {
             fl'-fsanitize=scudo',
           }
         },
-        -- on, with_minimal_code_size, extra, extra_with_minimal_code_size
-        -- address, address_with_minimal_code_size kernel, kernel_extra,
-        -- kernel_address
+        -- on, with_minimal_code_size,
+        -- extra, extra_with_minimal_code_size,
+        -- address, address_with_minimal_code_size
         {
           flag'-fno-omit-frame-pointer',
           flag'-fno-optimize-sibling-calls',
-
-          match {
-            Or(
-              lvl'on', lvl'with_minimal_code_size',
-              lvl'extra', lvl'extra_with_minimal_code_size',
-              lvl'address', lvl'address_with_minimal_code_size'
-            ) {
-              fl'-fsanitize=address',
-            }, {
-              fl'-fsanitize=kernel-address',
-            }
-          },
+          fl'-fsanitize=address',
 
           Or(
             lvl'on', lvl'with_minimal_code_size',
-            lvl'extra', lvl'extra_with_minimal_code_size',
-            lvl'kernel', lvl'kernel_extra'
+            lvl'extra', lvl'extra_with_minimal_code_size'
           ) {
             Or(gcc'>=4.9', clang_like, clang_cl) {
               fl'-fsanitize=undefined',
@@ -1066,7 +1054,7 @@ Or(gcc, clang_like, clang_cl) {
               },
             },
 
-            Or(lvl'extra', lvl'extra_with_minimal_code_size', lvl'kernel_extra') {
+            Or(lvl'extra', lvl'extra_with_minimal_code_size') {
               Or(gcc'>=8', clang'>=9', clang_cl'>=9') {
                 -- By default these checks is disabled at run time.
                 -- To enable it, add "detect_invalid_pointer_pairs=2" to the environment variable ASAN_OPTIONS.
@@ -2127,24 +2115,10 @@ match {
     opt'sanitizers' {
       match {
         vers'>=19.28' {
-          Or(
-            lvl'on',
-            lvl'extra',
-            lvl'address',
-            lvl'kernel',
-            lvl'kernel_extra',
-            lvl'kernel_address'
-          ) {
-            match {
-              -- https://github.com/MicrosoftDocs/cpp-docs/blob/main/docs/sanitizers/asan.md
-              Or(lvl'on', lvl'extra', lvl'address') {
-                fl'/fsanitize=address',
-              }, {
-                fl'/fsanitize=kernel-address',
-              }
-            },
-
-            Or(lvl'extra', lvl'kernel_extra') {
+          Or(lvl'on', lvl'extra', lvl'address') {
+            -- https://github.com/MicrosoftDocs/cpp-docs/blob/main/docs/sanitizers/asan.md
+            fl'/fsanitize=address',
+            lvl'extra' {
               -- required env variable ASAN_OPTIONS=detect_stack_use_after_return=1
               -- (checked with 19.43)
               -- https://learn.microsoft.com/en-us/cpp/sanitizers/error-stack-use-after-return?view=msvc-170
@@ -2294,24 +2268,12 @@ match {
 
     -- icl
     opt'sanitizers' {
-      Or(
-        lvl'on',
-        lvl'extra',
-        lvl'address',
-        lvl'kernel',
-        lvl'kernel_extra',
-        lvl'kernel_address'
-      ) {
+      Or(lvl'on', lvl'extra', lvl'address') {
         flag'/Qtrapuv',
         -- /RTC can't be used with compiler optimizations (/O Options)
         -- but /Qtrapuv force to /Od (disable optimization)
         flag'/RTCsu',
-        Or(
-          lvl'on',
-          lvl'extra',
-          lvl'kernel',
-          lvl'kernel_extra'
-        ) {
+        Or(lvl'on', lvl'extra') {
           flag'/Qfp-stack-check',
           flag'/Qfp-trap:common',
           -- flag'/Qfp-trap=all',
@@ -2535,21 +2497,9 @@ match {
 
     -- icc
     opt'sanitizers' {
-      Or(
-        lvl'on',
-        lvl'extra',
-        lvl'address',
-        lvl'kernel',
-        lvl'kernel_extra',
-        lvl'kernel_address'
-      ) {
+      Or(lvl'on', lvl'extra', lvl'address') {
         flag'-ftrapuv',
-        Or(
-          lvl'on',
-          lvl'extra',
-          lvl'kernel',
-          lvl'kernel_extra'
-        ) {
+        Or(lvl'on', lvl'extra') {
           flag'-fp-stack-check',
           flag'-fp-trap=common',
           -- flag'-fp-trap=all',
@@ -2909,11 +2859,6 @@ local Vbase = {
         {'extra_with_minimal_code_size', 'Combines `extra` and `with_minimal_code_size` values.'},
         {'address', 'Enable address sanitizer only.'},
         {'address_with_minimal_code_size', 'Enable address sanitizer only, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `-fsanitize-address-use-after-return=runtime` with Clang family).'},
-        -- fsanitize=kernel-address
-        {'kernel', 'Enable kernel-address sanitizers and other compatible sanitizers'},
-        {'kernel_extra', 'Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.'},
-        'kernel_extra',
-        {'kernel_address', 'Enable kernel address sanitizer only.'},
         -- fsanitize=thread
         {'thread', 'Enable thread sanitizer.'},
         -- fsanitize=undefined
@@ -2928,6 +2873,7 @@ local Vbase = {
         -- - memory + -fsanitize-memory-track-origins=1
         -- - memory + -fsanitize-memory-track-origins=2
         -- - hwaddress
+        -- - kernel-address
         -- - kernel-hwaddress
         -- - shadow-call-stack
         -- - fuzzer (cl)
