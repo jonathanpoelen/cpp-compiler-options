@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>C++ Compiler Options reference</title>
+<style>
+
+:root {
+  --fg: #000;
+  --bg: #fff;
+  --bg-group: #eee;
+
+  --bg-code: #fff;
+
+  --border-group: #555;
+
+  --link-color: #2244fe;
+  --link-visited: #643096;
+  --link-hover: #21b277;
+
+  --bg-group-header: #444;
+  --fg-group-header: #fff;
+  --fg-group-header-hover: #a0ff00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #f3f3f3;
+    --bg: #000;
+    --bg-group: #222;
+
+    --bg-code: #333;
+
+    --border-group: #555;
+
+    --link-color: #b8daff;
+    --link-visited: #d8affe;
+    --link-hover: #81faa7;
+  }
+}
+
+html {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+a {
+  color: var(--link-color);
+}
+
+a:hover, a:hover:visited {
+  color: var(--link-hover);
+}
+
+a:visited {
+  color: var(--link-visited);
+}
+
+
+code {
+  font-size: 1em;
+  background: var(--bg-code);
+}
+
+ul {
+  margin: 0;
+  padding: 0 0 0 1em;
+}
+
+li {
+  margin-bottom: .2em;
+}
+
+dl {
+  padding: 0;
+  margin: 0;
+}
+
+dd {
+  margin: 1em;
+}
+
+dt {
+  padding: .5em;
+  border-radius: .5em .5em 0 0;
+  background: var(--bg-group-header);
+}
+
+dt, .option-name > a {
+  color: var(--fg-group-header);
+}
+
+.option-name > a:hover, .option-name > a:focus {
+  color: var(--fg-group-header-hover);
+}
+
+.group {
+  border: 2px solid var(--border-group);
+  border-radius: .5em;
+  background-color: var(--bg-group);
+  margin-bottom: 1em;
+}
+
+.option-desc {
+  display: inline-block;
+  margin:  0 0 .5em 0;
+}
+
+
+.header-link, .linked-header {
+  display: inline-block;
+}
+
+.header-link {
+  margin: 0;
+  padding: 0 .5em 0 0;
+}
+
+
+#nav {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.nav-option {
+  border: 2px solid var(--border-group);
+  border-radius: .5em;
+  background-color: var(--bg-group);
+  padding: 0 1em 1em 1em;
+  margin: 0 0 1em 1em;
+}
+
+.nav-option > ul > li {
+  margin: 0;
+  padding: 0;
+}
+.nav-option > ul > li > a {
+  margin: 0;
+  padding: .1em 0;
+  display: inline-block;
+}
+
+</style>
+</head>
+<body>
+
+<p>This page lists the available options for the <a href="https://github.com/jonathanpoelen/cpp-compiler-options/">C++ Compiler Options</a> project.</p>
+<div><a class="header-link" href="#navigation">🔗</a><h1 class="linked-header" id="navigation">Navigation</h1></div>
+
+<nav><div id="nav"><div class="nav-option"><h2>Menu</h2><ul><li><a href="#navigation">Navigation</a></li>
+<li><a href="#options">Options</a></li>
+<li><a href="#profiles">Profiles</a></li>
+</ul></div><div class="nav-option">
+<h2>Warning options</h2><ul>
+<li><a href="#warning-options--warnings">warnings</a></li>
+<li><a href="#warning-options--warnings_as_error">warnings_as_error</a></li>
+<li><a href="#warning-options--conversion_warnings">conversion_warnings</a></li>
+<li><a href="#warning-options--covered_switch_default_warnings">covered_switch_default_warnings</a></li>
+<li><a href="#warning-options--msvc_crt_secure_no_warnings">msvc_crt_secure_no_warnings</a></li>
+<li><a href="#warning-options--noexcept_warnings">noexcept_warnings</a></li>
+<li><a href="#warning-options--reproducible_build_warnings">reproducible_build_warnings</a></li>
+<li><a href="#warning-options--shadow_warnings">shadow_warnings</a></li>
+<li><a href="#warning-options--suggest_attributes">suggest_attributes</a></li>
+<li><a href="#warning-options--switch_warnings">switch_warnings</a></li>
+<li><a href="#warning-options--unsafe_buffer_usage_warnings">unsafe_buffer_usage_warnings</a></li>
+<li><a href="#warning-options--windows_abi_compatibility_warnings">windows_abi_compatibility_warnings</a></li>
+</ul></div>
+<div class="nav-option">
+<h2>Pedantic options</h2><ul>
+<li><a href="#pedantic-options--pedantic">pedantic</a></li>
+<li><a href="#pedantic-options--stl_fix">stl_fix</a></li>
+</ul></div>
+<div class="nav-option">
+<h2>Debug options</h2><ul>
+<li><a href="#debug-options--symbols">symbols</a></li>
+<li><a href="#debug-options--stl_hardening">stl_hardening</a></li>
+<li><a href="#debug-options--control_flow">control_flow</a></li>
+<li><a href="#debug-options--sanitizers">sanitizers</a></li>
+<li><a href="#debug-options--var_init">var_init</a></li>
+<li><a href="#debug-options--ndebug">ndebug</a></li>
+<li><a href="#debug-options--optimization">optimization</a></li>
+</ul></div>
+<div class="nav-option">
+<h2>Optimization options</h2><ul>
+<li><a href="#optimization-options--cpu">cpu</a></li>
+<li><a href="#optimization-options--lto">lto</a></li>
+<li><a href="#optimization-options--optimization">optimization</a></li>
+<li><a href="#optimization-options--optimization_warnings">optimization_warnings</a></li>
+</ul></div>
+<div class="nav-option">
+<h2>C++ options</h2><ul>
+<li><a href="#c-options--exceptions">exceptions</a></li>
+<li><a href="#c-options--rtti">rtti</a></li>
+</ul></div>
+<div class="nav-option">
+<h2>Hardening options</h2><ul>
+<li><a href="#hardening-options--control_flow">control_flow</a></li>
+<li><a href="#hardening-options--relro">relro</a></li>
+<li><a href="#hardening-options--stack_protector">stack_protector</a></li>
+<li><a href="#hardening-options--stl_hardening">stl_hardening</a></li>
+</ul></div>
+<div class="nav-option">
+<h2>Static Analyzer options</h2><ul>
+<li><a href="#static-analyzer-options--analyzer">analyzer</a></li>
+<li><a href="#static-analyzer-options--analyzer_too_complex_warning">analyzer_too_complex_warning</a></li>
+<li><a href="#static-analyzer-options--analyzer_verbosity">analyzer_verbosity</a></li>
+</ul></div>
+<div class="nav-option">
+<h2>Other options</h2><ul>
+<li><a href="#other-options--color">color</a></li>
+<li><a href="#other-options--coverage">coverage</a></li>
+<li><a href="#other-options--diagnostics_format">diagnostics_format</a></li>
+<li><a href="#other-options--diagnostics_show_template">diagnostics_show_template</a></li>
+<li><a href="#other-options--linker">linker</a></li>
+<li><a href="#other-options--msvc_diagnostics_format">msvc_diagnostics_format</a></li>
+<li><a href="#other-options--msvc_isystem">msvc_isystem</a></li>
+<li><a href="#other-options--msvc_isystem_with_template_instantiations_treated_as_non_external">msvc_isystem_with_template_instantiations_treated_as_non_external</a></li>
+<li><a href="#other-options--pie">pie</a></li>
+<li><a href="#other-options--windows_bigobj">windows_bigobj</a></li>
+</ul></div>
+</div></nav>
+<div><a class="header-link" href="#options">🔗</a><h1 class="linked-header" id="options">Options</h1></div>
+
+
+
+<p>The first value corresponds to the one used by default, and the value `<code>default</code>` has no associated behavior.</p>
+
+<div><a class="header-link" href="#warning-options">🔗</a><h2 class="linked-header" id="warning-options">Warning options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="warning-options--warnings"><a href="#warning-options--warnings">warnings</a></dt>
+<dd>
+  <span class="option-desc">Warning level.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code>: Activates essential warnings and extras.</li>
+    <li class="even-value"><code class="value">essential</code>: Activates essential warnings, typically `<code>-Wall -Wextra</code>` or `<code>/W4</code>`).</li>
+    <li class="odd-value"><code class="value">extensive</code>: Activates essential warnings, extras and some that may raise false positives</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--warnings_as_error"><a href="#warning-options--warnings_as_error">warnings_as_error</a></dt>
+<dd>
+  <span class="option-desc">Make all or some warnings into errors.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="even-value"><code class="value">basic</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--conversion_warnings"><a href="#warning-options--conversion_warnings">conversion_warnings</a></dt>
+<dd>
+  <span class="option-desc">Warn for implicit conversions that may alter a value.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code>: Combine conversion and sign value</li>
+    <li class="even-value"><code class="value">sign</code>: Warn for implicit conversions that may change the sign (the `<code>unsigned_integer = signed_integer</code>`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.</li>
+    <li class="odd-value"><code class="value">float</code>: Warn for implicit conversions that reduce the precision of a real value.</li>
+    <li class="even-value"><code class="value">conversion</code>: Warn for implicit conversions that may alter a value.</li>
+    <li class="odd-value"><code class="value">all</code>: Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--covered_switch_default_warnings"><a href="#warning-options--covered_switch_default_warnings">covered_switch_default_warnings</a></dt>
+<dd>
+  <span class="option-desc">Warning for default label in switch which covers all enumeration values.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--msvc_crt_secure_no_warnings"><a href="#warning-options--msvc_crt_secure_no_warnings">msvc_crt_secure_no_warnings</a></dt>
+<dd>
+  <span class="option-desc">Disable CRT warnings with MSVC.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--noexcept_warnings"><a href="#warning-options--noexcept_warnings">noexcept_warnings</a></dt>
+<dd>
+  <span class="option-desc">Warn when a noexcept-expression evaluates to false because of a call to a function that does not have a non-throwing exception specification (i.e. "throw()" or "noexcept") but is known by the compiler to never throw an exception. Only with GCC.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--reproducible_build_warnings"><a href="#warning-options--reproducible_build_warnings">reproducible_build_warnings</a></dt>
+<dd>
+  <span class="option-desc">Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--shadow_warnings"><a href="#warning-options--shadow_warnings">shadow_warnings</a></dt>
+<dd>
+
+  <ul>
+    <li class="value-off default-value"><code class="value">off</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="even-value"><code class="value">local</code></li>
+    <li class="odd-value"><code class="value">compatible_local</code></li>
+    <li class="even-value"><code class="value">all</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--suggest_attributes"><a href="#warning-options--suggest_attributes">suggest_attributes</a></dt>
+<dd>
+  <span class="option-desc">Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option `<code>-fipa-pure-const</code>`, which is enabled by default at `<code>-O1</code>` and higher.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code>: Suggests noreturn attribute with Clang and GCC.</li>
+    <li class="even-value"><code class="value">common</code>: Suggests noreturn and format attributes with GCC ; noreturn with Clang.</li>
+    <li class="odd-value"><code class="value">analysis</code>: Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.</li>
+    <li class="even-value"><code class="value">unity</code>: Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.</li>
+    <li class="odd-value"><code class="value">all</code>: Active all suggestions for attributes.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--switch_warnings"><a href="#warning-options--switch_warnings">switch_warnings</a></dt>
+<dd>
+  <span class="option-desc">Warnings concerning the switch keyword.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="even-value"><code class="value">exhaustive_enum</code></li>
+    <li class="odd-value"><code class="value">mandatory_default</code></li>
+    <li class="even-value"><code class="value">exhaustive_enum_and_mandatory_default</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--unsafe_buffer_usage_warnings"><a href="#warning-options--unsafe_buffer_usage_warnings">unsafe_buffer_usage_warnings</a></dt>
+<dd>
+  <span class="option-desc">Enable `<code>-Wunsafe-buffer-usage</code>` with Clang (<a href="https://clang.llvm.org/docs/SafeBuffers.html">https://clang.llvm.org/docs/SafeBuffers.html</a>).</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="warning-options--windows_abi_compatibility_warnings"><a href="#warning-options--windows_abi_compatibility_warnings">windows_abi_compatibility_warnings</a></dt>
+<dd>
+  <span class="option-desc">In code that is intended to be portable to Windows-based compilers the warning helps prevent unresolved references due to the difference in the mangling of symbols declared with different class-keys.</span>
+  <ul>
+    <li class="value-off default-value"><code class="value">off</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#pedantic-options">🔗</a><h2 class="linked-header" id="pedantic-options">Pedantic options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="pedantic-options--pedantic"><a href="#pedantic-options--pedantic">pedantic</a></dt>
+<dd>
+  <span class="option-desc">Issue all the warnings demanded by strict ISO C and ISO C++.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="even-value"><code class="value">as_error</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="pedantic-options--stl_fix"><a href="#pedantic-options--stl_fix">stl_fix</a></dt>
+<dd>
+  <span class="option-desc">Enable `<code>/DNOMINMAX</code>` with MSVC.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#debug-options">🔗</a><h2 class="linked-header" id="debug-options">Debug options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="debug-options--symbols"><a href="#debug-options--symbols">symbols</a></dt>
+<dd>
+  <span class="option-desc">Produce debugging information in the operating system's.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">hidden</code>: Use `<code>-fvisibility=hidden</code>` with Clang, GCC and other compilers that support this flag.</li>
+    <li class="odd-value"><code class="value">strip_all</code>: Strip all symbols.</li>
+    <li class="even-value"><code class="value">gc_sections</code>: Enable garbage collection of unused sections.</li>
+    <li class="odd-value"><code class="value">nodebug</code>: Request no debugging information.</li>
+    <li class="even-value"><code class="value">debug</code>: Request debugging information. How much information can be controlled with options `<code>minimal_debug</code>` and `<code>full_debug</code>`.</li>
+    <li class="odd-value"><code class="value">minimal_debug</code>: If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables. If the level is not supported by a compiler, this is equivalent to the `<code>debug</code>` option.</li>
+    <li class="even-value"><code class="value">full_debug</code>: If possible, includes extra information, such as all the macro definitions present in the program.</li>
+    <li class="odd-value"><code class="value">btf</code>: GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.</li>
+    <li class="even-value"><code class="value">codeview</code>: GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).</li>
+    <li class="odd-value"><code class="value">ctf</code>: GCC only. Produce a CTF debug information. The default level is 2.</li>
+    <li class="even-value"><code class="value">ctf1</code>: Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.</li>
+    <li class="odd-value"><code class="value">ctf2</code>: Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.</li>
+    <li class="even-value"><code class="value">vms</code>: GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.</li>
+    <li class="odd-value"><code class="value">vms1</code>: Same as `<code>minimal_debug</code>`, but for Alpha/VMS.</li>
+    <li class="even-value"><code class="value">vms2</code>: Same as `<code>debug</code>`, but for Alpha/VMS.</li>
+    <li class="odd-value"><code class="value">vms3</code>: Same as `<code>full_debug</code>`, but for Alpha/VMS.</li>
+    <li class="even-value"><code class="value">dbx</code>: Clang only.</li>
+    <li class="odd-value"><code class="value">lldb</code>: Clang only.</li>
+    <li class="even-value"><code class="value">sce</code>: Clang only.</li>
+    <li class="odd-value"><code class="value">dwarf</code>: Clang-cl only</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="debug-options--stl_hardening"><a href="#debug-options--stl_hardening">stl_hardening</a></dt>
+<dd>
+  <span class="option-desc">Hardening allows turning some instances of undefined behavior in the standard library into a contract violation.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="even-value"><code class="value">fast</code>: A set of security-critical checks that can be done with relatively little overhead in constant time and are intended to be used in production. No impact on the ABI.</li>
+    <li class="odd-value"><code class="value">extensive</code>: All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren't security-critical. No impact on the ABI.</li>
+    <li class="even-value"><code class="value">debug</code>: Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. No impact on the ABI.</li>
+    <li class="odd-value"><code class="value">debug_with_broken_abi</code>: Debug mode with ABI incompatibility for more check.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="debug-options--control_flow"><a href="#debug-options--control_flow">control_flow</a></dt>
+<dd>
+  <span class="option-desc">Insert extra runtime security checks to detect attempts to compromise your code.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="even-value"><code class="value">branch</code></li>
+    <li class="odd-value"><code class="value">return</code></li>
+    <li class="even-value"><code class="value">allow_bugs</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="debug-options--sanitizers"><a href="#debug-options--sanitizers">sanitizers</a></dt>
+<dd>
+  <span class="option-desc">Enable sanitizers (asan, ubsan, etc) when available.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code>: Enable address sanitizer and other compatible sanitizers</li>
+    <li class="even-value"><code class="value">with_minimal_code_size</code>: Enable address sanitizer and other compatible sanitizers, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `<code>-fsanitize-address-use-after-return=runtime</code>` with Clang family).</li>
+    <li class="odd-value"><code class="value">extra</code>: Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.</li>
+    <li class="even-value"><code class="value">extra_with_minimal_code_size</code>: Combines `<code>extra</code>` and `<code>with_minimal_code_size</code>` values.</li>
+    <li class="odd-value"><code class="value">address</code>: Enable address sanitizer only.</li>
+    <li class="even-value"><code class="value">address_with_minimal_code_size</code>: Enable address sanitizer only, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `<code>-fsanitize-address-use-after-return=runtime</code>` with Clang family).</li>
+    <li class="odd-value"><code class="value">kernel</code>: Enable kernel-address sanitizers and other compatible sanitizers</li>
+    <li class="even-value"><code class="value">kernel_extra</code>: Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.</li>
+    <li class="odd-value"><code class="value">kernel_extra</code></li>
+    <li class="even-value"><code class="value">kernel_address</code>: Enable kernel address sanitizer only.</li>
+    <li class="odd-value"><code class="value">thread</code>: Enable thread sanitizer.</li>
+    <li class="even-value"><code class="value">undefined</code>: Enable undefined sanitizer.</li>
+    <li class="odd-value"><code class="value">undefined_minimal_runtime</code>: Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).</li>
+    <li class="even-value"><code class="value">scudo_hardened_allocator</code>: Enable Scudo Hardened Allocator with Clang. See <a href="https://llvm.org/docs/ScudoHardenedAllocator.html">https://llvm.org/docs/ScudoHardenedAllocator.html</a>.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="debug-options--var_init"><a href="#debug-options--var_init">var_init</a></dt>
+<dd>
+  <span class="option-desc">Initialize all stack variables implicitly, including padding.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">uninitialized</code>: Doesn't initialize any automatic variables (default behavior of Clang and GCC).</li>
+    <li class="odd-value"><code class="value">pattern</code>: Initialize automatic variables with byte-repeatable pattern (0xFE for GCC, 0xAA for Clang).</li>
+    <li class="even-value"><code class="value">zero</code>: zero Initialize automatic variables with zeroes.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="debug-options--ndebug"><a href="#debug-options--ndebug">ndebug</a></dt>
+<dd>
+  <span class="option-desc">Enable `<code>NDEBUG</code>` macro (disable assert macro).</span>
+  <ul>
+    <li class="even-value default-value"><code class="value">with_optimization_1_or_above</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="debug-options--optimization"><a href="#debug-options--optimization">optimization</a></dt>
+<dd>
+  <span class="option-desc">Optimization level.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">0</code>: Not optimize.</li>
+    <li class="odd-value"><code class="value">g</code>: Enable debugging experience.</li>
+    <li class="even-value"><code class="value">1</code>: Optimize.</li>
+    <li class="odd-value"><code class="value">2</code>: Optimize even more.</li>
+    <li class="even-value"><code class="value">3</code>: Optimize yet more.</li>
+    <li class="odd-value"><code class="value">fast</code>: Enables all `<code>optimization=3</code>` and disregard strict standards compliance.</li>
+    <li class="even-value"><code class="value">size</code>: Optimize for size.</li>
+    <li class="odd-value"><code class="value">z</code>: Optimize for size aggressively (⚠ possible slow compilation with emcc).</li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#optimization-options">🔗</a><h2 class="linked-header" id="optimization-options">Optimization options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="optimization-options--cpu"><a href="#optimization-options--cpu">cpu</a></dt>
+<dd>
+
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">generic</code></li>
+    <li class="odd-value"><code class="value">native</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="optimization-options--lto"><a href="#optimization-options--lto">lto</a></dt>
+<dd>
+  <span class="option-desc">Enable Link Time Optimization. Also known as interprocedural optimization (IPO).</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code>: Activates ThinLTO when available (Clang), otherwise FullLTO.</li>
+    <li class="even-value"><code class="value">full</code>: Activates FullLTO.</li>
+    <li class="odd-value"><code class="value">thin_or_nothing</code>: Activates ThinLTO. Disable lto when not supported.</li>
+    <li class="even-value"><code class="value">whole_program</code>: Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.</li>
+    <li class="odd-value"><code class="value">whole_program_and_full_lto</code>: Same as `<code>whole_program</code>`, but use FullLTO when not supported.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="optimization-options--optimization"><a href="#optimization-options--optimization">optimization</a></dt>
+<dd>
+  <span class="option-desc">Optimization level.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">0</code>: Not optimize.</li>
+    <li class="odd-value"><code class="value">g</code>: Enable debugging experience.</li>
+    <li class="even-value"><code class="value">1</code>: Optimize.</li>
+    <li class="odd-value"><code class="value">2</code>: Optimize even more.</li>
+    <li class="even-value"><code class="value">3</code>: Optimize yet more.</li>
+    <li class="odd-value"><code class="value">fast</code>: Enables all `<code>optimization=3</code>` and disregard strict standards compliance.</li>
+    <li class="even-value"><code class="value">size</code>: Optimize for size.</li>
+    <li class="odd-value"><code class="value">z</code>: Optimize for size aggressively (⚠ possible slow compilation with emcc).</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="optimization-options--optimization_warnings"><a href="#optimization-options--optimization_warnings">optimization_warnings</a></dt>
+<dd>
+  <span class="option-desc">Activate warnings about optimization.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#c-options">🔗</a><h2 class="linked-header" id="c-options">C++ options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="c-options--exceptions"><a href="#c-options--exceptions">exceptions</a></dt>
+<dd>
+  <span class="option-desc">Enable C++ exceptions.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="c-options--rtti"><a href="#c-options--rtti">rtti</a></dt>
+<dd>
+  <span class="option-desc">Disable generation of information about every class with virtual functions for use by the C++ run-time type identification features ("dynamic_cast" and "typeid").</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#hardening-options">🔗</a><h2 class="linked-header" id="hardening-options">Hardening options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="hardening-options--control_flow"><a href="#hardening-options--control_flow">control_flow</a></dt>
+<dd>
+  <span class="option-desc">Insert extra runtime security checks to detect attempts to compromise your code.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="even-value"><code class="value">branch</code></li>
+    <li class="odd-value"><code class="value">return</code></li>
+    <li class="even-value"><code class="value">allow_bugs</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="hardening-options--relro"><a href="#hardening-options--relro">relro</a></dt>
+<dd>
+  <span class="option-desc">Specifies a memory segment that should be made read-only after relocation, if supported.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="even-value"><code class="value">full</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="hardening-options--stack_protector"><a href="#hardening-options--stack_protector">stack_protector</a></dt>
+<dd>
+  <span class="option-desc">Emit extra code to check for buffer overflows, such as stack smashing attacks.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="even-value"><code class="value">strong</code></li>
+    <li class="odd-value"><code class="value">all</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="hardening-options--stl_hardening"><a href="#hardening-options--stl_hardening">stl_hardening</a></dt>
+<dd>
+  <span class="option-desc">Hardening allows turning some instances of undefined behavior in the standard library into a contract violation.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="even-value"><code class="value">fast</code>: A set of security-critical checks that can be done with relatively little overhead in constant time and are intended to be used in production. No impact on the ABI.</li>
+    <li class="odd-value"><code class="value">extensive</code>: All the checks from fast mode and some additional checks for undefined behavior that incur relatively little overhead but aren't security-critical. No impact on the ABI.</li>
+    <li class="even-value"><code class="value">debug</code>: Enables all the available checks, including heuristic checks that might have significant performance overhead as well as internal library assertions. No impact on the ABI.</li>
+    <li class="odd-value"><code class="value">debug_with_broken_abi</code>: Debug mode with ABI incompatibility for more check.</li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#static-analyzer-options">🔗</a><h2 class="linked-header" id="static-analyzer-options">Static Analyzer options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="static-analyzer-options--analyzer"><a href="#static-analyzer-options--analyzer">analyzer</a></dt>
+<dd>
+  <span class="option-desc">Enables an static analysis. It can have false positives and false negatives. It is a bug-finding tool, rather than a tool for proving program correctness. Available only with GCC and MSVC.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code>: Enables an static analysis and ignore external headers with MSVC.</li>
+    <li class="even-value"><code class="value">with_external_headers</code>: Enables an static analysis.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="static-analyzer-options--analyzer_too_complex_warning"><a href="#static-analyzer-options--analyzer_too_complex_warning">analyzer_too_complex_warning</a></dt>
+<dd>
+  <span class="option-desc">By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs. Available only with GCC.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="static-analyzer-options--analyzer_verbosity"><a href="#static-analyzer-options--analyzer_verbosity">analyzer_verbosity</a></dt>
+<dd>
+  <span class="option-desc">Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">0</code>: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.</li>
+    <li class="odd-value"><code class="value">1</code>: As per the previous level, but also show events for the entry to each function.</li>
+    <li class="even-value"><code class="value">2</code>: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. "true path taken" at a conditional). This level is the default.</li>
+    <li class="odd-value"><code class="value">3</code>: As per the previous level, but show all control flow events, not just significant ones.</li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#other-options">🔗</a><h2 class="linked-header" id="other-options">Other options</h2></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="option-name" id="other-options--color"><a href="#other-options--color">color</a></dt>
+<dd>
+
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">auto</code></li>
+    <li class="odd-value"><code class="value">never</code></li>
+    <li class="even-value"><code class="value">always</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--coverage"><a href="#other-options--coverage">coverage</a></dt>
+<dd>
+
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--diagnostics_format"><a href="#other-options--diagnostics_format">diagnostics_format</a></dt>
+<dd>
+  <span class="option-desc">Emit fix-it hints in a machine-parseable format.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">fixits</code></li>
+    <li class="odd-value"><code class="value">patch</code></li>
+    <li class="even-value"><code class="value">print_source_range_info</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--diagnostics_show_template"><a href="#other-options--diagnostics_show_template">diagnostics_show_template</a></dt>
+<dd>
+  <span class="option-desc">Configures how templates with incompatible types are displayed (Clang and GCC only).</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">tree</code>: Enables printing a tree-like structure showing the common and differing parts of the types</li>
+    <li class="odd-value"><code class="value">without_elided_types</code>: Disables printing diagnostics showing common parts of template types as "[...]".</li>
+    <li class="even-value"><code class="value">tree_without_elided_types</code>: Prints a tree-like without replacing common types. Mergeing `<code>tree</code>` and `<code>without_elided_types</code>`.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--linker"><a href="#other-options--linker">linker</a></dt>
+<dd>
+  <span class="option-desc">Configure linker.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">bfd</code></li>
+    <li class="odd-value"><code class="value">gold</code></li>
+    <li class="even-value"><code class="value">lld</code></li>
+    <li class="odd-value"><code class="value">mold</code></li>
+    <li class="even-value"><code class="value">native</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--msvc_diagnostics_format"><a href="#other-options--msvc_diagnostics_format">msvc_diagnostics_format</a></dt>
+<dd>
+  <span class="option-desc">Controls the display of error and warning information (<a href="https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options">https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options</a>).</span>
+  <ul>
+    <li class="even-value default-value"><code class="value">caret</code></li>
+    <li class="value-default"><code class="value">default</code>: Which reports only the line number where the issue was found.</li>
+    <li class="odd-value"><code class="value">classic</code>: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.</li>
+    <li class="even-value"><code class="value">column</code>: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--msvc_isystem"><a href="#other-options--msvc_isystem">msvc_isystem</a></dt>
+<dd>
+  <span class="option-desc">Warnings concerning external header (<a href="https://devblogs.microsoft.com/cppblog/broken-warnings-theory">https://devblogs.microsoft.com/cppblog/broken-warnings-theory</a>).</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="even-value"><code class="value">anglebrackets</code></li>
+    <li class="odd-value"><code class="value">include_and_caexcludepath</code></li>
+    <li class="even-value"><code class="value">external_as_include_system_flag</code></li>
+    <li class="odd-value"><code class="value">assumed</code>: Do not activate `<code>/external:W0</code>`, but considers the option as activated so that `<code>warnings=on</code>` or more activates more warnings.</li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--msvc_isystem_with_template_instantiations_treated_as_non_external"><a href="#other-options--msvc_isystem_with_template_instantiations_treated_as_non_external">msvc_isystem_with_template_instantiations_treated_as_non_external</a></dt>
+<dd>
+  <span class="option-desc">Allows warnings from external headers when they occur in a template that's instantiated in your code. (requires `<code>msvc_isystem</code>` option).</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--pie"><a href="#other-options--pie">pie</a></dt>
+<dd>
+  <span class="option-desc">Controls position-independent code generation.</span>
+  <ul>
+    <li class="value-default default-value"><code class="value">default</code></li>
+    <li class="value-off"><code class="value">off</code></li>
+    <li class="value-on"><code class="value">on</code></li>
+    <li class="even-value"><code class="value">static</code></li>
+    <li class="odd-value"><code class="value">fpic</code></li>
+    <li class="even-value"><code class="value">fPIC</code></li>
+    <li class="odd-value"><code class="value">fpie</code></li>
+    <li class="even-value"><code class="value">fPIE</code></li>
+  </ul>
+</dd></div>
+
+<div class="group"><dt class="option-name" id="other-options--windows_bigobj"><a href="#other-options--windows_bigobj">windows_bigobj</a></dt>
+<dd>
+  <span class="option-desc">Increases that addressable sections capacity.</span>
+  <ul>
+    <li class="value-on default-value"><code class="value">on</code></li>
+    <li class="value-default"><code class="value">default</code></li>
+  </ul>
+</dd></div>
+
+</dl>
+
+
+<div><a class="header-link" href="#profiles">🔗</a><h1 class="linked-header" id="profiles">Profiles</h1></div>
+
+
+
+<dl>
+
+<div class="group"><dt class="profile">debug</dt>
+<dd><ul>
+  <li><code class="option-name">control_flow</code> = on</code></li>
+  <li><code class="option-name">sanitizers</code> = on</code></li>
+  <li><code class="option-name">stl_hardening</code> = debug</code></li>
+  <li><code class="option-name">symbols</code> = debug</code></li>
+</ul></dd></div>
+
+<div class="group"><dt class="profile">debug_optimized</dt>
+<dd><ul>
+  <li><code class="option-name">optimization</code> = g</code></li>
+  <li><code class="option-name">symbols</code> = debug</code></li>
+</ul></dd></div>
+
+<div class="group"><dt class="profile">minimum_size_release</dt>
+<dd><ul>
+  <li><code class="option-name">lto</code> = on</code></li>
+  <li><code class="option-name">optimization</code> = size</code></li>
+</ul></dd></div>
+
+<div class="group"><dt class="profile">release</dt>
+<dd><ul>
+  <li><code class="option-name">lto</code> = on</code></li>
+  <li><code class="option-name">optimization</code> = 3</code></li>
+</ul></dd></div>
+
+</dl>
+</body></html>
