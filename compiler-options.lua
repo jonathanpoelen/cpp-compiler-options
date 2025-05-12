@@ -834,7 +834,11 @@ Or(gcc, clang_like, clang_cl) {
             link'-sASSERTIONS=1',
             link'-sDEMANGLE_SUPPORT=1',
             -- ASan does not work with SAFE_HEAP
-            has_opt'sanitizers':without(lvl'on', lvl'extra', lvl'address') {
+            has_opt'sanitizers':without(
+              lvl'on', lvl'with_minimal_code_size',
+              lvl'extra', lvl'extra_with_minimal_code_size',
+              lvl'address', lvl'address_with_minimal_code_size'
+            ) {
               link'-sSAFE_HEAP=1',
             },
           }
@@ -2102,10 +2106,14 @@ match {
     opt'sanitizers' {
       match {
         vers'>=19.28' {
-          Or(lvl'on', lvl'extra', lvl'address') {
+          Or(
+            lvl'on', lvl'with_minimal_code_size',
+            lvl'extra', lvl'extra_with_minimal_code_size',
+            lvl'address', lvl'address_with_minimal_code_size'
+          ) {
             -- https://github.com/MicrosoftDocs/cpp-docs/blob/main/docs/sanitizers/asan.md
             fl'/fsanitize=address',
-            lvl'extra' {
+            Or(lvl'extra', lvl'extra_with_minimal_code_size') {
               -- required env variable ASAN_OPTIONS=detect_stack_use_after_return=1
               -- (checked with 19.43)
               -- https://learn.microsoft.com/en-us/cpp/sanitizers/error-stack-use-after-return?view=msvc-170
@@ -2114,7 +2122,11 @@ match {
           }
         },
         match {
-          lvl'on' {
+          Or(
+            lvl'on', lvl'with_minimal_code_size',
+            lvl'extra', lvl'extra_with_minimal_code_size',
+            lvl'address', lvl'address_with_minimal_code_size'
+          ) {
             flag'/sdl',
             has_opt'optimization':with(lvl'0') {
               flag'/RTCsu', -- /RTC can't be used with compiler optimizations (/O Options)
@@ -2255,12 +2267,19 @@ match {
 
     -- icl
     opt'sanitizers' {
-      Or(lvl'on', lvl'extra', lvl'address') {
+      Or(
+        lvl'on', lvl'with_minimal_code_size',
+        lvl'extra', lvl'extra_with_minimal_code_size',
+        lvl'address', lvl'address_with_minimal_code_size'
+      ) {
         flag'/Qtrapuv',
         -- /RTC can't be used with compiler optimizations (/O Options)
         -- but /Qtrapuv force to /Od (disable optimization)
         flag'/RTCsu',
-        Or(lvl'on', lvl'extra') {
+        Or(
+          lvl'on', lvl'with_minimal_code_size',
+          lvl'extra', lvl'extra_with_minimal_code_size'
+        ) {
           flag'/Qfp-stack-check',
           flag'/Qfp-trap:common',
           -- flag'/Qfp-trap=all',
@@ -2472,9 +2491,16 @@ match {
 
     -- icc
     opt'sanitizers' {
-      Or(lvl'on', lvl'extra', lvl'address') {
+      Or(
+        lvl'on', lvl'with_minimal_code_size',
+        lvl'extra', lvl'extra_with_minimal_code_size',
+        lvl'address', lvl'address_with_minimal_code_size'
+      ) {
         flag'-ftrapuv',
-        Or(lvl'on', lvl'extra') {
+        Or(
+          lvl'on', lvl'with_minimal_code_size',
+          lvl'extra', lvl'extra_with_minimal_code_size'
+        ) {
           flag'-fp-stack-check',
           flag'-fp-trap=common',
           -- flag'-fp-trap=all',
