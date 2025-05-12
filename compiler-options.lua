@@ -1432,19 +1432,6 @@ Or(gcc, clang_like) {
       },
 
       -- Or(gcc, clang)
-      opt'pie' {
-        match {
-          lvl'off' { link'-no-pic' },
-          lvl'on'  { link'-pie' },
-          lvl'fpie'{ flag'-fpie' },
-          lvl'fpic'{ flag'-fpic' },
-          lvl'fPIE'{ flag'-fPIE' },
-          lvl'fPIC'{ flag'-fPIC' },
-          --[[lvl'static']] { link'-static-pie' }
-        }
-      },
-
-      -- Or(gcc, clang)
       opt'noexcept_warnings' {
         gcc'>=4.6' {
           match {
@@ -2484,18 +2471,6 @@ match {
     },
 
     -- icc
-    opt'pie' {
-      match {
-        lvl'off'{ link'-no-pic', },
-        lvl'on' { link'-pie', },
-        lvl'fpie'{ flag'-fpie', },
-        lvl'fpic'{ flag'-fpic', },
-        lvl'fPIE'{ flag'-fPIE', },
-        lvl'fPIC'{ flag'-fPIC', },
-      }
-    },
-
-    -- icc
     opt'sanitizers' {
       Or(lvl'on', lvl'extra', lvl'address') {
         flag'-ftrapuv',
@@ -2825,11 +2800,6 @@ local Vbase = {
       values={'off', 'on', 'as_error'},
       default='on',
       description='Issue all the warnings demanded by strict ISO C and ISO C++.',
-    },
-
-    pie={
-      values={'off', 'on', 'static', 'fpic', 'fPIC', 'fpie', 'fPIE'},
-      description='Controls position-independent code generation.',
     },
 
     relro={

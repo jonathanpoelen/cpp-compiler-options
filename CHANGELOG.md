@@ -1,5 +1,6 @@
 # ChangeLog
 
+- remove `pie`
 - remove `sanitizers=kernel`
 - remove `sanitizers=kernel_extra`
 - remove `sanitizers=kernel_address`
