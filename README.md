@@ -190,8 +190,8 @@ The environment variables to use are as follows:
 # cl (Windows)
 ASAN_OPTIONS=detect_stack_use_after_return=1
 
-# gcc
-ASAN_OPTIONS=detect_invalid_pointer_pairs=2  # see -fsanitize=pointer-subtract and -fsanitize=pointer-compare
+# gcc / clang (see -fsanitize=pointer-subtract and -fsanitize=pointer-compare)
+ASAN_OPTIONS=detect_invalid_pointer_pairs=2
 
 # macOS
 ASAN_OPTIONS=detect_leaks=1
@@ -206,7 +206,16 @@ for more details.
 
 See [AddressSanitizer Flags](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags)
 for a list of supported options.
+A useful pre-set to enable more aggressive diagnostics compared to the default behavior is given below:
 
+```sh
+ASAN_OPTIONS=\
+strict_string_checks=1:\
+detect_stack_use_after_return=1:\
+check_initialization_order=1:\
+strict_init_order=1:\
+alloc_dealloc_mismatch=1
+```
 
 ## Recommended options
 
