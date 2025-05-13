@@ -100,9 +100,9 @@ stl_fix = on default off
 
 symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 stl_hardening = default off fast extensive debug debug_with_broken_abi
-control_flow = default off on branch return allow_bugs
 sanitizers = default off on with_minimal_code_size extra extra_with_minimal_code_size address address_with_minimal_code_size thread undefined undefined_minimal_runtime scudo_hardened_allocator
 var_init = default uninitialized pattern zero
+emcc_debug = default off on slow
 ndebug = with_optimization_1_or_above default off on
 optimization = default 0 g 1 2 3 fast size z
 
@@ -123,7 +123,6 @@ rtti = default off on
 
 # Hardening options:
 
-control_flow = default off on branch return allow_bugs
 hardened = default off on all
 stl_hardening = default off fast extensive debug debug_with_broken_abi
 
@@ -171,8 +170,6 @@ If not specified:
 
 ## To know
 
-- `control_flow=allow_bugs`
-  - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
 - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
 - `stl_hardening=debug`
   - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
@@ -219,9 +216,9 @@ alloc_dealloc_mismatch=1
 
 category | options
 ---------|---------
-debug | `var_init=pattern`<br>`control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
+debug | `var_init=pattern`<br>`emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`symbols=debug` or `full_debug`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
 release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
-security | `control_flow=on`<br>`hardened=on`<br>`stl_hardening=fast` or `extensive`
+security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
 really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`switch_warnings=exhaustive_enum`<br>`shadow_warnings=local`<br>`windows_abi_compatibility_warnings=on`
 
 

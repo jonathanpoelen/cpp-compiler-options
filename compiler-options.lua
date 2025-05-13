@@ -824,62 +824,6 @@ Or(gcc, clang_like, clang_cl) {
     }
   },
 
-  -- Or(gcc, clang_like, clang_cl)
-  opt'control_flow' {
-    match {
-      clang_emcc {
-        match {
-          lvl'off' {
-            link'-sASSERTIONS=0',
-            link'-sSAFE_HEAP=0',
-          },
-          {
-            -- Building with ASSERTIONS=1 causes STACK_OVERFLOW_CHECK=1
-            link'-sASSERTIONS=1',
-            link'-sDEMANGLE_SUPPORT=1',
-            -- ASan does not work with SAFE_HEAP
-            has_opt'sanitizers':without(
-              lvl'on', lvl'with_minimal_code_size',
-              lvl'extra', lvl'extra_with_minimal_code_size',
-              lvl'address', lvl'address_with_minimal_code_size'
-            ) {
-              link'-sSAFE_HEAP=1',
-            },
-          }
-        }
-      },
-      lvl'off' {
-        match {
-          gcc'>=8' {
-            flag'-fcf-protection=none'
-          },
-          { -- clang, clang_cl
-            fl'-fno-sanitize=cfi',
-            flag'-fcf-protection=none',
-            flag'-fno-sanitize-cfi-cross-dso',
-          }
-        }
-      },
-      Or(gcc'>=8', -gcc) {
-        match {
-          -- gcc: flag'-mcet',
-          -- clang_cl: flag'-fsanitize-cfi-cross-dso',
-          lvl'branch' { flag'-fcf-protection=branch' },
-          lvl'return' { flag'-fcf-protection=return' },
-          flag'-fcf-protection=full',
-        },
-
-        And(lvl'allow_bugs', clang) {
-          fl'-fsanitize=cfi', -- cfi-* only allowed with '-flto' and '-fvisibility=...'
-          -clang_cl {
-            flag'-fvisibility=hidden',
-          },
-          fl'-flto',
-        }
-      }
-    }
-  },
-
   -- Or(gcc, clang_like)
   opt'color' {
     Or(vers'>=4.9', -gcc --[[=clang_like]]) {
@@ -1074,6 +1018,49 @@ Or(gcc, clang_like, clang_cl) {
               }
             }
           }
+        }
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like, clang_cl)
+  -- https://github.com/emscripten-core/emscripten/blob/main/src/settings.js
+  opt'emcc_debug' {
+    clang_emcc {
+      match {
+        lvl'off' {
+          link'-sASSERTIONS=0',
+          link'-sSAFE_HEAP=0',
+          link'-sSTACK_OVERFLOW_CHECK=0',
+        },
+        -- on, slow
+        {
+          -- ASSERTIONS=1 is the default at -O0
+          -- Building with ASSERTIONS=1 causes STACK_OVERFLOW_CHECK=1
+          match {
+            lvl'slow' {
+              -- ASSERTIONS == 2 gives even more runtime checks, that may be very slow
+              link'-sASSERTIONS=2'
+            }, {
+              link'-sASSERTIONS=1'
+            }
+          },
+
+          -- - 0: Stack overflows are not checked.
+          -- - 1: Adds a security cookie at the top of the stack, which is checked at end
+          --   of each tick and at exit (practically zero performance overhead)
+          -- - 2: Same as above, but also runs a binaryen pass which adds a check to all
+          --   stack pointer assignments. Has a small performance cost.
+          link'-sSTACK_OVERFLOW_CHECK=2',
+
+          -- ASan does not work with SAFE_HEAP
+          -has_opt'sanitizers':with(
+            lvl'on', lvl'with_minimal_code_size',
+            lvl'extra', lvl'extra_with_minimal_code_size',
+            lvl'address', lvl'address_with_minimal_code_size'
+          ) {
+            link'-sSAFE_HEAP=1',
+          },
         }
       }
     }
@@ -2633,11 +2620,6 @@ local Vbase = {
       incidental=true,
     },
 
-    control_flow={
-      values={'off', 'on', 'branch', 'return', 'allow_bugs'},
-      description='Insert extra runtime security checks to detect attempts to compromise your code.',
-    },
-
     conversion_warnings={
       values={
         'off',
@@ -2682,6 +2664,15 @@ local Vbase = {
       description='Configures how templates with incompatible types are displayed (Clang and GCC only).',
       incidental=true,
       unavailable='c',
+    },
+
+    emcc_debug={
+      values={
+        {'off', 'Disable checks used with default `-O0` optimization.'},
+        {'on', 'Activate some checks in addition to those used with default `-O0` optimization.'},
+        {'slow', 'Activate checks that can greatly slow down the program.'},
+      },
+      description='Add checks with Emscripten compiler.',
     },
 
     exceptions={
@@ -2984,9 +2975,9 @@ local Vbase = {
     {'Debug options', {
       'symbols',
       'stl_hardening',
-      'control_flow',
       'sanitizers',
       'var_init',
+      'emcc_debug',
       'ndebug',
       'optimization',
     }},
@@ -3004,7 +2995,6 @@ local Vbase = {
     }},
 
     {'Hardening options', {
-      'control_flow',
       'hardened',
       'stl_hardening',
     }},
@@ -3020,7 +3010,7 @@ local Vbase = {
 
   _opts_build_type={
     debug={
-      control_flow='on',
+      emcc_debug='on',
       symbols='debug',
       sanitizers='on',
       stl_hardening='debug',
