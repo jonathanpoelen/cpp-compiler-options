@@ -56,6 +56,10 @@
 --  Supported options are listed below by category.
 --  The same option can be found in several categories.
 --
+--  For a full description of options and values,
+--  see [C++ Compiler Options reference](https://jonathanpoelen.github.io/cpp-compiler-options/)
+--  or use the `list_options.lua` generator.
+--
 --  The first value corresponds to the one used by default,
 --  and the value `default` has no associated behavior.
 --
@@ -63,7 +67,7 @@
 --
 --  <!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 --  ```ini
---  # Warning:
+--  # Warning options:
 --
 --  warnings = on default off essential extensive
 --  warnings_as_error = default off on basic
@@ -78,47 +82,52 @@
 --  unsafe_buffer_usage_warnings = default on off
 --  windows_abi_compatibility_warnings = off default on
 --
---  # Pedantic:
+--
+--  # Pedantic options:
 --
 --  pedantic = on default off as_error
 --  stl_fix = on default off
 --
---  # Debug:
+--
+--  # Debug options:
 --
 --  symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 --  stl_hardening = default off fast extensive debug debug_with_broken_abi
---  control_flow = default off on branch return allow_bugs
---  sanitizers = default off on extra address kernel kernel_extra kernel_extra kernel_address thread undefined undefined_minimal_runtime scudo_hardened_allocator
+--  sanitizers = default off on with_minimal_code_size extra extra_with_minimal_code_size address address_with_minimal_code_size thread undefined undefined_minimal_runtime scudo_hardened_allocator
 --  var_init = default uninitialized pattern zero
+--  emcc_debug = default off on slow
 --  ndebug = with_optimization_1_or_above default off on
 --  optimization = default 0 g 1 2 3 fast size z
 --
---  # Optimization:
+--
+--  # Optimization options:
 --
 --  cpu = default generic native
 --  lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 --  optimization = default 0 g 1 2 3 fast size z
 --  optimization_warnings = default off on
 --
---  # C++:
+--
+--  # C++ options:
 --
 --  exceptions = default off on
 --  rtti = default off on
 --
---  # Hardening:
 --
---  control_flow = default off on branch return allow_bugs
---  relro = default off on full
---  stack_protector = default off on strong all
+--  # Hardening options:
+--
+--  hardened = default off on all
 --  stl_hardening = default off fast extensive debug debug_with_broken_abi
 --
---  # Analyzer:
+--
+--  # Static Analyzer options:
 --
 --  analyzer = default off on with_external_headers
 --  analyzer_too_complex_warning = default off on
 --  analyzer_verbosity = default 0 1 2 3
 --
---  # Other:
+--
+--  # Other options:
 --
 --  color = default auto never always
 --  coverage = default off on
@@ -128,7 +137,6 @@
 --  msvc_diagnostics_format = caret default classic column
 --  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
 --  msvc_isystem_with_template_instantiations_treated_as_non_external = default off on
---  pie = default off on static fpic fPIC fpie fPIE
 --  windows_bigobj = on default
 --  ```
 --  <!-- ./compiler-options.lua -->
@@ -153,16 +161,14 @@
 --
 --  <!-- enddefault -->
 --
---  ### To know
+--  ## To know
 --
---  - `control_flow=allow_bugs`
---    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
 --  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
 --  - `stl_hardening=debug`
 --    - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 --
 --
---  ### Sanitizers
+--  ## Sanitizers
 --
 --  Some sanitizers activated at compile time are only realistically active in the presence of a configuration in an environment variable.
 --  `sanitizers=on` does not include these sanitizers, unlike `sanitizers=extra`.
@@ -172,8 +178,8 @@
 --  # cl (Windows)
 --  ASAN_OPTIONS=detect_stack_use_after_return=1
 --
---  # gcc
---  ASAN_OPTIONS=detect_invalid_pointer_pairs=2  # see -fsanitize=pointer-subtract and -fsanitize=pointer-compare
+--  # gcc / clang (see -fsanitize=pointer-subtract and -fsanitize=pointer-compare)
+--  ASAN_OPTIONS=detect_invalid_pointer_pairs=2
 --
 --  # macOS
 --  ASAN_OPTIONS=detect_leaks=1
@@ -188,16 +194,25 @@
 --
 --  See [AddressSanitizer Flags](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags)
 --  for a list of supported options.
+--  A useful pre-set to enable more aggressive diagnostics compared to the default behavior is given below:
 --
+--  ```sh
+--  ASAN_OPTIONS=\
+--  strict_string_checks=1:\
+--  detect_stack_use_after_return=1:\
+--  check_initialization_order=1:\
+--  strict_init_order=1:\
+--  alloc_dealloc_mismatch=1
+--  ```
 --
 --  ## Recommended options
 --
 --  category | options
 --  ---------|---------
---  debug | `var_init=pattern`<br>`control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
+--  debug | `emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`optimization=g` or `default`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`symbols=debug` or `full_debug`<br>`var_init=pattern`
 --  release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
---  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
---  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`switch_warnings=exhaustive_enum`<br>`shadow_warnings=local`<br>`windows_abi_compatibility_warnings=on`
+--  security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
+--  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`shadow_warnings=local`<br>`switch_warnings=exhaustive_enum`<br>`windows_abi_compatibility_warnings=on`
 --
 --  
 
@@ -221,8 +236,6 @@ local _flag_names = {
   ["analyzer_verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
   ["jln-color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
-  ["jln-control-flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
-  ["control_flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
   ["jln-conversion-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
   ["conversion_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
   ["jln-coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -233,8 +246,12 @@ local _flag_names = {
   ["cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["jln-diagnostics-format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
   ["diagnostics_format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
+  ["jln-emcc-debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["slow"]="slow", [""]=""},
+  ["emcc_debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["slow"]="slow", [""]=""},
   ["jln-exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-hardened"] = {["default"]="", ["off"]="off", ["on"]="on", ["all"]="all", [""]=""},
+  ["hardened"] = {["default"]="", ["off"]="off", ["on"]="on", ["all"]="all", [""]=""},
   ["jln-linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
   ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
   ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", ["thin_or_nothing"]="thin_or_nothing", ["whole_program"]="whole_program", ["whole_program_and_full_lto"]="whole_program_and_full_lto", [""]=""},
@@ -251,18 +268,12 @@ local _flag_names = {
   ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["jln-pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
-  ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
-  ["pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
-  ["jln-relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
-  ["relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
   ["jln-reproducible-build-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["reproducible_build_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["extra"]="extra", ["address"]="address", ["kernel"]="kernel", ["kernel_extra"]="kernel_extra", ["kernel_extra"]="kernel_extra", ["kernel_address"]="kernel_address", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
-  ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["extra"]="extra", ["address"]="address", ["kernel"]="kernel", ["kernel_extra"]="kernel_extra", ["kernel_extra"]="kernel_extra", ["kernel_address"]="kernel_address", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
+  ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_minimal_code_size"]="with_minimal_code_size", ["extra"]="extra", ["extra_with_minimal_code_size"]="extra_with_minimal_code_size", ["address"]="address", ["address_with_minimal_code_size"]="address_with_minimal_code_size", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
+  ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_minimal_code_size"]="with_minimal_code_size", ["extra"]="extra", ["extra_with_minimal_code_size"]="extra_with_minimal_code_size", ["address"]="address", ["address_with_minimal_code_size"]="address_with_minimal_code_size", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
   ["jln-shadow-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["shadow_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
-  ["jln-stack-protector"] = {["default"]="", ["off"]="off", ["on"]="on", ["strong"]="strong", ["all"]="all", [""]=""},
-  ["stack_protector"] = {["default"]="", ["off"]="off", ["on"]="on", ["strong"]="strong", ["all"]="all", [""]=""},
   ["jln-stl-fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["stl_fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-suggest-attributes"] = {["default"]="", ["off"]="off", ["on"]="on", ["common"]="common", ["analysis"]="analysis", ["unity"]="unity", ["all"]="all", [""]=""},
@@ -323,13 +334,14 @@ function create_options(options, extra_options)
       analyzer_too_complex_warning = options.analyzer_too_complex_warning or options["jln-analyzer-too-complex-warning"] or (disable_other_options and "" or _flag_names.analyzer_too_complex_warning[get_config("jln-analyzer-too-complex-warning")]),
       analyzer_verbosity = options.analyzer_verbosity or options["jln-analyzer-verbosity"] or (disable_other_options and "" or _flag_names.analyzer_verbosity[get_config("jln-analyzer-verbosity")]),
       color = options.color or options["jln-color"] or (disable_other_options and "" or _flag_names.color[get_config("jln-color")]),
-      control_flow = options.control_flow or options["jln-control-flow"] or (disable_other_options and "" or _flag_names.control_flow[get_config("jln-control-flow")]),
       conversion_warnings = options.conversion_warnings or options["jln-conversion-warnings"] or (disable_other_options and "" or _flag_names.conversion_warnings[get_config("jln-conversion-warnings")]),
       coverage = options.coverage or options["jln-coverage"] or (disable_other_options and "" or _flag_names.coverage[get_config("jln-coverage")]),
       covered_switch_default_warnings = options.covered_switch_default_warnings or options["jln-covered-switch-default-warnings"] or (disable_other_options and "" or _flag_names.covered_switch_default_warnings[get_config("jln-covered-switch-default-warnings")]),
       cpu = options.cpu or options["jln-cpu"] or (disable_other_options and "" or _flag_names.cpu[get_config("jln-cpu")]),
       diagnostics_format = options.diagnostics_format or options["jln-diagnostics-format"] or (disable_other_options and "" or _flag_names.diagnostics_format[get_config("jln-diagnostics-format")]),
+      emcc_debug = options.emcc_debug or options["jln-emcc-debug"] or (disable_other_options and "" or _flag_names.emcc_debug[get_config("jln-emcc-debug")]),
       exceptions = options.exceptions or options["jln-exceptions"] or (disable_other_options and "" or _flag_names.exceptions[get_config("jln-exceptions")]),
+      hardened = options.hardened or options["jln-hardened"] or (disable_other_options and "" or _flag_names.hardened[get_config("jln-hardened")]),
       linker = options.linker or options["jln-linker"] or (disable_other_options and "" or _flag_names.linker[get_config("jln-linker")]),
       lto = options.lto or options["jln-lto"] or (disable_other_options and "" or _flag_names.lto[get_config("jln-lto")]),
       msvc_crt_secure_no_warnings = options.msvc_crt_secure_no_warnings or options["jln-msvc-crt-secure-no-warnings"] or (disable_other_options and "" or _flag_names.msvc_crt_secure_no_warnings[get_config("jln-msvc-crt-secure-no-warnings")]),
@@ -338,12 +350,9 @@ function create_options(options, extra_options)
       ndebug = options.ndebug or options["jln-ndebug"] or (disable_other_options and "" or _flag_names.ndebug[get_config("jln-ndebug")]),
       optimization = options.optimization or options["jln-optimization"] or (disable_other_options and "" or _flag_names.optimization[get_config("jln-optimization")]),
       pedantic = options.pedantic or options["jln-pedantic"] or (disable_other_options and "" or _flag_names.pedantic[get_config("jln-pedantic")]),
-      pie = options.pie or options["jln-pie"] or (disable_other_options and "" or _flag_names.pie[get_config("jln-pie")]),
-      relro = options.relro or options["jln-relro"] or (disable_other_options and "" or _flag_names.relro[get_config("jln-relro")]),
       reproducible_build_warnings = options.reproducible_build_warnings or options["jln-reproducible-build-warnings"] or (disable_other_options and "" or _flag_names.reproducible_build_warnings[get_config("jln-reproducible-build-warnings")]),
       sanitizers = options.sanitizers or options["jln-sanitizers"] or (disable_other_options and "" or _flag_names.sanitizers[get_config("jln-sanitizers")]),
       shadow_warnings = options.shadow_warnings or options["jln-shadow-warnings"] or (disable_other_options and "" or _flag_names.shadow_warnings[get_config("jln-shadow-warnings")]),
-      stack_protector = options.stack_protector or options["jln-stack-protector"] or (disable_other_options and "" or _flag_names.stack_protector[get_config("jln-stack-protector")]),
       stl_fix = options.stl_fix or options["jln-stl-fix"] or (disable_other_options and "" or _flag_names.stl_fix[get_config("jln-stl-fix")]),
       suggest_attributes = options.suggest_attributes or options["jln-suggest-attributes"] or (disable_other_options and "" or _flag_names.suggest_attributes[get_config("jln-suggest-attributes")]),
       switch_warnings = options.switch_warnings or options["jln-switch-warnings"] or (disable_other_options and "" or _flag_names.switch_warnings[get_config("jln-switch-warnings")]),
@@ -363,13 +372,14 @@ function create_options(options, extra_options)
       ["analyzer_too_complex_warning"] = _flag_names["analyzer_too_complex_warning"][get_config("jln-analyzer-too-complex-warning")],
       ["analyzer_verbosity"] = _flag_names["analyzer_verbosity"][get_config("jln-analyzer-verbosity")],
       ["color"] = _flag_names["color"][get_config("jln-color")],
-      ["control_flow"] = _flag_names["control_flow"][get_config("jln-control-flow")],
       ["conversion_warnings"] = _flag_names["conversion_warnings"][get_config("jln-conversion-warnings")],
       ["coverage"] = _flag_names["coverage"][get_config("jln-coverage")],
       ["covered_switch_default_warnings"] = _flag_names["covered_switch_default_warnings"][get_config("jln-covered-switch-default-warnings")],
       ["cpu"] = _flag_names["cpu"][get_config("jln-cpu")],
       ["diagnostics_format"] = _flag_names["diagnostics_format"][get_config("jln-diagnostics-format")],
+      ["emcc_debug"] = _flag_names["emcc_debug"][get_config("jln-emcc-debug")],
       ["exceptions"] = _flag_names["exceptions"][get_config("jln-exceptions")],
+      ["hardened"] = _flag_names["hardened"][get_config("jln-hardened")],
       ["linker"] = _flag_names["linker"][get_config("jln-linker")],
       ["lto"] = _flag_names["lto"][get_config("jln-lto")],
       ["msvc_crt_secure_no_warnings"] = _flag_names["msvc_crt_secure_no_warnings"][get_config("jln-msvc-crt-secure-no-warnings")],
@@ -378,12 +388,9 @@ function create_options(options, extra_options)
       ["ndebug"] = _flag_names["ndebug"][get_config("jln-ndebug")],
       ["optimization"] = _flag_names["optimization"][get_config("jln-optimization")],
       ["pedantic"] = _flag_names["pedantic"][get_config("jln-pedantic")],
-      ["pie"] = _flag_names["pie"][get_config("jln-pie")],
-      ["relro"] = _flag_names["relro"][get_config("jln-relro")],
       ["reproducible_build_warnings"] = _flag_names["reproducible_build_warnings"][get_config("jln-reproducible-build-warnings")],
       ["sanitizers"] = _flag_names["sanitizers"][get_config("jln-sanitizers")],
       ["shadow_warnings"] = _flag_names["shadow_warnings"][get_config("jln-shadow-warnings")],
-      ["stack_protector"] = _flag_names["stack_protector"][get_config("jln-stack-protector")],
       ["stl_fix"] = _flag_names["stl_fix"][get_config("jln-stl-fix")],
       ["suggest_attributes"] = _flag_names["suggest_attributes"][get_config("jln-suggest-attributes")],
       ["switch_warnings"] = _flag_names["switch_warnings"][get_config("jln-switch-warnings")],
@@ -888,11 +895,6 @@ function get_flags(options, extra_options)
     end
     if options.var_init ~= "" then
       if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) or ( compiler == 'clang-cl' and version >= 800000 ) ) then
-        if ( ( is_clang_like and version <= 1500000 ) or ( compiler == 'clang-cl' and version <= 1500000 ) ) then
-          if options.var_init == "zero" then
-            insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
-          end
-        end
         if options.var_init == "pattern" then
           insert(jln_cxflags, "-ftrivial-auto-var-init=pattern")
           if compiler == 'gcc' then
@@ -900,9 +902,15 @@ function get_flags(options, extra_options)
           end
         else
           if options.var_init == "zero" then
-            insert(jln_cxflags, "-ftrivial-auto-var-init=zero")
-            if compiler == 'gcc' then
-              insert(jln_cxflags, "-Wtrivial-auto-var-init")
+            if ( ( is_clang_like and version <= 1500000 ) or ( compiler == 'clang-cl' and version <= 1500000 ) ) then
+              if options.var_init == "zero" then
+                insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+              end
+            else
+              insert(jln_cxflags, "-ftrivial-auto-var-init=zero")
+              if compiler == 'gcc' then
+                insert(jln_cxflags, "-Wtrivial-auto-var-init")
+              end
             end
           else
             insert(jln_cxflags, "-ftrivial-auto-var-init=uninitialized")
@@ -942,52 +950,6 @@ function get_flags(options, extra_options)
           end
         else
           insert(jln_cxflags, "-Wno-error")
-        end
-      end
-    end
-    if options.control_flow ~= "" then
-      if compiler == 'clang-emcc' then
-        if options.control_flow == "off" then
-          insert(jln_ldflags, "-sASSERTIONS=0")
-          insert(jln_ldflags, "-sSAFE_HEAP=0")
-        else
-          insert(jln_ldflags, "-sASSERTIONS=1")
-          insert(jln_ldflags, "-sDEMANGLE_SUPPORT=1")
-          if options.sanitizers ~= "" and not ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "address" ) then
-            insert(jln_ldflags, "-sSAFE_HEAP=1")
-          end
-        end
-      else
-        if options.control_flow == "off" then
-          if ( compiler == 'gcc' and version >= 800000 ) then
-            insert(jln_cxflags, "-fcf-protection=none")
-          else
-            insert(jln_cxflags, "-fno-sanitize=cfi")
-            insert(jln_cxflags, "-fcf-protection=none")
-            insert(jln_cxflags, "-fno-sanitize-cfi-cross-dso")
-            insert(jln_ldflags, "-fno-sanitize=cfi")
-          end
-        else
-          if ( ( compiler == 'gcc' and version >= 800000 ) or compiler ~= 'gcc' ) then
-            if options.control_flow == "branch" then
-              insert(jln_cxflags, "-fcf-protection=branch")
-            else
-              if options.control_flow == "return" then
-                insert(jln_cxflags, "-fcf-protection=return")
-              else
-                insert(jln_cxflags, "-fcf-protection=full")
-              end
-            end
-            if ( options.control_flow == "allow_bugs" and compiler == 'clang' ) then
-              insert(jln_cxflags, "-fsanitize=cfi")
-              insert(jln_ldflags, "-fsanitize=cfi")
-              if compiler ~= 'clang-cl' then
-                insert(jln_cxflags, "-fvisibility=hidden")
-              end
-              insert(jln_cxflags, "-flto")
-              insert(jln_ldflags, "-flto")
-            end
-          end
         end
       end
     end
@@ -1080,19 +1042,20 @@ function get_flags(options, extra_options)
                 else
                   insert(jln_cxflags, "-fno-omit-frame-pointer")
                   insert(jln_cxflags, "-fno-optimize-sibling-calls")
-                  if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "address" ) then
-                    insert(jln_cxflags, "-fsanitize=address")
-                    insert(jln_ldflags, "-fsanitize=address")
-                  else
-                    insert(jln_cxflags, "-fsanitize=kernel-address")
-                    insert(jln_ldflags, "-fsanitize=kernel-address")
-                  end
-                  if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "kernel" or options.sanitizers == "kernel_extra" ) then
+                  insert(jln_cxflags, "-fsanitize=address")
+                  insert(jln_ldflags, "-fsanitize=address")
+                  if ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" ) then
                     if ( ( compiler == 'gcc' and version >= 400009 ) or is_clang_like or compiler == 'clang-cl' ) then
                       insert(jln_cxflags, "-fsanitize=undefined")
                       insert(jln_ldflags, "-fsanitize=undefined")
                     end
-                    if ( options.sanitizers == "extra" or options.sanitizers == "kernel_extra" ) then
+                    if ( options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra_with_minimal_code_size" ) then
+                      if ( ( is_clang_like and version >= 1300000 ) or ( compiler == 'clang-cl' and version >= 1300000 ) ) then
+                        insert(jln_cxflags, "-fsanitize-address-use-after-return=always")
+                        insert(jln_ldflags, "-fsanitize-address-use-after-return=always")
+                      end
+                    end
+                    if ( options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" ) then
                       if ( ( compiler == 'gcc' and version >= 800000 ) or ( compiler == 'clang' and version >= 900000 ) or ( compiler == 'clang-cl' and version >= 900000 ) ) then
                         insert(jln_cxflags, "-fsanitize=pointer-compare")
                         insert(jln_cxflags, "-fsanitize=pointer-subtract")
@@ -1102,6 +1065,25 @@ function get_flags(options, extra_options)
                 end
               end
             end
+          end
+        end
+      end
+    end
+    if options.emcc_debug ~= "" then
+      if compiler == 'clang-emcc' then
+        if options.emcc_debug == "off" then
+          insert(jln_ldflags, "-sASSERTIONS=0")
+          insert(jln_ldflags, "-sSAFE_HEAP=0")
+          insert(jln_ldflags, "-sSTACK_OVERFLOW_CHECK=0")
+        else
+          if options.emcc_debug == "slow" then
+            insert(jln_ldflags, "-sASSERTIONS=2")
+          else
+            insert(jln_ldflags, "-sASSERTIONS=1")
+          end
+          insert(jln_ldflags, "-sSTACK_OVERFLOW_CHECK=2")
+          if  not ( ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" or options.sanitizers == "address" or options.sanitizers == "address_with_minimal_code_size" ) ) then
+            insert(jln_ldflags, "-sSAFE_HEAP=1")
           end
         end
       end
@@ -1155,6 +1137,71 @@ function get_flags(options, extra_options)
         end
       else
         insert(jln_cxflags, "-fno-exceptions")
+      end
+    end
+    if options.hardened ~= "" then
+      if ( options.hardened == "on" or options.hardened == "all" ) then
+        if ( compiler == 'gcc' and version >= 1400000 ) then
+          insert(jln_cxflags, "-fhardened")
+          insert(jln_cxflags, "-Whardened")
+          if options.hardened == "all" then
+            insert(jln_cxflags, "-fstack-protector-all")
+          end
+          insert(jln_cxflags, "-Wtrampolines")
+          insert(jln_ldflags, "-Wl,-z,noexecstack")
+        else
+          if options.hardened == "all" then
+            insert(jln_cxflags, "-fstack-protector-all")
+          else
+            insert(jln_cxflags, "-fstack-protector-strong")
+          end
+          if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 1400000 ) ) then
+            insert(jln_cxflags, "-D_FORTIFY_SOURCE=3")
+            if ( ( compiler == 'gcc' and version >= 1300000 ) or ( is_clang_like and version >= 1600000 ) ) then
+              insert(jln_cxflags, "-fstrict-flex-arrays=3")
+            end
+          else
+            insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
+          end
+          if options.var_init == "" then
+            if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) ) then
+              if ( is_clang_like and version <= 1500000 ) then
+                insert(jln_cxflags, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+              else
+                insert(jln_cxflags, "-ftrivial-auto-var-init=zero")
+                if compiler == 'gcc' then
+                  insert(jln_cxflags, "-Wtrivial-auto-var-init")
+                end
+              end
+            end
+          end
+          insert(jln_cxflags, "-fPIE")
+          insert(jln_ldflags, "-fPIE")
+          if compiler ~= 'clang-emcc' then
+            insert(jln_cxflags, "-pie")
+            insert(jln_ldflags, "-pie")
+            insert(jln_ldflags, "-Wl,-z,relro,-z,now")
+            insert(jln_ldflags, "-Wl,-z,noexecstack")
+          end
+          if compiler == 'gcc' then
+            if version >= 400006 then
+              insert(jln_cxflags, "-Wtrampolines")
+              if version >= 800000 then
+                insert(jln_cxflags, "-fstack-clash-protection")
+                insert(jln_cxflags, "-fcf-protection=full")
+              end
+            end
+          else
+            if compiler ~= 'clang-emcc' then
+              if version >= 700000 then
+                insert(jln_cxflags, "-fcf-protection=full")
+                if version >= 1100000 then
+                  insert(jln_cxflags, "-fstack-clash-protection")
+                end
+              end
+            end
+          end
+        end
       end
     end
     if options.diagnostics_format ~= "" then
@@ -1392,107 +1439,6 @@ function get_flags(options, extra_options)
           end
         end
       end
-      if options.stack_protector ~= "" then
-        if options.stack_protector == "off" then
-          insert(jln_cxflags, "-Wno-stack-protector")
-          insert(jln_cxflags, "-U_FORTIFY_SOURCE")
-          insert(jln_ldflags, "-Wno-stack-protector")
-        else
-          insert(jln_cxflags, "-Wstack-protector")
-          if ( ( compiler == 'gcc' and version >= 1200000 ) or ( compiler == 'clang' and version >= 1400000 ) ) then
-            insert(jln_cxflags, "-D_FORTIFY_SOURCE=3")
-          else
-            insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
-          end
-          if options.stack_protector == "strong" then
-            if compiler == 'gcc' then
-              if version >= 400009 then
-                insert(jln_cxflags, "-fstack-protector-strong")
-                insert(jln_ldflags, "-fstack-protector-strong")
-                if version >= 800000 then
-                  insert(jln_cxflags, "-fstack-clash-protection")
-                  insert(jln_ldflags, "-fstack-clash-protection")
-                end
-              end
-            else
-              insert(jln_cxflags, "-fstack-protector-strong")
-              insert(jln_cxflags, "-fsanitize=safe-stack")
-              insert(jln_ldflags, "-fstack-protector-strong")
-              insert(jln_ldflags, "-fsanitize=safe-stack")
-              if version >= 1100000 then
-                insert(jln_cxflags, "-fstack-clash-protection")
-                insert(jln_ldflags, "-fstack-clash-protection")
-              end
-            end
-          else
-            if options.stack_protector == "all" then
-              insert(jln_cxflags, "-fstack-protector-all")
-              insert(jln_ldflags, "-fstack-protector-all")
-              if ( compiler == 'gcc' and version >= 800000 ) then
-                insert(jln_cxflags, "-fstack-clash-protection")
-                insert(jln_ldflags, "-fstack-clash-protection")
-              else
-                insert(jln_cxflags, "-fsanitize=safe-stack")
-                insert(jln_ldflags, "-fsanitize=safe-stack")
-                if version >= 1100000 then
-                  insert(jln_cxflags, "-fstack-clash-protection")
-                  insert(jln_ldflags, "-fstack-clash-protection")
-                end
-              end
-            else
-              insert(jln_cxflags, "-fstack-protector")
-              insert(jln_ldflags, "-fstack-protector")
-            end
-          end
-          if compiler == 'clang' then
-            insert(jln_cxflags, "-fsanitize=shadow-call-stack")
-            insert(jln_ldflags, "-fsanitize=shadow-call-stack")
-          end
-        end
-      end
-      if options.relro ~= "" then
-        if options.relro == "off" then
-          insert(jln_ldflags, "-Wl,-z,norelro")
-        else
-          if options.relro == "on" then
-            insert(jln_ldflags, "-Wl,-z,relro")
-          else
-            insert(jln_ldflags, "-Wl,-z,relro,-z,now,-z,noexecstack")
-            if options.linker ~= "" then
-              if not ( ( options.linker == "gold" or ( compiler == 'gcc' and version < 900000 ) or ( options.linker == "native" and compiler == 'gcc' ) ) ) then
-                insert(jln_ldflags, "-Wl,-z,separate-code")
-              end
-            end
-          end
-        end
-      end
-      if options.pie ~= "" then
-        if options.pie == "off" then
-          insert(jln_ldflags, "-no-pic")
-        else
-          if options.pie == "on" then
-            insert(jln_ldflags, "-pie")
-          else
-            if options.pie == "fpie" then
-              insert(jln_cxflags, "-fpie")
-            else
-              if options.pie == "fpic" then
-                insert(jln_cxflags, "-fpic")
-              else
-                if options.pie == "fPIE" then
-                  insert(jln_cxflags, "-fPIE")
-                else
-                  if options.pie == "fPIC" then
-                    insert(jln_cxflags, "-fPIC")
-                  else
-                    insert(jln_ldflags, "-static-pie")
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
       if options.analyzer ~= "" then
         if ( compiler == 'gcc' and version >= 1000000 ) then
           if options.analyzer == "off" then
@@ -1603,27 +1549,15 @@ function get_flags(options, extra_options)
           end
         end
       end
-      if options.control_flow ~= "" then
-        if options.control_flow == "off" then
-          insert(jln_cxflags, "/guard:cf-")
-        else
-          insert(jln_cxflags, "/guard:cf")
-        end
-      end
-      if options.stack_protector ~= "" then
-        if options.stack_protector == "off" then
+      if options.hardened ~= "" then
+        if options.hardened == "off" then
           insert(jln_cxflags, "/GS-")
         else
-          insert(jln_cxflags, "/GS")
           insert(jln_cxflags, "/sdl")
-          if options.stack_protector == "strong" then
-            if ( compiler == 'cl' and version >= 1900027 ) then
-              insert(jln_cxflags, "/guard:ehcont")
-              insert(jln_ldflags, "/CETCOMPAT")
-            end
-          end
-          if options.control_flow ~= "" and not ( options.control_flow == "off" ) then
-            insert(jln_cxflags, "/guard:cf")
+          insert(jln_cxflags, "/guard:cf")
+          if ( ( compiler == 'cl' and version >= 1900027 ) or ( compiler == 'clang-cl' and version >= 1000000 ) ) then
+            insert(jln_cxflags, "/guard:ehcont")
+            insert(jln_ldflags, "/CETCOMPAT")
           end
         end
       end
@@ -1906,27 +1840,22 @@ function get_flags(options, extra_options)
     end
     if options.sanitizers ~= "" then
       if version >= 1900028 then
-        if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "address" or options.sanitizers == "kernel" or options.sanitizers == "kernel_extra" or options.sanitizers == "kernel_address" ) then
-          if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "address" ) then
-            insert(jln_cxflags, "/fsanitize=address")
-            insert(jln_ldflags, "/fsanitize=address")
-          else
-            insert(jln_cxflags, "/fsanitize=kernel-address")
-            insert(jln_ldflags, "/fsanitize=kernel-address")
-          end
-          if ( options.sanitizers == "extra" or options.sanitizers == "kernel_extra" ) then
+        if ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" or options.sanitizers == "address" or options.sanitizers == "address_with_minimal_code_size" ) then
+          insert(jln_cxflags, "/fsanitize=address")
+          insert(jln_ldflags, "/fsanitize=address")
+          if ( options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" ) then
             insert(jln_cxflags, "/fsanitize-address-use-after-return")
           end
         end
       else
-        if options.sanitizers == "on" then
+        if ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" or options.sanitizers == "address" or options.sanitizers == "address_with_minimal_code_size" ) then
           insert(jln_cxflags, "/sdl")
           if ( options.optimization == "0" ) then
             insert(jln_cxflags, "/RTCsu")
           end
         else
-          if options.stack_protector ~= "" then
-            if options.stack_protector ~= "off" then
+          if options.sanitizers == "off" then
+            if options.hardened == "" then
               insert(jln_cxflags, "/sdl-")
             end
           end
@@ -2043,37 +1972,23 @@ function get_flags(options, extra_options)
             end
           end
         end
-        if options.stack_protector ~= "" then
-          if options.stack_protector == "off" then
+        if options.hardened ~= "" then
+          if options.hardened == "off" then
             insert(jln_cxflags, "/GS-")
           else
             insert(jln_cxflags, "/GS")
+            insert(jln_cxflags, "/guard:cf")
+            insert(jln_cxflags, "/mconditional-branch:all-fix")
+            insert(jln_cxflags, "/Qcf-protection:full")
           end
         end
         if options.sanitizers ~= "" then
-          if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "address" or options.sanitizers == "kernel" or options.sanitizers == "kernel_extra" or options.sanitizers == "kernel_address" ) then
+          if ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" or options.sanitizers == "address" or options.sanitizers == "address_with_minimal_code_size" ) then
             insert(jln_cxflags, "/Qtrapuv")
             insert(jln_cxflags, "/RTCsu")
-            if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "kernel" or options.sanitizers == "kernel_extra" ) then
+            if ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" ) then
               insert(jln_cxflags, "/Qfp-stack-check")
               insert(jln_cxflags, "/Qfp-trap:common")
-            end
-          end
-        end
-        if options.control_flow ~= "" then
-          if options.control_flow == "off" then
-            insert(jln_cxflags, "/guard:cf-")
-            insert(jln_cxflags, "/mconditional-branch=keep")
-          else
-            insert(jln_cxflags, "/guard:cf")
-            if options.control_flow == "branch" then
-              insert(jln_cxflags, "/mconditional-branch:all-fix")
-              insert(jln_cxflags, "/Qcf-protection:branch")
-            else
-              if options.control_flow == "on" then
-                insert(jln_cxflags, "/mconditional-branch:all-fix")
-                insert(jln_cxflags, "/Qcf-protection:full")
-              end
             end
           end
         end
@@ -2221,69 +2136,24 @@ function get_flags(options, extra_options)
               end
             end
           end
-          if options.stack_protector ~= "" then
-            if options.stack_protector == "off" then
-              insert(jln_cxflags, "-fno-protector-strong")
-              insert(jln_cxflags, "-U_FORTIFY_SOURCE")
-              insert(jln_ldflags, "-fno-protector-strong")
-            else
+          if options.hardened ~= "" then
+            if ( options.hardened == "on" or options.hardened == "all" ) then
               insert(jln_cxflags, "-D_FORTIFY_SOURCE=2")
-              if options.stack_protector == "strong" then
+              if options.hardened == "all" then
+                insert(jln_cxflags, "-fstack-protector-all")
+              else
                 insert(jln_cxflags, "-fstack-protector-strong")
-                insert(jln_ldflags, "-fstack-protector-strong")
-              else
-                if options.stack_protector == "all" then
-                  insert(jln_cxflags, "-fstack-protector-all")
-                  insert(jln_ldflags, "-fstack-protector-all")
-                else
-                  insert(jln_cxflags, "-fstack-protector")
-                  insert(jln_ldflags, "-fstack-protector")
-                end
               end
-            end
-          end
-          if options.relro ~= "" then
-            if options.relro == "off" then
-              insert(jln_ldflags, "-Xlinker-znorelro")
-            else
-              if options.relro == "on" then
-                insert(jln_ldflags, "-Xlinker-zrelro")
-              else
-                insert(jln_ldflags, "-Xlinker-zrelro")
-                insert(jln_ldflags, "-Xlinker-znow")
-                insert(jln_ldflags, "-Xlinker-znoexecstack")
-              end
-            end
-          end
-          if options.pie ~= "" then
-            if options.pie == "off" then
-              insert(jln_ldflags, "-no-pic")
-            else
-              if options.pie == "on" then
-                insert(jln_ldflags, "-pie")
-              else
-                if options.pie == "fpie" then
-                  insert(jln_cxflags, "-fpie")
-                else
-                  if options.pie == "fpic" then
-                    insert(jln_cxflags, "-fpic")
-                  else
-                    if options.pie == "fPIE" then
-                      insert(jln_cxflags, "-fPIE")
-                    else
-                      if options.pie == "fPIC" then
-                        insert(jln_cxflags, "-fPIC")
-                      end
-                    end
-                  end
-                end
-              end
+              insert(jln_cxflags, "-fcf-protection=full")
+              insert(jln_ldflags, "-Xlinker-zrelro")
+              insert(jln_ldflags, "-Xlinker-znow")
+              insert(jln_ldflags, "-Xlinker-znoexecstack")
             end
           end
           if options.sanitizers ~= "" then
-            if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "address" or options.sanitizers == "kernel" or options.sanitizers == "kernel_extra" or options.sanitizers == "kernel_address" ) then
+            if ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" or options.sanitizers == "address" or options.sanitizers == "address_with_minimal_code_size" ) then
               insert(jln_cxflags, "-ftrapuv")
-              if ( options.sanitizers == "on" or options.sanitizers == "extra" or options.sanitizers == "kernel" or options.sanitizers == "kernel_extra" ) then
+              if ( options.sanitizers == "on" or options.sanitizers == "with_minimal_code_size" or options.sanitizers == "extra" or options.sanitizers == "extra_with_minimal_code_size" ) then
                 insert(jln_cxflags, "-fp-stack-check")
                 insert(jln_cxflags, "-fp-trap=common")
               end
@@ -2312,22 +2182,6 @@ function get_flags(options, extra_options)
               if options.lto ~= "thin_or_nothing" then
                 insert(jln_cxflags, "-ipo")
                 insert(jln_ldflags, "-ipo")
-              end
-            end
-          end
-          if options.control_flow ~= "" then
-            if options.control_flow == "off" then
-              insert(jln_cxflags, "-mconditional-branch=keep")
-              insert(jln_cxflags, "-fcf-protection=none")
-            else
-              if options.control_flow == "branch" then
-                insert(jln_cxflags, "-mconditional-branch=all-fix")
-                insert(jln_cxflags, "-fcf-protection=branch")
-              else
-                if options.control_flow == "on" then
-                  insert(jln_cxflags, "-mconditional-branch=all-fix")
-                  insert(jln_cxflags, "-fcf-protection=full")
-                end
               end
             end
           end
