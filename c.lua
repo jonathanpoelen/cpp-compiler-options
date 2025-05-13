@@ -57,6 +57,10 @@
 --  Supported options are listed below by category.
 --  The same option can be found in several categories.
 --
+--  For a full description of options and values,
+--  see [C++ Compiler Options reference](https://jonathanpoelen.github.io/cpp-compiler-options/)
+--  or use the `list_options.lua` generator.
+--
 --  The first value corresponds to the one used by default,
 --  and the value `default` has no associated behavior.
 --
@@ -64,7 +68,7 @@
 --
 --  <!-- ./compiler-options.lua generators/list_options.lua --color --categorized -->
 --  ```ini
---  # Warning:
+--  # Warning options:
 --
 --  warnings = on default off essential extensive
 --  warnings_as_error = default off on basic
@@ -79,47 +83,52 @@
 --  unsafe_buffer_usage_warnings = default on off
 --  windows_abi_compatibility_warnings = off default on
 --
---  # Pedantic:
+--
+--  # Pedantic options:
 --
 --  pedantic = on default off as_error
 --  stl_fix = on default off
 --
---  # Debug:
+--
+--  # Debug options:
 --
 --  symbols = default hidden strip_all gc_sections nodebug debug minimal_debug full_debug btf codeview ctf ctf1 ctf2 vms vms1 vms2 vms3 dbx lldb sce dwarf
 --  stl_hardening = default off fast extensive debug debug_with_broken_abi
---  control_flow = default off on branch return allow_bugs
---  sanitizers = default off on extra address kernel kernel_extra kernel_extra kernel_address thread undefined undefined_minimal_runtime scudo_hardened_allocator
+--  sanitizers = default off on with_minimal_code_size extra extra_with_minimal_code_size address address_with_minimal_code_size thread undefined undefined_minimal_runtime scudo_hardened_allocator
 --  var_init = default uninitialized pattern zero
+--  emcc_debug = default off on slow
 --  ndebug = with_optimization_1_or_above default off on
 --  optimization = default 0 g 1 2 3 fast size z
 --
---  # Optimization:
+--
+--  # Optimization options:
 --
 --  cpu = default generic native
 --  lto = default off on full thin_or_nothing whole_program whole_program_and_full_lto
 --  optimization = default 0 g 1 2 3 fast size z
 --  optimization_warnings = default off on
 --
---  # C++:
+--
+--  # C++ options:
 --
 --  exceptions = default off on
 --  rtti = default off on
 --
---  # Hardening:
 --
---  control_flow = default off on branch return allow_bugs
---  relro = default off on full
---  stack_protector = default off on strong all
+--  # Hardening options:
+--
+--  hardened = default off on all
 --  stl_hardening = default off fast extensive debug debug_with_broken_abi
 --
---  # Analyzer:
+--
+--  # Static Analyzer options:
 --
 --  analyzer = default off on with_external_headers
 --  analyzer_too_complex_warning = default off on
 --  analyzer_verbosity = default 0 1 2 3
 --
---  # Other:
+--
+--  # Other options:
 --
 --  color = default auto never always
 --  coverage = default off on
@@ -129,7 +138,6 @@
 --  msvc_diagnostics_format = caret default classic column
 --  msvc_isystem = default anglebrackets include_and_caexcludepath external_as_include_system_flag assumed
 --  msvc_isystem_with_template_instantiations_treated_as_non_external = default off on
---  pie = default off on static fpic fPIC fpie fPIE
 --  windows_bigobj = on default
 --  ```
 --  <!-- ./compiler-options.lua -->
@@ -154,16 +162,14 @@
 --
 --  <!-- enddefault -->
 --
---  ### To know
+--  ## To know
 --
---  - `control_flow=allow_bugs`
---    - clang: Can crash programs with "illegal hardware instruction" on totally unlikely lines. It can also cause link errors and force `-fvisibility=hidden` and `-flto`.
 --  - `msvc_isystem=external_as_include_system_flag` is only available with `cmake`.
 --  - `stl_hardening=debug`
 --    - msvc: unlike `stl_hardening=debug_with_broken_abi`, STL debugging is not enabled by this option, as it breaks the ABI (only hardening mode is enabled on recent versions). However, as the `_DEBUG` macro can be defined in many different ways, STL debugging can be activated and the ABI broken.
 --
 --
---  ### Sanitizers
+--  ## Sanitizers
 --
 --  Some sanitizers activated at compile time are only realistically active in the presence of a configuration in an environment variable.
 --  `sanitizers=on` does not include these sanitizers, unlike `sanitizers=extra`.
@@ -173,8 +179,8 @@
 --  # cl (Windows)
 --  ASAN_OPTIONS=detect_stack_use_after_return=1
 --
---  # gcc
---  ASAN_OPTIONS=detect_invalid_pointer_pairs=2  # see -fsanitize=pointer-subtract and -fsanitize=pointer-compare
+--  # gcc / clang (see -fsanitize=pointer-subtract and -fsanitize=pointer-compare)
+--  ASAN_OPTIONS=detect_invalid_pointer_pairs=2
 --
 --  # macOS
 --  ASAN_OPTIONS=detect_leaks=1
@@ -189,16 +195,25 @@
 --
 --  See [AddressSanitizer Flags](https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags)
 --  for a list of supported options.
+--  A useful pre-set to enable more aggressive diagnostics compared to the default behavior is given below:
 --
+--  ```sh
+--  ASAN_OPTIONS=\
+--  strict_string_checks=1:\
+--  detect_stack_use_after_return=1:\
+--  check_initialization_order=1:\
+--  strict_init_order=1:\
+--  alloc_dealloc_mismatch=1
+--  ```
 --
 --  ## Recommended options
 --
 --  category | options
 --  ---------|---------
---  debug | `var_init=pattern`<br>`control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
+--  debug | `emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`optimization=g` or `default`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`symbols=debug` or `full_debug`<br>`var_init=pattern`
 --  release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
---  security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`pie=fPIE`<br>`stl_hardening=fast` or `extensive`
---  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`switch_warnings=exhaustive_enum`<br>`shadow_warnings=local`<br>`windows_abi_compatibility_warnings=on`
+--  security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
+--  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`shadow_warnings=local`<br>`switch_warnings=exhaustive_enum`<br>`windows_abi_compatibility_warnings=on`
 --
 --  
 
@@ -222,8 +237,6 @@ local _jln_c_flag_names = {
   ["analyzer_verbosity"] = true,
   ["jln-color"] = true,
   ["color"] = true,
-  ["jln-control-flow"] = true,
-  ["control_flow"] = true,
   ["jln-conversion-warnings"] = true,
   ["conversion_warnings"] = true,
   ["jln-coverage"] = true,
@@ -234,8 +247,12 @@ local _jln_c_flag_names = {
   ["cpu"] = true,
   ["jln-diagnostics-format"] = true,
   ["diagnostics_format"] = true,
+  ["jln-emcc-debug"] = true,
+  ["emcc_debug"] = true,
   ["jln-exceptions"] = true,
   ["exceptions"] = true,
+  ["jln-hardened"] = true,
+  ["hardened"] = true,
   ["jln-linker"] = true,
   ["linker"] = true,
   ["jln-lto"] = true,
@@ -252,18 +269,12 @@ local _jln_c_flag_names = {
   ["optimization"] = true,
   ["jln-pedantic"] = true,
   ["pedantic"] = true,
-  ["jln-pie"] = true,
-  ["pie"] = true,
-  ["jln-relro"] = true,
-  ["relro"] = true,
   ["jln-reproducible-build-warnings"] = true,
   ["reproducible_build_warnings"] = true,
   ["jln-sanitizers"] = true,
   ["sanitizers"] = true,
   ["jln-shadow-warnings"] = true,
   ["shadow_warnings"] = true,
-  ["jln-stack-protector"] = true,
-  ["stack_protector"] = true,
   ["jln-stl-fix"] = true,
   ["stl_fix"] = true,
   ["jln-suggest-attributes"] = true,
@@ -306,16 +317,13 @@ function jln_c_newoptions(defaults)
   newoption{trigger="jln-analyzer-too-complex-warning", allowed={{'default'}, {'off'}, {'on'}}, description="By default, the analysis silently stops if the code is too complicated for the analyzer to fully explore and it reaches an internal limit. This option warns if this occurs. Available only with GCC."}
   if not _OPTIONS["jln-analyzer-too-complex-warning"] then _OPTIONS["jln-analyzer-too-complex-warning"] = (defaults["analyzer_too_complex_warning"] or defaults["jln-analyzer-too-complex-warning"] or "default") end
 
-  newoption{trigger="jln-analyzer-verbosity", allowed={{'default'}, {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'}, {'1', 'As per the previous level, but also show events for the entry to each function.'}, {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.'}, {'3', 'As per the previous level, but show all control flow events, not just significant ones.'}}, description="Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC."}
+  newoption{trigger="jln-analyzer-verbosity", allowed={{'default'}, {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'}, {'1', 'As per the previous level, but also show events for the entry to each function.'}, {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. \"true path taken\" at a conditional). This level is the default.'}, {'3', 'As per the previous level, but show all control flow events, not just significant ones.'}}, description="Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC."}
   if not _OPTIONS["jln-analyzer-verbosity"] then _OPTIONS["jln-analyzer-verbosity"] = (defaults["analyzer_verbosity"] or defaults["jln-analyzer-verbosity"] or "default") end
 
   newoption{trigger="jln-color", allowed={{'default'}, {'auto'}, {'never'}, {'always'}}, description=""}
   if not _OPTIONS["jln-color"] then _OPTIONS["jln-color"] = (defaults["color"] or defaults["jln-color"] or "default") end
 
-  newoption{trigger="jln-control-flow", allowed={{'default'}, {'off'}, {'on'}, {'branch'}, {'return'}, {'allow_bugs'}}, description="Insert extra runtime security checks to detect attempts to compromise your code."}
-  if not _OPTIONS["jln-control-flow"] then _OPTIONS["jln-control-flow"] = (defaults["control_flow"] or defaults["jln-control-flow"] or "default") end
-
-  newoption{trigger="jln-conversion-warnings", allowed={{'default'}, {'off'}, {'on', 'Combine conversion and sign value'}, {'sign', 'Warn for implicit conversions that may change the sign (lke `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.'}, {'float', 'Warn for implicit conversions that reduce the precision of a real value.'}, {'conversion', 'Warn for implicit conversions that may alter a value.'}, {'all', 'Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.'}}, description="Warn for implicit conversions that may alter a value."}
+  newoption{trigger="jln-conversion-warnings", allowed={{'default'}, {'off'}, {'on', 'Combine conversion and sign value'}, {'sign', 'Warn for implicit conversions that may change the sign (the `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.'}, {'float', 'Warn for implicit conversions that reduce the precision of a real value.'}, {'conversion', 'Warn for implicit conversions that may alter a value.'}, {'all', 'Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.'}}, description="Warn for implicit conversions that may alter a value."}
   if not _OPTIONS["jln-conversion-warnings"] then _OPTIONS["jln-conversion-warnings"] = (defaults["conversion_warnings"] or defaults["jln-conversion-warnings"] or "on") end
 
   newoption{trigger="jln-coverage", allowed={{'default'}, {'off'}, {'on'}}, description=""}
@@ -330,70 +338,67 @@ function jln_c_newoptions(defaults)
   newoption{trigger="jln-diagnostics-format", allowed={{'default'}, {'fixits'}, {'patch'}, {'print_source_range_info'}}, description="Emit fix-it hints in a machine-parseable format."}
   if not _OPTIONS["jln-diagnostics-format"] then _OPTIONS["jln-diagnostics-format"] = (defaults["diagnostics_format"] or defaults["jln-diagnostics-format"] or "default") end
 
+  newoption{trigger="jln-emcc-debug", allowed={{'default'}, {'off', 'Disable checks used with default `-O0` optimization.'}, {'on', 'Activate some checks in addition to those used with default `-O0` optimization.'}, {'slow', 'Activate checks that can greatly slow down the program.'}}, description="Add checks with Emscripten compiler."}
+  if not _OPTIONS["jln-emcc-debug"] then _OPTIONS["jln-emcc-debug"] = (defaults["emcc_debug"] or defaults["jln-emcc-debug"] or "default") end
+
   newoption{trigger="jln-exceptions", allowed={{'default'}, {'off'}, {'on'}}, description="Enable C++ exceptions."}
   if not _OPTIONS["jln-exceptions"] then _OPTIONS["jln-exceptions"] = (defaults["exceptions"] or defaults["jln-exceptions"] or "default") end
+
+  newoption{trigger="jln-hardened", allowed={{'default'}, {'off', 'Use `/GS-` with MSVC-like compiler. Does nothing with other compilers.'}, {'on'}, {'all', 'Use -fstack-protector-all instead of -fstack-protector-strong'}}, description="Enable a set of flags for C and C++ that improve the security of the generated code without affecting its ABI. Can impact performance."}
+  if not _OPTIONS["jln-hardened"] then _OPTIONS["jln-hardened"] = (defaults["hardened"] or defaults["jln-hardened"] or "default") end
 
   newoption{trigger="jln-linker", allowed={{'default'}, {'bfd'}, {'gold'}, {'lld'}, {'mold'}, {'native'}}, description="Configure linker."}
   if not _OPTIONS["jln-linker"] then _OPTIONS["jln-linker"] = (defaults["linker"] or defaults["jln-linker"] or "default") end
 
-  newoption{trigger="jln-lto", allowed={{'default'}, {'off'}, {'on', 'Activates ThinLTO when available (Clang), otherwise FullLTO.'}, {'full', 'Activates FullLTO.'}, {'thin_or_nothing', 'Activates ThinLTO. Disable lto when not supported.'}, {'whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.'}, {'whole_program_and_full_lto', 'Same as whole_program, but use FullLTO when not supported.'}}, description="Enable Link Time Optimization. Also known as interprocedural optimization (IPO)."}
+  newoption{trigger="jln-lto", allowed={{'default'}, {'off'}, {'on', 'Activates ThinLTO when available (Clang), otherwise FullLTO.'}, {'full', 'Activates FullLTO.'}, {'thin_or_nothing', 'Activates ThinLTO. Disable lto when not supported.'}, {'whole_program', 'Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.'}, {'whole_program_and_full_lto', 'Same as `whole_program`, but use FullLTO when not supported.'}}, description="Enable Link Time Optimization. Also known as interprocedural optimization (IPO)."}
   if not _OPTIONS["jln-lto"] then _OPTIONS["jln-lto"] = (defaults["lto"] or defaults["jln-lto"] or "default") end
 
   newoption{trigger="jln-msvc-crt-secure-no-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="Disable CRT warnings with MSVC."}
   if not _OPTIONS["jln-msvc-crt-secure-no-warnings"] then _OPTIONS["jln-msvc-crt-secure-no-warnings"] = (defaults["msvc_crt_secure_no_warnings"] or defaults["jln-msvc-crt-secure-no-warnings"] or "on") end
 
-  newoption{trigger="jln-msvc-diagnostics-format", allowed={{'default'}, {'classic', 'Which reports only the line number where the issue was found.'}, {'column', 'Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.'}, {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.'}}, description="Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170)."}
+  newoption{trigger="jln-msvc-diagnostics-format", allowed={{'default'}, {'classic', 'Which reports only the line number where the issue was found.'}, {'column', 'Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.'}, {'caret', 'Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.'}}, description="Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options)."}
   if not _OPTIONS["jln-msvc-diagnostics-format"] then _OPTIONS["jln-msvc-diagnostics-format"] = (defaults["msvc_diagnostics_format"] or defaults["jln-msvc-diagnostics-format"] or "caret") end
 
   newoption{trigger="jln-msvc-isystem", allowed={{'default'}, {'anglebrackets'}, {'include_and_caexcludepath'}, {'assumed'}}, description="Warnings concerning external header (https://devblogs.microsoft.com/cppblog/broken-warnings-theory)."}
   if not _OPTIONS["jln-msvc-isystem"] then _OPTIONS["jln-msvc-isystem"] = (defaults["msvc_isystem"] or defaults["jln-msvc-isystem"] or "default") end
 
-  newoption{trigger="jln-ndebug", allowed={{'default'}, {'off'}, {'on'}, {'with_optimization_1_or_above'}}, description="Enable NDEBUG macro (disable assert macro)."}
+  newoption{trigger="jln-ndebug", allowed={{'default'}, {'off'}, {'on'}, {'with_optimization_1_or_above'}}, description="Enable `NDEBUG` macro (disable assert macro)."}
   if not _OPTIONS["jln-ndebug"] then _OPTIONS["jln-ndebug"] = (defaults["ndebug"] or defaults["jln-ndebug"] or "with_optimization_1_or_above") end
 
-  newoption{trigger="jln-optimization", allowed={{'default'}, {'0', 'Not optimize.'}, {'g', 'Enable debugging experience.'}, {'1', 'Optimize.'}, {'2', 'Optimize even more.'}, {'3', 'Optimize yet more.'}, {'fast', 'Enables all optimization=3 and disregard strict standards compliance.'}, {'size', 'Optimize for size.'}, {'z', 'Optimize for size aggressively (/!\\ possible slow compilation with emcc).'}}, description="Optimization level."}
+  newoption{trigger="jln-optimization", allowed={{'default'}, {'0', 'Not optimize.'}, {'g', 'Enable debugging experience.'}, {'1', 'Optimize.'}, {'2', 'Optimize even more.'}, {'3', 'Optimize yet more.'}, {'fast', 'Enables all `optimization=3` and disregard strict standards compliance.'}, {'size', 'Optimize for size.'}, {'z', 'Optimize for size aggressively (/!\\ possible slow compilation with emcc).'}}, description="Optimization level."}
   if not _OPTIONS["jln-optimization"] then _OPTIONS["jln-optimization"] = (defaults["optimization"] or defaults["jln-optimization"] or "default") end
 
   newoption{trigger="jln-pedantic", allowed={{'default'}, {'off'}, {'on'}, {'as_error'}}, description="Issue all the warnings demanded by strict ISO C and ISO C++."}
   if not _OPTIONS["jln-pedantic"] then _OPTIONS["jln-pedantic"] = (defaults["pedantic"] or defaults["jln-pedantic"] or "on") end
 
-  newoption{trigger="jln-pie", allowed={{'default'}, {'off'}, {'on'}, {'static'}, {'fpic'}, {'fPIC'}, {'fpie'}, {'fPIE'}}, description="Controls position-independent code generation."}
-  if not _OPTIONS["jln-pie"] then _OPTIONS["jln-pie"] = (defaults["pie"] or defaults["jln-pie"] or "default") end
-
-  newoption{trigger="jln-relro", allowed={{'default'}, {'off'}, {'on'}, {'full'}}, description="Specifies a memory segment that should be made read-only after relocation, if supported."}
-  if not _OPTIONS["jln-relro"] then _OPTIONS["jln-relro"] = (defaults["relro"] or defaults["jln-relro"] or "default") end
-
   newoption{trigger="jln-reproducible-build-warnings", allowed={{'default'}, {'off'}, {'on'}}, description="Warn when macros \"__TIME__\", \"__DATE__\" or \"__TIMESTAMP__\" are encountered as they might prevent bit-wise-identical reproducible compilations."}
   if not _OPTIONS["jln-reproducible-build-warnings"] then _OPTIONS["jln-reproducible-build-warnings"] = (defaults["reproducible_build_warnings"] or defaults["jln-reproducible-build-warnings"] or "default") end
 
-  newoption{trigger="jln-sanitizers", allowed={{'default'}, {'off'}, {'on', 'Enable address sanitizer and other compatible sanitizers'}, {'extra', 'Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.'}, {'address', 'Enable address sanitizer only.'}, {'kernel', 'Enable kernel-address sanitizers and other compatible sanitizers'}, {'kernel_extra', 'Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.'}, {'kernel_extra'}, {'kernel_address', 'Enable kernel address sanitizer only.'}, {'thread', 'Enable thread sanitizer.'}, {'undefined', 'Enable undefined sanitizer.'}, {'undefined_minimal_runtime', 'Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).'}, {'scudo_hardened_allocator', 'Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html'}}, description="Enable sanitizers (asan, ubsan, etc) when available."}
+  newoption{trigger="jln-sanitizers", allowed={{'default'}, {'off'}, {'on', 'Enable address sanitizer and other compatible sanitizers'}, {'with_minimal_code_size', 'Enable address sanitizer and other compatible sanitizers, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `-fsanitize-address-use-after-return=runtime` with Clang family).'}, {'extra', 'Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.'}, {'extra_with_minimal_code_size', 'Combines `extra` and `with_minimal_code_size` values.'}, {'address', 'Enable address sanitizer only.'}, {'address_with_minimal_code_size', 'Enable address sanitizer only, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `-fsanitize-address-use-after-return=runtime` with Clang family).'}, {'thread', 'Enable thread sanitizer.'}, {'undefined', 'Enable undefined sanitizer.'}, {'undefined_minimal_runtime', 'Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).'}, {'scudo_hardened_allocator', 'Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html.'}}, description="Enable sanitizers (asan, ubsan, etc) when available."}
   if not _OPTIONS["jln-sanitizers"] then _OPTIONS["jln-sanitizers"] = (defaults["sanitizers"] or defaults["jln-sanitizers"] or "default") end
 
   newoption{trigger="jln-shadow-warnings", allowed={{'default'}, {'off'}, {'on'}, {'local'}, {'compatible_local'}, {'all'}}, description=""}
   if not _OPTIONS["jln-shadow-warnings"] then _OPTIONS["jln-shadow-warnings"] = (defaults["shadow_warnings"] or defaults["jln-shadow-warnings"] or "off") end
 
-  newoption{trigger="jln-stack-protector", allowed={{'default'}, {'off'}, {'on'}, {'strong'}, {'all'}}, description="Emit extra code to check for buffer overflows, such as stack smashing attacks."}
-  if not _OPTIONS["jln-stack-protector"] then _OPTIONS["jln-stack-protector"] = (defaults["stack_protector"] or defaults["jln-stack-protector"] or "default") end
-
-  newoption{trigger="jln-stl-fix", allowed={{'default'}, {'off'}, {'on'}}, description="Enable /DNOMINMAX with msvc."}
+  newoption{trigger="jln-stl-fix", allowed={{'default'}, {'off'}, {'on'}}, description="Enable `/DNOMINMAX` with MSVC."}
   if not _OPTIONS["jln-stl-fix"] then _OPTIONS["jln-stl-fix"] = (defaults["stl_fix"] or defaults["jln-stl-fix"] or "on") end
 
-  newoption{trigger="jln-suggest-attributes", allowed={{'default'}, {'off'}, {'on', 'Suggests noreturn attribute with Clang and GCC.'}, {'common', 'Suggests noreturn and format attributes with GCC ; noreturn with Clang.'}, {'analysis', 'Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.'}, {'unity', 'Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.'}, {'all', 'Active all suggestions for attributes.'}}, description="Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option -fipa-pure-const, which is enabled by default at -O1 and higher."}
+  newoption{trigger="jln-suggest-attributes", allowed={{'default'}, {'off'}, {'on', 'Suggests noreturn attribute with Clang and GCC.'}, {'common', 'Suggests noreturn and format attributes with GCC ; noreturn with Clang.'}, {'analysis', 'Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.'}, {'unity', 'Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.'}, {'all', 'Active all suggestions for attributes.'}}, description="Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option `-fipa-pure-const`, which is enabled by default at `-O1` and higher."}
   if not _OPTIONS["jln-suggest-attributes"] then _OPTIONS["jln-suggest-attributes"] = (defaults["suggest_attributes"] or defaults["jln-suggest-attributes"] or "on") end
 
   newoption{trigger="jln-switch-warnings", allowed={{'default'}, {'on'}, {'off'}, {'exhaustive_enum'}, {'mandatory_default'}, {'exhaustive_enum_and_mandatory_default'}}, description="Warnings concerning the switch keyword."}
   if not _OPTIONS["jln-switch-warnings"] then _OPTIONS["jln-switch-warnings"] = (defaults["switch_warnings"] or defaults["jln-switch-warnings"] or "on") end
 
-  newoption{trigger="jln-symbols", allowed={{'default'}, {'hidden', 'Use -fvisibility=hidden with Clang, GCC and other compilers that support this flag.'}, {'strip_all', 'Strip all symbols.'}, {'gc_sections', 'Enable garbage collection of unused sections.'}, {'nodebug', 'Request no debugging information.'}, {'debug', 'Request debugging information. How much information can be controlled with options \'minimal_debug\', and \'full_debug\'. If the level is not supported by a compiler, this is equivalent to the \'debug\' option.'}, {'minimal_debug', 'If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables.'}, {'full_debug', 'If possible, includes extra information, such as all the macro definitions present in the program.'}, {'btf', 'GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.'}, {'codeview', 'GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).'}, {'ctf', 'GCC only. Produce a CTF debug information. The default level is 2.'}, {'ctf1', 'Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.'}, {'ctf2', 'Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.'}, {'vms', 'GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.'}, {'vms1', 'Same as 1, but for Alpha/VMS.'}, {'vms2', 'Same as 2, but for Alpha/VMS.'}, {'vms3', 'Same as 3, but for Alpha/VMS.'}, {'dbx', 'Clang only.'}, {'lldb', 'Clang only.'}, {'sce', 'Clang only.'}, {'dwarf', 'Clang-cl only'}}, description="Produce debugging information in the operating system\'s."}
+  newoption{trigger="jln-symbols", allowed={{'default'}, {'hidden', 'Use `-fvisibility=hidden` with Clang, GCC and other compilers that support this flag.'}, {'strip_all', 'Strip all symbols.'}, {'gc_sections', 'Enable garbage collection of unused sections.'}, {'nodebug', 'Request no debugging information.'}, {'debug', 'Request debugging information. How much information can be controlled with options `minimal_debug` and `full_debug`.'}, {'minimal_debug', 'If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables. If the level is not supported by a compiler, this is equivalent to the `debug` option.'}, {'full_debug', 'If possible, includes extra information, such as all the macro definitions present in the program.'}, {'btf', 'GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.'}, {'codeview', 'GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).'}, {'ctf', 'GCC only. Produce a CTF debug information. The default level is 2.'}, {'ctf1', 'Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.'}, {'ctf2', 'Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.'}, {'vms', 'GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.'}, {'vms1', 'Same as `minimal_debug`, but for Alpha/VMS.'}, {'vms2', 'Same as `debug`, but for Alpha/VMS.'}, {'vms3', 'Same as `full_debug`, but for Alpha/VMS.'}, {'dbx', 'Clang only.'}, {'lldb', 'Clang only.'}, {'sce', 'Clang only.'}, {'dwarf', 'Clang-cl only'}}, description="Produce debugging information in the operating system\'s."}
   if not _OPTIONS["jln-symbols"] then _OPTIONS["jln-symbols"] = (defaults["symbols"] or defaults["jln-symbols"] or "default") end
 
-  newoption{trigger="jln-unsafe-buffer-usage-warnings", allowed={{'default'}, {'on'}, {'off'}}, description="Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html)."}
+  newoption{trigger="jln-unsafe-buffer-usage-warnings", allowed={{'default'}, {'on'}, {'off'}}, description="Enable `-Wunsafe-buffer-usage` with Clang (https://clang.llvm.org/docs/SafeBuffers.html)."}
   if not _OPTIONS["jln-unsafe-buffer-usage-warnings"] then _OPTIONS["jln-unsafe-buffer-usage-warnings"] = (defaults["unsafe_buffer_usage_warnings"] or defaults["jln-unsafe-buffer-usage-warnings"] or "default") end
 
   newoption{trigger="jln-var-init", allowed={{'default'}, {'uninitialized', 'Doesn\'t initialize any automatic variables (default behavior of Clang and GCC).'}, {'pattern', 'Initialize automatic variables with byte-repeatable pattern (0xFE for GCC, 0xAA for Clang).'}, {'zero', 'zero Initialize automatic variables with zeroes.'}}, description="Initialize all stack variables implicitly, including padding."}
   if not _OPTIONS["jln-var-init"] then _OPTIONS["jln-var-init"] = (defaults["var_init"] or defaults["jln-var-init"] or "default") end
 
-  newoption{trigger="jln-warnings", allowed={{'default'}, {'off'}, {'on', 'Activates essential warnings and extras.'}, {'essential', 'Activates essential warnings, typically -Wall -Wextra or /W4).'}, {'extensive', 'Activates essential warnings, extras and some that may raise false positives'}}, description="Warning level."}
+  newoption{trigger="jln-warnings", allowed={{'default'}, {'off'}, {'on', 'Activates essential warnings and extras.'}, {'essential', 'Activates essential warnings, typically `-Wall -Wextra` or `/W4`).'}, {'extensive', 'Activates essential warnings, extras and some that may raise false positives'}}, description="Warning level."}
   if not _OPTIONS["jln-warnings"] then _OPTIONS["jln-warnings"] = (defaults["warnings"] or defaults["jln-warnings"] or "on") end
 
   newoption{trigger="jln-warnings-as-error", allowed={{'default'}, {'off'}, {'on'}, {'basic'}}, description="Make all or some warnings into errors."}
@@ -446,13 +451,14 @@ function jln_c_tovalues(values, disable_others)
       ["analyzer_too_complex_warning"] = values["analyzer_too_complex_warning"] or values["jln-analyzer-too-complex-warning"] or (disable_others and "default" or _OPTIONS["jln-analyzer-too-complex-warning"]),
       ["analyzer_verbosity"] = values["analyzer_verbosity"] or values["jln-analyzer-verbosity"] or (disable_others and "default" or _OPTIONS["jln-analyzer-verbosity"]),
       ["color"] = values["color"] or values["jln-color"] or (disable_others and "default" or _OPTIONS["jln-color"]),
-      ["control_flow"] = values["control_flow"] or values["jln-control-flow"] or (disable_others and "default" or _OPTIONS["jln-control-flow"]),
       ["conversion_warnings"] = values["conversion_warnings"] or values["jln-conversion-warnings"] or (disable_others and "default" or _OPTIONS["jln-conversion-warnings"]),
       ["coverage"] = values["coverage"] or values["jln-coverage"] or (disable_others and "default" or _OPTIONS["jln-coverage"]),
       ["covered_switch_default_warnings"] = values["covered_switch_default_warnings"] or values["jln-covered-switch-default-warnings"] or (disable_others and "default" or _OPTIONS["jln-covered-switch-default-warnings"]),
       ["cpu"] = values["cpu"] or values["jln-cpu"] or (disable_others and "default" or _OPTIONS["jln-cpu"]),
       ["diagnostics_format"] = values["diagnostics_format"] or values["jln-diagnostics-format"] or (disable_others and "default" or _OPTIONS["jln-diagnostics-format"]),
+      ["emcc_debug"] = values["emcc_debug"] or values["jln-emcc-debug"] or (disable_others and "default" or _OPTIONS["jln-emcc-debug"]),
       ["exceptions"] = values["exceptions"] or values["jln-exceptions"] or (disable_others and "default" or _OPTIONS["jln-exceptions"]),
+      ["hardened"] = values["hardened"] or values["jln-hardened"] or (disable_others and "default" or _OPTIONS["jln-hardened"]),
       ["linker"] = values["linker"] or values["jln-linker"] or (disable_others and "default" or _OPTIONS["jln-linker"]),
       ["lto"] = values["lto"] or values["jln-lto"] or (disable_others and "default" or _OPTIONS["jln-lto"]),
       ["msvc_crt_secure_no_warnings"] = values["msvc_crt_secure_no_warnings"] or values["jln-msvc-crt-secure-no-warnings"] or (disable_others and "default" or _OPTIONS["jln-msvc-crt-secure-no-warnings"]),
@@ -461,12 +467,9 @@ function jln_c_tovalues(values, disable_others)
       ["ndebug"] = values["ndebug"] or values["jln-ndebug"] or (disable_others and "default" or _OPTIONS["jln-ndebug"]),
       ["optimization"] = values["optimization"] or values["jln-optimization"] or (disable_others and "default" or _OPTIONS["jln-optimization"]),
       ["pedantic"] = values["pedantic"] or values["jln-pedantic"] or (disable_others and "default" or _OPTIONS["jln-pedantic"]),
-      ["pie"] = values["pie"] or values["jln-pie"] or (disable_others and "default" or _OPTIONS["jln-pie"]),
-      ["relro"] = values["relro"] or values["jln-relro"] or (disable_others and "default" or _OPTIONS["jln-relro"]),
       ["reproducible_build_warnings"] = values["reproducible_build_warnings"] or values["jln-reproducible-build-warnings"] or (disable_others and "default" or _OPTIONS["jln-reproducible-build-warnings"]),
       ["sanitizers"] = values["sanitizers"] or values["jln-sanitizers"] or (disable_others and "default" or _OPTIONS["jln-sanitizers"]),
       ["shadow_warnings"] = values["shadow_warnings"] or values["jln-shadow-warnings"] or (disable_others and "default" or _OPTIONS["jln-shadow-warnings"]),
-      ["stack_protector"] = values["stack_protector"] or values["jln-stack-protector"] or (disable_others and "default" or _OPTIONS["jln-stack-protector"]),
       ["stl_fix"] = values["stl_fix"] or values["jln-stl-fix"] or (disable_others and "default" or _OPTIONS["jln-stl-fix"]),
       ["suggest_attributes"] = values["suggest_attributes"] or values["jln-suggest-attributes"] or (disable_others and "default" or _OPTIONS["jln-suggest-attributes"]),
       ["switch_warnings"] = values["switch_warnings"] or values["jln-switch-warnings"] or (disable_others and "default" or _OPTIONS["jln-switch-warnings"]),
@@ -486,13 +489,14 @@ function jln_c_tovalues(values, disable_others)
       ["analyzer_too_complex_warning"] = _OPTIONS["jln-analyzer-too-complex-warning"],
       ["analyzer_verbosity"] = _OPTIONS["jln-analyzer-verbosity"],
       ["color"] = _OPTIONS["jln-color"],
-      ["control_flow"] = _OPTIONS["jln-control-flow"],
       ["conversion_warnings"] = _OPTIONS["jln-conversion-warnings"],
       ["coverage"] = _OPTIONS["jln-coverage"],
       ["covered_switch_default_warnings"] = _OPTIONS["jln-covered-switch-default-warnings"],
       ["cpu"] = _OPTIONS["jln-cpu"],
       ["diagnostics_format"] = _OPTIONS["jln-diagnostics-format"],
+      ["emcc_debug"] = _OPTIONS["jln-emcc-debug"],
       ["exceptions"] = _OPTIONS["jln-exceptions"],
+      ["hardened"] = _OPTIONS["jln-hardened"],
       ["linker"] = _OPTIONS["jln-linker"],
       ["lto"] = _OPTIONS["jln-lto"],
       ["msvc_crt_secure_no_warnings"] = _OPTIONS["jln-msvc-crt-secure-no-warnings"],
@@ -501,12 +505,9 @@ function jln_c_tovalues(values, disable_others)
       ["ndebug"] = _OPTIONS["jln-ndebug"],
       ["optimization"] = _OPTIONS["jln-optimization"],
       ["pedantic"] = _OPTIONS["jln-pedantic"],
-      ["pie"] = _OPTIONS["jln-pie"],
-      ["relro"] = _OPTIONS["jln-relro"],
       ["reproducible_build_warnings"] = _OPTIONS["jln-reproducible-build-warnings"],
       ["sanitizers"] = _OPTIONS["jln-sanitizers"],
       ["shadow_warnings"] = _OPTIONS["jln-shadow-warnings"],
-      ["stack_protector"] = _OPTIONS["jln-stack-protector"],
       ["stl_fix"] = _OPTIONS["jln-stl-fix"],
       ["suggest_attributes"] = _OPTIONS["jln-suggest-attributes"],
       ["switch_warnings"] = _OPTIONS["jln-switch-warnings"],
@@ -926,11 +927,6 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     end
     if values['var_init'] ~= 'default' then
       if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) or ( compiler == 'clang-cl' and version >= 800000 ) ) then
-        if ( ( is_clang_like and version <= 1500000 ) or ( compiler == 'clang-cl' and version <= 1500000 ) ) then
-          if values['var_init'] == 'zero' then
-            table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
-          end
-        end
         if values['var_init'] == 'pattern' then
           table_insert(jln_buildoptions, "-ftrivial-auto-var-init=pattern")
           if compiler == 'gcc' then
@@ -938,9 +934,15 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           end
         else
           if values['var_init'] == 'zero' then
-            table_insert(jln_buildoptions, "-ftrivial-auto-var-init=zero")
-            if compiler == 'gcc' then
-              table_insert(jln_buildoptions, "-Wtrivial-auto-var-init")
+            if ( ( is_clang_like and version <= 1500000 ) or ( compiler == 'clang-cl' and version <= 1500000 ) ) then
+              if values['var_init'] == 'zero' then
+                table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+              end
+            else
+              table_insert(jln_buildoptions, "-ftrivial-auto-var-init=zero")
+              if compiler == 'gcc' then
+                table_insert(jln_buildoptions, "-Wtrivial-auto-var-init")
+              end
             end
           else
             table_insert(jln_buildoptions, "-ftrivial-auto-var-init=uninitialized")
@@ -980,52 +982,6 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           end
         else
           table_insert(jln_buildoptions, "-Wno-error")
-        end
-      end
-    end
-    if values['control_flow'] ~= 'default' then
-      if compiler == 'clang-emcc' then
-        if values['control_flow'] == 'off' then
-          table_insert(jln_linkoptions, "-sASSERTIONS=0")
-          table_insert(jln_linkoptions, "-sSAFE_HEAP=0")
-        else
-          table_insert(jln_linkoptions, "-sASSERTIONS=1")
-          table_insert(jln_linkoptions, "-sDEMANGLE_SUPPORT=1")
-          if values['sanitizers'] ~= 'default' and not ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'address' ) then
-            table_insert(jln_linkoptions, "-sSAFE_HEAP=1")
-          end
-        end
-      else
-        if values['control_flow'] == 'off' then
-          if ( compiler == 'gcc' and version >= 800000 ) then
-            table_insert(jln_buildoptions, "-fcf-protection=none")
-          else
-            table_insert(jln_buildoptions, "-fno-sanitize=cfi")
-            table_insert(jln_buildoptions, "-fcf-protection=none")
-            table_insert(jln_buildoptions, "-fno-sanitize-cfi-cross-dso")
-            table_insert(jln_linkoptions, "-fno-sanitize=cfi")
-          end
-        else
-          if ( ( compiler == 'gcc' and version >= 800000 ) or compiler ~= 'gcc' ) then
-            if values['control_flow'] == 'branch' then
-              table_insert(jln_buildoptions, "-fcf-protection=branch")
-            else
-              if values['control_flow'] == 'return' then
-                table_insert(jln_buildoptions, "-fcf-protection=return")
-              else
-                table_insert(jln_buildoptions, "-fcf-protection=full")
-              end
-            end
-            if ( values['control_flow'] == 'allow_bugs' and compiler == 'clang' ) then
-              table_insert(jln_buildoptions, "-fsanitize=cfi")
-              table_insert(jln_linkoptions, "-fsanitize=cfi")
-              if compiler ~= 'clang-cl' then
-                table_insert(jln_buildoptions, "-fvisibility=hidden")
-              end
-              table_insert(jln_buildoptions, "-flto")
-              table_insert(jln_linkoptions, "-flto")
-            end
-          end
         end
       end
     end
@@ -1118,19 +1074,20 @@ function jln_c_getoptions(values, disable_others, print_compiler)
                 else
                   table_insert(jln_buildoptions, "-fno-omit-frame-pointer")
                   table_insert(jln_buildoptions, "-fno-optimize-sibling-calls")
-                  if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'address' ) then
-                    table_insert(jln_buildoptions, "-fsanitize=address")
-                    table_insert(jln_linkoptions, "-fsanitize=address")
-                  else
-                    table_insert(jln_buildoptions, "-fsanitize=kernel-address")
-                    table_insert(jln_linkoptions, "-fsanitize=kernel-address")
-                  end
-                  if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'kernel' or values['sanitizers'] == 'kernel_extra' ) then
+                  table_insert(jln_buildoptions, "-fsanitize=address")
+                  table_insert(jln_linkoptions, "-fsanitize=address")
+                  if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' ) then
                     if ( ( compiler == 'gcc' and version >= 400009 ) or is_clang_like or compiler == 'clang-cl' ) then
                       table_insert(jln_buildoptions, "-fsanitize=undefined")
                       table_insert(jln_linkoptions, "-fsanitize=undefined")
                     end
-                    if ( values['sanitizers'] == 'extra' or values['sanitizers'] == 'kernel_extra' ) then
+                    if ( values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra_with_minimal_code_size' ) then
+                      if ( ( is_clang_like and version >= 1300000 ) or ( compiler == 'clang-cl' and version >= 1300000 ) ) then
+                        table_insert(jln_buildoptions, "-fsanitize-address-use-after-return=always")
+                        table_insert(jln_linkoptions, "-fsanitize-address-use-after-return=always")
+                      end
+                    end
+                    if ( values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' ) then
                       if ( ( compiler == 'gcc' and version >= 800000 ) or ( compiler == 'clang' and version >= 900000 ) or ( compiler == 'clang-cl' and version >= 900000 ) ) then
                         table_insert(jln_buildoptions, "-fsanitize=pointer-compare")
                         table_insert(jln_buildoptions, "-fsanitize=pointer-subtract")
@@ -1140,6 +1097,25 @@ function jln_c_getoptions(values, disable_others, print_compiler)
                 end
               end
             end
+          end
+        end
+      end
+    end
+    if values['emcc_debug'] ~= 'default' then
+      if compiler == 'clang-emcc' then
+        if values['emcc_debug'] == 'off' then
+          table_insert(jln_linkoptions, "-sASSERTIONS=0")
+          table_insert(jln_linkoptions, "-sSAFE_HEAP=0")
+          table_insert(jln_linkoptions, "-sSTACK_OVERFLOW_CHECK=0")
+        else
+          if values['emcc_debug'] == 'slow' then
+            table_insert(jln_linkoptions, "-sASSERTIONS=2")
+          else
+            table_insert(jln_linkoptions, "-sASSERTIONS=1")
+          end
+          table_insert(jln_linkoptions, "-sSTACK_OVERFLOW_CHECK=2")
+          if  not ( ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' or values['sanitizers'] == 'address' or values['sanitizers'] == 'address_with_minimal_code_size' ) ) then
+            table_insert(jln_linkoptions, "-sSAFE_HEAP=1")
           end
         end
       end
@@ -1193,6 +1169,71 @@ function jln_c_getoptions(values, disable_others, print_compiler)
         end
       else
         table_insert(jln_buildoptions, "-fno-exceptions")
+      end
+    end
+    if values['hardened'] ~= 'default' then
+      if ( values['hardened'] == 'on' or values['hardened'] == 'all' ) then
+        if ( compiler == 'gcc' and version >= 1400000 ) then
+          table_insert(jln_buildoptions, "-fhardened")
+          table_insert(jln_buildoptions, "-Whardened")
+          if values['hardened'] == 'all' then
+            table_insert(jln_buildoptions, "-fstack-protector-all")
+          end
+          table_insert(jln_buildoptions, "-Wtrampolines")
+          table_insert(jln_linkoptions, "-Wl,-z,noexecstack")
+        else
+          if values['hardened'] == 'all' then
+            table_insert(jln_buildoptions, "-fstack-protector-all")
+          else
+            table_insert(jln_buildoptions, "-fstack-protector-strong")
+          end
+          if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 1400000 ) ) then
+            table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=3")
+            if ( ( compiler == 'gcc' and version >= 1300000 ) or ( is_clang_like and version >= 1600000 ) ) then
+              table_insert(jln_buildoptions, "-fstrict-flex-arrays=3")
+            end
+          else
+            table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=2")
+          end
+          if values['var_init'] == 'default' then
+            if ( ( compiler == 'gcc' and version >= 1200000 ) or ( is_clang_like and version >= 800000 ) ) then
+              if ( is_clang_like and version <= 1500000 ) then
+                table_insert(jln_buildoptions, "-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang")
+              else
+                table_insert(jln_buildoptions, "-ftrivial-auto-var-init=zero")
+                if compiler == 'gcc' then
+                  table_insert(jln_buildoptions, "-Wtrivial-auto-var-init")
+                end
+              end
+            end
+          end
+          table_insert(jln_buildoptions, "-fPIE")
+          table_insert(jln_linkoptions, "-fPIE")
+          if compiler ~= 'clang-emcc' then
+            table_insert(jln_buildoptions, "-pie")
+            table_insert(jln_linkoptions, "-pie")
+            table_insert(jln_linkoptions, "-Wl,-z,relro,-z,now")
+            table_insert(jln_linkoptions, "-Wl,-z,noexecstack")
+          end
+          if compiler == 'gcc' then
+            if version >= 400006 then
+              table_insert(jln_buildoptions, "-Wtrampolines")
+              if version >= 800000 then
+                table_insert(jln_buildoptions, "-fstack-clash-protection")
+                table_insert(jln_buildoptions, "-fcf-protection=full")
+              end
+            end
+          else
+            if compiler ~= 'clang-emcc' then
+              if version >= 700000 then
+                table_insert(jln_buildoptions, "-fcf-protection=full")
+                if version >= 1100000 then
+                  table_insert(jln_buildoptions, "-fstack-clash-protection")
+                end
+              end
+            end
+          end
+        end
       end
     end
     if values['diagnostics_format'] ~= 'default' then
@@ -1430,107 +1471,6 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if values['stack_protector'] ~= 'default' then
-        if values['stack_protector'] == 'off' then
-          table_insert(jln_buildoptions, "-Wno-stack-protector")
-          table_insert(jln_buildoptions, "-U_FORTIFY_SOURCE")
-          table_insert(jln_linkoptions, "-Wno-stack-protector")
-        else
-          table_insert(jln_buildoptions, "-Wstack-protector")
-          if ( ( compiler == 'gcc' and version >= 1200000 ) or ( compiler == 'clang' and version >= 1400000 ) ) then
-            table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=3")
-          else
-            table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=2")
-          end
-          if values['stack_protector'] == 'strong' then
-            if compiler == 'gcc' then
-              if version >= 400009 then
-                table_insert(jln_buildoptions, "-fstack-protector-strong")
-                table_insert(jln_linkoptions, "-fstack-protector-strong")
-                if version >= 800000 then
-                  table_insert(jln_buildoptions, "-fstack-clash-protection")
-                  table_insert(jln_linkoptions, "-fstack-clash-protection")
-                end
-              end
-            else
-              table_insert(jln_buildoptions, "-fstack-protector-strong")
-              table_insert(jln_buildoptions, "-fsanitize=safe-stack")
-              table_insert(jln_linkoptions, "-fstack-protector-strong")
-              table_insert(jln_linkoptions, "-fsanitize=safe-stack")
-              if version >= 1100000 then
-                table_insert(jln_buildoptions, "-fstack-clash-protection")
-                table_insert(jln_linkoptions, "-fstack-clash-protection")
-              end
-            end
-          else
-            if values['stack_protector'] == 'all' then
-              table_insert(jln_buildoptions, "-fstack-protector-all")
-              table_insert(jln_linkoptions, "-fstack-protector-all")
-              if ( compiler == 'gcc' and version >= 800000 ) then
-                table_insert(jln_buildoptions, "-fstack-clash-protection")
-                table_insert(jln_linkoptions, "-fstack-clash-protection")
-              else
-                table_insert(jln_buildoptions, "-fsanitize=safe-stack")
-                table_insert(jln_linkoptions, "-fsanitize=safe-stack")
-                if version >= 1100000 then
-                  table_insert(jln_buildoptions, "-fstack-clash-protection")
-                  table_insert(jln_linkoptions, "-fstack-clash-protection")
-                end
-              end
-            else
-              table_insert(jln_buildoptions, "-fstack-protector")
-              table_insert(jln_linkoptions, "-fstack-protector")
-            end
-          end
-          if compiler == 'clang' then
-            table_insert(jln_buildoptions, "-fsanitize=shadow-call-stack")
-            table_insert(jln_linkoptions, "-fsanitize=shadow-call-stack")
-          end
-        end
-      end
-      if values['relro'] ~= 'default' then
-        if values['relro'] == 'off' then
-          table_insert(jln_linkoptions, "-Wl,-z,norelro")
-        else
-          if values['relro'] == 'on' then
-            table_insert(jln_linkoptions, "-Wl,-z,relro")
-          else
-            table_insert(jln_linkoptions, "-Wl,-z,relro,-z,now,-z,noexecstack")
-            if values['linker'] ~= 'default' then
-              if not ( ( values['linker'] == 'gold' or ( compiler == 'gcc' and version < 900000 ) or ( values['linker'] == 'native' and compiler == 'gcc' ) ) ) then
-                table_insert(jln_linkoptions, "-Wl,-z,separate-code")
-              end
-            end
-          end
-        end
-      end
-      if values['pie'] ~= 'default' then
-        if values['pie'] == 'off' then
-          table_insert(jln_linkoptions, "-no-pic")
-        else
-          if values['pie'] == 'on' then
-            table_insert(jln_linkoptions, "-pie")
-          else
-            if values['pie'] == 'fpie' then
-              table_insert(jln_buildoptions, "-fpie")
-            else
-              if values['pie'] == 'fpic' then
-                table_insert(jln_buildoptions, "-fpic")
-              else
-                if values['pie'] == 'fPIE' then
-                  table_insert(jln_buildoptions, "-fPIE")
-                else
-                  if values['pie'] == 'fPIC' then
-                    table_insert(jln_buildoptions, "-fPIC")
-                  else
-                    table_insert(jln_linkoptions, "-static-pie")
-                  end
-                end
-              end
-            end
-          end
-        end
-      end
       if values['analyzer'] ~= 'default' then
         if ( compiler == 'gcc' and version >= 1000000 ) then
           if values['analyzer'] == 'off' then
@@ -1641,27 +1581,15 @@ function jln_c_getoptions(values, disable_others, print_compiler)
           end
         end
       end
-      if values['control_flow'] ~= 'default' then
-        if values['control_flow'] == 'off' then
-          table_insert(jln_buildoptions, "/guard:cf-")
-        else
-          table_insert(jln_buildoptions, "/guard:cf")
-        end
-      end
-      if values['stack_protector'] ~= 'default' then
-        if values['stack_protector'] == 'off' then
+      if values['hardened'] ~= 'default' then
+        if values['hardened'] == 'off' then
           table_insert(jln_buildoptions, "/GS-")
         else
-          table_insert(jln_buildoptions, "/GS")
           table_insert(jln_buildoptions, "/sdl")
-          if values['stack_protector'] == 'strong' then
-            if ( compiler == 'msvc' and version >= 1900027 ) then
-              table_insert(jln_buildoptions, "/guard:ehcont")
-              table_insert(jln_linkoptions, "/CETCOMPAT")
-            end
-          end
-          if values['control_flow'] ~= 'default' and not ( values['control_flow'] == 'off' ) then
-            table_insert(jln_buildoptions, "/guard:cf")
+          table_insert(jln_buildoptions, "/guard:cf")
+          if ( ( compiler == 'msvc' and version >= 1900027 ) or ( compiler == 'clang-cl' and version >= 1000000 ) ) then
+            table_insert(jln_buildoptions, "/guard:ehcont")
+            table_insert(jln_linkoptions, "/CETCOMPAT")
           end
         end
       end
@@ -1944,27 +1872,22 @@ function jln_c_getoptions(values, disable_others, print_compiler)
     end
     if values['sanitizers'] ~= 'default' then
       if version >= 1900028 then
-        if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'address' or values['sanitizers'] == 'kernel' or values['sanitizers'] == 'kernel_extra' or values['sanitizers'] == 'kernel_address' ) then
-          if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'address' ) then
-            table_insert(jln_buildoptions, "/fsanitize=address")
-            table_insert(jln_linkoptions, "/fsanitize=address")
-          else
-            table_insert(jln_buildoptions, "/fsanitize=kernel-address")
-            table_insert(jln_linkoptions, "/fsanitize=kernel-address")
-          end
-          if ( values['sanitizers'] == 'extra' or values['sanitizers'] == 'kernel_extra' ) then
+        if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' or values['sanitizers'] == 'address' or values['sanitizers'] == 'address_with_minimal_code_size' ) then
+          table_insert(jln_buildoptions, "/fsanitize=address")
+          table_insert(jln_linkoptions, "/fsanitize=address")
+          if ( values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' ) then
             table_insert(jln_buildoptions, "/fsanitize-address-use-after-return")
           end
         end
       else
-        if values['sanitizers'] == 'on' then
+        if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' or values['sanitizers'] == 'address' or values['sanitizers'] == 'address_with_minimal_code_size' ) then
           table_insert(jln_buildoptions, "/sdl")
           if ( values['optimization'] == '0' ) then
             table_insert(jln_buildoptions, "/RTCsu")
           end
         else
-          if values['stack_protector'] ~= 'default' then
-            if values['stack_protector'] ~= 'off' then
+          if values['sanitizers'] == 'off' then
+            if values['hardened'] == 'default' then
               table_insert(jln_buildoptions, "/sdl-")
             end
           end
@@ -2081,37 +2004,23 @@ function jln_c_getoptions(values, disable_others, print_compiler)
             end
           end
         end
-        if values['stack_protector'] ~= 'default' then
-          if values['stack_protector'] == 'off' then
+        if values['hardened'] ~= 'default' then
+          if values['hardened'] == 'off' then
             table_insert(jln_buildoptions, "/GS-")
           else
             table_insert(jln_buildoptions, "/GS")
+            table_insert(jln_buildoptions, "/guard:cf")
+            table_insert(jln_buildoptions, "/mconditional-branch:all-fix")
+            table_insert(jln_buildoptions, "/Qcf-protection:full")
           end
         end
         if values['sanitizers'] ~= 'default' then
-          if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'address' or values['sanitizers'] == 'kernel' or values['sanitizers'] == 'kernel_extra' or values['sanitizers'] == 'kernel_address' ) then
+          if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' or values['sanitizers'] == 'address' or values['sanitizers'] == 'address_with_minimal_code_size' ) then
             table_insert(jln_buildoptions, "/Qtrapuv")
             table_insert(jln_buildoptions, "/RTCsu")
-            if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'kernel' or values['sanitizers'] == 'kernel_extra' ) then
+            if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' ) then
               table_insert(jln_buildoptions, "/Qfp-stack-check")
               table_insert(jln_buildoptions, "/Qfp-trap:common")
-            end
-          end
-        end
-        if values['control_flow'] ~= 'default' then
-          if values['control_flow'] == 'off' then
-            table_insert(jln_buildoptions, "/guard:cf-")
-            table_insert(jln_buildoptions, "/mconditional-branch=keep")
-          else
-            table_insert(jln_buildoptions, "/guard:cf")
-            if values['control_flow'] == 'branch' then
-              table_insert(jln_buildoptions, "/mconditional-branch:all-fix")
-              table_insert(jln_buildoptions, "/Qcf-protection:branch")
-            else
-              if values['control_flow'] == 'on' then
-                table_insert(jln_buildoptions, "/mconditional-branch:all-fix")
-                table_insert(jln_buildoptions, "/Qcf-protection:full")
-              end
             end
           end
         end
@@ -2259,69 +2168,24 @@ function jln_c_getoptions(values, disable_others, print_compiler)
               end
             end
           end
-          if values['stack_protector'] ~= 'default' then
-            if values['stack_protector'] == 'off' then
-              table_insert(jln_buildoptions, "-fno-protector-strong")
-              table_insert(jln_buildoptions, "-U_FORTIFY_SOURCE")
-              table_insert(jln_linkoptions, "-fno-protector-strong")
-            else
+          if values['hardened'] ~= 'default' then
+            if ( values['hardened'] == 'on' or values['hardened'] == 'all' ) then
               table_insert(jln_buildoptions, "-D_FORTIFY_SOURCE=2")
-              if values['stack_protector'] == 'strong' then
+              if values['hardened'] == 'all' then
+                table_insert(jln_buildoptions, "-fstack-protector-all")
+              else
                 table_insert(jln_buildoptions, "-fstack-protector-strong")
-                table_insert(jln_linkoptions, "-fstack-protector-strong")
-              else
-                if values['stack_protector'] == 'all' then
-                  table_insert(jln_buildoptions, "-fstack-protector-all")
-                  table_insert(jln_linkoptions, "-fstack-protector-all")
-                else
-                  table_insert(jln_buildoptions, "-fstack-protector")
-                  table_insert(jln_linkoptions, "-fstack-protector")
-                end
               end
-            end
-          end
-          if values['relro'] ~= 'default' then
-            if values['relro'] == 'off' then
-              table_insert(jln_linkoptions, "-Xlinker-znorelro")
-            else
-              if values['relro'] == 'on' then
-                table_insert(jln_linkoptions, "-Xlinker-zrelro")
-              else
-                table_insert(jln_linkoptions, "-Xlinker-zrelro")
-                table_insert(jln_linkoptions, "-Xlinker-znow")
-                table_insert(jln_linkoptions, "-Xlinker-znoexecstack")
-              end
-            end
-          end
-          if values['pie'] ~= 'default' then
-            if values['pie'] == 'off' then
-              table_insert(jln_linkoptions, "-no-pic")
-            else
-              if values['pie'] == 'on' then
-                table_insert(jln_linkoptions, "-pie")
-              else
-                if values['pie'] == 'fpie' then
-                  table_insert(jln_buildoptions, "-fpie")
-                else
-                  if values['pie'] == 'fpic' then
-                    table_insert(jln_buildoptions, "-fpic")
-                  else
-                    if values['pie'] == 'fPIE' then
-                      table_insert(jln_buildoptions, "-fPIE")
-                    else
-                      if values['pie'] == 'fPIC' then
-                        table_insert(jln_buildoptions, "-fPIC")
-                      end
-                    end
-                  end
-                end
-              end
+              table_insert(jln_buildoptions, "-fcf-protection=full")
+              table_insert(jln_linkoptions, "-Xlinker-zrelro")
+              table_insert(jln_linkoptions, "-Xlinker-znow")
+              table_insert(jln_linkoptions, "-Xlinker-znoexecstack")
             end
           end
           if values['sanitizers'] ~= 'default' then
-            if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'address' or values['sanitizers'] == 'kernel' or values['sanitizers'] == 'kernel_extra' or values['sanitizers'] == 'kernel_address' ) then
+            if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' or values['sanitizers'] == 'address' or values['sanitizers'] == 'address_with_minimal_code_size' ) then
               table_insert(jln_buildoptions, "-ftrapuv")
-              if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'kernel' or values['sanitizers'] == 'kernel_extra' ) then
+              if ( values['sanitizers'] == 'on' or values['sanitizers'] == 'with_minimal_code_size' or values['sanitizers'] == 'extra' or values['sanitizers'] == 'extra_with_minimal_code_size' ) then
                 table_insert(jln_buildoptions, "-fp-stack-check")
                 table_insert(jln_buildoptions, "-fp-trap=common")
               end
@@ -2350,22 +2214,6 @@ function jln_c_getoptions(values, disable_others, print_compiler)
               if values['lto'] ~= 'thin_or_nothing' then
                 table_insert(jln_buildoptions, "-ipo")
                 table_insert(jln_linkoptions, "-ipo")
-              end
-            end
-          end
-          if values['control_flow'] ~= 'default' then
-            if values['control_flow'] == 'off' then
-              table_insert(jln_buildoptions, "-mconditional-branch=keep")
-              table_insert(jln_buildoptions, "-fcf-protection=none")
-            else
-              if values['control_flow'] == 'branch' then
-                table_insert(jln_buildoptions, "-mconditional-branch=all-fix")
-                table_insert(jln_buildoptions, "-fcf-protection=branch")
-              else
-                if values['control_flow'] == 'on' then
-                  table_insert(jln_buildoptions, "-mconditional-branch=all-fix")
-                  table_insert(jln_buildoptions, "-fcf-protection=full")
-                end
               end
             end
           end
