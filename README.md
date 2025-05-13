@@ -124,8 +124,7 @@ rtti = default off on
 # Hardening options:
 
 control_flow = default off on branch return allow_bugs
-relro = default off on full
-stack_protector = default off on strong all
+hardened = default off on all
 stl_hardening = default off fast extensive debug debug_with_broken_abi
 
 
@@ -222,7 +221,7 @@ category | options
 ---------|---------
 debug | `var_init=pattern`<br>`control_flow=on`<br>`symbols=debug` or `full_debug`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`optimization=g` or `default`
 release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
-security | `control_flow=on`<br>`relro=full`<br>`stack_protector=strong`<br>`stl_hardening=fast` or `extensive`
+security | `control_flow=on`<br>`hardened=on`<br>`stl_hardening=fast` or `extensive`
 really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`switch_warnings=exhaustive_enum`<br>`shadow_warnings=local`<br>`windows_abi_compatibility_warnings=on`
 
 
@@ -469,11 +468,11 @@ include output/cpp/bjam ;
 
 project name : requirements
   <jln-lto-default>on # enable jln-lto
-  <jln-relro-default>on
+  <jln-hardened-default>on
   <conditional>@jln_flags
 : default-build release ;
 
-exe test : test.cpp : <jln-relro-incidental>off # incidental version of <jln-relro>off
+exe test : test.cpp : <jln-hardened-incidental>off # incidental version of <jln-hardened>off
 
 # NOTE: for C, jln_flags becomes jln_c_flags
 ```

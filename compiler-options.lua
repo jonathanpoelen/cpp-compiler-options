@@ -731,19 +731,23 @@ Or(gcc, clang_like, clang_cl) {
   -- Or(gcc, clang_like, clang_cl)
   opt'var_init' {
     Or(gcc'>=12', clang_like'>=8', clang_cl'>=8') {
-      Or(clang_like'<=15', clang_cl'<=15') {
-        lvl'zero' {
-          flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
-        }
-      },
       match {
         lvl'pattern' {
           flag'-ftrivial-auto-var-init=pattern',
           gcc{ flag'-Wtrivial-auto-var-init' },
         },
         lvl'zero' {
-          flag'-ftrivial-auto-var-init=zero',
-          gcc{ flag'-Wtrivial-auto-var-init' },
+          match {
+            Or(clang_like'<=15', clang_cl'<=15') {
+              lvl'zero' {
+                flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
+              }
+            },
+            {
+              flag'-ftrivial-auto-var-init=zero',
+              gcc{ flag'-Wtrivial-auto-var-init' },
+            }
+          }
         },
         --[[lvl'uninitialized']] {
           flag'-ftrivial-auto-var-init=uninitialized',
@@ -1144,6 +1148,100 @@ Or(gcc, clang_like) {
   },
 
   -- Or(gcc, clang_like)
+  -- https://airbus-seclab.github.io/c-compiler-security/
+  -- https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html
+  opt'hardened' {
+    Or(lvl'on', lvl'all') {
+      match {
+        gcc'>=14' {
+          -- gcc --help=hardened
+          -- -D_FORTIFY_SOURCE=3 (or =2 for glibc < 2.35)
+          -- -D_GLIBCXX_ASSERTIONS
+          -- -ftrivial-auto-var-init=zero
+          -- -fPIE  -pie
+          -- -Wl,-z,now
+          -- -Wl,-z,relro
+          -- -fstack-protector-strong
+          -- -fstack-clash-protection
+          -- -fcf-protection=full
+          flag'-fhardened',
+          flag'-Whardened',
+          lvl'all' {
+            flag'-fstack-protector-all'
+          },
+          link'-Wl,-z,noexecstack',
+          flag'-Wtrampolines',
+        },
+        {
+          -- -fstack-protector-*
+          match {
+            lvl'all' {
+              flag'-fstack-protector-all',
+            }, {
+              flag'-fstack-protector-strong',
+            }
+          },
+
+          -- _FORTIFY_SOURCE
+          match {
+            Or(gcc'>=12', clang_like'>=14') {
+              flag'-D_FORTIFY_SOURCE=3',
+              Or(gcc'>=13', clang_like'>=16') {
+                flag'-fstrict-flex-arrays=3', -- for check size with _FORTIFY_SOURCE
+              }
+            },
+            -- >= gcc-4.1
+            flag'-D_FORTIFY_SOURCE=2',
+          },
+
+          -- var_init=zero / -ftrivial-auto-var-init=zero
+          -has_opt'var_init' {
+            Or(gcc'>=12', clang_like'>=8') {
+              match {
+                clang_like'<=15' {
+                  flag'-enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang'
+                },
+                {
+                  flag'-ftrivial-auto-var-init=zero',
+                  gcc{ flag'-Wtrivial-auto-var-init' },
+                }
+              },
+            },
+          },
+
+          fl'-fPIE',
+
+          -clang_emcc {
+            fl'-pie',
+            link'-Wl,-z,relro,-z,now', -- full RELRO
+            link'-Wl,-z,noexecstack',
+          },
+
+          match {
+            gcc {
+              vers'>=4.6' {
+                flag'-Wtrampolines', -- for -z,noexecstack
+                vers'>=8' {
+                  flag'-fstack-clash-protection',
+                  flag'-fcf-protection=full',
+                }
+              }
+            },
+            -clang_emcc {
+              vers'>=7' {
+                flag'-fcf-protection=full',
+                vers'>=11' {
+                  flag'-fstack-clash-protection',
+                }
+              }
+            }
+          },
+        }
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like)
   opt'rtti' {
     match {
       lvl'on' { cxx'-frtti' },
@@ -1352,90 +1450,6 @@ Or(gcc, clang_like) {
       },
 
       -- Or(gcc, clang)
-      -- https://airbus-seclab.github.io/c-compiler-security/
-      -- g++ --help=hardened
-      opt'stack_protector' {
-        match {
-          lvl'off' {
-            fl'-Wno-stack-protector',
-            flag'-U_FORTIFY_SOURCE'
-          },
-          {
-            flag'-Wstack-protector', -- only active when -fstack-protector is active
-            match {
-              Or(gcc'>=12', clang'>=14') {
-                flag'-D_FORTIFY_SOURCE=3'
-              },
-              -- >= gcc-4.1
-              flag'-D_FORTIFY_SOURCE=2',
-            },
-            match {
-              lvl'strong' {
-                match {
-                  gcc {
-                    vers'>=4.9' {
-                      fl'-fstack-protector-strong',
-                      vers'>=8' {
-                        fl'-fstack-clash-protection'
-                      }
-                    }
-                  },
-                  --[[clang]] {
-                    fl'-fstack-protector-strong',
-                    fl'-fsanitize=safe-stack',
-                    vers'>=11' {
-                      fl'-fstack-clash-protection'
-                    }
-                  }
-                }
-              },
-              lvl'all' {
-                fl'-fstack-protector-all',
-                match {
-                  gcc'>=8' {
-                    fl'-fstack-clash-protection'
-                  },
-                  --[[clang]] {
-                    fl'-fsanitize=safe-stack',
-                    vers'>=11' {
-                      fl'-fstack-clash-protection'
-                    }
-                  }
-                }
-              },
-              fl'-fstack-protector',
-            },
-
-            -- ShadowCallStack is an instrumentation pass, currently only implemented for aarch64
-            -- ShadowCallStack is intended to be a stronger alternative to -fstack-protector
-            -- On aarch64, you also need to pass -ffixed-x18 unless your target already reserves x18.
-            clang {
-              fl'-fsanitize=shadow-call-stack',
-            }
-          },
-        }
-      },
-
-      -- Or(gcc, clang)
-      -- https://airbus-seclab.github.io/c-compiler-security/
-      -- g++ --help=hardened
-      opt'relro' {
-        match {
-          lvl'off' { link'-Wl,-z,norelro', },
-          lvl'on'  { link'-Wl,-z,relro', },
-          { --[[lvl'full']]
-            link'-Wl,-z,relro,-z,now,-z,noexecstack',
-            opt'linker' {
-              -- -Wl,-z,separate-code is invalid with gold linker
-              -Or(Or(lvl'gold', gcc'<9'), And(lvl'native', gcc)) {
-                link'-Wl,-z,separate-code'
-              }
-            }
-          }
-        }
-      },
-
-      -- Or(gcc, clang)
       opt'noexcept_warnings' {
         gcc'>=4.6' {
           match {
@@ -1621,30 +1635,20 @@ Or(msvc, clang_cl, icl) {
     },
 
     -- Or(msvc, clang_cl)
-    opt'control_flow' {
-      match { lvl'off' { flag'/guard:cf-' }, flag'/guard:cf' },
-    },
-
-    -- Or(msvc, clang_cl)
     -- https://airbus-seclab.github.io/c-compiler-security/
-    opt'stack_protector' {
+    opt'hardened' {
       match {
         lvl'off' {
           flag'/GS-',
         },
+        -- on, all
         {
-          flag'/GS',
+          -- flag'/GS', -- on by default
           flag'/sdl',
-          match {
-            lvl'strong' {
-              msvc'>=19.27' {
-                flag'/guard:ehcont',
-                link'/CETCOMPAT',
-              },
-            },
-          },
-          has_opt'control_flow':without(lvl'off') {
-            flag'/guard:cf',
+          flag'/guard:cf',
+          Or(msvc'>=19.27', clang_cl'>=10') {
+            flag'/guard:ehcont',
+            link'/CETCOMPAT',
           },
         }
       }
@@ -2132,9 +2136,11 @@ match {
               flag'/RTCsu', -- /RTC can't be used with compiler optimizations (/O Options)
             },
           },
-          opt'stack_protector' {
-            -lvl'off' { flag'/sdl-' },
-          },
+          lvl'off' {
+            -has_opt'hardened' {
+              flag'/sdl-',
+            },
+          }
         }
       }
     },
@@ -2254,14 +2260,18 @@ match {
     },
 
     -- icl
-    opt'stack_protector' {
+    opt'hardened' {
       match {
         lvl'off' {
           flag'/GS-',
         },
+        -- on, all
         {
           flag'/GS',
-        },
+          flag'/guard:cf',
+          flag'/mconditional-branch:all-fix',
+          flag'/Qcf-protection:full',
+        }
       }
     },
 
@@ -2283,29 +2293,6 @@ match {
           flag'/Qfp-stack-check',
           flag'/Qfp-trap:common',
           -- flag'/Qfp-trap=all',
-        }
-      }
-    },
-
-    -- icl
-    opt'control_flow' {
-      match {
-        lvl'off' {
-          flag'/guard:cf-',
-          flag'/mconditional-branch=keep',
-        },
-        {
-          flag'/guard:cf',
-          match {
-            lvl'branch' {
-              flag'/mconditional-branch:all-fix',
-              flag'/Qcf-protection:branch',
-            },
-            lvl'on' {
-              flag'/mconditional-branch:all-fix',
-              flag'/Qcf-protection:full',
-            }
-          }
         }
       }
     },
@@ -2459,33 +2446,19 @@ match {
     },
 
     -- icc
-    opt'stack_protector' {
-      match {
-        lvl'off' {
-          fl'-fno-protector-strong',
-          flag'-U_FORTIFY_SOURCE'
+    opt'hardened' {
+      Or(lvl'on', lvl'all') {
+        flag'-D_FORTIFY_SOURCE=2',
+        match {
+          lvl'all' { flag'-fstack-protector-all', },
+          flag'-fstack-protector-strong',
         },
-        {
-          flag'-D_FORTIFY_SOURCE=2',
-          match {
-            lvl'strong' { fl'-fstack-protector-strong', },
-            lvl'all' { fl'-fstack-protector-all', },
-            fl'-fstack-protector',
-          }
-        },
-      }
-    },
-
-    -- icc
-    opt'relro' {
-      match {
-        lvl'off' { link'-Xlinker-znorelro', },
-        lvl'on'  { link'-Xlinker-zrelro', },
-        { --[[lvl'full']]
-          link'-Xlinker-zrelro',
-          link'-Xlinker-znow',
-          link'-Xlinker-znoexecstack',
-        },
+        -- flag'-mconditional-branch=all-fix',
+        -- flag'-fcf-protection=branch',
+        flag'-fcf-protection=full',
+        link'-Xlinker-zrelro',
+        link'-Xlinker-znow',
+        link'-Xlinker-znoexecstack',
       }
     },
 
@@ -2523,24 +2496,6 @@ match {
       match {
         lvl'off' { fl'-no-ipo', },
         -lvl'thin_or_nothing' { fl'-ipo', }
-      }
-    },
-
-    -- icc
-    opt'control_flow' {
-      match {
-        lvl'off' {
-          flag'-mconditional-branch=keep',
-          flag'-fcf-protection=none',
-        },
-        lvl'branch' {
-          flag'-mconditional-branch=all-fix',
-          flag'-fcf-protection=branch',
-        },
-        lvl'on' {
-          flag'-mconditional-branch=all-fix',
-          flag'-fcf-protection=full',
-        }
       }
     },
 
@@ -2734,6 +2689,15 @@ local Vbase = {
       description='Enable C++ exceptions.',
     },
 
+    hardened={
+      values={
+        {'off', 'Use `/GS-` with MSVC-like compiler. Does nothing with other compilers.'},
+        'on',
+        {'all', 'Use -fstack-protector-all instead of -fstack-protector-strong'},
+      },
+      description='Enable a set of flags for C and C++ that improve the security of the generated code without affecting its ABI. Can impact performance.',
+    },
+
     linker={
       values={'bfd', 'gold', 'lld', 'mold', 'native'},
       description='Configure linker.',
@@ -2828,11 +2792,6 @@ local Vbase = {
       description='Issue all the warnings demanded by strict ISO C and ISO C++.',
     },
 
-    relro={
-      values={'off', 'on', 'full'},
-      description='Specifies a memory segment that should be made read-only after relocation, if supported.',
-    },
-
     reproducible_build_warnings={
       values={'off', 'on'},
       description='Warn when macros "__TIME__", "__DATE__" or "__TIMESTAMP__" are encountered as they might prevent bit-wise-identical reproducible compilations.',
@@ -2899,11 +2858,6 @@ local Vbase = {
       values={'off', 'on', 'local', 'compatible_local', 'all'},
       default='off',
       incidental=true,
-    },
-
-    stack_protector={
-      values={'off', 'on', 'strong', 'all'},
-      description='Emit extra code to check for buffer overflows, such as stack smashing attacks.',
     },
 
     suggest_attributes={
@@ -3051,8 +3005,7 @@ local Vbase = {
 
     {'Hardening options', {
       'control_flow',
-      'relro',
-      'stack_protector',
+      'hardened',
       'stl_hardening',
     }},
 

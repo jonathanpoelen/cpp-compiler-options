@@ -1,9 +1,12 @@
 # ChangeLog
 
 - remove `pie`
+- remove `relro`
 - remove `sanitizers=kernel`
 - remove `sanitizers=kernel_extra`
 - remove `sanitizers=kernel_address`
+- remove `stack_protector`
+- add `hardened` (`off`, `on`, `all`)
 - add `sanitizers=with_minimal_code_size`
 - add `sanitizers=extra_with_minimal_code_size`
 - add `sanitizers=address_with_minimal_code_size`
