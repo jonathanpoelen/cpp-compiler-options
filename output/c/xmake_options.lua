@@ -27,8 +27,6 @@ local _flag_names = {
   ["analyzer_verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
   ["jln-color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
-  ["jln-control-flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
-  ["control_flow"] = {["default"]="", ["off"]="off", ["on"]="on", ["branch"]="branch", ["return"]="return", ["allow_bugs"]="allow_bugs", [""]=""},
   ["jln-conversion-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
   ["conversion_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
   ["jln-coverage"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
@@ -39,8 +37,12 @@ local _flag_names = {
   ["cpu"] = {["default"]="", ["generic"]="generic", ["native"]="native", [""]=""},
   ["jln-diagnostics-format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
   ["diagnostics_format"] = {["default"]="", ["fixits"]="fixits", ["patch"]="patch", ["print_source_range_info"]="print_source_range_info", [""]=""},
+  ["jln-emcc-debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["slow"]="slow", [""]=""},
+  ["emcc_debug"] = {["default"]="", ["off"]="off", ["on"]="on", ["slow"]="slow", [""]=""},
   ["jln-exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["exceptions"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
+  ["jln-hardened"] = {["default"]="", ["off"]="off", ["on"]="on", ["all"]="all", [""]=""},
+  ["hardened"] = {["default"]="", ["off"]="off", ["on"]="on", ["all"]="all", [""]=""},
   ["jln-linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
   ["linker"] = {["default"]="", ["bfd"]="bfd", ["gold"]="gold", ["lld"]="lld", ["mold"]="mold", ["native"]="native", [""]=""},
   ["jln-lto"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", ["thin_or_nothing"]="thin_or_nothing", ["whole_program"]="whole_program", ["whole_program_and_full_lto"]="whole_program_and_full_lto", [""]=""},
@@ -57,18 +59,12 @@ local _flag_names = {
   ["optimization"] = {["default"]="", ["0"]="0", ["g"]="g", ["1"]="1", ["2"]="2", ["3"]="3", ["fast"]="fast", ["size"]="size", ["z"]="z", [""]=""},
   ["jln-pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
   ["pedantic"] = {["default"]="", ["off"]="off", ["on"]="on", ["as_error"]="as_error", [""]=""},
-  ["jln-pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
-  ["pie"] = {["default"]="", ["off"]="off", ["on"]="on", ["static"]="static", ["fpic"]="fpic", ["fPIC"]="fPIC", ["fpie"]="fpie", ["fPIE"]="fPIE", [""]=""},
-  ["jln-relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
-  ["relro"] = {["default"]="", ["off"]="off", ["on"]="on", ["full"]="full", [""]=""},
   ["jln-reproducible-build-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["reproducible_build_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
-  ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["extra"]="extra", ["address"]="address", ["kernel"]="kernel", ["kernel_extra"]="kernel_extra", ["kernel_extra"]="kernel_extra", ["kernel_address"]="kernel_address", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
-  ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["extra"]="extra", ["address"]="address", ["kernel"]="kernel", ["kernel_extra"]="kernel_extra", ["kernel_extra"]="kernel_extra", ["kernel_address"]="kernel_address", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
+  ["jln-sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_minimal_code_size"]="with_minimal_code_size", ["extra"]="extra", ["extra_with_minimal_code_size"]="extra_with_minimal_code_size", ["address"]="address", ["address_with_minimal_code_size"]="address_with_minimal_code_size", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
+  ["sanitizers"] = {["default"]="", ["off"]="off", ["on"]="on", ["with_minimal_code_size"]="with_minimal_code_size", ["extra"]="extra", ["extra_with_minimal_code_size"]="extra_with_minimal_code_size", ["address"]="address", ["address_with_minimal_code_size"]="address_with_minimal_code_size", ["thread"]="thread", ["undefined"]="undefined", ["undefined_minimal_runtime"]="undefined_minimal_runtime", ["scudo_hardened_allocator"]="scudo_hardened_allocator", [""]=""},
   ["jln-shadow-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
   ["shadow_warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["local"]="local", ["compatible_local"]="compatible_local", ["all"]="all", [""]=""},
-  ["jln-stack-protector"] = {["default"]="", ["off"]="off", ["on"]="on", ["strong"]="strong", ["all"]="all", [""]=""},
-  ["stack_protector"] = {["default"]="", ["off"]="off", ["on"]="on", ["strong"]="strong", ["all"]="all", [""]=""},
   ["jln-stl-fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["stl_fix"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-suggest-attributes"] = {["default"]="", ["off"]="off", ["on"]="on", ["common"]="common", ["analysis"]="analysis", ["unity"]="unity", ["all"]="all", [""]=""},
@@ -143,7 +139,7 @@ local _flag_names = {
   option("jln-analyzer-verbosity", {
            showmenu=true,
            category=category,
-           description="Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.\\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\\n - 1: As per the previous level, but also show events for the entry to each function.\\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. “true path taken” at a conditional). This level is the default.\\n - 3: As per the previous level, but show all control flow events, not just significant ones.",
+           description="Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.\\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\\n - 1: As per the previous level, but also show events for the entry to each function.\\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. \"true path taken\" at a conditional). This level is the default.\\n - 3: As per the previous level, but show all control flow events, not just significant ones.",
            values={"default", "0", "1", "2", "3"},
            default=default_options["analyzer_verbosity"] or default_options["jln-analyzer-verbosity"] or "default",
            after_check=function(option) check_option("jln-analyzer-verbosity", "analyzer_verbosity") end,
@@ -156,18 +152,10 @@ local _flag_names = {
            default=default_options["color"] or default_options["jln-color"] or "default",
            after_check=function(option) check_option("jln-color", "color") end,
          })
-  option("jln-control-flow", {
-           showmenu=true,
-           category=category,
-           description="Insert extra runtime security checks to detect attempts to compromise your code.",
-           values={"default", "off", "on", "branch", "return", "allow_bugs"},
-           default=default_options["control_flow"] or default_options["jln-control-flow"] or "default",
-           after_check=function(option) check_option("jln-control-flow", "control_flow") end,
-         })
   option("jln-conversion-warnings", {
            showmenu=true,
            category=category,
-           description="Warn for implicit conversions that may alter a value.\\n - on: Combine conversion and sign value\\n - sign: Warn for implicit conversions that may change the sign (lke `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.\\n - float: Warn for implicit conversions that reduce the precision of a real value.\\n - conversion: Warn for implicit conversions that may alter a value.\\n - all: Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.",
+           description="Warn for implicit conversions that may alter a value.\\n - on: Combine conversion and sign value\\n - sign: Warn for implicit conversions that may change the sign (the `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.\\n - float: Warn for implicit conversions that reduce the precision of a real value.\\n - conversion: Warn for implicit conversions that may alter a value.\\n - all: Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.",
            values={"default", "off", "on", "sign", "float", "conversion", "all"},
            default=default_options["conversion_warnings"] or default_options["jln-conversion-warnings"] or "on",
            after_check=function(option) check_option("jln-conversion-warnings", "conversion_warnings") end,
@@ -204,6 +192,14 @@ local _flag_names = {
            default=default_options["diagnostics_format"] or default_options["jln-diagnostics-format"] or "default",
            after_check=function(option) check_option("jln-diagnostics-format", "diagnostics_format") end,
          })
+  option("jln-emcc-debug", {
+           showmenu=true,
+           category=category,
+           description="Add checks with Emscripten compiler.\\n - off: Disable checks used with default `-O0` optimization.\\n - on: Activate some checks in addition to those used with default `-O0` optimization.\\n - slow: Activate checks that can greatly slow down the program.",
+           values={"default", "off", "on", "slow"},
+           default=default_options["emcc_debug"] or default_options["jln-emcc-debug"] or "default",
+           after_check=function(option) check_option("jln-emcc-debug", "emcc_debug") end,
+         })
   option("jln-exceptions", {
            showmenu=true,
            category=category,
@@ -211,6 +207,14 @@ local _flag_names = {
            values={"default", "off", "on"},
            default=default_options["exceptions"] or default_options["jln-exceptions"] or "default",
            after_check=function(option) check_option("jln-exceptions", "exceptions") end,
+         })
+  option("jln-hardened", {
+           showmenu=true,
+           category=category,
+           description="Enable a set of flags for C and C++ that improve the security of the generated code without affecting its ABI. Can impact performance.\\n - off: Use `/GS-` with MSVC-like compiler. Does nothing with other compilers.\\n - all: Use -fstack-protector-all instead of -fstack-protector-strong",
+           values={"default", "off", "on", "all"},
+           default=default_options["hardened"] or default_options["jln-hardened"] or "default",
+           after_check=function(option) check_option("jln-hardened", "hardened") end,
          })
   option("jln-linker", {
            showmenu=true,
@@ -223,7 +227,7 @@ local _flag_names = {
   option("jln-lto", {
            showmenu=true,
            category=category,
-           description="Enable Link Time Optimization. Also known as interprocedural optimization (IPO).\\n - on: Activates ThinLTO when available (Clang), otherwise FullLTO.\\n - full: Activates FullLTO.\\n - thin_or_nothing: Activates ThinLTO. Disable lto when not supported.\\n - whole_program: Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.\\n - whole_program_and_full_lto: Same as whole_program, but use FullLTO when not supported.",
+           description="Enable Link Time Optimization. Also known as interprocedural optimization (IPO).\\n - on: Activates ThinLTO when available (Clang), otherwise FullLTO.\\n - full: Activates FullLTO.\\n - thin_or_nothing: Activates ThinLTO. Disable lto when not supported.\\n - whole_program: Assume that the current compilation unit represents the whole program being compiled. This option should not be used to compile a library. When not supported by the compiler, ThinLTO or FullLTO are used.\\n - whole_program_and_full_lto: Same as `whole_program`, but use FullLTO when not supported.",
            values={"default", "off", "on", "full", "thin_or_nothing", "whole_program", "whole_program_and_full_lto"},
            default=default_options["lto"] or default_options["jln-lto"] or "default",
            after_check=function(option) check_option("jln-lto", "lto") end,
@@ -239,7 +243,7 @@ local _flag_names = {
   option("jln-msvc-diagnostics-format", {
            showmenu=true,
            category=category,
-           description="Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options?view=msvc-170).\\n - classic: Which reports only the line number where the issue was found.\\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.\\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.",
+           description="Controls the display of error and warning information (https://learn.microsoft.com/en-us/cpp/build/reference/diagnostics-compiler-diagnostic-options).\\n - classic: Which reports only the line number where the issue was found.\\n - column: Includes the column where the issue was found. This can help you identify the specific language construct or character that is causing the issue.\\n - caret: Includes the column where the issue was found and places a caret (^) under the location in the line of code where the issue was detected.",
            values={"default", "classic", "column", "caret"},
            default=default_options["msvc_diagnostics_format"] or default_options["jln-msvc-diagnostics-format"] or "caret",
            after_check=function(option) check_option("jln-msvc-diagnostics-format", "msvc_diagnostics_format") end,
@@ -255,7 +259,7 @@ local _flag_names = {
   option("jln-ndebug", {
            showmenu=true,
            category=category,
-           description="Enable NDEBUG macro (disable assert macro).",
+           description="Enable `NDEBUG` macro (disable assert macro).",
            values={"default", "off", "on", "with_optimization_1_or_above"},
            default=default_options["ndebug"] or default_options["jln-ndebug"] or "with_optimization_1_or_above",
            after_check=function(option) check_option("jln-ndebug", "ndebug") end,
@@ -263,7 +267,7 @@ local _flag_names = {
   option("jln-optimization", {
            showmenu=true,
            category=category,
-           description="Optimization level.\\n - 0: Not optimize.\\n - g: Enable debugging experience.\\n - 1: Optimize.\\n - 2: Optimize even more.\\n - 3: Optimize yet more.\\n - fast: Enables all optimization=3 and disregard strict standards compliance.\\n - size: Optimize for size.\\n - z: Optimize for size aggressively (/!\\ possible slow compilation with emcc).",
+           description="Optimization level.\\n - 0: Not optimize.\\n - g: Enable debugging experience.\\n - 1: Optimize.\\n - 2: Optimize even more.\\n - 3: Optimize yet more.\\n - fast: Enables all `optimization=3` and disregard strict standards compliance.\\n - size: Optimize for size.\\n - z: Optimize for size aggressively (/!\\ possible slow compilation with emcc).",
            values={"default", "0", "g", "1", "2", "3", "fast", "size", "z"},
            default=default_options["optimization"] or default_options["jln-optimization"] or "default",
            after_check=function(option) check_option("jln-optimization", "optimization") end,
@@ -276,22 +280,6 @@ local _flag_names = {
            default=default_options["pedantic"] or default_options["jln-pedantic"] or "on",
            after_check=function(option) check_option("jln-pedantic", "pedantic") end,
          })
-  option("jln-pie", {
-           showmenu=true,
-           category=category,
-           description="Controls position-independent code generation.",
-           values={"default", "off", "on", "static", "fpic", "fPIC", "fpie", "fPIE"},
-           default=default_options["pie"] or default_options["jln-pie"] or "default",
-           after_check=function(option) check_option("jln-pie", "pie") end,
-         })
-  option("jln-relro", {
-           showmenu=true,
-           category=category,
-           description="Specifies a memory segment that should be made read-only after relocation, if supported.",
-           values={"default", "off", "on", "full"},
-           default=default_options["relro"] or default_options["jln-relro"] or "default",
-           after_check=function(option) check_option("jln-relro", "relro") end,
-         })
   option("jln-reproducible-build-warnings", {
            showmenu=true,
            category=category,
@@ -303,8 +291,8 @@ local _flag_names = {
   option("jln-sanitizers", {
            showmenu=true,
            category=category,
-           description="Enable sanitizers (asan, ubsan, etc) when available.\\n - on: Enable address sanitizer and other compatible sanitizers\\n - extra: Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.\\n - address: Enable address sanitizer only.\\n - kernel: Enable kernel-address sanitizers and other compatible sanitizers\\n - kernel_extra: Enable kernel-address sanitizers and other compatible sanitizers, even those who require a config via environment variable.\\n - kernel_address: Enable kernel address sanitizer only.\\n - thread: Enable thread sanitizer.\\n - undefined: Enable undefined sanitizer.\\n - undefined_minimal_runtime: Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).\\n - scudo_hardened_allocator: Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html",
-           values={"default", "off", "on", "extra", "address", "kernel", "kernel_extra", "kernel_extra", "kernel_address", "thread", "undefined", "undefined_minimal_runtime", "scudo_hardened_allocator"},
+           description="Enable sanitizers (asan, ubsan, etc) when available.\\n - on: Enable address sanitizer and other compatible sanitizers\\n - with_minimal_code_size: Enable address sanitizer and other compatible sanitizers, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `-fsanitize-address-use-after-return=runtime` with Clang family).\\n - extra: Enable address sanitizer and other compatible sanitizers, even those who require a config via environment variable.\\n - extra_with_minimal_code_size: Combines `extra` and `with_minimal_code_size` values.\\n - address: Enable address sanitizer only.\\n - address_with_minimal_code_size: Enable address sanitizer only, but reduces code size by removing the possibility of deleting checks via an environment variable when possible (use `-fsanitize-address-use-after-return=runtime` with Clang family).\\n - thread: Enable thread sanitizer.\\n - undefined: Enable undefined sanitizer.\\n - undefined_minimal_runtime: Enable undefined sanitizer with minimal UBSan runtime when available (Clang>=6).\\n - scudo_hardened_allocator: Enable Scudo Hardened Allocator with Clang. See https://llvm.org/docs/ScudoHardenedAllocator.html.",
+           values={"default", "off", "on", "with_minimal_code_size", "extra", "extra_with_minimal_code_size", "address", "address_with_minimal_code_size", "thread", "undefined", "undefined_minimal_runtime", "scudo_hardened_allocator"},
            default=default_options["sanitizers"] or default_options["jln-sanitizers"] or "default",
            after_check=function(option) check_option("jln-sanitizers", "sanitizers") end,
          })
@@ -316,18 +304,10 @@ local _flag_names = {
            default=default_options["shadow_warnings"] or default_options["jln-shadow-warnings"] or "off",
            after_check=function(option) check_option("jln-shadow-warnings", "shadow_warnings") end,
          })
-  option("jln-stack-protector", {
-           showmenu=true,
-           category=category,
-           description="Emit extra code to check for buffer overflows, such as stack smashing attacks.",
-           values={"default", "off", "on", "strong", "all"},
-           default=default_options["stack_protector"] or default_options["jln-stack-protector"] or "default",
-           after_check=function(option) check_option("jln-stack-protector", "stack_protector") end,
-         })
   option("jln-stl-fix", {
            showmenu=true,
            category=category,
-           description="Enable /DNOMINMAX with msvc.",
+           description="Enable `/DNOMINMAX` with MSVC.",
            values={"default", "off", "on"},
            default=default_options["stl_fix"] or default_options["jln-stl-fix"] or "on",
            after_check=function(option) check_option("jln-stl-fix", "stl_fix") end,
@@ -335,7 +315,7 @@ local _flag_names = {
   option("jln-suggest-attributes", {
            showmenu=true,
            category=category,
-           description="Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option -fipa-pure-const, which is enabled by default at -O1 and higher.\\n - on: Suggests noreturn attribute with Clang and GCC.\\n - common: Suggests noreturn and format attributes with GCC ; noreturn with Clang.\\n - analysis: Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.\\n - unity: Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.\\n - all: Active all suggestions for attributes.",
+           description="Warn for cases where adding an attribute may be beneficial. With GCC, this  analysis requires option `-fipa-pure-const`, which is enabled by default at `-O1` and higher.\\n - on: Suggests noreturn attribute with Clang and GCC.\\n - common: Suggests noreturn and format attributes with GCC ; noreturn with Clang.\\n - analysis: Suggests noreturn, format attributes, malloc and returns_nonnull attributes with GCC ; noreturn with Clang.\\n - unity: Suggests noreturn, format attributes and final on types and methods ; noreturn with Clang.\\n - all: Active all suggestions for attributes.",
            values={"default", "off", "on", "common", "analysis", "unity", "all"},
            default=default_options["suggest_attributes"] or default_options["jln-suggest-attributes"] or "on",
            after_check=function(option) check_option("jln-suggest-attributes", "suggest_attributes") end,
@@ -351,7 +331,7 @@ local _flag_names = {
   option("jln-symbols", {
            showmenu=true,
            category=category,
-           description="Produce debugging information in the operating system\'s.\\n - hidden: Use -fvisibility=hidden with Clang, GCC and other compilers that support this flag.\\n - strip_all: Strip all symbols.\\n - gc_sections: Enable garbage collection of unused sections.\\n - nodebug: Request no debugging information.\\n - debug: Request debugging information. How much information can be controlled with options \'minimal_debug\', and \'full_debug\'. If the level is not supported by a compiler, this is equivalent to the \'debug\' option.\\n - minimal_debug: If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables.\\n - full_debug: If possible, includes extra information, such as all the macro definitions present in the program.\\n - btf: GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.\\n - codeview: GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).\\n - ctf: GCC only. Produce a CTF debug information. The default level is 2.\\n - ctf1: Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.\\n - ctf2: Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.\\n - vms: GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.\\n - vms1: Same as 1, but for Alpha/VMS.\\n - vms2: Same as 2, but for Alpha/VMS.\\n - vms3: Same as 3, but for Alpha/VMS.\\n - dbx: Clang only.\\n - lldb: Clang only.\\n - sce: Clang only.\\n - dwarf: Clang-cl only",
+           description="Produce debugging information in the operating system\'s.\\n - hidden: Use `-fvisibility=hidden` with Clang, GCC and other compilers that support this flag.\\n - strip_all: Strip all symbols.\\n - gc_sections: Enable garbage collection of unused sections.\\n - nodebug: Request no debugging information.\\n - debug: Request debugging information. How much information can be controlled with options `minimal_debug` and `full_debug`.\\n - minimal_debug: If possible, produces information for tracebacks only. This includes descriptions of functions and external variables, and line number tables, but no information about local variables. If the level is not supported by a compiler, this is equivalent to the `debug` option.\\n - full_debug: If possible, includes extra information, such as all the macro definitions present in the program.\\n - btf: GCC only. Request BTF debug information. BTF is the default debugging format for the eBPF  target.\\n - codeview: GCC only. Code View debug format (used by Microsoft Visual C++ on Windows).\\n - ctf: GCC only. Produce a CTF debug information. The default level is 2.\\n - ctf1: Level 1 produces CTF information for tracebacks only. This includes callsite information, but does not include type information.\\n - ctf2: Level 2 produces type information for entities (functions, data objects etc.)  at file-scope or global-scope only.\\n - vms: GCC only. Alpha/VMS debug format (used by DEBUG on Alpha/VMS systems).The default level is 2.\\n - vms1: Same as `minimal_debug`, but for Alpha/VMS.\\n - vms2: Same as `debug`, but for Alpha/VMS.\\n - vms3: Same as `full_debug`, but for Alpha/VMS.\\n - dbx: Clang only.\\n - lldb: Clang only.\\n - sce: Clang only.\\n - dwarf: Clang-cl only",
            values={"default", "hidden", "strip_all", "gc_sections", "nodebug", "debug", "minimal_debug", "full_debug", "btf", "codeview", "ctf", "ctf1", "ctf2", "vms", "vms1", "vms2", "vms3", "dbx", "lldb", "sce", "dwarf"},
            default=default_options["symbols"] or default_options["jln-symbols"] or "default",
            after_check=function(option) check_option("jln-symbols", "symbols") end,
@@ -359,7 +339,7 @@ local _flag_names = {
   option("jln-unsafe-buffer-usage-warnings", {
            showmenu=true,
            category=category,
-           description="Enable -Wunsafe-buffer-usage with clang (https://clang.llvm.org/docs/SafeBuffers.html).",
+           description="Enable `-Wunsafe-buffer-usage` with Clang (https://clang.llvm.org/docs/SafeBuffers.html).",
            values={"default", "on", "off"},
            default=default_options["unsafe_buffer_usage_warnings"] or default_options["jln-unsafe-buffer-usage-warnings"] or "default",
            after_check=function(option) check_option("jln-unsafe-buffer-usage-warnings", "unsafe_buffer_usage_warnings") end,
@@ -375,7 +355,7 @@ local _flag_names = {
   option("jln-warnings", {
            showmenu=true,
            category=category,
-           description="Warning level.\\n - on: Activates essential warnings and extras.\\n - essential: Activates essential warnings, typically -Wall -Wextra or /W4).\\n - extensive: Activates essential warnings, extras and some that may raise false positives",
+           description="Warning level.\\n - on: Activates essential warnings and extras.\\n - essential: Activates essential warnings, typically `-Wall -Wextra` or `/W4`).\\n - extensive: Activates essential warnings, extras and some that may raise false positives",
            values={"default", "off", "on", "essential", "extensive"},
            default=default_options["warnings"] or default_options["jln-warnings"] or "on",
            after_check=function(option) check_option("jln-warnings", "warnings") end,
@@ -403,7 +383,7 @@ end
 
 jln_c_default_options_by_modes = {
   debug={
-    control_flow='on',
+    emcc_debug='on',
     sanitizers='on',
     stl_hardening='debug',
     symbols='debug',
