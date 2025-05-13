@@ -15,7 +15,7 @@ PROJECT_PATH=$(realpath $(dirname "$0"))/..
 if [[ -d "$TMPDIR/$OUTPUT_DIR_NAME" ]] ; then
   rm -r -- "$TMPDIR/$OUTPUT_DIR_NAME"/../output
 fi
-mkdir -p "$TMPDIR/generators" "$TMPDIR/$OUTPUT_DIR_NAME"/{c,cpp}/{clang,gcc,msvc,clang-cl,icc,icl}
+mkdir -p "$TMPDIR/$OUTPUT_DIR_NAME"/{c,cpp}/{clang,gcc,msvc,clang-cl,icc,icl}
 
 cd -- "$PROJECT_PATH"
 
@@ -29,22 +29,12 @@ if [[ -z "$LUA" ]]; then
     LUA=$(which luajit 2>/dev/null||:)
     if [[ -n "$LUA" ]]; then
       output=$(luajit -v)
-      # luajit 2022 (luajit-2.1.0-beta3) takes longer to load than to run the code
-      if ! [[ $output = *2017* ]]; then
-        LUA=
+      # luajit 2022-2024 (2023?) takes longer to load than to run the code
+      # ok with 2.1.1741730670
+      if [[ $output = *202[01234]* ]]; then
+        LUA=lua
       fi
     fi
-  fi
-
-  if [[ -z "$LUA" ]]; then
-    LUA=lua
-  else
-    for f in compiler-options.lua generators/* ; do
-      $LUA -b "$f" "$TMPDIR/$f"
-    done
-    cd "$TMPDIR"
-    OUTPUT_DIR="$OUTPUT_DIR_NAME"
-    OUTPUT_PROJECT="$PROJECT_PATH/$OUTPUT_DIR_NAME"
   fi
 fi
 
