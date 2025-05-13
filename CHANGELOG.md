@@ -1,6 +1,21 @@
 # ChangeLog
 
-## 2024-05-09
+## 2025-05-13
+
+- remove `control_flow`
+- remove `pie`
+- remove `relro`
+- remove `sanitizers=kernel`
+- remove `sanitizers=kernel_extra`
+- remove `sanitizers=kernel_address`
+- remove `stack_protector`
+- add `emcc_debug` (`off`, `on`, `slow`)
+- add `hardened` (`off`, `on`, `all`)
+- add `sanitizers=with_minimal_code_size`
+- add `sanitizers=extra_with_minimal_code_size`
+- add `sanitizers=address_with_minimal_code_size`
+
+## 2025-05-09
 
 - remove `debug` and `debug_level` (replaced by `symbols`)
 - remove `fix_compiler_error` (merged with `pedantic`)
@@ -25,9 +40,9 @@
 - add `sanitizers=undefined_minimal_runtime`
 - add `sanitizers=scudo_hardened_allocator`
 - add `suggest_attributes` (`on`, `off`, `common`, `analysis`, `unity`, `all`)
-- add `symbols` (`hidden`, `strip_all`, `gc_sections`, `nodebug`, debug`, `minimal_debug`, `full_debug`, `btf`, `ctf`, `ctf1`, `ctf2`, `vms`, `vms1`, `vms2`, `vms3`, `codeview`, `dbx`, `lldb`, `sce`, `dwarf`)
+- add `symbols` (`hidden`, `strip_all`, `gc_sections`, `nodebug`, `debug`, `minimal_debug`, `full_debug`, `btf`, `ctf`, `ctf1`, `ctf2`, `vms`, `vms1`, `vms2`, `vms3`, `codeview`, `dbx`, `lldb`, `sce`, `dwarf`)
 
-## 2024-04-14
+## 2025-04-14
 
 - remove `warnings=strict` and `warnings=very_strict`
 - add `warnings=essential` and `warnings=extensive`
@@ -35,13 +50,13 @@
 - add `conversion_warnings=float`
 - add `msvc_isystem=assumed`
 
-## 2024-04-06
+## 2025-04-06
 
 - remove `stl_debug` (replaced by `stl_hardening`)
 - add `stl_hardening` (`off`, `fast`, `extensive`, `debug`, `debug_with_broken_abi`)
 - remove `analyzer=taint`
 
-## 2024-03-23
+## 2025-03-23
 
 - remove `stl_debug=assert_as_exception`
 - add `stl_debug=extensive`
