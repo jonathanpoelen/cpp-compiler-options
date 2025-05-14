@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(test)
 
 include(../../output/cpp/cmake)
@@ -9,9 +9,9 @@ elseif ("${TEST_PROFILE}" STREQUAL "off")
 elseif ("${TEST_PROFILE}" STREQUAL "empty")
   jln_init_flags()
 elseif ("${TEST_PROFILE}" STREQUAL "on2")
-  jln_init_flags(AUTO_PROFILE on SUGGESTIONS on)
+  jln_init_flags(AUTO_PROFILE on SUGGEST_ATTRIBUTES on)
 else()
-  jln_init_flags(SUGGESTIONS on) # SUGGESTIONS default value is on
+  jln_init_flags(SUGGEST_ATTRIBUTES on) # SUGGEST_ATTRIBUTES default value is on
 endif()
 
 jln_flags(CXX_VAR JLN_CXX_FLAGS LINK_VAR JLN_LINK_FLAGS SANITIZERS On)
@@ -24,18 +24,18 @@ add_compile_options(${JLN_CXX_FLAGS})
 # add_link_options(${JLN_LINK_FLAGS})
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${JLN_LINK_FLAGS}")
 
-jln_target_interface(lib_test INTERFACE DEBUG on DISABLE_OTHERS on)
+jln_target_interface(lib_test INTERFACE SYMBOLS debug DISABLE_OTHERS on)
 jln_target_interface(lib_test2 INTERFACE
-  BUILD_TYPE release SUGGESTIONS on)
+  BUILD_TYPE release SUGGEST_ATTRIBUTES on)
 jln_target_interface(lib_test3 INTERFACE
-  DEBUG on
-  BUILD_TYPE release SUGGESTIONS on)
+  SYMBOLS debug
+  BUILD_TYPE release SUGGEST_ATTRIBUTES on)
 jln_target_interface(lib_test4 INTERFACE
-  BUILD_TYPE release SUGGESTIONS on
+  BUILD_TYPE release SUGGEST_ATTRIBUTES on
   BUILD_TYPE debug WARNINGS on)
 jln_target_interface(lib_test5 INTERFACE
-  DEBUG on
-  BUILD_TYPE release SUGGESTIONS on
+  SYMBOLS debug
+  BUILD_TYPE release SUGGEST_ATTRIBUTES on
   BUILD_TYPE debug WARNINGS on)
 
 add_executable(test test.cpp)
