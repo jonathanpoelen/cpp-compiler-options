@@ -125,6 +125,7 @@
 #
 #  # Other options:
 #
+#  bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 #  color = default auto never always
 #  coverage = default off on
 #  diagnostics_format = default fixits patch print_source_range_info
@@ -139,6 +140,7 @@
 #
 #  If not specified:
 #
+#  - `bidi_char_warnings` is `any`
 #  - `msvc_diagnostics_format` is `caret`
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
@@ -203,10 +205,13 @@
 #
 #  ## Recommended options
 #
+#  Some of the recommendations here are already made by build systems.
+#  These include `ndebug`, `symbols` and `optimization`.
+#
 #  category | options
 #  ---------|---------
 #  debug | `emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`optimization=g` or `default`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`symbols=debug` or `full_debug`<br>`var_init=pattern`
-#  release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
+#  release | `cpu=native`<br>`lto=on`<br>`ndebug=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 #  security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
 #  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`shadow_warnings=local`<br>`switch_warnings=exhaustive_enum`<br>`windows_abi_compatibility_warnings=on`
 #
@@ -217,6 +222,7 @@
 set(_JLN_ANALYZER_VALUES default off on with_external_headers)
 set(_JLN_ANALYZER_TOO_COMPLEX_WARNING_VALUES default off on)
 set(_JLN_ANALYZER_VERBOSITY_VALUES default 0 1 2 3)
+set(_JLN_BIDI_CHAR_WARNINGS_VALUES default any any_and_ucn unpaired unpaired_and_ucn)
 set(_JLN_COLOR_VALUES default auto never always)
 set(_JLN_CONVERSION_WARNINGS_VALUES default off on sign float conversion all)
 set(_JLN_COVERAGE_VALUES default off on)
@@ -273,6 +279,14 @@ if(NOT("${JLN_ANALYZER_VERBOSITY}" STREQUAL ""))
   string(TOLOWER "${JLN_ANALYZER_VERBOSITY}" JLN_ANALYZER_VERBOSITY)
   if(NOT(("default" STREQUAL JLN_ANALYZER_VERBOSITY) OR ("0" STREQUAL JLN_ANALYZER_VERBOSITY) OR ("1" STREQUAL JLN_ANALYZER_VERBOSITY) OR ("2" STREQUAL JLN_ANALYZER_VERBOSITY) OR ("3" STREQUAL JLN_ANALYZER_VERBOSITY)))
     message(FATAL_ERROR "Unknow value \"${JLN_ANALYZER_VERBOSITY}\" for JLN_ANALYZER_VERBOSITY, expected: default, 0, 1, 2, 3")
+  endif()
+endif()
+set(JLN_BIDI_CHAR_WARNINGS "${JLN_BIDI_CHAR_WARNINGS}" CACHE STRING "Enable warnings for possibly misleading Unicode bidirectional control characters. Set to `default` or `unpaired_and_ucn` in cases where some of the source code is expected to include bidirectional control characters.")
+set_property(CACHE JLN_BIDI_CHAR_WARNINGS PROPERTY STRINGS "default" "any" "any_and_ucn" "unpaired" "unpaired_and_ucn")
+if(NOT("${JLN_BIDI_CHAR_WARNINGS}" STREQUAL ""))
+  string(TOLOWER "${JLN_BIDI_CHAR_WARNINGS}" JLN_BIDI_CHAR_WARNINGS)
+  if(NOT(("default" STREQUAL JLN_BIDI_CHAR_WARNINGS) OR ("any" STREQUAL JLN_BIDI_CHAR_WARNINGS) OR ("any_and_ucn" STREQUAL JLN_BIDI_CHAR_WARNINGS) OR ("unpaired" STREQUAL JLN_BIDI_CHAR_WARNINGS) OR ("unpaired_and_ucn" STREQUAL JLN_BIDI_CHAR_WARNINGS)))
+    message(FATAL_ERROR "Unknow value \"${JLN_BIDI_CHAR_WARNINGS}\" for JLN_BIDI_CHAR_WARNINGS, expected: default, any, any_and_ucn, unpaired, unpaired_and_ucn")
   endif()
 endif()
 set(JLN_COLOR "${JLN_COLOR}" CACHE STRING "")
@@ -578,7 +592,7 @@ set(JLN_C_IS_INITIALIZED 0 CACHE BOOL "private" FORCE)
 #       BUILD_TYPE release LTO on
 #   )
 function(jln_c_init_flags)
-  jln_c_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;COLOR;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DIAGNOSTICS_FORMAT;EMCC_DEBUG;EXCEPTIONS;HARDENED;LINKER;LTO;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_DIAGNOSTICS_FORMAT;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;PEDANTIC;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STL_FIX;SUGGEST_ATTRIBUTES;SWITCH_WARNINGS;SYMBOLS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WINDOWS_BIGOBJ;AUTO_PROFILE" ${ARGN})
+  jln_c_parse_arguments(JLN_DEFAULT_FLAG "VERBOSE;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;BIDI_CHAR_WARNINGS;COLOR;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DIAGNOSTICS_FORMAT;EMCC_DEBUG;EXCEPTIONS;HARDENED;LINKER;LTO;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_DIAGNOSTICS_FORMAT;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;PEDANTIC;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STL_FIX;SUGGEST_ATTRIBUTES;SWITCH_WARNINGS;SYMBOLS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WINDOWS_BIGOBJ;AUTO_PROFILE" ${ARGN})
 
   if(DEFINED JLN_DEFAULT_FLAG_VERBOSE)
     set(JLN_VERBOSE_D ${JLN_DEFAULT_FLAG_VERBOSE})
@@ -663,6 +677,14 @@ function(jln_c_init_flags)
     set(JLN_ANALYZER_VERBOSITY_D "default" CACHE STRING "private" FORCE)
   else()
     set(JLN_ANALYZER_VERBOSITY_D "${JLN_ANALYZER_VERBOSITY}" CACHE STRING "private" FORCE)
+  endif()
+
+  if(DEFINED JLN_DEFAULT_FLAG_BIDI_CHAR_WARNINGS)
+    set(JLN_BIDI_CHAR_WARNINGS_D ${JLN_DEFAULT_FLAG_BIDI_CHAR_WARNINGS} CACHE STRING "private" FORCE)
+  elseif("${JLN_BIDI_CHAR_WARNINGS}" STREQUAL "")
+    set(JLN_BIDI_CHAR_WARNINGS_D "any" CACHE STRING "private" FORCE)
+  else()
+    set(JLN_BIDI_CHAR_WARNINGS_D "${JLN_BIDI_CHAR_WARNINGS}" CACHE STRING "private" FORCE)
   endif()
 
   if(DEFINED JLN_DEFAULT_FLAG_COLOR)
@@ -902,6 +924,7 @@ function(jln_c_init_flags)
     message(STATUS "JLN_ANALYZER = ${JLN_ANALYZER_D}	[default, off, on, with_external_headers]")
     message(STATUS "JLN_ANALYZER_TOO_COMPLEX_WARNING = ${JLN_ANALYZER_TOO_COMPLEX_WARNING_D}	[default, off, on]")
     message(STATUS "JLN_ANALYZER_VERBOSITY = ${JLN_ANALYZER_VERBOSITY_D}	[default, 0, 1, 2, 3]")
+    message(STATUS "JLN_BIDI_CHAR_WARNINGS = ${JLN_BIDI_CHAR_WARNINGS_D}	[default, any, any_and_ucn, unpaired, unpaired_and_ucn]")
     message(STATUS "JLN_COLOR = ${JLN_COLOR_D}	[default, auto, never, always]")
     message(STATUS "JLN_CONVERSION_WARNINGS = ${JLN_CONVERSION_WARNINGS_D}	[default, off, on, sign, float, conversion, all]")
     message(STATUS "JLN_COVERAGE = ${JLN_COVERAGE_D}	[default, off, on]")
@@ -939,13 +962,13 @@ endfunction()
 
 set(JLN_C_COMPILER_VERSION ${CMAKE_C_COMPILER_VERSION})
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if(CMAKE_C_COMPILER_ID MATCHES "GNU")
   set(JLN_GCC_C_COMPILER 1)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if (CMAKE_CXX_COMPILER MATCHES /emcc)
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  if (CMAKE_SYSTEM_NAME MATCHES Emscripten)
     set(JLN_CLANG_LIKE_COMPILER 1)
     set(JLN_CLANG_EMCC_C_COMPILER 1)
-  elseif(MSVC)
+  elseif(CMAKE_C_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
     set(JLN_CLANG_LIKE_COMPILER 0)
     set(JLN_CLANG_CL_C_COMPILER 1)
   else()
@@ -953,7 +976,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(JLN_CLANG_C_COMPILER 1)
   endif()
 # icx / icpx, dpcpp
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
+elseif(CMAKE_C_COMPILER_ID MATCHES "IntelLLVM")
   set(JLN_CLANG_LIKE_COMPILER 1)
   set(JLN_ICX_C_COMPILER 1)
   set(JLN_CLANG_C_COMPILER 1)
@@ -961,7 +984,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
   file(WRITE "${CMAKE_BINARY_DIR}/jln_null.cpp"
              "int vers = __clang_major__ - __clang_minor__;")
   execute_process(
-    COMMAND ${CMAKE_CXX_COMPILER} "${CMAKE_BINARY_DIR}/jln_null.cpp" -E
+    COMMAND ${CMAKE_C_COMPILER} "${CMAKE_BINARY_DIR}/jln_null.cpp" -E
     OUTPUT_VARIABLE JLN_ICX_MACROS_OUTPUT
   )
   file(REMOVE "${CMAKE_BINARY_DIR}/jln_null.cpp")
@@ -969,7 +992,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
          JLN_ICX_MACROS_OUTPUT "${JLN_ICX_MACROS_OUTPUT}")
   set(JLN_C_COMPILER_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
 # icc / icl
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+elseif(CMAKE_C_COMPILER_ID MATCHES "Intel")
   if (CMAKE_HOST_WIN32)
     set(JLN_ICL_C_COMPILER 1)
   else()
@@ -1009,7 +1032,7 @@ function(jln_c_flags)
   endif()
   set(CXX_FLAGS "")
   set(LINK_LINK "")
-  jln_c_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;C_VAR;LINK_VAR;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;COLOR;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DIAGNOSTICS_FORMAT;EMCC_DEBUG;EXCEPTIONS;HARDENED;LINKER;LTO;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_DIAGNOSTICS_FORMAT;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;PEDANTIC;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STL_FIX;SUGGEST_ATTRIBUTES;SWITCH_WARNINGS;SYMBOLS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WINDOWS_BIGOBJ" ${ARGN})
+  jln_c_parse_arguments(JLN_FLAGS "DISABLE_OTHERS;C_VAR;LINK_VAR;ANALYZER;ANALYZER_TOO_COMPLEX_WARNING;ANALYZER_VERBOSITY;BIDI_CHAR_WARNINGS;COLOR;CONVERSION_WARNINGS;COVERAGE;COVERED_SWITCH_DEFAULT_WARNINGS;CPU;DIAGNOSTICS_FORMAT;EMCC_DEBUG;EXCEPTIONS;HARDENED;LINKER;LTO;MSVC_CRT_SECURE_NO_WARNINGS;MSVC_DIAGNOSTICS_FORMAT;MSVC_ISYSTEM;NDEBUG;OPTIMIZATION;PEDANTIC;REPRODUCIBLE_BUILD_WARNINGS;SANITIZERS;SHADOW_WARNINGS;STL_FIX;SUGGEST_ATTRIBUTES;SWITCH_WARNINGS;SYMBOLS;UNSAFE_BUFFER_USAGE_WARNINGS;VAR_INIT;WARNINGS;WARNINGS_AS_ERROR;WINDOWS_BIGOBJ" ${ARGN})
 
   if(NOT DEFINED JLN_FLAGS_ANALYZER)
     if(JLN_FLAGS_DISABLE_OTHERS)
@@ -1032,6 +1055,14 @@ function(jln_c_flags)
       set(JLN_FLAGS_ANALYZER_VERBOSITY "default")
     else()
       set(JLN_FLAGS_ANALYZER_VERBOSITY "${JLN_ANALYZER_VERBOSITY_D}")
+    endif()
+  endif()
+
+  if(NOT DEFINED JLN_FLAGS_BIDI_CHAR_WARNINGS)
+    if(JLN_FLAGS_DISABLE_OTHERS)
+      set(JLN_FLAGS_BIDI_CHAR_WARNINGS "any")
+    else()
+      set(JLN_FLAGS_BIDI_CHAR_WARNINGS "${JLN_BIDI_CHAR_WARNINGS_D}")
     endif()
   endif()
 
@@ -1374,6 +1405,23 @@ function(jln_c_flags)
                   endif()
                 endif()
               endif()
+            endif()
+          endif()
+        endif()
+      endif()
+    endif()
+    if (   NOT ( JLN_FLAGS_BIDI_CHAR_WARNINGS STREQUAL "default" ) )
+      if (  ( JLN_GCC_C_COMPILER AND JLN_C_COMPILER_VERSION VERSION_GREATER_EQUAL "12.0" ) )
+        if (  JLN_FLAGS_BIDI_CHAR_WARNINGS STREQUAL "any" )
+          list(APPEND CXX_FLAGS  "-Wbidi-chars=any")
+        else()
+          if (  JLN_FLAGS_BIDI_CHAR_WARNINGS STREQUAL "any_and_ucn" )
+            list(APPEND CXX_FLAGS  "-Wbidi-chars=any,ucn")
+          else()
+            if (  JLN_FLAGS_BIDI_CHAR_WARNINGS STREQUAL "unpaired" )
+              list(APPEND CXX_FLAGS  "-Wbidi-chars=unpaired")
+            else()
+              list(APPEND CXX_FLAGS  "-Wbidi-chars=unpaired,ucn")
             endif()
           endif()
         endif()

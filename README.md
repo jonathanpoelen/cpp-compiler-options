@@ -125,6 +125,7 @@ analyzer_verbosity = default 0 1 2 3
 
 # Other options:
 
+bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 color = default auto never always
 coverage = default off on
 diagnostics_format = default fixits patch print_source_range_info
@@ -139,6 +140,7 @@ windows_bigobj = on default
 
 If not specified:
 
+- `bidi_char_warnings` is `any`
 - `msvc_diagnostics_format` is `caret`
 - `ndebug` is `with_optimization_1_or_above`
 - The following values are `off`:
@@ -203,10 +205,13 @@ alloc_dealloc_mismatch=1
 
 ## Recommended options
 
+Some of the recommendations here are already made by build systems.
+These include `ndebug`, `symbols` and `optimization`.
+
 category | options
 ---------|---------
 debug | `emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`optimization=g` or `default`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`symbols=debug` or `full_debug`<br>`var_init=pattern`
-release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
+release | `cpu=native`<br>`lto=on`<br>`ndebug=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
 really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`shadow_warnings=local`<br>`switch_warnings=exhaustive_enum`<br>`windows_abi_compatibility_warnings=on`
 
