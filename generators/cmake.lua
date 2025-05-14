@@ -210,16 +210,23 @@ endfunction()
     self:print('  set(JLN_' .. compiler_type .. '_IS_INITIALIZED 1 CACHE BOOL "private" FORCE)\n')
     self:print('endfunction()\n')
 
+    -- https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html
+    -- https://cmake.org/cmake/help/latest/variable/CMAKE_SYSTEM_NAME.html#variable:CMAKE_SYSTEM_NAME
+    -- https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_FRONTEND_VARIANT.html
+    local comp_id = self.is_C and 'CMAKE_C_COMPILER_ID' or 'CMAKE_CXX_COMPILER_ID'
+    local comp_name = self.is_C and 'CMAKE_C_COMPILER' or 'CMAKE_CXX_COMPILER'
+    local comp_frontend = self.is_C and 'CMAKE_C_COMPILER_FRONTEND_VARIANT' or 'CMAKE_CXX_COMPILER_FRONTEND_VARIANT'
+
     self:print([[
 set(JLN_]].. compiler_type .. [[_COMPILER_VERSION ${CMAKE_]].. compiler_type .. [[_COMPILER_VERSION})
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if(]] .. comp_id .. [[ MATCHES "GNU")
   set(JLN_GCC_]].. compiler_type .. [[_COMPILER 1)
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if (CMAKE_CXX_COMPILER MATCHES ]] .. (self.is_C and '/emcc' or '/em\\\\+\\\\+') .. [[)
+elseif(]] .. comp_id .. [[ MATCHES "Clang")
+  if (CMAKE_SYSTEM_NAME MATCHES Emscripten)
     set(JLN_CLANG_LIKE_COMPILER 1)
     set(JLN_CLANG_EMCC_]].. compiler_type .. [[_COMPILER 1)
-  elseif(MSVC)
+  elseif(]] .. comp_frontend .. [[ MATCHES "MSVC")
     set(JLN_CLANG_LIKE_COMPILER 0)
     set(JLN_CLANG_CL_]].. compiler_type .. [[_COMPILER 1)
   else()
@@ -227,7 +234,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
   endif()
 # icx / icpx, dpcpp
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
+elseif(]] .. comp_id .. [[ MATCHES "IntelLLVM")
   set(JLN_CLANG_LIKE_COMPILER 1)
   set(JLN_ICX_]].. compiler_type .. [[_COMPILER 1)
   set(JLN_CLANG_]].. compiler_type .. [[_COMPILER 1)
@@ -235,7 +242,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
   file(WRITE "${CMAKE_BINARY_DIR}/jln_null.cpp"
              "int vers = __clang_major__ - __clang_minor__;")
   execute_process(
-    COMMAND ${CMAKE_CXX_COMPILER} "${CMAKE_BINARY_DIR}/jln_null.cpp" -E
+    COMMAND ${]] .. comp_name .. [[} "${CMAKE_BINARY_DIR}/jln_null.cpp" -E
     OUTPUT_VARIABLE JLN_ICX_MACROS_OUTPUT
   )
   file(REMOVE "${CMAKE_BINARY_DIR}/jln_null.cpp")
@@ -243,7 +250,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
          JLN_ICX_MACROS_OUTPUT "${JLN_ICX_MACROS_OUTPUT}")
   set(JLN_]].. compiler_type .. [[_COMPILER_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
 # icc / icl
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+elseif(]] .. comp_id .. [[ MATCHES "Intel")
   if (CMAKE_HOST_WIN32)
     set(JLN_ICL_]].. compiler_type .. [[_COMPILER 1)
   else()
