@@ -79,9 +79,10 @@ gencompopt ()
 }
 
 warn_opts='
+  bidi_char_warnings=any
   shadow_warnings=off
-  windows_abi_compatibility_warnings=off
   switch_warnings=exhaustive_enum
+  windows_abi_compatibility_warnings=off
   pedantic
   warnings
 '

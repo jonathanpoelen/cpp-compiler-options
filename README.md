@@ -78,6 +78,7 @@ Options with a default value other than `default` are listed below.
 
 warnings = on default off essential extensive
 warnings_as_error = default off on basic
+bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 conversion_warnings = on default off sign float conversion all
 covered_switch_default_warnings = on default off
 msvc_crt_secure_no_warnings = on default off
@@ -150,6 +151,7 @@ windows_bigobj = on default
 
 If not specified:
 
+- `bidi_char_warnings` is `any`
 - `msvc_diagnostics_format` is `caret`
 - `ndebug` is `with_optimization_1_or_above`
 - The following values are `off`:

@@ -527,6 +527,26 @@ Or(gcc, clang_like, clang_cl) {
   },
 
   -- Or(gcc, clang_like, clang_cl)
+  opt'bidi_char_warnings' {
+    gcc'>=12' {
+      match {
+        lvl'any'              {
+          flag'-Wbidi-chars=any'
+        },
+        lvl'any_and_ucn'      {
+          flag'-Wbidi-chars=any,ucn'
+        },
+        lvl'unpaired'         {
+          flag'-Wbidi-chars=unpaired'
+        },
+        --[[lvl'unpaired_and_ucn']] {
+          flag'-Wbidi-chars=unpaired,ucn'
+        },
+      }
+    }
+  },
+
+  -- Or(gcc, clang_like, clang_cl)
   opt'optimization_warnings' {
     match {
       gcc {
@@ -2620,6 +2640,17 @@ local Vbase = {
       incidental=true,
     },
 
+    bidi_char_warnings={
+      values={
+        'any',
+        'any_and_ucn',
+        'unpaired',
+        'unpaired_and_ucn',
+      },
+      default='any',
+      description='Enable warnings for possibly misleading Unicode bidirectional control characters. Set to `default` or `unpaired_and_ucn` in cases where some of the source code is expected to include bidirectional control characters.',
+    },
+
     conversion_warnings={
       values={
         'off',
@@ -2955,6 +2986,7 @@ local Vbase = {
     {'Warning options', {
       'warnings',
       'warnings_as_error',
+      'bidi_char_warnings',
       'conversion_warnings',
       'covered_switch_default_warnings',
       'msvc_crt_secure_no_warnings',
