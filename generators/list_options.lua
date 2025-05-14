@@ -160,7 +160,7 @@ dt, .option-name > a {
 <p>This page lists the available options for the <a href="https://github.com/jonathanpoelen/cpp-compiler-options/">C++ Compiler Options</a> project.</p>
 ]]
 
-local html_footer = '</body></html>'
+local html_footer = '</body></html>\n'
 
 -- template
 --[[
