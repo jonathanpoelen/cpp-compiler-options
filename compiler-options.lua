@@ -3018,6 +3018,7 @@ local Vbase = {
     release={
       -- linker='native',
       lto='on',
+      -- ndebug='on', -- already made by build systems.
       optimization='3',
     },
     debug_optimized={
