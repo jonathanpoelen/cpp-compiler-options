@@ -1,15 +1,6 @@
 local known_opts = {}
 local errors = {}
 
-local _color_map = {
-  '\027[34m',
-  '\027[35m',
-  -- specific color for certain values
-  on='\027[32m',
-  off='\027[31m',
-  default='\027[37m',
-}
-
 local _color_value1 = '34'
 local _color_value2 = '35'
 local _color_on = '32'
@@ -500,7 +491,7 @@ return {
 
     local icolor
     local desc
-    local color = ''
+    local color
     local first_opt = true
     local first_value
 
@@ -587,7 +578,6 @@ return {
     -- init categories
 
     if categorized then
-      local color_cat = colorize and _color_cat or ''
       local opt
 
       local push_title = function(name)

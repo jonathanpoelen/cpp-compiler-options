@@ -1,6 +1,6 @@
 local table_insert = table.insert
 
-function negate_compilers(compilers, parentcomps)
+local function negate_compilers(compilers, parentcomps)
   local new = {}
   for comp in pairs(parentcomps) do
     if not compilers[comp] then
