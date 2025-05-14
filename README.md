@@ -67,6 +67,7 @@ Options with a default value other than `default` are listed below.
 
 warnings = on default off essential extensive
 warnings_as_error = default off on basic
+bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 conversion_warnings = on default off sign float conversion all
 covered_switch_default_warnings = on default off
 msvc_crt_secure_no_warnings = on default off
@@ -125,7 +126,6 @@ analyzer_verbosity = default 0 1 2 3
 
 # Other options:
 
-bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 color = default auto never always
 coverage = default off on
 diagnostics_format = default fixits patch print_source_range_info
