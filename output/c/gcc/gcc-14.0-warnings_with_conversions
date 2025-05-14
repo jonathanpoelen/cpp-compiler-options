@@ -4,6 +4,7 @@
 -Walloca
 -Warray-bounds=2
 -Wbad-function-cast
+-Wbidi-chars=any
 -Wcast-align=strict
 -Wcast-qual
 -Wconversion

@@ -16,6 +16,8 @@ local _jln_c_flag_names = {
   ["analyzer_too_complex_warning"] = true,
   ["jln-analyzer-verbosity"] = true,
   ["analyzer_verbosity"] = true,
+  ["jln-bidi-char-warnings"] = true,
+  ["bidi_char_warnings"] = true,
   ["jln-color"] = true,
   ["color"] = true,
   ["jln-conversion-warnings"] = true,
@@ -100,6 +102,9 @@ function jln_c_newoptions(defaults)
 
   newoption{trigger="jln-analyzer-verbosity", allowed={{'default'}, {'0', 'At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.'}, {'1', 'As per the previous level, but also show events for the entry to each function.'}, {'2', 'As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. \"true path taken\" at a conditional). This level is the default.'}, {'3', 'As per the previous level, but show all control flow events, not just significant ones.'}}, description="Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC."}
   if not _OPTIONS["jln-analyzer-verbosity"] then _OPTIONS["jln-analyzer-verbosity"] = (defaults["analyzer_verbosity"] or defaults["jln-analyzer-verbosity"] or "default") end
+
+  newoption{trigger="jln-bidi-char-warnings", allowed={{'default'}, {'any'}, {'any_and_ucn'}, {'unpaired'}, {'unpaired_and_ucn'}}, description="Enable warnings for possibly misleading Unicode bidirectional control characters. Set to `default` or `unpaired_and_ucn` in cases where some of the source code is expected to include bidirectional control characters."}
+  if not _OPTIONS["jln-bidi-char-warnings"] then _OPTIONS["jln-bidi-char-warnings"] = (defaults["bidi_char_warnings"] or defaults["jln-bidi-char-warnings"] or "any") end
 
   newoption{trigger="jln-color", allowed={{'default'}, {'auto'}, {'never'}, {'always'}}, description=""}
   if not _OPTIONS["jln-color"] then _OPTIONS["jln-color"] = (defaults["color"] or defaults["jln-color"] or "default") end
@@ -231,6 +236,7 @@ function jln_c_tovalues(values, disable_others)
       ["analyzer"] = values["analyzer"] or values["jln-analyzer"] or (disable_others and "default" or _OPTIONS["jln-analyzer"]),
       ["analyzer_too_complex_warning"] = values["analyzer_too_complex_warning"] or values["jln-analyzer-too-complex-warning"] or (disable_others and "default" or _OPTIONS["jln-analyzer-too-complex-warning"]),
       ["analyzer_verbosity"] = values["analyzer_verbosity"] or values["jln-analyzer-verbosity"] or (disable_others and "default" or _OPTIONS["jln-analyzer-verbosity"]),
+      ["bidi_char_warnings"] = values["bidi_char_warnings"] or values["jln-bidi-char-warnings"] or (disable_others and "default" or _OPTIONS["jln-bidi-char-warnings"]),
       ["color"] = values["color"] or values["jln-color"] or (disable_others and "default" or _OPTIONS["jln-color"]),
       ["conversion_warnings"] = values["conversion_warnings"] or values["jln-conversion-warnings"] or (disable_others and "default" or _OPTIONS["jln-conversion-warnings"]),
       ["coverage"] = values["coverage"] or values["jln-coverage"] or (disable_others and "default" or _OPTIONS["jln-coverage"]),
@@ -269,6 +275,7 @@ function jln_c_tovalues(values, disable_others)
       ["analyzer"] = _OPTIONS["jln-analyzer"],
       ["analyzer_too_complex_warning"] = _OPTIONS["jln-analyzer-too-complex-warning"],
       ["analyzer_verbosity"] = _OPTIONS["jln-analyzer-verbosity"],
+      ["bidi_char_warnings"] = _OPTIONS["jln-bidi-char-warnings"],
       ["color"] = _OPTIONS["jln-color"],
       ["conversion_warnings"] = _OPTIONS["jln-conversion-warnings"],
       ["coverage"] = _OPTIONS["jln-coverage"],
@@ -556,6 +563,23 @@ function jln_c_getoptions(values, disable_others, print_compiler)
                   end
                 end
               end
+            end
+          end
+        end
+      end
+    end
+    if values['bidi_char_warnings'] ~= 'default' then
+      if ( compiler == 'gcc' and version >= 1200000 ) then
+        if values['bidi_char_warnings'] == 'any' then
+          table_insert(jln_buildoptions, "-Wbidi-chars=any")
+        else
+          if values['bidi_char_warnings'] == 'any_and_ucn' then
+            table_insert(jln_buildoptions, "-Wbidi-chars=any,ucn")
+          else
+            if values['bidi_char_warnings'] == 'unpaired' then
+              table_insert(jln_buildoptions, "-Wbidi-chars=unpaired")
+            else
+              table_insert(jln_buildoptions, "-Wbidi-chars=unpaired,ucn")
             end
           end
         end

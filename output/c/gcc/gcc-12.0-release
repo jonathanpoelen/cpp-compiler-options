@@ -1,0 +1,6 @@
+-DNDEBUG
+-O3
+-Wl,-O1
+-flto=auto
+-march=native
+-mtune=native

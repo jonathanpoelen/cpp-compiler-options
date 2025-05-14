@@ -3,6 +3,7 @@
 -Walloc-zero
 -Walloca
 -Warray-bounds=2
+-Wbidi-chars=any
 -Wcast-align=strict
 -Wcast-qual
 -Wclass-memaccess

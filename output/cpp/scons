@@ -9,6 +9,7 @@ _default_flags = {
   'analyzer': 'default',
   'analyzer_too_complex_warning': 'default',
   'analyzer_verbosity': 'default',
+  'bidi_char_warnings': 'any',
   'color': 'default',
   'conversion_warnings': 'on',
   'coverage': 'default',
@@ -51,6 +52,7 @@ _var2opts = {
   'jln_analyzer': 'analyzer',
   'jln_analyzer_too_complex_warning': 'analyzer_too_complex_warning',
   'jln_analyzer_verbosity': 'analyzer_verbosity',
+  'jln_bidi_char_warnings': 'bidi_char_warnings',
   'jln_color': 'color',
   'jln_conversion_warnings': 'conversion_warnings',
   'jln_coverage': 'coverage',
@@ -93,6 +95,7 @@ _opt2vars = {
   'analyzer': 'jln_analyzer',
   'analyzer_too_complex_warning': 'jln_analyzer_too_complex_warning',
   'analyzer_verbosity': 'jln_analyzer_verbosity',
+  'bidi_char_warnings': 'jln_bidi_char_warnings',
   'color': 'jln_color',
   'conversion_warnings': 'jln_conversion_warnings',
   'coverage': 'jln_coverage',
@@ -142,6 +145,8 @@ def add_variables(vars, default_values={}):
                  allowed_values=('default', 'off', 'on')),
     EnumVariable('jln_analyzer_verbosity', 'Controls the complexity of the control flow paths that are emitted for analyzer diagnostics. Available only with GCC.\\n - 0: At this level, interprocedural call and return events are displayed, along with the most pertinent state-change events relating to a diagnostic. For example, for a double-free diagnostic, both calls to free will be shown.\\n - 1: As per the previous level, but also show events for the entry to each function.\\n - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. \"true path taken\" at a conditional). This level is the default.\\n - 3: As per the previous level, but show all control flow events, not just significant ones.', default_values.get('analyzer_verbosity', _default_flags['analyzer_verbosity']),
                  allowed_values=('default', '0', '1', '2', '3')),
+    EnumVariable('jln_bidi_char_warnings', 'Enable warnings for possibly misleading Unicode bidirectional control characters. Set to `default` or `unpaired_and_ucn` in cases where some of the source code is expected to include bidirectional control characters.', default_values.get('bidi_char_warnings', _default_flags['bidi_char_warnings']),
+                 allowed_values=('default', 'any', 'any_and_ucn', 'unpaired', 'unpaired_and_ucn')),
     EnumVariable('jln_color', '', default_values.get('color', _default_flags['color']),
                  allowed_values=('default', 'auto', 'never', 'always')),
     EnumVariable('jln_conversion_warnings', 'Warn for implicit conversions that may alter a value.\\n - on: Combine conversion and sign value\\n - sign: Warn for implicit conversions that may change the sign (the `unsigned_integer = signed_integer`) or a comparison between signed and unsigned values could produce an incorrect result when the signed value is converted to unsigned.\\n - float: Warn for implicit conversions that reduce the precision of a real value.\\n - conversion: Warn for implicit conversions that may alter a value.\\n - all: Like conversion and also warn about implicit conversions from arithmetic operations even when conversion of the operands to the same type cannot change their values.', default_values.get('conversion_warnings', _default_flags['conversion_warnings']),
@@ -285,6 +290,7 @@ def get_flags(options, env=None):
   x_analyzer = options.get('analyzer', _default_flags['analyzer'])
   x_analyzer_too_complex_warning = options.get('analyzer_too_complex_warning', _default_flags['analyzer_too_complex_warning'])
   x_analyzer_verbosity = options.get('analyzer_verbosity', _default_flags['analyzer_verbosity'])
+  x_bidi_char_warnings = options.get('bidi_char_warnings', _default_flags['bidi_char_warnings'])
   x_color = options.get('color', _default_flags['color'])
   x_conversion_warnings = options.get('conversion_warnings', _default_flags['conversion_warnings'])
   x_coverage = options.get('coverage', _default_flags['coverage'])
@@ -404,6 +410,18 @@ def get_flags(options, env=None):
                       if compversion >= 1600000 :
                         if x_unsafe_buffer_usage_warnings == 'default' :
                           flags += ('-Wno-unsafe-buffer-usage', )
+    if x_bidi_char_warnings != 'default' :
+      if ( compiler == 'gcc' and compversion >= 1200000 ) :
+        if x_bidi_char_warnings == 'any' :
+          flags += ('-Wbidi-chars=any', )
+        else:
+          if x_bidi_char_warnings == 'any_and_ucn' :
+            flags += ('-Wbidi-chars=any,ucn', )
+          else:
+            if x_bidi_char_warnings == 'unpaired' :
+              flags += ('-Wbidi-chars=unpaired', )
+            else:
+              flags += ('-Wbidi-chars=unpaired,ucn', )
     if x_optimization_warnings != 'default' :
       if compiler == 'gcc' :
         if compversion >= 900000 :
