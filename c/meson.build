@@ -121,6 +121,7 @@
 #
 #  # Other options:
 #
+#  bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 #  color = default auto never always
 #  coverage = default off on
 #  diagnostics_format = default fixits patch print_source_range_info
@@ -135,6 +136,7 @@
 #
 #  If not specified:
 #
+#  - `bidi_char_warnings` is `any`
 #  - `msvc_diagnostics_format` is `caret`
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
@@ -199,10 +201,13 @@
 #
 #  ## Recommended options
 #
+#  Some of the recommendations here are already made by build systems.
+#  These include `ndebug`, `symbols` and `optimization`.
+#
 #  category | options
 #  ---------|---------
 #  debug | `emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`optimization=g` or `default`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`symbols=debug` or `full_debug`<br>`var_init=pattern`
-#  release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
+#  release | `cpu=native`<br>`lto=on`<br>`ndebug=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 #  security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
 #  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`shadow_warnings=local`<br>`switch_warnings=exhaustive_enum`<br>`windows_abi_compatibility_warnings=on`
 #
@@ -245,6 +250,7 @@ ___jln_c_flags = {
   'analyzer': ___jln_c_default_flags.get('analyzer', get_option('jln_analyzer')),
   'analyzer_too_complex_warning': ___jln_c_default_flags.get('analyzer_too_complex_warning', get_option('jln_analyzer_too_complex_warning')),
   'analyzer_verbosity': ___jln_c_default_flags.get('analyzer_verbosity', get_option('jln_analyzer_verbosity')),
+  'bidi_char_warnings': ___jln_c_default_flags.get('bidi_char_warnings', get_option('jln_bidi_char_warnings')),
   'color': ___jln_c_default_flags.get('color', get_option('jln_color')),
   'conversion_warnings': ___jln_c_default_flags.get('conversion_warnings', get_option('jln_conversion_warnings')),
   'coverage': ___jln_c_default_flags.get('coverage', get_option('jln_coverage')),
@@ -404,6 +410,23 @@ foreach ___jln_c_flags : ___jln_c_custom_flags
                   endif
                 endif
               endif
+            endif
+          endif
+        endif
+      endif
+    endif
+    if (  ___jln_c_flags.get('bidi_char_warnings', 'default') != 'default' )
+      if (  ( ___jln_c_compiler_id == 'gcc' and ___jln_c_compiler_version.version_compare('>=12.0') ) )
+        if (  ___jln_c_flags.get('bidi_char_warnings', 'default') == 'any' )
+          jln_c_c_flags += ['-Wbidi-chars=any', ]
+        else
+          if (  ___jln_c_flags.get('bidi_char_warnings', 'default') == 'any_and_ucn' )
+            jln_c_c_flags += ['-Wbidi-chars=any,ucn', ]
+          else
+            if (  ___jln_c_flags.get('bidi_char_warnings', 'default') == 'unpaired' )
+              jln_c_c_flags += ['-Wbidi-chars=unpaired', ]
+            else
+              jln_c_c_flags += ['-Wbidi-chars=unpaired,ucn', ]
             endif
           endif
         endif
