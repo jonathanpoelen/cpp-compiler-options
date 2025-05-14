@@ -95,6 +95,7 @@
 #
 #  # Other options:
 #
+#  bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 #  color = default auto never always
 #  coverage = default off on
 #  diagnostics_format = default fixits patch print_source_range_info
@@ -109,6 +110,7 @@
 #
 #  If not specified:
 #
+#  - `bidi_char_warnings` is `any`
 #  - `msvc_diagnostics_format` is `caret`
 #  - `ndebug` is `with_optimization_1_or_above`
 #  - The following values are `off`:
@@ -173,10 +175,13 @@
 #
 #  ## Recommended options
 #
+#  Some of the recommendations here are already made by build systems.
+#  These include `ndebug`, `symbols` and `optimization`.
+#
 #  category | options
 #  ---------|---------
 #  debug | `emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`optimization=g` or `default`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`symbols=debug` or `full_debug`<br>`var_init=pattern`
-#  release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
+#  release | `cpu=native`<br>`lto=on`<br>`ndebug=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 #  security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
 #  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`shadow_warnings=local`<br>`switch_warnings=exhaustive_enum`<br>`windows_abi_compatibility_warnings=on`
 #
@@ -205,6 +210,8 @@ feature <jln-analyzer-too-complex-warning> : _ default off on : propagated ;
 #  - 2: As per the previous level, but also show events relating to control flow that are significant to triggering the issue (e.g. "true path taken" at a conditional). This level is the default.
 #  - 3: As per the previous level, but show all control flow events, not just significant ones.
 feature <jln-analyzer-verbosity> : _ default 0 1 2 3 : propagated ;
+# Enable warnings for possibly misleading Unicode bidirectional control characters. Set to `default` or `unpaired_and_ucn` in cases where some of the source code is expected to include bidirectional control characters.
+feature <jln-bidi-char-warnings> : _ any default any-and-ucn unpaired unpaired-and-ucn : incidental ;
 feature <jln-color> : _ default auto never always : propagated ;
 # Warn for implicit conversions that may alter a value.
 #  - on: Combine conversion and sign value
@@ -348,6 +355,7 @@ feature <jln-windows-abi-compatibility-warnings> : _ off default on : propagated
 # Increases that addressable sections capacity.
 feature <jln-windows-bigobj> : _ on default : incidental ;
 
+feature <jln-bidi-char-warnings-incidental> : _ any default any-and-ucn unpaired unpaired-and-ucn : incidental ;
 feature <jln-coverage-incidental> : _ default off on : incidental ;
 feature <jln-cpu-incidental> : _ default generic native : incidental ;
 feature <jln-emcc-debug-incidental> : _ default off on slow : incidental ;
@@ -369,6 +377,7 @@ feature <jln-windows-bigobj-incidental> : _ on default : incidental ;
 feature <jln-analyzer-default> : default off on with-external-headers : incidental ;
 feature <jln-analyzer-too-complex-warning-default> : default off on : incidental ;
 feature <jln-analyzer-verbosity-default> : default 0 1 2 3 : incidental ;
+feature <jln-bidi-char-warnings-default> : any default any-and-ucn unpaired unpaired-and-ucn : incidental ;
 feature <jln-color-default> : default auto never always : incidental ;
 feature <jln-conversion-warnings-default> : on default off sign float conversion all : incidental ;
 feature <jln-coverage-default> : default off on : incidental ;
@@ -430,6 +439,7 @@ rule jln-get-env ( env : values * )
 constant jln_env_analyzer : [ jln-get-env jln_analyzer : default off on with-external-headers ] ;
 constant jln_env_analyzer_too_complex_warning : [ jln-get-env jln_analyzer_too_complex_warning : default off on ] ;
 constant jln_env_analyzer_verbosity : [ jln-get-env jln_analyzer_verbosity : default 0 1 2 3 ] ;
+constant jln_env_bidi_char_warnings : [ jln-get-env jln_bidi_char_warnings : any default any-and-ucn unpaired unpaired-and-ucn ] ;
 constant jln_env_color : [ jln-get-env jln_color : default auto never always ] ;
 constant jln_env_conversion_warnings : [ jln-get-env jln_conversion_warnings : on default off sign float conversion all ] ;
 constant jln_env_coverage : [ jln-get-env jln_coverage : default off on ] ;
@@ -470,6 +480,8 @@ constant jln_env_windows_bigobj : [ jln-get-env jln_windows_bigobj : on default 
 if $(JLN_BJAM_YEAR_VERSION) < 2016.00
 {
   import toolset ;
+  toolset.flags jln-bidi-char-warnings JLN_BIDI_CHAR_WARNINGS : <jln-bidi-char-warnings> ;
+  toolset.flags jln-bidi-char-warnings-incidental JLN_BIDI_CHAR_WARNINGS_INCIDENTAL : <jln-bidi-char-warnings-incidental> ;
   toolset.flags jln-coverage JLN_COVERAGE : <jln-coverage> ;
   toolset.flags jln-coverage-incidental JLN_COVERAGE_INCIDENTAL : <jln-coverage-incidental> ;
   toolset.flags jln-cpu JLN_CPU : <jln-cpu> ;
@@ -619,6 +631,7 @@ rule jln_flags ( properties * )
   if $(JLN_BJAM_YEAR_VERSION) >= 2016.00
   {
     flags += 
+      <relevant>jln-bidi-char-warnings
       <relevant>jln-coverage
       <relevant>jln-cpu
       <relevant>jln-emcc-debug
@@ -642,6 +655,7 @@ rule jln_flags ( properties * )
   local x_analyzer = [ jln-get-value $(ps) : jln-analyzer : $(jln_env_analyzer) ] ;
   local x_analyzer_too_complex_warning = [ jln-get-value $(ps) : jln-analyzer-too-complex-warning : $(jln_env_analyzer_too_complex_warning) ] ;
   local x_analyzer_verbosity = [ jln-get-value $(ps) : jln-analyzer-verbosity : $(jln_env_analyzer_verbosity) ] ;
+  local x_bidi_char_warnings = [ jln-get-value2 $(ps) : jln-bidi-char-warnings : jln-bidi-char-warnings-incidental : $(jln_env_bidi_char_warnings) ] ;
   local x_color = [ jln-get-value $(ps) : jln-color : $(jln_env_color) ] ;
   local x_conversion_warnings = [ jln-get-value $(ps) : jln-conversion-warnings : $(jln_env_conversion_warnings) ] ;
   local x_coverage = [ jln-get-value2 $(ps) : jln-coverage : jln-coverage-incidental : $(jln_env_coverage) ] ;
@@ -961,6 +975,42 @@ rule jln_flags ( properties * )
                   }
                 }
               }
+            }
+          }
+        }
+      }
+    }
+    if $(x_bidi_char_warnings) != "default"
+    {
+      if ( $(JLN_NORMALIZED_CXX_COMP) = "gcc" && ! [ numbers.less $(JLN_NORMALIZED_CXX_COMP_VERSION) 1200000 ] )
+      {
+        if $(x_bidi_char_warnings) = "any"
+        {
+          flags +=
+            <cxxflags>"-Wbidi-chars=any"
+          ;
+        }
+        else
+        {
+          if $(x_bidi_char_warnings) = "any-and-ucn"
+          {
+            flags +=
+              <cxxflags>"-Wbidi-chars=any,ucn"
+            ;
+          }
+          else
+          {
+            if $(x_bidi_char_warnings) = "unpaired"
+            {
+              flags +=
+                <cxxflags>"-Wbidi-chars=unpaired"
+              ;
+            }
+            else
+            {
+              flags +=
+                <cxxflags>"-Wbidi-chars=unpaired,ucn"
+              ;
             }
           }
         }
