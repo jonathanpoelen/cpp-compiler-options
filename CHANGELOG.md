@@ -1,5 +1,9 @@
 # ChangeLog
 
+## 2025-05-14
+
+- add `bidi_char_warnings (`any`, `any_and_ucn`, `unpaired`, `unpaired_and_ucn`)
+
 ## 2025-05-13
 
 - remove `control_flow`

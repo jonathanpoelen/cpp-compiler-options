@@ -129,6 +129,7 @@
 --
 --  # Other options:
 --
+--  bidi_char_warnings = any default any_and_ucn unpaired unpaired_and_ucn
 --  color = default auto never always
 --  coverage = default off on
 --  diagnostics_format = default fixits patch print_source_range_info
@@ -143,6 +144,7 @@
 --
 --  If not specified:
 --
+--  - `bidi_char_warnings` is `any`
 --  - `msvc_diagnostics_format` is `caret`
 --  - `ndebug` is `with_optimization_1_or_above`
 --  - The following values are `off`:
@@ -207,10 +209,13 @@
 --
 --  ## Recommended options
 --
+--  Some of the recommendations here are already made by build systems.
+--  These include `ndebug`, `symbols` and `optimization`.
+--
 --  category | options
 --  ---------|---------
 --  debug | `emcc_debug=on` or `slow` (useless if Emscripten is not used)<br>`optimization=g` or `default`<br>`sanitizers=on` or `with_minimal_code_size`<br>`stl_hardening=debug_with_broken_abi` or `debug`<br>`symbols=debug` or `full_debug`<br>`var_init=pattern`
---  release | `cpu=native`<br>`lto=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
+--  release | `cpu=native`<br>`lto=on`<br>`ndebug=on`<br>`optimization=3`<br>`rtti=off`<br>`symbols=strip_all`
 --  security | `hardened=on`<br>`stl_hardening=fast` or `extensive`
 --  really strict warnings | `pedantic=as_error`<br>`suggest_attributes=common`<br>`warnings=extensive`<br>`conversion_warnings=all`<br>`shadow_warnings=local`<br>`switch_warnings=exhaustive_enum`<br>`windows_abi_compatibility_warnings=on`
 --
@@ -234,6 +239,8 @@ local _flag_names = {
   ["analyzer_too_complex_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-analyzer-verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
   ["analyzer_verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
+  ["jln-bidi-char-warnings"] = {["default"]="", ["any"]="any", ["any_and_ucn"]="any_and_ucn", ["unpaired"]="unpaired", ["unpaired_and_ucn"]="unpaired_and_ucn", [""]=""},
+  ["bidi_char_warnings"] = {["default"]="", ["any"]="any", ["any_and_ucn"]="any_and_ucn", ["unpaired"]="unpaired", ["unpaired_and_ucn"]="unpaired_and_ucn", [""]=""},
   ["jln-color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["jln-conversion-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
@@ -333,6 +340,7 @@ function create_options(options, extra_options)
       analyzer = options.analyzer or options["jln-analyzer"] or (disable_other_options and "" or _flag_names.analyzer[get_config("jln-analyzer")]),
       analyzer_too_complex_warning = options.analyzer_too_complex_warning or options["jln-analyzer-too-complex-warning"] or (disable_other_options and "" or _flag_names.analyzer_too_complex_warning[get_config("jln-analyzer-too-complex-warning")]),
       analyzer_verbosity = options.analyzer_verbosity or options["jln-analyzer-verbosity"] or (disable_other_options and "" or _flag_names.analyzer_verbosity[get_config("jln-analyzer-verbosity")]),
+      bidi_char_warnings = options.bidi_char_warnings or options["jln-bidi-char-warnings"] or (disable_other_options and "" or _flag_names.bidi_char_warnings[get_config("jln-bidi-char-warnings")]),
       color = options.color or options["jln-color"] or (disable_other_options and "" or _flag_names.color[get_config("jln-color")]),
       conversion_warnings = options.conversion_warnings or options["jln-conversion-warnings"] or (disable_other_options and "" or _flag_names.conversion_warnings[get_config("jln-conversion-warnings")]),
       coverage = options.coverage or options["jln-coverage"] or (disable_other_options and "" or _flag_names.coverage[get_config("jln-coverage")]),
@@ -371,6 +379,7 @@ function create_options(options, extra_options)
       ["analyzer"] = _flag_names["analyzer"][get_config("jln-analyzer")],
       ["analyzer_too_complex_warning"] = _flag_names["analyzer_too_complex_warning"][get_config("jln-analyzer-too-complex-warning")],
       ["analyzer_verbosity"] = _flag_names["analyzer_verbosity"][get_config("jln-analyzer-verbosity")],
+      ["bidi_char_warnings"] = _flag_names["bidi_char_warnings"][get_config("jln-bidi-char-warnings")],
       ["color"] = _flag_names["color"][get_config("jln-color")],
       ["conversion_warnings"] = _flag_names["conversion_warnings"][get_config("jln-conversion-warnings")],
       ["coverage"] = _flag_names["coverage"][get_config("jln-coverage")],
@@ -743,6 +752,23 @@ function get_flags(options, extra_options)
                   end
                 end
               end
+            end
+          end
+        end
+      end
+    end
+    if options.bidi_char_warnings ~= "" then
+      if ( compiler == 'gcc' and version >= 1200000 ) then
+        if options.bidi_char_warnings == "any" then
+          insert(jln_cxflags, "-Wbidi-chars=any")
+        else
+          if options.bidi_char_warnings == "any_and_ucn" then
+            insert(jln_cxflags, "-Wbidi-chars=any,ucn")
+          else
+            if options.bidi_char_warnings == "unpaired" then
+              insert(jln_cxflags, "-Wbidi-chars=unpaired")
+            else
+              insert(jln_cxflags, "-Wbidi-chars=unpaired,ucn")
             end
           end
         end

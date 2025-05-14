@@ -25,6 +25,8 @@ local _flag_names = {
   ["analyzer_too_complex_warning"] = {["default"]="", ["off"]="off", ["on"]="on", [""]=""},
   ["jln-analyzer-verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
   ["analyzer_verbosity"] = {["default"]="", ["0"]="0", ["1"]="1", ["2"]="2", ["3"]="3", [""]=""},
+  ["jln-bidi-char-warnings"] = {["default"]="", ["any"]="any", ["any_and_ucn"]="any_and_ucn", ["unpaired"]="unpaired", ["unpaired_and_ucn"]="unpaired_and_ucn", [""]=""},
+  ["bidi_char_warnings"] = {["default"]="", ["any"]="any", ["any_and_ucn"]="any_and_ucn", ["unpaired"]="unpaired", ["unpaired_and_ucn"]="unpaired_and_ucn", [""]=""},
   ["jln-color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["color"] = {["default"]="", ["auto"]="auto", ["never"]="never", ["always"]="always", [""]=""},
   ["jln-conversion-warnings"] = {["default"]="", ["off"]="off", ["on"]="on", ["sign"]="sign", ["float"]="float", ["conversion"]="conversion", ["all"]="all", [""]=""},
@@ -157,6 +159,14 @@ local _flag_names = {
            values={"default", "0", "1", "2", "3"},
            default=default_options["analyzer_verbosity"] or default_options["jln-analyzer-verbosity"] or "default",
            after_check=function(option) check_option("jln-analyzer-verbosity", "analyzer_verbosity") end,
+         })
+  option("jln-bidi-char-warnings", {
+           showmenu=true,
+           category=category,
+           description="Enable warnings for possibly misleading Unicode bidirectional control characters. Set to `default` or `unpaired_and_ucn` in cases where some of the source code is expected to include bidirectional control characters.",
+           values={"default", "any", "any_and_ucn", "unpaired", "unpaired_and_ucn"},
+           default=default_options["bidi_char_warnings"] or default_options["jln-bidi-char-warnings"] or "any",
+           after_check=function(option) check_option("jln-bidi-char-warnings", "bidi_char_warnings") end,
          })
   option("jln-color", {
            showmenu=true,
